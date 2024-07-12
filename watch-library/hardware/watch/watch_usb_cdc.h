@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Joey Castillo
+ * Copyright (c) 2020 Joey Castillo
+ * Copyright (c) 2023 Edward Shin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,24 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_PRIVATE_H_INCLUDED
-#define _WATCH_PRIVATE_H_INCLUDED
 
-#include "watch.h"
+#ifndef _WATCH_PRIVATE_CDC_H_INCLUDED
+#define _WATCH_PRIVATE_CDC_H_INCLUDED
 
-/// Called by main.c while setting up the app.
-void _watch_init(void);
-
-/// Initializes the real-time clock peripheral. Implemented in watch_rtc.c
-void _watch_rtc_init(void);
-
-/// Called by buzzer and LED setup functions.
-void _watch_enable_tcc(void);
-
-/// Called by buzzer and LED teardown functions.
-void _watch_disable_tcc(void);
-
-/// Called by main.c if plugged in to USB. You should not call this from your app.
-void _watch_enable_usb(void);
+int _write(int file, char *ptr, int len);
+int _read(int file, char *ptr, int len);
+void cdc_task(void);
 
 #endif

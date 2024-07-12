@@ -25,6 +25,7 @@
 #include "watch_private.h"
 #include "tcc.h"
 #include "tc.h"
+#include "usb.h"
 
 void _watch_init(void) {
     // disable debugger hot-plugging
@@ -196,4 +197,9 @@ void _watch_disable_tcc(void) {
     HAL_GPIO_BLUE_off();
 #endif
     tcc_disable(0);
+}
+
+void _watch_enable_usb(void) {
+    usb_init();
+    usb_enable();
 }

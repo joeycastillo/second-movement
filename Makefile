@@ -5,6 +5,9 @@ GOSSAMER_PATH=gossamer
 # or omit it and provide it on the command line (make BOARD=foo).
 BOARD=sensorwatch_green
 
+# TinyUSB configuration: we want one CDC interface.
+TINYUSB_CDC=1
+
 # Leave this line here.
 include $(GOSSAMER_PATH)/make.mk
 
@@ -15,8 +18,12 @@ SRCS += \
   ./watch-library/hardware/watch/watch_buzzer.c \
   ./watch-library/hardware/watch/watch_led.c \
   ./watch-library/hardware/watch/watch_private.c \
+  ./watch-library/hardware/watch/watch_usb_descriptors.c \
+  ./watch-library/hardware/watch/watch_usb_cdc.c \
 
 INCLUDES += \
+  -I./tinyusb/src \
+  -I./watch-library/hardware/watch \
   -I./watch-library/shared/watch \
 
 # Finally, leave this line at the bottom of the file.
