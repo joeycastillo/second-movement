@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_PRIVATE_H_INCLUDED
-#define _WATCH_PRIVATE_H_INCLUDED
+
+#pragma once
 
 #include "watch.h"
 
@@ -40,5 +40,3 @@ void _watch_disable_tcc(void);
 
 /// Called by main.c if plugged in to USB. You should not call this from your app.
 void _watch_enable_usb(void);
-
-#endif
