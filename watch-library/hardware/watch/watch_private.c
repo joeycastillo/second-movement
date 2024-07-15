@@ -147,10 +147,10 @@ void _watch_enable_tcc(void) {
 #ifdef WATCH_INVERT_LED_POLARITY
     // invert all channels, we'll flip the buzzer back in just a moment.
     // this is easier than writing a maze of #ifdefs.
-    tcc_set_channel_polarity(0, 0, TCC_CHANNEL_POLARITY_INVERTED);
-    tcc_set_channel_polarity(0, 1, TCC_CHANNEL_POLARITY_INVERTED);
-    tcc_set_channel_polarity(0, 2, TCC_CHANNEL_POLARITY_INVERTED);
-    tcc_set_channel_polarity(0, 3, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 4, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 5, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 6, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 7, TCC_CHANNEL_POLARITY_INVERTED);
 #endif // WATCH_INVERT_LED_POLARITY
     tcc_set_channel_polarity(0, WATCH_BUZZER_TCC_CHANNEL, TCC_CHANNEL_POLARITY_NORMAL);
 
@@ -158,13 +158,13 @@ void _watch_enable_tcc(void) {
     tcc_set_period(0, 1000, false);
 
     // Set the duty cycle of all pins to 0: LED's off, buzzer not buzzing.
-    tcc_set_cc(0, WATCH_BUZZER_TCC_CHANNEL, 0, false);
-    tcc_set_cc(0, WATCH_RED_TCC_CHANNEL, 0, false);
+    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, 0, false);
+    tcc_set_cc(0, (WATCH_RED_TCC_CHANNEL) % 4, 0, false);
 #ifdef WATCH_GREEN_TCC_CHANNEL
-    tcc_set_cc(0, WATCH_GREEN_TCC_CHANNEL, 0, false);
+    tcc_set_cc(0, (WATCH_GREEN_TCC_CHANNEL) % 4, 0, false);
 #endif
 #ifdef WATCH_BLUE_TCC_CHANNEL
-    tcc_set_cc(0, WATCH_BLUE_TCC_CHANNEL, 0, false);
+    tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, 0, false);
 #endif
     // Enable the TCC
     tcc_enable(0);

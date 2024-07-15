@@ -35,7 +35,7 @@ inline void watch_enable_buzzer(void) {
 
 inline void watch_set_buzzer_period(uint32_t period) {
     tcc_set_period(0, period, true);
-    tcc_set_cc(0, WATCH_BUZZER_TCC_CHANNEL, period / 2, true);
+    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, period / 2, true);
 }
 
 void watch_disable_buzzer(void) {
