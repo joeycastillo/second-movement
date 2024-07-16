@@ -70,25 +70,25 @@ void watch_display_character(uint8_t character, uint8_t position) {
         if (character == 'I') character = 'l'; // uppercase I only works in position 0
     }
 
-    uint64_t segmap = Segment_Map[position];
-    uint64_t segdata = Character_Set[character - 0x20];
+    digit_mapping_t segmap = Watch_Display_Mapping[position];
+    uint8_t segdata = Watch_Character_Set[character - 0x20];
 
     for (int i = 0; i < 8; i++) {
-        uint8_t com = (segmap & 0xFF) >> 6;
-        if (com > 2) {
-            // COM3 means no segment exists; skip it.
-            segmap = segmap >> 8;
+        if (segmap.segment[i].value == segment_does_not_exist) {
+            // Segment does not exist; skip it.
             segdata = segdata >> 1;
             continue;
         }
-        uint8_t seg = segmap & 0x3F;
+        uint8_t com = segmap.segment[i].address.com;
+        uint8_t seg = segmap.segment[i].address.seg;
 
-        if (segdata & 1)
-          watch_set_pixel(com, seg);
-        else
-          watch_clear_pixel(com, seg);
+        if (segdata & 1) {
+            watch_set_pixel(com, seg);
+        }
+        else {
+            watch_clear_pixel(com, seg);
+        }
 
-        segmap = segmap >> 8;
         segdata = segdata >> 1;
     }
 
@@ -100,25 +100,25 @@ void watch_display_character(uint8_t character, uint8_t position) {
 void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
     // Will only work for digits and for positions  8 and 9 - but less code & checks to reduce power consumption
 
-    uint64_t segmap = Segment_Map[position];
-    uint64_t segdata = Character_Set[character - 0x20];
+    digit_mapping_t segmap = Watch_Display_Mapping[position];
+    uint8_t segdata = Watch_Character_Set[character - 0x20];
 
     for (int i = 0; i < 8; i++) {
-        uint8_t com = (segmap & 0xFF) >> 6;
-        if (com > 2) {
-            // COM3 means no segment exists; skip it.
-            segmap = segmap >> 8;
+        if (segmap.segment[i].value == segment_does_not_exist) {
+            // Segment does not exist; skip it.
             segdata = segdata >> 1;
             continue;
         }
-        uint8_t seg = segmap & 0x3F;
+        uint8_t com = segmap.segment[i].address.com;
+        uint8_t seg = segmap.segment[i].address.seg;
 
-        if (segdata & 1)
-          watch_set_pixel(com, seg);
-        else
-          watch_clear_pixel(com, seg);
+        if (segdata & 1) {
+            watch_set_pixel(com, seg);
+        }
+        else {
+            watch_clear_pixel(com, seg);
+        }
 
-        segmap = segmap >> 8;
         segdata = segdata >> 1;
     }
 }

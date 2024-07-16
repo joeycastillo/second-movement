@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Joey Castillo
+ * Copyright (c) 2020-2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,26 @@
  */
 #pragma once
 
-static const uint8_t Character_Set[] =
+// Union representing a single segment mapping
+// COM occupies two bits, SEG occupes the rest.
+typedef union segment_mapping_t {
+    struct {
+        uint8_t com : 2;
+        uint8_t seg : 6;
+    } address;
+    uint8_t value;
+} segment_mapping_t;
+
+// Value to indicate that a segment does not exist
+static const uint8_t segment_does_not_exist = 0xff;
+
+// Union representing 8 segment mappings, A-H
+typedef union digit_mapping_t {
+    segment_mapping_t segment[8];
+    uint64_t value;
+} digit_mapping_t;
+
+static const uint8_t Watch_Character_Set[] =
 {
     0b00000000, //  
     0b01100000, // ! (L in the top half for positions 4 and 6)
@@ -122,17 +141,130 @@ static const uint8_t Character_Set[] =
     0b00000001, // ~
 };
 
-static const uint64_t Segment_Map[] = {
-    0x4e4f0e8e8f8d4d0d, // Position 0, mode
-    0xc8c4c4c8b4b4b0b,  // Position 1, mode (Segments B and C shared, as are segments E and F)
-    0xc049c00a49890949, // Position 2, day of month (Segments A, D, G shared; missing segment F)
-    0xc048088886874707, // Position 3, day of month
-    0xc053921252139352, // Position 4, clock hours (Segments A and D shared)
-    0xc054511415559594, // Position 5, clock hours
-    0xc057965616179716, // Position 6, clock minutes (Segments A and D shared)
-    0xc041804000018a81, // Position 7, clock minutes
-    0xc043420203048382, // Position 8, clock seconds
-    0xc045440506468584, // Position 9, clock seconds
+static const digit_mapping_t Watch_Display_Mapping[] = {
+    // Positions 0 and 1 are the Weekday or Mode digits
+    {
+        .segment = {
+            { .address = { .com = 0, .seg = 13 } }, // 0A
+            { .address = { .com = 1, .seg = 13 } }, // 0B
+            { .address = { .com = 2, .seg = 13 } }, // 0C
+            { .address = { .com = 2, .seg = 15 } }, // 0D
+            { .address = { .com = 2, .seg = 14 } }, // 0E
+            { .address = { .com = 0, .seg = 14 } }, // 0F
+            { .address = { .com = 1, .seg = 15 } }, // 0G
+            { .address = { .com = 1, .seg = 14 } }, // 0H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 0, .seg = 11 } }, // 1A
+            { .address = { .com = 1, .seg = 11 } }, // 1B, note that 1B has the same address as 1C
+            { .address = { .com = 1, .seg = 11 } }, // 1C, will override 1B when displaying a character
+            { .address = { .com = 2, .seg = 11 } }, // 1D
+            { .address = { .com = 1, .seg = 12 } }, // 1E, note that 1E has the same address as 1F
+            { .address = { .com = 1, .seg = 12 } }, // 1F, will override 1E when displaying a character
+            { .address = { .com = 2, .seg = 12 } }, // 1G
+            { .address = { .com = 0, .seg = 12 } }, // 1H
+        },
+    },
+    // Positions 2 and 3 are the Day of Month digits
+    {
+        .segment = {
+            { .address = { .com = 1, .seg =  9 } }, // 2A, note that 2A, 2D and 2G have the same address
+            { .address = { .com = 0, .seg =  9 } }, // 2B
+            { .address = { .com = 2, .seg =  9 } }, // 2C
+            { .address = { .com = 1, .seg =  9 } }, // 2D, same address as 2A and 2G
+            { .address = { .com = 0, .seg = 10 } }, // 2E
+            { .value = segment_does_not_exist },    // 2F
+            { .address = { .com = 1, .seg =  9 } }, // 2G, will override 2A and 2D when displaying a character
+            { .value = segment_does_not_exist },    // 2H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 0, .seg =  7 } }, // 3A
+            { .address = { .com = 1, .seg =  7 } }, // 3B
+            { .address = { .com = 2, .seg =  7 } }, // 3C
+            { .address = { .com = 2, .seg =  6 } }, // 3D
+            { .address = { .com = 2, .seg =  8 } }, // 3E
+            { .address = { .com = 0, .seg =  8 } }, // 3F
+            { .address = { .com = 1, .seg =  8 } }, // 3G
+            { .value = segment_does_not_exist },    // 3H
+        },
+    },
+    // Positions 4-9 are the Clock digits
+    {
+        .segment = {
+            { .address = { .com = 1, .seg = 18 } }, // 4A, note that 4A and 4D have the same address
+            { .address = { .com = 2, .seg = 19 } }, // 4B
+            { .address = { .com = 0, .seg = 19 } }, // 4C
+            { .address = { .com = 1, .seg = 18 } }, // 4D, will override 4A when displaying a character
+            { .address = { .com = 0, .seg = 18 } }, // 4E
+            { .address = { .com = 2, .seg = 18 } }, // 4F
+            { .address = { .com = 1, .seg = 19 } }, // 4G
+            { .value = segment_does_not_exist },    // 4H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 2, .seg = 20 } }, // 5A
+            { .address = { .com = 2, .seg = 21 } }, // 5B
+            { .address = { .com = 1, .seg = 21 } }, // 5C
+            { .address = { .com = 0, .seg = 21 } }, // 5D
+            { .address = { .com = 0, .seg = 20 } }, // 5E
+            { .address = { .com = 1, .seg = 17 } }, // 5F
+            { .address = { .com = 1, .seg = 20 } }, // 5G
+            { .value = segment_does_not_exist },    // 5H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 0, .seg = 22 } }, // 6A, note that 6A and 6D have the same address
+            { .address = { .com = 2, .seg = 23 } }, // 6B
+            { .address = { .com = 0, .seg = 23 } }, // 6C
+            { .address = { .com = 0, .seg = 22 } }, // 6D, will override 6A when displaying a character
+            { .address = { .com = 1, .seg = 22 } }, // 6E
+            { .address = { .com = 2, .seg = 22 } }, // 6F
+            { .address = { .com = 1, .seg = 23 } }, // 6G
+            { .value = segment_does_not_exist },    // 6H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 2, .seg =  1 } }, // 7A
+            { .address = { .com = 2, .seg = 10 } }, // 7B
+            { .address = { .com = 0, .seg =  1 } }, // 7C
+            { .address = { .com = 0, .seg =  0 } }, // 7D
+            { .address = { .com = 1, .seg =  0 } }, // 7E
+            { .address = { .com = 2, .seg =  0 } }, // 7F
+            { .address = { .com = 1, .seg =  1 } }, // 7G
+            { .value = segment_does_not_exist },    // 7H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 2, .seg =  2 } }, // 8A
+            { .address = { .com = 2, .seg =  3 } }, // 8B
+            { .address = { .com = 0, .seg =  4 } }, // 8C
+            { .address = { .com = 0, .seg =  3 } }, // 8D
+            { .address = { .com = 0, .seg =  2 } }, // 8E
+            { .address = { .com = 1, .seg =  2 } }, // 8F
+            { .address = { .com = 1, .seg =  3 } }, // 8G
+            { .value = segment_does_not_exist },    // 8H
+        },
+    },
+    {
+        .segment = {
+            { .address = { .com = 2, .seg =  4 } }, // 9A
+            { .address = { .com = 2, .seg =  5 } }, // 9B
+            { .address = { .com = 1, .seg =  6 } }, // 9C
+            { .address = { .com = 0, .seg =  6 } }, // 9D
+            { .address = { .com = 0, .seg =  5 } }, // 9E
+            { .address = { .com = 1, .seg =  4 } }, // 9F
+            { .address = { .com = 1, .seg =  5 } }, // 9G
+            { .value = segment_does_not_exist },    // 9H
+        },
+    },
 };
 
 void watch_display_character(uint8_t character, uint8_t position);
