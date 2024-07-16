@@ -18,6 +18,7 @@ SRCS += \
   ./watch-library/hardware/watch/watch_buzzer.c \
   ./watch-library/hardware/watch/watch_led.c \
   ./watch-library/hardware/watch/watch_private.c \
+  ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \

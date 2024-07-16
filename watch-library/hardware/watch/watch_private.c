@@ -78,13 +78,13 @@ void _watch_init(void) {
     SUPC->INTENSET.bit.BOD33DET = 1;
     SUPC->BOD33.bit.ENABLE = 1;
 
-    /// TODO: start the real-time clock
-    // _watch_rtc_init();
+    /// start the real-time clock
+    _watch_rtc_init();
 
-    /// TODO: set up callbacks for low energy mode
-    // btn_alarm_callback = NULL;
-    // a2_callback = NULL;
-    // a4_callback = NULL;
+    /// set up callbacks for low energy mode
+    btn_alarm_callback = NULL;
+    a2_callback = NULL;
+    a4_callback = NULL;
 }
 
 static inline void _watch_wait_for_entropy() {
