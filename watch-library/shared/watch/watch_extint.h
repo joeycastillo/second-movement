@@ -67,6 +67,6 @@ void watch_disable_external_interrupts(void);
   *          external interrupt on pin A2, use the watch_register_extwake_callback function. This issue will be
   *          addressed in a future revision of the watch library.
   */
-void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger trigger);
+void watch_register_interrupt_callback(const uint16_t pin, watch_cb_t callback, eic_interrupt_trigger trigger);
 
 /// @}

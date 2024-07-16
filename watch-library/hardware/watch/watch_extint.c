@@ -39,7 +39,7 @@ void watch_disable_external_interrupts(void) {
     eic_disable();
 }
 
-void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger trigger) {
+void watch_register_interrupt_callback(const uint16_t pin, watch_cb_t callback, eic_interrupt_trigger trigger) {
     int8_t channel = eic_configure_pin(pin, trigger);
     if (channel >= 0 && channel < 16) {
         printf("Configured pin %d on channel %d\n", pin, channel);
