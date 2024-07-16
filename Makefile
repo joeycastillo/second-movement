@@ -16,6 +16,7 @@ SRCS += \
   ./app.c \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_buzzer.c \
+  ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_led.c \
   ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
