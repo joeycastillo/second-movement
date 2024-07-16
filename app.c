@@ -49,18 +49,18 @@ void app_init(void) {
 }
 
 void app_setup(void) {
-    watch_enable_leds();
+    watch_enable_display();
+    watch_display_top_left("MO");
+    watch_display_top_right("15");
+    watch_display_main_line("123456");
+    watch_set_colon();
+    watch_set_indicator(WATCH_INDICATOR_PM);
 }
 
 bool app_loop(void) {
-    watch_set_led_yellow();
-    delay_ms(500);
-    watch_set_led_off();
-    delay_ms(500);
-
     if (usb_is_enabled()) {
         yield();
     }
 
-    return false;
+    return true;
 }
