@@ -166,20 +166,21 @@ void _watch_enable_tcc(void) {
 #ifdef WATCH_BLUE_TCC_CHANNEL
     tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, 0, false);
 #endif
-    // Enable the TCC
-    tcc_enable(0);
 
     // enable LED PWM pins (the LED driver assumes if the TCC is on, the pins are enabled)
-    HAL_GPIO_RED_out();
     HAL_GPIO_RED_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_RED_out();
 #ifdef WATCH_GREEN_TCC_CHANNEL
-    HAL_GPIO_GREEN_out();
     HAL_GPIO_GREEN_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_GREEN_out();
 #endif
 #ifdef WATCH_BLUE_TCC_CHANNEL
-    HAL_GPIO_BLUE_out();
     HAL_GPIO_BLUE_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_BLUE_out();
 #endif
+
+    // Enable the TCC
+    tcc_enable(0);
 }
 
 void _watch_disable_tcc(void) {

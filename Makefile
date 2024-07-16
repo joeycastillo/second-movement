@@ -25,6 +25,7 @@ SRCS += \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \
   ./watch-library/shared/watch/watch_private_display.c \
+  ./watch-library/shared/watch/watch_private_buzzer.c \
 
 INCLUDES += \
   -I./tinyusb/src \
