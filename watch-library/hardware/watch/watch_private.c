@@ -28,6 +28,7 @@
 #include "tcc.h"
 #include "tc.h"
 #include "usb.h"
+#include "system.h"
 
 void _watch_init(void) {
     // disable debugger hot-plugging

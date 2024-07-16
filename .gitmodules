@@ -1,3 +1,6 @@
 [submodule "gossamer"]
 	path = gossamer
 	url = git@github.com:joeycastillo/gossamer.git
+[submodule "littlefs"]
+	path = littlefs
+	url = git@github.com:littlefs-project/littlefs.git

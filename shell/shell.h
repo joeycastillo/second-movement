@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2024 Joey Castillo
+ * Copyright (c) 2023 Edward Shin
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,52 +22,13 @@
  * SOFTWARE.
  */
 
-#include "app.h"
-#include "delay.h"
-#include "watch.h"
-#include "watch_private.h"
-#include "usb.h"
-#include "tusb.h"
-#include "watch_usb_cdc.h"
-#include "filesystem.h"
-#include "shell.h"
+#ifndef SHELL_H_
+#define SHELL_H_
 
-void yield(void) {
-    tud_task();
-    cdc_task();
-}
+/** @brief Called periodically from the app loop to handle shell commands.
+ *         When a full command is complete, parses and executes its matching
+ *         callback.
+ */
+void shell_task(void);
 
-void app_init(void) {
-    // initialize the watch hardware.
-    _watch_init();
-
-    // check if we are plugged into USB power.
-    HAL_GPIO_VBUS_DET_in();
-    HAL_GPIO_VBUS_DET_pulldown();
-    if (HAL_GPIO_VBUS_DET_read()){
-        /// if so, enable USB functionality.
-        _watch_enable_usb();
-    }
-    HAL_GPIO_VBUS_DET_off();
-
-    filesystem_init();
-}
-
-void app_setup(void) {
-    watch_enable_display();
-    watch_display_top_left("MO");
-    watch_display_top_right("15");
-    watch_display_main_line("123456");
-    watch_set_colon();
-    watch_set_indicator(WATCH_INDICATOR_PM);
-}
-
-bool app_loop(void) {
-    if (usb_is_enabled()) {
-        yield();
-    }
-
-    shell_task();
-
-    return false;
-}
+#endif
