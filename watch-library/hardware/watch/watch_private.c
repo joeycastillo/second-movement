@@ -23,6 +23,8 @@
  */
 
 #include "watch_private.h"
+#include "watch_adc.h"
+#include "adc.h"
 #include "tcc.h"
 #include "tc.h"
 #include "usb.h"
@@ -45,7 +47,6 @@ void _watch_init(void) {
     SUPC->VREG.bit.STDBYPL0 = 1;
     while(!SUPC->STATUS.bit.VREGRDY); // wait for voltage regulator to become ready
 
-    /** TODO: check the battery voltage...
     watch_enable_adc();
     uint16_t battery_voltage = watch_get_vcc_voltage();
     watch_disable_adc();
@@ -56,7 +57,6 @@ void _watch_init(void) {
     } else {
         SUPC->VREG.bit.LPEFF = 0;
     }
- */
 
     // set up the brownout detector (low battery warning)
     NVIC_DisableIRQ(SYSTEM_IRQn);

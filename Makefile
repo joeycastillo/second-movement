@@ -15,6 +15,7 @@ include $(GOSSAMER_PATH)/make.mk
 SRCS += \
   ./app.c \
   ./watch-library/hardware/watch/watch.c \
+  ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_buzzer.c \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_led.c \
