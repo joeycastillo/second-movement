@@ -23,7 +23,6 @@
  */
 
 #include "watch_private.h"
-#include "watch_adc.h"
 #include "adc.h"
 #include "tcc.h"
 #include "tc.h"
