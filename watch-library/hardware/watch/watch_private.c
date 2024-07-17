@@ -30,6 +30,9 @@
 #include "system.h"
 
 void _watch_init(void) {
+    // set frequency to 4 MHz
+    set_cpu_frequency(4000000);
+
     // disable debugger hot-plugging
     HAL_GPIO_SWCLK_pmuxdis();
     HAL_GPIO_SWCLK_off();
@@ -201,6 +204,7 @@ void _watch_disable_tcc(void) {
 }
 
 void _watch_enable_usb(void) {
+    set_cpu_frequency(8000000);
     usb_init();
     usb_enable();
 }
