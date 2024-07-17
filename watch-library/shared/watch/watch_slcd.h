@@ -52,7 +52,11 @@ typedef enum WatchIndicatorSegment {
     WATCH_INDICATOR_BELL,       ///< The small bell indicating that an alarm is set.
     WATCH_INDICATOR_PM,         ///< The PM indicator, indicating that a time is in the afternoon.
     WATCH_INDICATOR_24H,        ///< The 24H indicator, indicating that the watch is in a 24-hour mode.
-    WATCH_INDICATOR_LAP         ///< The LAP indicator; the F-91W uses this in its stopwatch UI.
+    WATCH_INDICATOR_LAP,        ///< The LAP indicator; the F-91W uses this in its stopwatch UI.
+
+    // These next indicators are only available on the new custom LCD:
+    WATCH_INDICATOR_BATTERY,    ///< The battery indicator. Will fall back to the LAP icon on the original F-91W LCD.
+    WATCH_INDICATOR_SLEEP,      ///< The sleep indicator. No fallback here; use the tick animation to indicate sleep.
 } WatchIndicatorSegment;
 
 /** @brief Enables the Segment LCD display.

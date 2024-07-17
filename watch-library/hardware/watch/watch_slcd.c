@@ -62,10 +62,17 @@ void watch_enable_display(void) {
     HAL_GPIO_SLCD25_pmuxen(HAL_GPIO_PMUX_B);
     HAL_GPIO_SLCD26_pmuxen(HAL_GPIO_PMUX_B);
 
+#ifdef USE_CUSTOM_LCD
+    // Original famous Casio LCD: 1/3 bias, 1/4 duty with a frame rate of 32 Hz
+    slcd_init(LCD_PIN_ENABLE, SLCD_BIAS_THIRD, SLCD_DUTY_4_COMMON, SLCD_PRESCALER_DIV64, SLCD_CLOCKDIV_4);
+    // exact frame rate is: 32768 / (4 * 64 * 4) ≈ 32 Hz
+    _slcd_framerate = 32;
+#else
     // Original famous Casio LCD: 1/3 bias, 1/3 duty with a frame rate of ~34 Hz
     slcd_init(LCD_PIN_ENABLE, SLCD_BIAS_THIRD, SLCD_DUTY_3_COMMON, SLCD_PRESCALER_DIV64, SLCD_CLOCKDIV_5);
     // exact frame rate is: 32768 / (3 * 64 * 5) ≈ 34.13 Hz
     _slcd_framerate = 34;
+#endif
     // calculate the smallest duration we can time before we have to engage the frame counter prescaler bypass
     _slcd_fc_min_ms_bypass = 32 * (1000 / _slcd_framerate);
 

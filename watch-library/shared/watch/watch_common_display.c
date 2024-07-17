@@ -25,13 +25,30 @@
 #include "watch_slcd.h"
 #include "watch_common_display.h"
 
+#ifdef USE_CUSTOM_LCD
+static const uint32_t IndicatorSegments[] = {
+    SLCD_SEGID(0, 21), // WATCH_INDICATOR_SIGNAL
+    SLCD_SEGID(1, 21), // WATCH_INDICATOR_BELL
+    SLCD_SEGID(3, 21), // WATCH_INDICATOR_PM
+    SLCD_SEGID(2, 21), // WATCH_INDICATOR_24H
+    SLCD_SEGID(1,  0), // WATCH_INDICATOR_LAP
+    SLCD_SEGID(2,  0), // WATCH_INDICATOR_BATTERY
+    SLCD_SEGID(3,  0),  // WATCH_INDICATOR_SLEEP
+};
+#else
 static const uint32_t IndicatorSegments[] = {
     SLCD_SEGID(0, 17), // WATCH_INDICATOR_SIGNAL
     SLCD_SEGID(0, 16), // WATCH_INDICATOR_BELL
     SLCD_SEGID(2, 17), // WATCH_INDICATOR_PM
     SLCD_SEGID(2, 16), // WATCH_INDICATOR_24H
     SLCD_SEGID(1, 10), // WATCH_INDICATOR_LAP
+
+    // Aliases for indicators unavailable on the original F-91W LCD
+    SLCD_SEGID(1, 10), // WATCH_INDICATOR_BATTERY (same as LAP)
+    SLCD_SEGID(4, 0),  // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
 };
+
+#endif
 
 void watch_display_character(uint8_t character, uint8_t position) {
     // special cases for positions 4 and 6
@@ -155,11 +172,19 @@ void watch_display_main_line(char *string) {
 }
 
 void watch_set_colon(void) {
+#ifdef USE_CUSTOM_LCD
+    watch_set_pixel(0, 0);
+#else
     watch_set_pixel(1, 16);
+#endif
 }
 
 void watch_clear_colon(void) {
+#ifdef USE_CUSTOM_LCD
+    watch_clear_pixel(0, 0);
+#else
     watch_clear_pixel(1, 16);
+#endif
 }
 
 void watch_set_indicator(WatchIndicatorSegment indicator) {
@@ -177,9 +202,12 @@ void watch_clear_indicator(WatchIndicatorSegment indicator) {
 }
 
 void watch_clear_all_indicators(void) {
-    watch_clear_pixel(2, 17);
-    watch_clear_pixel(2, 16);
-    watch_clear_pixel(0, 17);
-    watch_clear_pixel(0, 16);
-    watch_clear_pixel(1, 10);
+    /// TODO: Optimize this? Can be 3-4 writes to SDATAL registers
+    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    watch_clear_indicator(WATCH_INDICATOR_BELL);
+    watch_clear_indicator(WATCH_INDICATOR_PM);
+    watch_clear_indicator(WATCH_INDICATOR_24H);
+    watch_clear_indicator(WATCH_INDICATOR_LAP);
+    watch_clear_indicator(WATCH_INDICATOR_BATTERY);
+    watch_clear_indicator(WATCH_INDICATOR_SLEEP);
 }
