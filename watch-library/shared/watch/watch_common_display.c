@@ -23,7 +23,7 @@
  */
 
 #include "watch_slcd.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
 
 static const uint32_t IndicatorSegments[] = {
     SLCD_SEGID(0, 17), // WATCH_INDICATOR_SIGNAL

@@ -24,7 +24,7 @@
 
 #include "pins.h"
 #include "watch_slcd.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
 #include "slcd.h"
 
  //////////////////////////////////////////////////////////////////////////////////////////
