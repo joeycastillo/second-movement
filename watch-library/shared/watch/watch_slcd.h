@@ -100,6 +100,23 @@ void watch_display_string(char *string, uint8_t position) __attribute__ ((deprec
  */
 void watch_display_top_left(char *string);
 
+/** 
+ * @brief Displays a string at in the digits at the top left, which typically show the day of the week.
+ * @details This function is designed to make use of the new custom LCD, which has three digits at the
+ *          top left. If you are using the original F-91W LCD, this function will fall back to displaying
+ *          the fallback string. So for example if you were displaying a world clock for Anchorage, you
+ *          could pass "ANC" as the string, and "AN" as the fallback.
+ * @param string A null-terminated string with 1-3 characters to display on the custom LCD.
+ * @param fallback A null-terminated string with 1-2 characters to display on the original F-91W LCD.
+ * @note Both the custom LCD and the original F-91W LCD have some limitations on what characters can be
+ *       displayed. For example, the custom LCD can display "NYC" but the original F-91W LCD can't
+ *       display "NY" due to the shared segments in position 1. On the other hand the original F-91W
+ *       can display "FR" for Friday thanks to its extra segment in position 1, but the custom LCD can
+ *       only display lowercase R, "Fri", due to the more simplistic 8-segment design of all the sigits.
+ *       Some fine-tuning may be necessary to get the best results on both displays.
+ */
+void watch_display_top_left_with_fallback(char *string, char *fallback);
+
 /**
  * @brief Displays a string in the digits at the top right, which typically show the day of the month.
  * @param string A null-terminated string with two characters to display.
@@ -107,11 +124,51 @@ void watch_display_top_left(char *string);
 void watch_display_top_right(char *string);
 
 /**
+ * @brief Displays a string in the digits at the top right, which typically show the day of the month.
+ * @param string A null-terminated string with two characters to display on the custom LCD.
+ * @param fallback A null-terminated string with two characters to display on the original F-91W LCD.
+ * @note On the original F-91W LCD, position 2 can only display the numbers 1, 2 and 3 (or a
+ *       lowercase 'a') due to its aggressive segment sharing in this position. You may need to come
+ *       up with more complex logic to create a useful fallback if displaying other characters here.
+ *       Position 3, the second digit, is a standard 7-segment digit.
+ */
+void watch_display_top_right_with_fallback(char *string, char *fallback);
+
+/**
  * @brief Displays a string in the main line of the display, which typically shows the time.
  * @param string A null-terminated string with six characters to display. Omit the colon; if you want
  *        the colon to appear, use watch_set_colon() to turn it on.
  */
 void watch_display_main_line(char *string);
+
+/**
+ * @brief Displays a string in the main line of the display, which typically shows the time.
+ * @param string A null-terminated string with 7 characters to display. The first character must be
+ *        either a 1 or a space; on the custom LCD, this will indicate whether to turn on the leading
+ *        '1' segment. Omit any colons or decimal points.
+ * @param fallback A null-terminated string with 6 characters to display if the custom LCD is not
+ *        available. Once again, omit the colon.
+ * @note This function is a bit more complicated, but the gist is, the custom LCD can display
+ *       "1888888", while the original F-91W LCD can only display "888888". In addition, on the original
+ *       Casio LCD, the first digit of the hours and seconds display have their top and bottom segments
+ *       linked, which causes some limitations. The intent is for you to use the function like this,
+ *       for example, displaying a longutide and latitude: 
+ *
+ *          watch_display_main_line_with_fallback("14990#W", "-14990") // longitude
+ *          watch_display_main_line_with_fallback(" 6122#N", "  6122") // latitude
+ *
+ *       In the first example, the leading 1 allows us to dusplay "146.90°W" on the custom LCD, with the
+ *       numeric portion in the clock digits, and the "°W" hint in the small seconds digits. Meanwhile on
+ *       the classic LCD, the fallback string "-14990" will display -149 in the large clock digits, and
+ *       90 in the small seconds digits, indicating that this is a decimal portion.
+ *       In the second example, the leading space allows us to display "61.22°N" on the custom LCD, with
+ *       the "°N" in the seconds place, while the fallback string "  6122" will display 61 on the large
+ *       clock digits, and 22 in the small seconds digits, indicating that this is a decimal portion.
+ *
+ *       Note also that the custom LCD has a vertical descender in the two seconds digits, which can be
+ *       used to displaty uppercase letters like D, I, T, M and W.
+ */
+void watch_display_main_line_with_fallback(char *string, char *fallback);
 
 /**
  * @brief Displays a string in the hours portion of the main line.
@@ -138,6 +195,16 @@ void watch_set_colon(void);
 /** @brief Turns the colon segment off.
   */
 void watch_clear_colon(void);
+
+/** @brief Turns the decimal segment on.
+  * @note Only exists on the custom LCD, in the same position as the colon.
+  */
+void watch_set_decimal_if_available(void);
+
+/** @brief Turns the decimal segment off.
+  * @note Only exists on the custom LCD, in the same position as the colon.
+  */
+void watch_clear_decimal_if_available(void);
 
 /** @brief Sets an indicator on the LCD. Use this to turn on one of the indicator segments.
   * @param indicator One of the indicator segments from the enum. @see WatchIndicatorSegment

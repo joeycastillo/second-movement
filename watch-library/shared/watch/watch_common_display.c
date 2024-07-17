@@ -24,6 +24,7 @@
 
 #include "watch_slcd.h"
 #include "watch_common_display.h"
+#include <string.h>
 
 #ifdef USE_CUSTOM_LCD
 static const uint32_t IndicatorSegments[] = {
@@ -156,6 +157,25 @@ void watch_display_top_left(char *string) {
     }
 }
 
+void watch_display_top_left_with_fallback(char *string, char *fallback) {
+#ifdef USE_CUSTOM_LCD
+    (void)fallback;
+    watch_display_character(string[0], 0);
+    if (string[1]) {
+        watch_display_character(string[1], 1);
+    } else {
+        return;
+    }
+    if (string[2]) {
+        // position 3 is at index 10 in the display mapping
+        watch_display_character(string[2], 10);
+    }
+#else
+    (void)string;
+    watch_display_top_left(fallback);
+#endif
+}
+
 void watch_display_top_right(char *string) {
     watch_display_character(string[0], 2);
     if (string[1]) {
@@ -163,12 +183,47 @@ void watch_display_top_right(char *string) {
     }
 }
 
+void watch_display_top_right_with_fallback(char *string, char *fallback) {
+#ifdef USE_CUSTOM_LCD
+    (void)fallback;
+    watch_display_top_right(string);
+#else
+    (void)string;
+    watch_display_top_right(fallback);
+#endif
+}
+
 void watch_display_main_line(char *string) {
+#ifdef USE_CUSTOM_LCD
+    watch_clear_pixel(0, 22);
+#endif
     int i = 0;
     while (string[i] != 0) {
         watch_display_character(string[i], 4 + i);
         i++;
     }
+}
+
+void watch_display_main_line_with_fallback(char *string, char *fallback) {
+#ifdef USE_CUSTOM_LCD
+    (void)fallback;
+    watch_clear_pixel(0, 22);
+    int i = 0;
+    int offset = 0;
+    size_t len = strlen(string);
+    if (len == 7 && string[0] == '1') {
+        watch_set_pixel(0, 22);
+        offset = 1;
+        i++;
+    }
+    while (string[i] != 0) {
+        watch_display_character(string[i], 4 + i - offset);
+        i++;
+    }
+#else
+    (void)string;
+    watch_display_main_line(fallback);
+#endif
 }
 
 void watch_display_hours(char *string) {
@@ -205,6 +260,18 @@ void watch_clear_colon(void) {
     watch_clear_pixel(0, 0);
 #else
     watch_clear_pixel(1, 16);
+#endif
+}
+
+void watch_set_decimal_if_available(void) {
+#ifdef USE_CUSTOM_LCD
+    watch_set_pixel(0, 14);
+#endif
+}
+
+void watch_clear_decimal_if_available(void) {
+#ifdef USE_CUSTOM_LCD
+    watch_clear_pixel(0, 14);
 #endif
 }
 
