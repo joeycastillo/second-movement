@@ -113,6 +113,24 @@ void watch_display_top_right(char *string);
  */
 void watch_display_main_line(char *string);
 
+/**
+ * @brief Displays a string in the hours portion of the main line.
+ * @param string A null-terminated string with two characters to display.
+ */
+void watch_display_hours(char *string);
+
+/**
+ * @brief Displays a string in the minutes portion of the main line.
+ * @param string A null-terminated string with two characters to display.
+ */
+void watch_display_minutes(char *string);
+
+/**
+ * @brief Displays a string in the seconds portion of the main line.
+ * @param string A null-terminated string with two characters to display.
+ */
+void watch_display_seconds(char *string);
+
 /** @brief Turns the colon segment on.
   */
 void watch_set_colon(void);

@@ -171,6 +171,27 @@ void watch_display_main_line(char *string) {
     }
 }
 
+void watch_display_hours(char *string) {
+    watch_display_character(string[0], 4);
+    if (string[1]) {
+        watch_display_character(string[1], 5);
+    }
+}
+
+void watch_display_minutes(char *string) {
+    watch_display_character(string[0], 6);
+    if (string[1]) {
+        watch_display_character(string[1], 7);
+    }
+}
+
+void watch_display_seconds(char *string) {
+    watch_display_character(string[0], 8);
+    if (string[1]) {
+        watch_display_character(string[1], 9);
+    }
+}
+
 void watch_set_colon(void) {
 #ifdef USE_CUSTOM_LCD
     watch_set_pixel(0, 0);
