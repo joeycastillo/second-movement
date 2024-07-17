@@ -18,7 +18,7 @@ include $(GOSSAMER_PATH)/make.mk
 
 # Add your source files here.
 SRCS += \
-  ./app.c \
+  ./movement.c \
   ./littlefs/lfs.c \
   ./littlefs/lfs_util.c \
   ./filesystem/filesystem.c \
