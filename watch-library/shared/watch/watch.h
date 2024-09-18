@@ -57,7 +57,11 @@
                                deepest sleep mode available on the SAM L22.
  */
 
-// #include "watch_rtc.h"
+/** @brief Typedef for a general-purpose callback function.
+ */
+typedef void (*watch_cb_t)(void);
+
+#include "watch_rtc.h"
 // #include "watch_slcd.h"
 // #include "watch_extint.h"
 #include "watch_tcc.h"

@@ -21,44 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_RTC_H_INCLUDED
-#define _WATCH_RTC_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_rtc.h
 
 #include "watch.h"
-#include "hpl_calendar.h"
+#include "rtc.h"
 
 /** @addtogroup rtc Real-Time Clock
   * @brief This section covers functions related to the SAM L22's real-time clock peripheral, including
   *        date, time and alarm functions.
   * @details The real-time clock is the only peripheral that main.c enables for you. It is the cornerstone
   *          of low power operation on the watch, and it is required for several key functions that we
-  *          assume will be available, namely the wake from BACKUP mode and the callback on the ALARM button.
-  *          It is also required for the operation of the 1 Hz tick interrupt, which you will most likely use
-  *          to wake from STANDBY mode.
+  *          assume will be available, namely waking on a press of the ALARM button. It is also required
+  *          for the operation of the 1 Hz tick interrupt, which we use to wake from STANDBY mode.
   */
 /// @{
 
+extern watch_cb_t btn_alarm_callback;
+extern watch_cb_t a2_callback;
+extern watch_cb_t a4_callback;
+
 #define WATCH_RTC_REFERENCE_YEAR (2020)
 
-typedef union {
-    struct {
-        uint32_t second : 6;    // 0-59
-        uint32_t minute : 6;    // 0-59
-        uint32_t hour : 5;      // 0-23
-        uint32_t day : 5;       // 1-31
-        uint32_t month : 4;     // 1-12
-        uint32_t year : 6;      // 0-63 (representing 2020-2083)
-    } unit;
-    uint32_t reg;               // the bit-packed value as expected by the RTC peripheral's CLOCK register.
-} watch_date_time;
-
-typedef enum watch_rtc_alarm_match {
-    ALARM_MATCH_DISABLED = 0,
-    ALARM_MATCH_SS,
-    ALARM_MATCH_MMSS,
-    ALARM_MATCH_HHMMSS,
-} watch_rtc_alarm_match;
+#define watch_date_time rtc_date_time
 
 /** @brief Called by main.c to check if the RTC is enabled.
   * You may call this function, but outside of app_init, it should always return true.
@@ -73,20 +60,20 @@ bool _watch_rtc_is_enabled(void);
   *       1 means 2021, 2 means 2022, etc. **You will be responsible for handling this offset in your code**,
   *       if the calendar year is needed for timestamp calculation logic or display purposes.
   */
-void watch_rtc_set_date_time(watch_date_time date_time);
+void watch_rtc_set_date_time(rtc_date_time date_time);
 
 /** @brief Returns the date and time.
-  * @return A watch_date_time with the current date and time, with a year value from 0-63 representing 2020-2083.
+  * @return A rtc_date_time with the current date and time, with a year value from 0-63 representing 2020-2083.
   * @see watch_rtc_set_date_time for notes about how the year is stored.
   */
-watch_date_time watch_rtc_get_date_time(void);
+rtc_date_time watch_rtc_get_date_time(void);
 
 /** @brief Registers an alarm callback that will be called when the RTC time matches the target time, as masked
   *        by the provided mask.
   * @param callback The function you wish to have called when the alarm fires. If this value is NULL, the alarm
   *                 interrupt will still be enabled, but no callback function will be called.
   * @param alarm_time The time that you wish to match. The date is currently ignored.
-  * @param mask One of the values in watch_rtc_alarm_match indicating which values to check.
+  * @param mask One of the values in rtc_alarm_match indicating which values to check.
   * @details The alarm interrupt is a versatile tool for scheduling events in the future, especially since it can
   *          wake the device from all sleep modes. The key to its versatility is the mask parameter.
   *          Suppose we set an alarm for midnight, 00:00:00.
@@ -96,7 +83,7 @@ watch_date_time watch_rtc_get_date_time(void);
   *          In theory the SAM L22's alarm function can match on days, months and even years, but I have not had
   *          success with this yet; as such, I am omitting these options for now.
   */
-void watch_rtc_register_alarm_callback(ext_irq_cb_t callback, watch_date_time alarm_time, watch_rtc_alarm_match mask);
+void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time alarm_time, rtc_alarm_match mask);
 
 /** @brief Disables the alarm callback.
   */
@@ -109,7 +96,7 @@ void watch_rtc_disable_alarm_callback(void);
   *       disabled with either watch_rtc_disable_tick_callback() or watch_rtc_disable_periodic_callback(1),
   *       and will also be disabled when watch_rtc_disable_all_periodic_callbacks is called.
   */
-void watch_rtc_register_tick_callback(ext_irq_cb_t callback);
+void watch_rtc_register_tick_callback(watch_cb_t callback);
 
 /** @brief Disables the tick callback for the given period.
   */
@@ -130,7 +117,7 @@ void watch_rtc_disable_tick_callback(void);
   *       the system will not have any way of telling you where you are within a given second; watch_rtc_get_date_time
   *       will return the exact same timestamp until the second ticks over.
   */
-void watch_rtc_register_periodic_callback(ext_irq_cb_t callback, uint8_t frequency);
+void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency);
 
 /** @brief Disables the tick callback for the given period.
   * @param frequency The frequency of the tick you wish to disable, in Hz. **Must be a power of 2**, from 1 to 128.
@@ -158,4 +145,3 @@ void watch_rtc_enable(bool en);
 void watch_rtc_freqcorr_write(int16_t value, int16_t sign);
 
 /// @}
-#endif

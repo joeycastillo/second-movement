@@ -22,56 +22,41 @@
  * SOFTWARE.
  */
 
-#include "watch_rtc.h"
+#include <stddef.h>
 
-ext_irq_cb_t tick_callbacks[8];
-ext_irq_cb_t alarm_callback;
-ext_irq_cb_t btn_alarm_callback;
-ext_irq_cb_t a2_callback;
-ext_irq_cb_t a4_callback;
+#include "watch_rtc.h"
+#include "watch_private.h"
+
+watch_cb_t tick_callbacks[8];
+watch_cb_t alarm_callback;
+watch_cb_t btn_alarm_callback;
+watch_cb_t a2_callback;
+watch_cb_t a4_callback;
+
+void watch_rtc_callback(uint16_t interrupt_status);
 
 bool _watch_rtc_is_enabled(void) {
-    return RTC->MODE2.CTRLA.bit.ENABLE;
-}
-
-static void _sync_rtc(void) {
-    while (RTC->MODE2.SYNCBUSY.reg);
+    return rtc_is_enabled();
 }
 
 void _watch_rtc_init(void) {
-    MCLK->APBAMASK.reg |= MCLK_APBAMASK_RTC;
-
-    if (_watch_rtc_is_enabled()) return; // don't reset the RTC if it's already set up.
-
-    RTC->MODE2.CTRLA.bit.ENABLE = 0;
-    _sync_rtc();
-
-    RTC->MODE2.CTRLA.bit.SWRST = 1;
-    _sync_rtc();
-
-    RTC->MODE2.CTRLA.bit.MODE = RTC_MODE2_CTRLA_MODE_CLOCK_Val;
-    RTC->MODE2.CTRLA.bit.PRESCALER = RTC_MODE2_CTRLA_PRESCALER_DIV1024_Val;
-    RTC->MODE2.CTRLA.bit.CLOCKSYNC = 1;
-    RTC->MODE2.CTRLA.bit.ENABLE = 1;
-    _sync_rtc();
+    rtc_init();
+#ifdef STATIC_FREQCORR
+    watch_rtc_freqcorr_write(STATIC_FREQCORR, 0);
+#endif
+    rtc_enable();
+    rtc_configure_callback(watch_rtc_callback);
 }
 
-void watch_rtc_set_date_time(watch_date_time date_time) {
-    _sync_rtc(); // Double sync as without it at high Hz faces setting time is unrealiable (specifically, set_time_hackwatch)
-    RTC->MODE2.CLOCK.reg = date_time.reg;
-    _sync_rtc();
+void watch_rtc_set_date_time(rtc_date_time date_time) {
+    rtc_set_date_time(date_time);
 }
 
-watch_date_time watch_rtc_get_date_time(void) {
-    watch_date_time retval;
-
-    _sync_rtc();
-    retval.reg = RTC->MODE2.CLOCK.reg;
-
-    return retval;
+rtc_date_time watch_rtc_get_date_time(void) {
+    return rtc_get_date_time();
 }
 
-void watch_rtc_register_tick_callback(ext_irq_cb_t callback) {
+void watch_rtc_register_tick_callback(watch_cb_t callback) {
     watch_rtc_register_periodic_callback(callback, 1);
 }
 
@@ -79,7 +64,7 @@ void watch_rtc_disable_tick_callback(void) {
     watch_rtc_disable_periodic_callback(1);
 }
 
-void watch_rtc_register_periodic_callback(ext_irq_cb_t callback, uint8_t frequency) {
+void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency) {
     // we told them, it has to be a power of 2.
     if (__builtin_popcount(frequency) != 1) return;
 
@@ -111,7 +96,7 @@ void watch_rtc_disable_all_periodic_callbacks(void) {
     watch_rtc_disable_matching_periodic_callbacks(0xFF);
 }
 
-void watch_rtc_register_alarm_callback(ext_irq_cb_t callback, watch_date_time alarm_time, watch_rtc_alarm_match mask) {
+void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time alarm_time, rtc_alarm_match mask) {
     RTC->MODE2.Mode2Alarm[0].ALARM.reg = alarm_time.reg;
     RTC->MODE2.Mode2Alarm[0].MASK.reg = mask;
     RTC->MODE2.INTENSET.reg = RTC_MODE2_INTENSET_ALARM0;
@@ -125,8 +110,7 @@ void watch_rtc_disable_alarm_callback(void) {
     RTC->MODE2.INTENCLR.reg = RTC_MODE2_INTENCLR_ALARM0;
 }
 
-void RTC_Handler(void) {
-    uint16_t interrupt_status = RTC->MODE2.INTFLAG.reg;
+void watch_rtc_callback(uint16_t interrupt_status) {
     uint16_t interrupt_enabled = RTC->MODE2.INTENSET.reg;
 
     if ((interrupt_status & interrupt_enabled) & RTC_MODE2_INTFLAG_PER_Msk) {
@@ -162,8 +146,7 @@ void RTC_Handler(void) {
     }
 }
 
-void watch_rtc_enable(bool en)
-{
+void watch_rtc_enable(bool en) {
     // Writing it twice - as it's quite dangerous operation.
     // If write fails - we might hang with RTC off, which means no recovery possible
     while (RTC->MODE2.SYNCBUSY.reg);
@@ -173,8 +156,7 @@ void watch_rtc_enable(bool en)
     while (RTC->MODE2.SYNCBUSY.reg);
 }
 
-void watch_rtc_freqcorr_write(int16_t value, int16_t sign)
-{
+void watch_rtc_freqcorr_write(int16_t value, int16_t sign) {
     RTC_FREQCORR_Type data;
 
     data.bit.VALUE = value;
