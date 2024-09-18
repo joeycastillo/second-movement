@@ -21,12 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_EXTINT_H_INCLUDED
-#define _WATCH_EXTINT_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_extint.h
 
 #include "watch.h"
-#include "hal_ext_irq.h"
+#include "eic.h"
 
 /** @addtogroup buttons Buttons & External Interrupts
   * @brief This section covers functions related to the three buttons: Light, Mode and Alarm, as well as
@@ -39,14 +40,6 @@
   *          mode, but it does not run in BACKUP mode; to wake from BACKUP, buttons will not cut it.
   */
 /// @{
-
-///@brief An enum defining the types of interrupt trigger you wish to scan for.
-typedef enum watch_interrupt_trigger {
-    INTERRUPT_TRIGGER_NONE = 0,
-    INTERRUPT_TRIGGER_RISING,
-    INTERRUPT_TRIGGER_FALLING,
-    INTERRUPT_TRIGGER_BOTH,
-} watch_interrupt_trigger;
 
 /// @brief Enables the external interrupt controller.
 void watch_enable_external_interrupts(void);
@@ -62,7 +55,7 @@ void watch_disable_external_interrupts(void);
   *          want to detect both rising and falling conditions (i.e. button down and button up), use
   *          INTERRUPT_TRIGGER_BOTH and use watch_get_pin_level to check the pin level in your callback
   *          to determine which condition caused the interrupt.
-  * @param pin One of BTN_LIGHT, BTN_MODE, BTN_ALARM, A0, A1, A3 or A4. If the pin parameter matches one of
+  * @param pin One of BTN_LIGHT, BTN_MODE, BTN_ALARM, A0, A1, A2, A3 or A4. If the pin parameter matches one of
   *            the three button pins, this function will also enable an internal pull-down resistor. If
   *            the pin parameter is A0-A4, you are responsible for setting any required pull configuration
   *            using watch_enable_pull_up or watch_enable_pull_down.
@@ -70,11 +63,8 @@ void watch_disable_external_interrupts(void);
   * @param trigger The condition on which you wish to trigger: rising, falling or both.
   * @note Pins A2 and A4 can also generate interrupts via the watch_register_extwake_callback function, which
   *       will allow them to trigger even when the watch is in deep sleep mode.
-  * @warning As of now, A2 is not usable via the watch_register_interrupt_callback function. To enable an
-  *          external interrupt on pin A2, use the watch_register_extwake_callback function. This issue will be
-  *          addressed in a future revision of the watch library.
+  * @warning Pin A2 shares an interrupt channel with the Alarm button; use caution when configuring both.
   */
-void watch_register_interrupt_callback(const uint8_t pin, ext_irq_cb_t callback, watch_interrupt_trigger trigger);
+void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger trigger);
 
 /// @}
-#endif

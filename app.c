@@ -4,22 +4,25 @@
 #include "delay.h"
 
 void app_init(void) {
-    _watch_rtc_init();
 }
 
 void app_setup(void) {
     watch_enable_leds();
-    watch_rtc_register_periodic_callback(NULL, 1);
+    watch_enable_external_interrupts();
+    watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), NULL, INTERRUPT_TRIGGER_FALLING);
+    watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), NULL, INTERRUPT_TRIGGER_FALLING);
+    watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), NULL, INTERRUPT_TRIGGER_FALLING);
 }
 
 bool app_loop(void) {
-    watch_date_time date_time = watch_rtc_get_date_time();
+    static bool on = false;
 
-    if (date_time.unit.second % 2 == 0) {
-        watch_set_led_red();
+    if (on) {
+        watch_set_led_off();
     } else {
-        watch_set_led_green();
+        watch_set_led_yellow();
     }
+    on = !on;
 
     return true;
 }
