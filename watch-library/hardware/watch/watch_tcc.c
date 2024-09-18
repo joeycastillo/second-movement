@@ -27,7 +27,6 @@
 #include "tcc.h"
 
 void _watch_enable_tcc(void);
-void _watch_disable_tcc(void);
 
 bool watch_is_buzzer_or_led_enabled(void){
     return tcc_is_enabled(0);

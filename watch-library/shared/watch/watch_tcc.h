@@ -258,4 +258,10 @@ void watch_set_led_yellow(void);
 /** @brief Turns both the red and the green LEDs off. */
 void watch_set_led_off(void);
 
+/** @brief Disables the TCC peripheral. Should only be called internally. */
+void _watch_disable_tcc(void);
+
+/// @brief An array of periods for all the notes on a piano, corresponding to the names in BuzzerNote.
+extern const uint16_t NotePeriods[108];
+
 /// @}

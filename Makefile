@@ -33,6 +33,8 @@ INCLUDES += \
 
 # Add your source files here.
 SRCS += \
+  ./watch-library/shared/watch/watch_common_buzzer.c \
+  ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_extint.c \
@@ -40,7 +42,6 @@ SRCS += \
   ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \
-  ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \
