@@ -26,7 +26,7 @@
 #include "simple_clock_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
 
 static void _update_alarm_indicator(bool settings_alarm_enabled, simple_clock_state_t *state) {
     state->alarm_enabled = settings_alarm_enabled;

@@ -27,14 +27,18 @@ endif
 
 # Add your include directories here.
 INCLUDES += \
+  -I./ \
   -I./tinyusb/src \
   -I./watch-library/shared/watch \
   -I./watch-library/hardware/watch \
+  -I./watch-faces/clock \
+  -I./watch-faces/settings \
 
 # Add your source files here.
 SRCS += \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
+  ./watch-library/shared/watch/watch_utility.c \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_deepsleep.c \
@@ -47,7 +51,11 @@ SRCS += \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \
-  ./app.c \
+
+include watch-faces.mk
+
+SRCS += \
+  ./movement.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk

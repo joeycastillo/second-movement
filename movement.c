@@ -30,32 +30,25 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "app.h"
 #include "watch.h"
-#include "filesystem.h"
+#include "usb.h"
 #include "movement.h"
-#include "shell.h"
 
-#ifndef MOVEMENT_FIRMWARE
-#include "movement_config.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_STANDARD
-#include "movement_config.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_BACKER
-#include "alt_fw/backer.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_ALT_TIME
-#include "alt_fw/alt_time.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_FOCUS
-#include "alt_fw/focus.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_THE_BACKPACKER
-#include "alt_fw/the_backpacker.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_THE_ATHLETE
-#include "alt_fw/the_athlete.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_THE_STARGAZER
-#include "alt_fw/the_stargazer.h"
-#elif MOVEMENT_FIRMWARE == MOVEMENT_FIRMWARE_DEEP_SPACE_NOW
-#include "alt_fw/deep_space_now.h"
-#endif
+/// FIXMME: #SecondMovement needs to bring back the following includes (and remove the default signal_tune)
+// #include "filesystem.h"
+// #include "shell.h"
+// #include "movement_custom_signal_tunes.h"
+int8_t signal_tune[] = {
+    BUZZER_NOTE_C8, 5,
+    BUZZER_NOTE_REST, 6,
+    BUZZER_NOTE_C8, 5,
+    0
+};
 
-#include "movement_custom_signal_tunes.h"
+
+#include "movement_config.h"
+
 
 // Default to no secondary face behaviour.
 #ifndef MOVEMENT_SECONDARY_FACE_INDEX
@@ -412,7 +405,8 @@ void app_init(void) {
     movement_state.next_available_backup_register = 4;
     _movement_reset_inactivity_countdown();
 
-    filesystem_init();
+/// FIXME: #SecondMovement needs filesystem support
+    // filesystem_init();
 
 #if __EMSCRIPTEN__
     int32_t time_zone_offset = EM_ASM_INT({
@@ -454,12 +448,12 @@ void app_setup(void) {
         watch_rtc_register_alarm_callback(cb_alarm_fired, alarm_time, ALARM_MATCH_SS);
     }
     if (movement_state.le_mode_ticks != -1) {
-        watch_disable_extwake_interrupt(BTN_ALARM);
+        watch_disable_extwake_interrupt(HAL_GPIO_BTN_ALARM_pin());
 
         watch_enable_external_interrupts();
-        watch_register_interrupt_callback(BTN_MODE, cb_mode_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(BTN_LIGHT, cb_light_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
-        watch_register_interrupt_callback(BTN_ALARM, cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), cb_mode_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), cb_light_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
         watch_enable_buzzer();
         watch_enable_leds();
@@ -475,12 +469,6 @@ void app_setup(void) {
         event.subsecond = 0;
         event.event_type = EVENT_ACTIVATE;
     }
-}
-
-void app_prepare_for_standby(void) {
-}
-
-void app_wake_from_standby(void) {
 }
 
 static void _sleep_mode_app_loop(void) {
@@ -523,7 +511,7 @@ bool app_loop(void) {
     // if the LED should be off, turn it off
     if (movement_state.light_ticks == 0) {
         // unless the user is holding down the LIGHT button, in which case, give them more time.
-        if (watch_get_pin_level(BTN_LIGHT)) {
+        if (HAL_GPIO_BTN_LIGHT_read()) {
             movement_state.light_ticks = 1;
         } else {
             _movement_led_off();
@@ -539,7 +527,7 @@ bool app_loop(void) {
     // if we have timed out of our low energy mode countdown, enter low energy mode.
     if (movement_state.le_mode_ticks == 0) {
         movement_state.le_mode_ticks = -1;
-        watch_register_extwake_callback(BTN_ALARM, cb_alarm_btn_extwake, true);
+        watch_register_extwake_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_extwake, true);
         event.event_type = EVENT_NONE;
         event.subsecond = 0;
 
@@ -623,8 +611,9 @@ bool app_loop(void) {
     }
 
     // if we are plugged into USB, handle the serial shell
-    if (watch_is_usb_enabled()) {
-        shell_task();
+    if (usb_is_enabled()) {
+        /// FIXME: #SecondMovement needs to bring back the shell
+        // shell_task();
     }
 
     event.subsecond = 0;
@@ -667,19 +656,19 @@ static movement_event_type_t _figure_out_button_event(bool pin_level, movement_e
 }
 
 void cb_light_btn_interrupt(void) {
-    bool pin_level = watch_get_pin_level(BTN_LIGHT);
+    bool pin_level = HAL_GPIO_BTN_LIGHT_read();
     _movement_reset_inactivity_countdown();
     event.event_type = _figure_out_button_event(pin_level, EVENT_LIGHT_BUTTON_DOWN, &movement_state.light_down_timestamp);
 }
 
 void cb_mode_btn_interrupt(void) {
-    bool pin_level = watch_get_pin_level(BTN_MODE);
+    bool pin_level = HAL_GPIO_BTN_MODE_read();
     _movement_reset_inactivity_countdown();
     event.event_type = _figure_out_button_event(pin_level, EVENT_MODE_BUTTON_DOWN, &movement_state.mode_down_timestamp);
 }
 
 void cb_alarm_btn_interrupt(void) {
-    bool pin_level = watch_get_pin_level(BTN_ALARM);
+    bool pin_level = HAL_GPIO_BTN_ALARM_read();
     _movement_reset_inactivity_countdown();
     event.event_type = _figure_out_button_event(pin_level, EVENT_ALARM_BUTTON_DOWN, &movement_state.alarm_down_timestamp);
 }

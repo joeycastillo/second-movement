@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef MOVEMENT_H_
-#define MOVEMENT_H_
+#pragma once
+
 #include <stdio.h>
 #include <stdbool.h>
 #include "watch.h"
@@ -312,5 +312,3 @@ void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, BuzzerNote alarm_note);
 
 uint8_t movement_claim_backup_register(void);
-
-#endif // MOVEMENT_H_
