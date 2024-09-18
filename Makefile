@@ -29,9 +29,8 @@ INCLUDES += \
 
 # Add your source files here.
 SRCS += \
-  ./watch-library/hardware/watch/watch_buzzer.c \
   ./watch-library/hardware/watch/watch_gpio.c \
-  ./watch-library/hardware/watch/watch_led.c \
+  ./watch-library/hardware/watch/watch_tcc.c \
   ./app.c \
 
 # Finally, leave this line at the bottom of the file.

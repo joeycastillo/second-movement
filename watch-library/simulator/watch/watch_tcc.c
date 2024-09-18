@@ -181,3 +181,42 @@ void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
     main_loop_sleep(duration_ms);
     watch_set_buzzer_off();
 }
+
+void watch_enable_leds(void) {}
+
+void watch_disable_leds(void) {}
+
+void watch_set_led_color(uint8_t red, uint8_t green) {
+    EM_ASM({
+        // the watch svg contains an feColorMatrix filter with id ledcolor
+        // and a green svg gradient that mimics the led being on
+        // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feColorMatrix
+        // this changes the color of the gradient to match the red+green combination
+        let filter = document.getElementById("ledcolor");
+        let color_matrix = filter.children[0].values.baseVal;
+        color_matrix[1].value = $0  / 255; // red value
+        color_matrix[6].value = $1 / 255; // green value
+        document.getElementById('light').style.opacity = Math.min(255, $0 + $1) / 255;
+    }, red, green);
+}
+
+void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
+    (void) blue;
+    watch_set_led_color(red, green);
+}
+
+void watch_set_led_red(void) {
+    watch_set_led_color(255, 0);
+}
+
+void watch_set_led_green(void) {
+    watch_set_led_color(0, 255);
+}
+
+void watch_set_led_yellow(void) {
+    watch_set_led_color(255, 255);
+}
+
+void watch_set_led_off(void) {
+    watch_set_led_color(0, 0);
+}

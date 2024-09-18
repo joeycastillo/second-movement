@@ -44,8 +44,8 @@
             - @ref slcd - This section covers functions related to the Segment LCD display driver, which is responsible
                           for displaying strings of characters and indicators on the main watch display.
             - @ref buttons - This section covers functions related to the three buttons: Light, Mode and Alarm.
-            - @ref led - This section covers functions related to the bi-color red/green LED mounted behind the LCD.
-            - @ref buzzer - This section covers functions related to the piezo buzzer.
+            - @ref tcc - This section covers functions related to the LED and piezo buzzer, which are controlled by the
+                         SAM L22's Timer Counter for Control, or TCC peripheral.
             - @ref adc - This section covers functions related to the SAM L22's analog-to-digital converter, as well as
                          configuring and reading values from the five analog-capable pins on the 9-pin connector.
             - @ref gpio - This section covers functions related to general-purpose input and output signals.
@@ -60,8 +60,7 @@
 // #include "watch_rtc.h"
 // #include "watch_slcd.h"
 // #include "watch_extint.h"
-#include "watch_led.h"
-#include "watch_buzzer.h"
+#include "watch_tcc.h"
 // #include "watch_adc.h"
 #include "watch_gpio.h"
 // #include "watch_i2c.h"

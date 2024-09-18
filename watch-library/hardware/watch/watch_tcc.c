@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#include "watch_buzzer.h"
-#include "watch_private.h"
+#include "watch_tcc.h"
 #include "delay.h"
 #include "tcc.h"
 
 void _watch_enable_tcc(void);
+void _watch_disable_tcc(void);
 
 bool watch_is_buzzer_or_led_enabled(void){
     return tcc_is_enabled(0);
@@ -138,4 +138,55 @@ void _watch_disable_tcc(void) {
     HAL_GPIO_BLUE_off();
 #endif
     tcc_disable(0);
+}
+
+void watch_enable_leds(void) {
+    if (!tcc_is_enabled(0)) {
+        _watch_enable_tcc();
+    }
+}
+
+void watch_disable_leds(void) {
+    _watch_disable_tcc();
+}
+
+void watch_set_led_color(uint8_t red, uint8_t green) {
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    watch_set_led_color_rgb(red, green, 0);
+#else
+    watch_set_led_color_rgb(red, green, green);
+#endif
+}
+
+void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
+    if (tcc_is_enabled(0)) {
+        uint32_t period = tcc_get_period(0);
+        tcc_set_cc(0, (WATCH_RED_TCC_CHANNEL) % 4, ((period * (uint32_t)red * 1000ull) / 255000ull), true);
+#ifdef WATCH_GREEN_TCC_CHANNEL
+        tcc_set_cc(0, (WATCH_GREEN_TCC_CHANNEL) % 4, ((period * (uint32_t)green * 1000ull) / 255000ull), true);
+#else
+        (void) green; // silence warning
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+        tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, ((period * (uint32_t)blue * 1000ull) / 255000ull), true);
+#else
+        (void) blue; // silence warning
+#endif
+    }
+}
+
+void watch_set_led_red(void) {
+    watch_set_led_color_rgb(255, 0, 0);
+}
+
+void watch_set_led_green(void) {
+    watch_set_led_color_rgb(0, 255, 0);
+}
+
+void watch_set_led_yellow(void) {
+    watch_set_led_color_rgb(255, 255, 0);
+}
+
+void watch_set_led_off(void) {
+    watch_set_led_color_rgb(0, 0, 0);
 }
