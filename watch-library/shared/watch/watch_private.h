@@ -29,9 +29,6 @@
 /// Called by main.c while setting up the app. You should not call this from your app.
 void _watch_init(void);
 
-/// Initializes the real-time clock peripheral.
-void _watch_rtc_init(void);
-
 /// Called by buzzer and LED teardown functions. You should not call this from your app.
 void _watch_disable_tcc(void);
 
@@ -49,5 +46,8 @@ void _watch_disable_tc1(void);
 
 /// Called by main.c if plugged in to USB. You should not call this from your app.
 void _watch_enable_usb(void);
+
+/// Initializes the real-time clock peripheral. Implemented in watch_rtc.c
+void _watch_rtc_init(void);
 
 #endif

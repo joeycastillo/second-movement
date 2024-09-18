@@ -25,7 +25,7 @@
 #include "watch.h"
 
 // receives interrupts from MCLK, OSC32KCTRL, OSCCTRL, PAC, PM, SUPC and TAL, whatever that is.
-void SYSTEM_Handler(void) {
+void irq_handler_system(void) {
     if (SUPC->INTFLAG.bit.BOD33DET) {
         // Our system voltage has dipped below 2.6V!
         // Set the voltage regulator to work at low system voltage before we hit 2.5 V
@@ -36,14 +36,4 @@ void SYSTEM_Handler(void) {
         // and disable the brownout detector (TODO: add a second, "power critical" brownout condition?)
         SUPC->INTFLAG.reg &= ~SUPC_INTFLAG_BOD33DET;
     }
-}
-
-bool watch_is_usb_enabled(void) {
-    return USB->DEVICE.CTRLA.bit.ENABLE;
-}
-
-void watch_reset_to_bootloader(void) {
-    volatile uint32_t *dbl_tap_ptr = ((volatile uint32_t *)(HSRAM_ADDR + HSRAM_SIZE - 4));
-    *dbl_tap_ptr = 0xf01669ef; // from the UF2 bootloaer: uf2.h line 255
-    NVIC_SystemReset();
 }

@@ -414,3 +414,9 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
     return _desc_str;
 }
+
+void watch_reset_to_bootloader(void) {
+    volatile uint32_t *dbl_tap_ptr = ((volatile uint32_t *)(HSRAM_ADDR + HSRAM_SIZE - 4));
+    *dbl_tap_ptr = 0xf01669ef; // from the UF2 bootloaer: uf2.h line 255
+    NVIC_SystemReset();
+}

@@ -23,8 +23,8 @@
  */
 /// @file watch.h
 
-#ifndef WATCH_H_
-#define WATCH_H_
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "pins.h"
@@ -73,11 +73,13 @@ typedef void (*watch_cb_t)(void);
 // #include "watch_storage.h"
 // #include "watch_deepsleep.h"
 
-// #include "watch_private.h"
-
-/** @brief Returns true if USB is enabled.
-  */
-bool watch_is_usb_enabled(void);
+/** @brief Interrupt handler for the SYSTEM interrupt, which handles MCLK,
+ *         OSC32KCTRL, OSCCTRL, PAC, PM and SUPC.
+ *  @details We use this to detect when the system voltage has dipped below
+ *           2.6V, which means it's time to disable the voltage regulator's
+ *           high-efficiency mode, which only works down to 2.5V.
+ */
+void irq_handler_system(void);
 
 /** @brief Resets in the UF2 bootloader mode
   */
@@ -96,7 +98,6 @@ void cdc_task(void);
 int read(int file, char *ptr, int len);
 
 /** @brief Disables the TRNG twice in order to work around silicon erratum 1.16.1.
+ *  FIXME: find a better place for this, a couple of watch faces need it.
  */
-void watch_disable_TRNG();
-
-#endif /* WATCH_H_ */
+void watch_disable_TRNG(void);
