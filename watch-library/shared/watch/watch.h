@@ -62,7 +62,7 @@
 typedef void (*watch_cb_t)(void);
 
 #include "watch_rtc.h"
-// #include "watch_slcd.h"
+#include "watch_slcd.h"
 #include "watch_extint.h"
 #include "watch_tcc.h"
 // #include "watch_adc.h"

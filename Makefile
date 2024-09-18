@@ -32,6 +32,8 @@ SRCS += \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_gpio.c \
   ./watch-library/hardware/watch/watch_rtc.c \
+  ./watch-library/hardware/watch/watch_slcd.c \
+  ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./app.c \
 
