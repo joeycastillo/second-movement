@@ -9,30 +9,24 @@ on:
 env:
   COLOR: BLUE
 
-jobs:
+jobs: 
   build:
     container:
       image: ghcr.io/armmbed/mbed-os-env:latest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Work around CVE-2022-24765
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Compile starter-project app
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Compile movement firmware
         run: make
-        working-directory: 'apps/starter-project'
-      - name: Compile accelerometer-test app
-        run: make
-        working-directory: 'apps/accelerometer-test'
-      - name: Compile movement
-        run: make
-        working-directory: 'movement/make'
-      - name: Upload UF2
+        working-directory: '.'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: watch.uf2
-          path: movement/make/build/watch.uf2
+          name: movement.uf2
+          path: build/firmware.uf2
 
   build-simulator:
     container:
@@ -40,19 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Work around CVE-2022-24765
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        uses: actions/checkout@v4
       - name: Compile movement
         run: emmake make
-        working-directory: 'movement/make'
+        working-directory: '.'
       - name: Archive simulator build
         working-directory: 'movement/make/build-sim'
         run: |
           cp watch.html index.html
-          tar -czf simulator.tar.gz index.html watch.wasm watch.js
+          tar -czf movement.tar.gz index.html watch.wasm watch.js
       - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
-          name: simulator.tar.gz
-          path: movement/make/build-sim/simulator.tar.gz
+          name: movement.tar.gz
+          path: build-sim/movement.tar.gz
