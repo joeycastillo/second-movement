@@ -6,11 +6,13 @@ void app_init(void) {
 }
 
 void app_setup(void) {
-    HAL_GPIO_GREEN_out();
+    watch_enable_digital_output(HAL_GPIO_GREEN_pin());
 }
 
 bool app_loop(void) {
-    HAL_GPIO_GREEN_toggle();
+    watch_set_pin_level(HAL_GPIO_GREEN_pin(), true);
+    delay_ms(500);
+    watch_set_pin_level(HAL_GPIO_GREEN_pin(), false);
     delay_ms(500);
 
     return false;

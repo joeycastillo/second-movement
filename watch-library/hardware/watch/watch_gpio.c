@@ -24,38 +24,45 @@
 
 #include "watch_gpio.h"
 
- void watch_enable_digital_input(const uint8_t pin) {
-    gpio_set_pin_direction(pin, GPIO_DIRECTION_IN);
-    gpio_set_pin_function(pin, GPIO_PIN_FUNCTION_OFF);
+inline void watch_enable_digital_input(const uint8_t pin) {
+    PORT->Group[pin >> 5].DIRCLR.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg |= PORT_PINCFG_INEN;
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg &= ~PORT_PINCFG_PULLEN;
 }
 
 void watch_disable_digital_input(const uint8_t pin) {
-    gpio_set_pin_direction(pin, GPIO_DIRECTION_OFF);
-    gpio_set_pin_pull_mode(pin, GPIO_PULL_OFF);
-    gpio_set_pin_function(pin, GPIO_PIN_FUNCTION_OFF);
+    PORT->Group[pin >> 5].DIRCLR.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg &= ~(PORT_PINCFG_PULLEN | PORT_PINCFG_INEN);
 }
 
 void watch_enable_pull_up(const uint8_t pin) {
-    gpio_set_pin_pull_mode(pin, GPIO_PULL_UP);
+    PORT->Group[pin >> 5].OUTSET.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg |= PORT_PINCFG_PULLEN;
 }
 
 void watch_enable_pull_down(const uint8_t pin) {
-    gpio_set_pin_pull_mode(pin, GPIO_PULL_DOWN);
+    PORT->Group[pin >> 5].OUTCLR.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg |= PORT_PINCFG_PULLEN;
 }
 
 bool watch_get_pin_level(const uint8_t pin) {
-    return gpio_get_pin_level(pin);
+    return (PORT->Group[pin >> 5].IN.reg & (1 << (pin & 0x1F))) != 0;
 }
 
 void watch_enable_digital_output(const uint8_t pin) {
-    gpio_set_pin_direction(pin, GPIO_DIRECTION_OUT);
-    gpio_set_pin_function(pin, GPIO_PIN_FUNCTION_OFF);
+    PORT->Group[pin >> 5].DIRSET.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg |= PORT_PINCFG_INEN;
 }
 
 void watch_disable_digital_output(const uint8_t pin) {
-    gpio_set_pin_direction(pin, GPIO_DIRECTION_OFF);
+    PORT->Group[pin >> 5].DIRCLR.reg = (1 << (pin & 0x1F));
+    PORT->Group[pin >> 5].PINCFG[pin & 0x1F].reg &= ~(PORT_PINCFG_PULLEN | PORT_PINCFG_INEN);
 }
 
 void watch_set_pin_level(const uint8_t pin, const bool level) {
-    gpio_set_pin_level(pin, level);
+    if (level) {
+        PORT->Group[pin >> 5].OUTSET.reg = (1 << (pin & 0x1F));
+    } else {
+        PORT->Group[pin >> 5].OUTCLR.reg = (1 << (pin & 0x1F));
+    }
 }

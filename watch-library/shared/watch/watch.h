@@ -63,7 +63,7 @@
 // #include "watch_led.h"
 // #include "watch_buzzer.h"
 // #include "watch_adc.h"
-// #include "watch_gpio.h"
+#include "watch_gpio.h"
 // #include "watch_i2c.h"
 // #include "watch_spi.h"
 // #include "watch_uart.h"
