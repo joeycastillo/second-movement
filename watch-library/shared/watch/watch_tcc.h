@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_BUZZER_H_INCLUDED
-#define _WATCH_BUZZER_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_buzzer.h
 
 #include "watch.h"
@@ -258,4 +259,3 @@ void watch_set_led_yellow(void);
 void watch_set_led_off(void);
 
 /// @}
-#endif

@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_GPIO_H_INCLUDED
-#define _WATCH_GPIO_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_gpio.h
 
 #include "watch.h"
@@ -73,4 +74,3 @@ void watch_disable_digital_output(const uint8_t pin);
   */
 void watch_set_pin_level(const uint8_t pin, const bool level);
 /// @}
-#endif
