@@ -43,6 +43,7 @@ SRCS += \
   ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \
+  ./watch-library/hardware/watch/watch_storage.c \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \

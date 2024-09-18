@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_STORAGE_H_INCLUDED
-#define _WATCH_STORAGE_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_storage.h
 
 #include "watch.h"
@@ -89,4 +90,3 @@ bool watch_storage_erase(uint32_t row);
   */
 bool watch_storage_sync(void);
 /// @}
-#endif

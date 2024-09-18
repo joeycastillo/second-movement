@@ -56,7 +56,7 @@ bool watch_storage_write(uint32_t row, uint32_t offset, const uint8_t *buffer, u
     uint32_t nvm_address = address / 2;
     uint16_t i, data;
 
-    hri_nvmctrl_write_CTRLA_reg(NVMCTRL, NVMCTRL_CTRLA_CMD_PBC | NVMCTRL_CTRLA_CMDEX_KEY);
+    NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMD_PBC | NVMCTRL_CTRLA_CMDEX_KEY;
     watch_storage_sync();
 
     for (i = 0; i < size; i += 2) {
@@ -66,8 +66,8 @@ bool watch_storage_write(uint32_t row, uint32_t offset, const uint8_t *buffer, u
         }
         NVM_MEMORY[nvm_address++] = data;
     }
-    hri_nvmctrl_write_ADDR_reg(NVMCTRL, address / 2);
-    hri_nvmctrl_write_CTRLA_reg(NVMCTRL, NVMCTRL_CTRLA_CMD_RWWEEWP | NVMCTRL_CTRLA_CMDEX_KEY);
+    NVMCTRL->ADDR.reg = address / 2;
+    NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMD_RWWEEWP | NVMCTRL_CTRLA_CMDEX_KEY;
 
     return true;
 }
@@ -77,18 +77,18 @@ bool watch_storage_erase(uint32_t row) {
     if (!_is_valid_address(address, NVMCTRL_ROW_SIZE)) return false;
 
     watch_storage_sync();
-    hri_nvmctrl_write_ADDR_reg(NVMCTRL, address / 2);
-    hri_nvmctrl_write_CTRLA_reg(NVMCTRL, NVMCTRL_CTRLA_CMD_RWWEEER | NVMCTRL_CTRLA_CMDEX_KEY);
+    NVMCTRL->ADDR.reg = address / 2;
+    NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMD_RWWEEER | NVMCTRL_CTRLA_CMDEX_KEY;
 
     return true;
 }
 
 bool watch_storage_sync(void) {
-    while (!hri_nvmctrl_get_interrupt_READY_bit(NVMCTRL)) {
+    while (!NVMCTRL->INTFLAG.bit.READY) {
         // wait for flash to become ready
     }
 
-    hri_nvmctrl_clear_STATUS_reg(NVMCTRL, NVMCTRL_STATUS_MASK);
+    NVMCTRL->STATUS.reg = NVMCTRL_STATUS_MASK;
 
     return true;
 }
