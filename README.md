@@ -1,2 +1,2 @@
 # second-movement
-Work-in-progress update to Movement, the community firmware for Sensor Watch
+This branch, `first-draft`, contains an early dry run of the Movement refactor. It is obsolete and will be deleted in the future.
