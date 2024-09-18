@@ -40,8 +40,6 @@
 /** @mainpage Sensor Watch Documentation
  *  @brief This documentation covers most of the functions you will use to interact with the Sensor Watch
            hardware. It is divided into the following sections:
-            - @ref app - This section covers the functions that you will implement in your app.c file when designing a
-                         Sensor Watch app.
             - @ref rtc - This section covers functions related to the SAM L22's real-time clock peripheral, including
                          date, time and alarm functions.
             - @ref slcd - This section covers functions related to the Segment LCD display driver, which is responsible
@@ -60,7 +58,6 @@
                                deepest sleep mode available on the SAM L22.
  */
 
-#include "watch_app.h"
 #include "watch_rtc.h"
 #include "watch_slcd.h"
 #include "watch_extint.h"
