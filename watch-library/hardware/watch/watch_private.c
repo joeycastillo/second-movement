@@ -91,7 +91,15 @@ void _watch_init(void) {
 }
 
 static inline void _watch_wait_for_entropy() {
-    while (!hri_trng_get_INTFLAG_reg(TRNG, TRNG_INTFLAG_DATARDY));
+    while (!TRNG->INTFLAG.bit.DATARDY);
+}
+
+void watch_disable_TRNG(void) {
+    // per Microchip datasheet clarification DS80000782,
+    // silicon erratum 1.16.1 indicates that the TRNG may leave internal components powered after being disabled.
+    // the workaround is to disable the TRNG by clearing the control register, twice.
+    TRNG->CTRLA.bit.ENABLE = 0;
+    TRNG->CTRLA.bit.ENABLE = 0;
 }
 
 // this function is called by arc4random to get entropy for random number generation.
@@ -99,38 +107,29 @@ int getentropy(void *buf, size_t buflen);
 
 // let's use the SAM L22's true random number generator to seed the PRNG!
 int getentropy(void *buf, size_t buflen) {
-    hri_mclk_set_APBCMASK_TRNG_bit(MCLK);
-    hri_trng_set_CTRLA_ENABLE_bit(TRNG);
+    MCLK->APBCMASK.bit.TRNG_ = 1;
+    TRNG->CTRLA.bit.ENABLE = 1;
 
     size_t i = 0;
     while(i < buflen / 4) {
         _watch_wait_for_entropy();
-        ((uint32_t *)buf)[i++] = hri_trng_read_DATA_reg(TRNG);
+        ((uint32_t *)buf)[i++] = TRNG->DATA.reg;
     }
 
     // but what if they asked for an awkward number of bytes?
     if (buflen % 4) {
         // all good: let's fill in one, two or three bytes at the end of the buffer.
         _watch_wait_for_entropy();
-        uint32_t last_little_bit = hri_trng_read_DATA_reg(TRNG);
+        uint32_t last_little_bit = TRNG->DATA.reg;
         for(size_t j = 0; j <= (buflen % 4); j++) {
             ((uint8_t *)buf)[i * 4 + j] = (last_little_bit >> (j * 8)) & 0xFF;
         }
     }
 
     watch_disable_TRNG();
-    hri_mclk_clear_APBCMASK_TRNG_bit(MCLK);
+    MCLK->APBCMASK.bit.TRNG_ = 0;
 
     return 0;
-}
-
-void watch_disable_TRNG(void);
-void watch_disable_TRNG(void) {
-    // per Microchip datasheet clarification DS80000782,
-    // silicon erratum 1.16.1 indicates that the TRNG may leave internal components powered after being disabled.
-    // the workaround is to disable the TRNG by clearing the control register, twice.
-    hri_trng_write_CTRLA_reg(TRNG, 0);
-    hri_trng_write_CTRLA_reg(TRNG, 0);
 }
 
 void _watch_enable_tc0(void) {
