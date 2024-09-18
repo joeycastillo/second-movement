@@ -25,7 +25,7 @@ endif
 
 # Add your source files here.
 SRCS += \
-  ./movement.c \
+  ./app.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk
