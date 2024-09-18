@@ -21,16 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _WATCH_DEEPSLEEP_H_INCLUDED
-#define _WATCH_DEEPSLEEP_H_INCLUDED
+
+#pragma once
+
 ////< @file watch_deepsleep.h
 
 #include "watch.h"
-
-// These are declared in watch_rtc.c.
-extern ext_irq_cb_t btn_alarm_callback;
-extern ext_irq_cb_t a2_callback;
-extern ext_irq_cb_t a4_callback;
 
 /** @addtogroup deepsleep Sleep Control
   * @brief This section covers functions related to the various sleep modes available to the watch,
@@ -56,8 +52,6 @@ extern ext_irq_cb_t a4_callback;
   *             but the display remains on and your app's state is retained. You can enter this
   *             mode by calling `watch_enter_sleep_mode`. It consumes an order of magnitude less
   *             power than STANDBY mode.
-  *           - Deep Sleep Mode is identical to sleep mode, but it also turns off the LCD to save
-  *             a bit more power. You can enter this mode by calling `watch_enter_deep_sleep_mode`.
   *           - BACKUP mode is the lowest possible power mode on the SAM L22. It turns off all pins
   *             and peripherals except for the RTC. It also turns off the RAM, obliterating your
   *             application's state. The only way to wake from this mode is by setting an external
@@ -84,7 +78,7 @@ extern ext_irq_cb_t a4_callback;
   *          device from BACKUP mode. You can still use this function to register a BTN_ALARM interrupt
   *          in normal or deep sleep mode, but to wake from BACKUP, you will need to use pin A2 or A4.
   */
-void watch_register_extwake_callback(uint8_t pin, ext_irq_cb_t callback, bool level);
+void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level);
 
 /** @brief Unregisters the RTC interrupt on one of the EXTWAKE pins. This will prevent a value change on
   *        one of these pins from waking the device.
@@ -122,18 +116,6 @@ uint32_t watch_get_backup_data(uint8_t reg);
   */
 void watch_enter_sleep_mode(void);
 
-/** @brief enters Deep Sleep Mode by disabling all pins and peripherals except the RTC.
-  * @details Short of BACKUP mode, this is the lowest power mode you can enter while retaining your
-  *          application state (and the ability to wake with the alarm button). Just note that the display
-  *          will be completely off, so you should document to the user of your application that they will
-  *          need to press the alarm button to wake the device, or use a sensor board with support for
-  *          an external wake pin.
-  *
-  *          All notes from watch_enter_sleep_mode apply here, except for power consumption. You can estimate
-  *          the power consumption of this mode to be on the order of 4µA at room temperature.
-  */
-void watch_enter_deep_sleep_mode(void);
-
 /** @brief Enters the SAM L22's lowest-power mode, BACKUP.
   * @details This function does some housekeeping before entering BACKUP mode. It first disables all pins
   *          and peripherals except for the RTC, and disables the tick interrupt (since that would wake
@@ -151,5 +133,14 @@ void watch_enter_deep_sleep_mode(void);
   */
 void watch_enter_backup_mode(void);
 
+/**
+ * @brief Puts the device to sleep in the specified mode.
+ * @param mode The sleep mode to enter. This can be one of the following:
+ *              * 2 - Idle: CPU, AHBx, and APBx clocks are off.
+ *              * 4 - Standby: STANDBY ALL clocks are OFF, unless requested by sleepwalking peripheral.
+ *              * 5 - Backup: Only Backup domain is powered on.
+ *              * 6 - Off: All clocks and power domains are OFF until next system reset.
+ */
+void sleep(const uint8_t mode);
+
 /// @}
-#endif

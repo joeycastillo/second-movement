@@ -22,52 +22,53 @@
  * SOFTWARE.
  */
 
-#include "hpl_systick_config.h"
+#include "watch_deepsleep.h"
+#include "app.h"
+#include "watch.h"
+#include "watch_private.h"
 
-#include "watch_extint.h"
+void sleep(const uint8_t mode) {
+    PM->SLEEPCFG.bit.SLEEPMODE = mode;
 
-// this warning only appears when you `make BOARD=OSO-SWAT-A1-02`. it's annoying,
-// but i'd rather have it warn us at build-time than fail silently at run-time.
-// besides, no one but me really has any of these boards anyway.
-#if BTN_ALARM != GPIO(GPIO_PORTA, 2)
-#warning This board revision does not support external wake on BTN_ALARM, so watch_register_extwake_callback will not work with it. Use watch_register_interrupt_callback instead.
-#endif
+    // wait for the mode set to actually take, per SLEEPCFG note in data sheet:
+    // "A small latency happens between the store instruction and actual writing
+    // of the SLEEPCFG register due to bridges. Software has to make sure the
+    // SLEEPCFG register reads the wanted value before issuing WFI instruction."
+    while(PM->SLEEPCFG.bit.SLEEPMODE != mode);
 
-void watch_register_extwake_callback(uint8_t pin, ext_irq_cb_t callback, bool level) {
-    uint32_t pinmux;
-    hri_rtc_tampctrl_reg_t config = RTC->MODE2.TAMPCTRL.reg;
+    __DSB();
+	__WFI();
+}
 
-    switch (pin) {
-        case A4:
-            a4_callback = callback;
-            pinmux = PINMUX_PB00G_RTC_IN0;
-            config &= ~(3 << RTC_TAMPCTRL_IN0ACT_Pos);
-            config &= ~(1 << RTC_TAMPCTRL_TAMLVL0_Pos);
-            config |= 1 << RTC_TAMPCTRL_IN0ACT_Pos;
-            if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL0_Pos;
-            break;
-        case A2:
-            a2_callback = callback;
-            pinmux = PINMUX_PB02G_RTC_IN1;
-            config &= ~(3 << RTC_TAMPCTRL_IN1ACT_Pos);
-            config &= ~(1 << RTC_TAMPCTRL_TAMLVL1_Pos);
-            config |= 1 << RTC_TAMPCTRL_IN1ACT_Pos;
-            if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL1_Pos;
-            break;
-        case BTN_ALARM:
-            gpio_set_pin_pull_mode(pin, GPIO_PULL_DOWN);
-            btn_alarm_callback = callback;
-            pinmux = PINMUX_PA02G_RTC_IN2;
-            config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
-            config &= ~(1 << RTC_TAMPCTRL_TAMLVL2_Pos);
-            config |= 1 << RTC_TAMPCTRL_IN2ACT_Pos;
-            if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL2_Pos;
-            break;
-        default:
-            return;
+void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
+    uint32_t config = RTC->MODE2.TAMPCTRL.reg;
+
+    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
+        HAL_GPIO_BTN_ALARM_in();
+        HAL_GPIO_BTN_ALARM_pulldown();
+        HAL_GPIO_BTN_ALARM_pmuxen(HAL_GPIO_PMUX_RTC);
+        btn_alarm_callback = callback;
+        config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
+        config &= ~(1 << RTC_TAMPCTRL_TAMLVL2_Pos);
+        config |= 1 << RTC_TAMPCTRL_IN2ACT_Pos;
+        if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL2_Pos;
+    } else if (pin == HAL_GPIO_A2_pin()) {
+        HAL_GPIO_A2_in();
+        HAL_GPIO_A2_pmuxen(HAL_GPIO_PMUX_RTC);
+        a2_callback = callback;
+        config &= ~(3 << RTC_TAMPCTRL_IN1ACT_Pos);
+        config &= ~(1 << RTC_TAMPCTRL_TAMLVL1_Pos);
+        config |= 1 << RTC_TAMPCTRL_IN1ACT_Pos;
+        if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL1_Pos;
+    } else if (pin == HAL_GPIO_A4_pin()) {
+        HAL_GPIO_A4_in();
+        HAL_GPIO_A4_pmuxen(HAL_GPIO_PMUX_RTC);
+        a4_callback = callback;
+        config &= ~(3 << RTC_TAMPCTRL_IN0ACT_Pos);
+        config &= ~(1 << RTC_TAMPCTRL_TAMLVL0_Pos);
+        config |= 1 << RTC_TAMPCTRL_IN0ACT_Pos;
+        if (level) config |= 1 << RTC_TAMPCTRL_TAMLVL0_Pos;
     }
-    gpio_set_pin_direction(pin, GPIO_DIRECTION_IN);
-    gpio_set_pin_function(pin, pinmux);
 
     // disable the RTC
     RTC->MODE2.CTRLA.bit.ENABLE = 0;
@@ -75,9 +76,9 @@ void watch_register_extwake_callback(uint8_t pin, ext_irq_cb_t callback, bool le
 
     // update the configuration
     RTC->MODE2.TAMPCTRL.reg = config;
+
     // re-enable the RTC
     RTC->MODE2.CTRLA.bit.ENABLE = 1;
-    while (RTC->MODE2.SYNCBUSY.bit.ENABLE); // wait for RTC to be enabled
 
     NVIC_ClearPendingIRQ(RTC_IRQn);
     NVIC_EnableIRQ(RTC_IRQn);
@@ -85,31 +86,29 @@ void watch_register_extwake_callback(uint8_t pin, ext_irq_cb_t callback, bool le
 }
 
 void watch_disable_extwake_interrupt(uint8_t pin) {
-    hri_rtc_tampctrl_reg_t config = hri_rtc_get_TAMPCTRL_reg(RTC, 0xFFFFFFFF);
+    uint32_t config = RTC->MODE2.TAMPCTRL.reg;
 
-    switch (pin) {
-        case A4:
-            a4_callback = NULL;
-            config &= ~(3 << RTC_TAMPCTRL_IN0ACT_Pos);
-            break;
-        case A2:
-            a2_callback = NULL;
-            config &= ~(3 << RTC_TAMPCTRL_IN1ACT_Pos);
-            break;
-        case BTN_ALARM:
-            btn_alarm_callback = NULL;
-            config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
-            break;
-        default:
-            return;
+    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
+        btn_alarm_callback = NULL;
+        config &= ~(3 << RTC_TAMPCTRL_IN2ACT_Pos);
+    } else if (pin == HAL_GPIO_A2_pin()) {
+        a2_callback = NULL;
+        config &= ~(3 << RTC_TAMPCTRL_IN1ACT_Pos);
+    }
+    else if (pin == HAL_GPIO_A4_pin()) {
+        a4_callback = NULL;
+        config &= ~(3 << RTC_TAMPCTRL_IN0ACT_Pos);
     }
 
-	if (hri_rtcmode0_get_CTRLA_ENABLE_bit(RTC)) {
-		hri_rtcmode0_clear_CTRLA_ENABLE_bit(RTC);
-		hri_rtcmode0_wait_for_sync(RTC, RTC_MODE0_SYNCBUSY_ENABLE);
-	}
-    hri_rtc_write_TAMPCTRL_reg(RTC, config);
-    hri_rtcmode0_set_CTRLA_ENABLE_bit(RTC);
+    // disable the RTC
+    RTC->MODE2.CTRLA.bit.ENABLE = 0;
+    while (RTC->MODE2.SYNCBUSY.bit.ENABLE); // wait for RTC to be disabled
+
+    // update the configuration
+    RTC->MODE2.TAMPCTRL.reg = config;
+
+    // re-enable the RTC
+    RTC->MODE2.CTRLA.bit.ENABLE = 1;
 }
 
 void watch_store_backup_data(uint32_t data, uint8_t reg) {
@@ -135,20 +134,27 @@ static void _watch_disable_all_pins_except_rtc(void) {
     // same with RTC/IN[1] and PB02
     if (config & RTC_TAMPCTRL_IN1ACT_Msk) portb_pins_to_disable &= 0xFFFFFFFB;
 
-    // port A: always keep PA02 configured as-is; that's our ALARM button.
-    gpio_set_port_direction(0, 0xFFFFFFFB, GPIO_DIRECTION_OFF);
+    // port A: that last B is to always keep PA02 configured as-is; that's our ALARM button.
+    PORT->Group[0].DIRCLR.reg = 0xFFFFFFFB;
+    // WRCONFIG can only set half the pins at a time, so we need two writes. This sets pins 0-15.
+	PORT->Group[0].WRCONFIG.reg = PORT_WRCONFIG_WRPINCFG | 0xFFFB;
+    // ...and adding the HWSEL flag configures 16-31.
+	PORT->Group[0].WRCONFIG.reg = PORT_WRCONFIG_HWSEL | PORT_WRCONFIG_WRPINCFG | 0xffff;
+
     // port B: disable all pins we didn't save above.
-    gpio_set_port_direction(1, portb_pins_to_disable, GPIO_DIRECTION_OFF);
+    PORT->Group[1].DIRCLR.reg = portb_pins_to_disable;
+	PORT->Group[1].WRCONFIG.reg = PORT_WRCONFIG_WRPINCFG | (portb_pins_to_disable & 0xFFFF);
+	PORT->Group[1].WRCONFIG.reg = PORT_WRCONFIG_HWSEL | PORT_WRCONFIG_WRPINCFG | (portb_pins_to_disable >> 16);
 }
 
 static void _watch_disable_all_peripherals_except_slcd(void) {
     _watch_disable_tcc();
     watch_disable_adc();
     watch_disable_external_interrupts();
-    watch_disable_i2c();
-    // TODO: replace this with a proper function when we remove the debug UART
-    SERCOM3->USART.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
-    MCLK->APBCMASK.reg &= ~MCLK_APBCMASK_SERCOM3;
+    /// TODO: Actually disable all these peripherals! #SecondMovement
+    // watch_disable_i2c();
+    // SERCOM3->USART.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
+    // MCLK->APBCMASK.reg &= ~MCLK_APBCMASK_SERCOM3;
 }
 
 void watch_enter_sleep_mode(void) {
@@ -161,41 +167,21 @@ void watch_enter_sleep_mode(void) {
     // disable brownout detector interrupt, which could inadvertently wake us up.
     SUPC->INTENCLR.bit.BOD33DET = 1;
 
-    // per Microchip datasheet clarification DS80000782,
-    // work around silicon erratum 1.8.4 by disabling the SysTick interrupt, which is
-    // enabled as part of driver init, before going to sleep.
-    SysTick->CTRL = SysTick->CTRL & ~(CONF_SYSTICK_TICKINT << SysTick_CTRL_TICKINT_Pos);
-
     // disable all pins
     _watch_disable_all_pins_except_rtc();
 
     // enter standby (4); we basically hang out here until an interrupt wakes us.
     sleep(4);
 
-    // and we awake! re-enable the brownout detector and SysTick interrupt
+    // and we awake! re-enable the brownout detector
     SUPC->INTENSET.bit.BOD33DET = 1;
-    SysTick->CTRL = SysTick->CTRL | (CONF_SYSTICK_TICKINT << SysTick_CTRL_TICKINT_Pos);
 
     // call app_setup so the app can re-enable everything we disabled.
     app_setup();
-
-    // and call app_wake_from_standby (since main won't have a chance to do it)
-    app_wake_from_standby();
-}
-
-void watch_enter_deep_sleep_mode(void) {
-    // identical to sleep mode except we disable the LCD first.
-    slcd_sync_deinit(&SEGMENT_LCD_0);
-    hri_mclk_clear_APBCMASK_SLCD_bit(SLCD);
-
-    watch_enter_sleep_mode();
 }
 
 void watch_enter_backup_mode(void) {
     watch_rtc_disable_all_periodic_callbacks();
-    _watch_disable_all_peripherals_except_slcd();
-    slcd_sync_deinit(&SEGMENT_LCD_0);
-    hri_mclk_clear_APBCMASK_SLCD_bit(SLCD);
     _watch_disable_all_pins_except_rtc();
 
     // go into backup sleep mode (5). when we exit, the reset controller will take over.

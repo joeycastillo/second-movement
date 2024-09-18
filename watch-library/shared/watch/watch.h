@@ -71,7 +71,7 @@ typedef void (*watch_cb_t)(void);
 // #include "watch_spi.h"
 // #include "watch_uart.h"
 // #include "watch_storage.h"
-// #include "watch_deepsleep.h"
+#include "watch_deepsleep.h"
 
 /** @brief Interrupt handler for the SYSTEM interrupt, which handles MCLK,
  *         OSC32KCTRL, OSCCTRL, PAC, PM and SUPC.

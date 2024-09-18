@@ -37,6 +37,7 @@ SRCS += \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
+  ./watch-library/hardware/watch/watch_deepsleep.c \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_gpio.c \
   ./watch-library/hardware/watch/watch_private.c \
