@@ -25,8 +25,118 @@
 #include "watch_tcc.h"
 #include "delay.h"
 #include "tcc.h"
+#include "tc.h"
 
 void _watch_enable_tcc(void);
+void cb_watch_buzzer_seq(void);
+
+static uint16_t _seq_position;
+static int8_t _tone_ticks, _repeat_counter;
+static bool _callback_running = false;
+static int8_t *_sequence;
+static void (*_cb_finished)(void);
+
+static void _tcc_write_RUNSTDBY(bool value) {
+    // enables or disables RUNSTDBY of the tcc
+    tcc_disable(0);
+    tcc_set_run_in_standby(0, value);
+    tcc_enable(0);
+}
+
+static inline void _tc3_start() {
+    // start the TC3 timer
+    tc_enable(3);
+    _callback_running = true;
+}
+
+static inline void _tc3_stop() {
+    // stop the TC3 timer
+    tc_disable(3);
+    _callback_running = false;
+}
+
+static void _tc3_initialize() {
+    // setup and initialize TC3 for a 64 Hz interrupt
+    tc_init(3, GENERIC_CLOCK_3, TC_PRESCALER_DIV64);
+    tc_set_counter_mode(3, TC_COUNTER_MODE_8BIT);
+    tc_set_run_in_standby(3, true);
+    tc_count8_set_period(3, 7); // 32 Khz divided by 64 divided by 8 equals 64 Hz
+    /// FIXME: #SecondMovement, we need a gossamer wrapper for interrupts.
+    TC3->COUNT8.INTENSET.bit.OVF = 1;
+    NVIC_ClearPendingIRQ(TC3_IRQn);
+    NVIC_EnableIRQ (TC3_IRQn);
+}
+
+void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
+    if (_callback_running) _tc3_stop();
+    watch_set_buzzer_off();
+    _sequence = note_sequence;
+    _cb_finished = callback_on_end;
+    _seq_position = 0;
+    _tone_ticks = 0;
+    _repeat_counter = -1;
+    // prepare buzzer
+    watch_enable_buzzer();
+    // setup TC3 timer
+    _tc3_initialize();
+    // TCC should run in standby mode
+    _tcc_write_RUNSTDBY(true);
+    // start the timer (for the 64 hz callback)
+    _tc3_start();
+}
+
+void cb_watch_buzzer_seq(void) {
+    // callback for reading the note sequence
+    if (_tone_ticks == 0) {
+        if (_sequence[_seq_position] < 0 && _sequence[_seq_position + 1]) {
+            // repeat indicator found
+            if (_repeat_counter == -1) {
+                // first encounter: load repeat counter
+                _repeat_counter = _sequence[_seq_position + 1];
+            } else _repeat_counter--;
+            if (_repeat_counter > 0)
+                // rewind
+                if (_seq_position > _sequence[_seq_position] * -2)
+                    _seq_position += _sequence[_seq_position] * 2;
+                else
+                    _seq_position = 0;
+            else {
+                // continue
+                _seq_position += 2;
+                _repeat_counter = -1;
+            }
+        }
+        if (_sequence[_seq_position] && _sequence[_seq_position + 1]) {
+            // read note
+            BuzzerNote note = _sequence[_seq_position];
+            if (note != BUZZER_NOTE_REST) {
+                watch_set_buzzer_period(NotePeriods[note]);
+                watch_set_buzzer_on();
+            } else watch_set_buzzer_off();
+            // set duration ticks and move to next tone
+            _tone_ticks = _sequence[_seq_position + 1];
+            _seq_position += 2;
+        } else {
+            // end the sequence
+            watch_buzzer_abort_sequence();
+            if (_cb_finished) _cb_finished();
+        }
+    } else _tone_ticks--;
+}
+
+void watch_buzzer_abort_sequence(void) {
+    // ends/aborts the sequence
+    if (_callback_running) _tc3_stop();
+    watch_set_buzzer_off();
+    // disable standby mode for TCC
+    _tcc_write_RUNSTDBY(false);
+}
+
+void TC3_Handler(void) {
+    // interrupt handler vor TC3 (globally!)
+    cb_watch_buzzer_seq();
+    TC3->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
+}
 
 bool watch_is_buzzer_or_led_enabled(void){
     return tcc_is_enabled(0);
