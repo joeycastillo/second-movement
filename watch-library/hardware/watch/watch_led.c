@@ -23,9 +23,13 @@
  */
 
 #include "watch_led.h"
+#include "watch_private.h"
+#include "tcc.h"
+
+void _watch_enable_tcc(void);
 
 void watch_enable_leds(void) {
-    if (!hri_tcc_get_CTRLA_reg(TCC0, TCC_CTRLA_ENABLE)) {
+    if (!tcc_is_enabled(0)) {
         _watch_enable_tcc();
     }
 }
@@ -43,31 +47,34 @@ void watch_set_led_color(uint8_t red, uint8_t green) {
 }
 
 void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
-#ifndef WATCH_BLUE_TCC_CHANNEL
-    (void) blue; // silence warning
+    if (tcc_is_enabled(0)) {
+        uint32_t period = tcc_get_period(0);
+        tcc_set_cc(0, (WATCH_RED_TCC_CHANNEL) % 4, ((period * (uint32_t)red * 1000ull) / 255000ull), true);
+#ifdef WATCH_GREEN_TCC_CHANNEL
+        tcc_set_cc(0, (WATCH_GREEN_TCC_CHANNEL) % 4, ((period * (uint32_t)green * 1000ull) / 255000ull), true);
+#else
+        (void) green; // silence warning
 #endif
-    if (hri_tcc_get_CTRLA_reg(TCC0, TCC_CTRLA_ENABLE)) {
-        uint32_t period = hri_tcc_get_PER_reg(TCC0, TCC_PER_MASK);
-        hri_tcc_write_CCBUF_reg(TCC0, WATCH_RED_TCC_CHANNEL, ((period * red * 1000ull) / 255000ull));
-        hri_tcc_write_CCBUF_reg(TCC0, WATCH_GREEN_TCC_CHANNEL, ((period * green * 1000ull) / 255000ull));
 #ifdef WATCH_BLUE_TCC_CHANNEL
-        hri_tcc_write_CCBUF_reg(TCC0, WATCH_BLUE_TCC_CHANNEL, ((period * blue * 1000ull) / 255000ull));
+        tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, ((period * (uint32_t)blue * 1000ull) / 255000ull), true);
+#else
+        (void) blue; // silence warning
 #endif
     }
 }
 
 void watch_set_led_red(void) {
-    watch_set_led_color(255, 0);
+    watch_set_led_color_rgb(255, 0, 0);
 }
 
 void watch_set_led_green(void) {
-    watch_set_led_color(0, 255);
+    watch_set_led_color_rgb(0, 255, 0);
 }
 
 void watch_set_led_yellow(void) {
-    watch_set_led_color(255, 255);
+    watch_set_led_color_rgb(255, 255, 0);
 }
 
 void watch_set_led_off(void) {
-    watch_set_led_color(0, 0);
+    watch_set_led_color_rgb(0, 0, 0);
 }

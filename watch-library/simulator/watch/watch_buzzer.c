@@ -40,6 +40,8 @@ static long _em_interval_id = 0;
 static int8_t *_sequence;
 static void (*_cb_finished)(void);
 
+void _watch_enable_tcc(void) {}
+
 static inline void _em_interval_stop() {
     emscripten_clear_interval(_em_interval_id);
     _em_interval_id = 0;

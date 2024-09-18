@@ -23,136 +23,25 @@
  */
 
 #include "watch_buzzer.h"
-#include "watch_private_buzzer.h"
-#include "../../../watch-library/hardware/include/saml22j18a.h"
-#include "../../../watch-library/hardware/include/component/tc.h"
-#include "../../../watch-library/hardware/hri/hri_tc_l22.h"
+#include "watch_private.h"
+#include "delay.h"
+#include "tcc.h"
 
-void cb_watch_buzzer_seq(void);
+void _watch_enable_tcc(void);
 
-static uint16_t _seq_position;
-static int8_t _tone_ticks, _repeat_counter;
-static bool _callback_running = false;
-static int8_t *_sequence;
-static void (*_cb_finished)(void);
-
-static void _tcc_write_RUNSTDBY(bool value) {
-    // enables or disables RUNSTDBY of the tcc
-    hri_tcc_clear_CTRLA_ENABLE_bit(TCC0);
-    hri_tcc_write_CTRLA_RUNSTDBY_bit(TCC0, value);
-    hri_tcc_set_CTRLA_ENABLE_bit(TCC0);
-    hri_tcc_wait_for_sync(TCC0, TCC_SYNCBUSY_ENABLE);
-}
-
-static inline void _tc3_start() {
-    // start the TC3 timer
-    hri_tc_set_CTRLA_ENABLE_bit(TC3);
-    _callback_running = true;
-}
-
-static inline void _tc3_stop() {
-    // stop the TC3 timer
-    hri_tc_clear_CTRLA_ENABLE_bit(TC3);
-    hri_tc_wait_for_sync(TC3, TC_SYNCBUSY_ENABLE);
-    _callback_running = false;
-}
-
-static void _tc3_initialize() {
-    // setup and initialize TC3 for a 64 Hz interrupt
-    hri_mclk_set_APBCMASK_TC3_bit(MCLK);
-    hri_gclk_write_PCHCTRL_reg(GCLK, TC3_GCLK_ID, GCLK_PCHCTRL_GEN_GCLK3 | GCLK_PCHCTRL_CHEN);
-    _tc3_stop();
-    hri_tc_write_CTRLA_reg(TC3, TC_CTRLA_SWRST);
-    hri_tc_wait_for_sync(TC3, TC_SYNCBUSY_SWRST);
-    hri_tc_write_CTRLA_reg(TC3, TC_CTRLA_PRESCALER_DIV64 |
-                           TC_CTRLA_MODE_COUNT8 | 
-                           TC_CTRLA_RUNSTDBY);
-    hri_tccount8_write_PER_reg(TC3, 7);   // 32 Khz divided by 64 divided by 8 equals 64 Hz
-    hri_tc_set_INTEN_OVF_bit(TC3);
-    NVIC_ClearPendingIRQ(TC3_IRQn);
-    NVIC_EnableIRQ (TC3_IRQn);
-}
-
-void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
-    if (_callback_running) _tc3_stop();
-    watch_set_buzzer_off();
-    _sequence = note_sequence;
-    _cb_finished = callback_on_end;
-    _seq_position = 0;
-    _tone_ticks = 0;
-    _repeat_counter = -1;
-    // prepare buzzer
-    watch_enable_buzzer();
-    // setup TC3 timer
-    _tc3_initialize();
-    // TCC should run in standby mode
-    _tcc_write_RUNSTDBY(true);
-    // start the timer (for the 64 hz callback)
-    _tc3_start();
-}
-
-void cb_watch_buzzer_seq(void) {
-    // callback for reading the note sequence
-    if (_tone_ticks == 0) {
-        if (_sequence[_seq_position] < 0 && _sequence[_seq_position + 1]) {
-            // repeat indicator found
-            if (_repeat_counter == -1) {
-                // first encounter: load repeat counter
-                _repeat_counter = _sequence[_seq_position + 1];
-            } else _repeat_counter--;
-            if (_repeat_counter > 0)
-                // rewind
-                if (_seq_position > _sequence[_seq_position] * -2)
-                    _seq_position += _sequence[_seq_position] * 2;
-                else
-                    _seq_position = 0;
-            else {
-                // continue
-                _seq_position += 2;
-                _repeat_counter = -1;
-            }
-        }
-        if (_sequence[_seq_position] && _sequence[_seq_position + 1]) {
-            // read note
-            BuzzerNote note = _sequence[_seq_position];
-            if (note != BUZZER_NOTE_REST) {
-                watch_set_buzzer_period(NotePeriods[note]);
-                watch_set_buzzer_on();
-            } else watch_set_buzzer_off();
-            // set duration ticks and move to next tone
-            _tone_ticks = _sequence[_seq_position + 1];
-            _seq_position += 2;
-        } else {
-            // end the sequence
-            watch_buzzer_abort_sequence();
-            if (_cb_finished) _cb_finished();
-        }
-    } else _tone_ticks--;
-}
-
-void watch_buzzer_abort_sequence(void) {
-    // ends/aborts the sequence
-    if (_callback_running) _tc3_stop();
-    watch_set_buzzer_off();
-    // disable standby mode for TCC
-    _tcc_write_RUNSTDBY(false);
-}
-
-void TC3_Handler(void) {
-    // interrupt handler vor TC3 (globally!)
-    cb_watch_buzzer_seq();
-    TC3->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
+bool watch_is_buzzer_or_led_enabled(void){
+    return tcc_is_enabled(0);
 }
 
 inline void watch_enable_buzzer(void) {
-    if (!hri_tcc_get_CTRLA_reg(TCC0, TCC_CTRLA_ENABLE)) {
+    if (!tcc_is_enabled(0)) {
         _watch_enable_tcc();
     }
 }
 
 inline void watch_set_buzzer_period(uint32_t period) {
-    hri_tcc_write_PERBUF_reg(TCC0, period);
-    hri_tcc_write_CCBUF_reg(TCC0, WATCH_BUZZER_TCC_CHANNEL, period / 2);
+    tcc_set_period(0, period, true);
+    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, period / 2, true);
 }
 
 void watch_disable_buzzer(void) {
@@ -160,13 +49,13 @@ void watch_disable_buzzer(void) {
 }
 
 inline void watch_set_buzzer_on(void) {
-    gpio_set_pin_direction(BUZZER, GPIO_DIRECTION_OUT);
-    gpio_set_pin_function(BUZZER, WATCH_BUZZER_TCC_PINMUX);
+    HAL_GPIO_BUZZER_out();
+    HAL_GPIO_BUZZER_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
 }
 
 inline void watch_set_buzzer_off(void) {
-    gpio_set_pin_direction(BUZZER, GPIO_DIRECTION_OFF);
-    gpio_set_pin_function(BUZZER, GPIO_PIN_FUNCTION_OFF);
+    HAL_GPIO_BUZZER_pmuxdis();
+    HAL_GPIO_BUZZER_off();
 }
 
 void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
@@ -178,4 +67,75 @@ void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
     }
     delay_ms(duration_ms);
     watch_set_buzzer_off();
+}
+
+void _watch_enable_tcc(void) {
+    // set up the TCC with a 1 MHz clock, but there's a trick:
+    if (USB->DEVICE.CTRLA.bit.ENABLE) {
+        // if USB is enabled, we are running an 8 MHz clock, so we divide by 8.
+        tcc_init(0, GENERIC_CLOCK_0, TCC_PRESCALER_DIV8);
+    } else {
+        // otherwise it's 4 Mhz and we divide by 4.
+        tcc_init(0, GENERIC_CLOCK_0, TCC_PRESCALER_DIV4);
+    }
+    // We're going to use normal PWM mode, which means period is controlled by PER, and duty cycle is controlled by
+    // each compare channel's value:
+    //  * Buzzer tones are set by setting PER to the desired period for a given frequency, and CC[1] to half of that
+    //    period (i.e. a square wave with a 50% duty cycle).
+    //  * LEDs on CC[0] CC[2] and CC[3] can be set to any value from 0 (off) to PER (fully on).
+    tcc_set_wavegen(0, TCC_WAVEGEN_NORMAL_PWM);
+#ifdef WATCH_INVERT_LED_POLARITY
+    // invert all channels, we'll flip the buzzer back in just a moment.
+    // this is easier than writing a maze of #ifdefs.
+    tcc_set_channel_polarity(0, 4, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 5, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 6, TCC_CHANNEL_POLARITY_INVERTED);
+    tcc_set_channel_polarity(0, 7, TCC_CHANNEL_POLARITY_INVERTED);
+#endif // WATCH_INVERT_LED_POLARITY
+    tcc_set_channel_polarity(0, WATCH_BUZZER_TCC_CHANNEL, TCC_CHANNEL_POLARITY_NORMAL);
+
+    // Set the period to 1 kHz to start.
+    tcc_set_period(0, 1000, false);
+
+    // Set the duty cycle of all pins to 0: LED's off, buzzer not buzzing.
+    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, 0, false);
+    tcc_set_cc(0, (WATCH_RED_TCC_CHANNEL) % 4, 0, false);
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    tcc_set_cc(0, (WATCH_GREEN_TCC_CHANNEL) % 4, 0, false);
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, 0, false);
+#endif
+
+    // enable LED PWM pins (the LED driver assumes if the TCC is on, the pins are enabled)
+    HAL_GPIO_RED_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_RED_out();
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    HAL_GPIO_GREEN_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_GREEN_out();
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    HAL_GPIO_BLUE_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_BLUE_out();
+#endif
+
+    // Enable the TCC
+    tcc_enable(0);
+}
+
+void _watch_disable_tcc(void) {
+    // disable all PWM pins
+    HAL_GPIO_BUZZER_pmuxdis();
+    HAL_GPIO_BUZZER_off();
+    HAL_GPIO_RED_pmuxdis();
+    HAL_GPIO_RED_off();
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    HAL_GPIO_GREEN_pmuxdis();
+    HAL_GPIO_GREEN_off();
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    HAL_GPIO_BLUE_pmuxdis();
+    HAL_GPIO_BLUE_off();
+#endif
+    tcc_disable(0);
 }

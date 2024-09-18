@@ -60,8 +60,8 @@
 // #include "watch_rtc.h"
 // #include "watch_slcd.h"
 // #include "watch_extint.h"
-// #include "watch_led.h"
-// #include "watch_buzzer.h"
+#include "watch_led.h"
+#include "watch_buzzer.h"
 // #include "watch_adc.h"
 #include "watch_gpio.h"
 // #include "watch_i2c.h"
@@ -71,13 +71,6 @@
 // #include "watch_deepsleep.h"
 
 // #include "watch_private.h"
-
-/** @brief Returns true if either the buzzer or the LED driver is enabled.
-  * @details Both the buzzer and the LED use the TCC peripheral to drive their behavior. This function returns true if that
-  *          peripheral is enabled. You can use this function to determine whether you need to call the watch_disable_leds or
-  *          or watch_enable_buzzer functions before using these peripherals.
-  */
-bool watch_is_buzzer_or_led_enabled(void);
 
 /** @brief Returns true if USB is enabled.
   */

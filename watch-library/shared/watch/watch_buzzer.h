@@ -27,7 +27,14 @@
 
 #include "watch.h"
 
-/** @addtogroup buzzer Buzzer
+/** @brief Returns true if either the buzzer or the LED driver is enabled.
+  * @details Both the buzzer and the LED use the TCC peripheral to drive their behavior. This function returns true if that
+  *          peripheral is enabled. You can use this function to determine whether you need to call the watch_disable_leds or
+  *          or watch_enable_buzzer functions before using these peripherals.
+  */
+bool watch_is_buzzer_or_led_enabled(void);
+
+/** @addtogroup tcc Buzzer and LED Control (via the TCC peripheral)
   * @brief This section covers functions related to the piezo buzzer embedded in the F-91W's back plate.
   */
 /// @{
