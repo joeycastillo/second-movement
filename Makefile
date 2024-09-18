@@ -29,6 +29,7 @@ INCLUDES += \
 
 # Add your source files here.
 SRCS += \
+  ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_gpio.c \
   ./watch-library/hardware/watch/watch_rtc.c \
