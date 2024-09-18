@@ -27,7 +27,6 @@
 #define WATCH_H_
 #include <stdint.h>
 #include <stdbool.h>
-#include "driver_init.h"
 #include "pins.h"
 
 #define SWCLK GPIO(GPIO_PORTA, 30)
@@ -58,20 +57,20 @@
                                deepest sleep mode available on the SAM L22.
  */
 
-#include "watch_rtc.h"
-#include "watch_slcd.h"
-#include "watch_extint.h"
-#include "watch_led.h"
-#include "watch_buzzer.h"
-#include "watch_adc.h"
-#include "watch_gpio.h"
-#include "watch_i2c.h"
-#include "watch_spi.h"
-#include "watch_uart.h"
-#include "watch_storage.h"
-#include "watch_deepsleep.h"
+// #include "watch_rtc.h"
+// #include "watch_slcd.h"
+// #include "watch_extint.h"
+// #include "watch_led.h"
+// #include "watch_buzzer.h"
+// #include "watch_adc.h"
+// #include "watch_gpio.h"
+// #include "watch_i2c.h"
+// #include "watch_spi.h"
+// #include "watch_uart.h"
+// #include "watch_storage.h"
+// #include "watch_deepsleep.h"
 
-#include "watch_private.h"
+// #include "watch_private.h"
 
 /** @brief Returns true if either the buzzer or the LED driver is enabled.
   * @details Both the buzzer and the LED use the TCC peripheral to drive their behavior. This function returns true if that

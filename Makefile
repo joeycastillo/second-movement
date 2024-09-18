@@ -23,6 +23,10 @@ $(BUILD)/$(BIN).html: $(OBJS)
 		--shell-file=$(TOP)/watch-library/simulator/shell.html
 endif
 
+# Add your include directories here.
+INCLUDES += \
+  -I./watch-library/shared/watch \
+
 # Add your source files here.
 SRCS += \
   ./app.c \

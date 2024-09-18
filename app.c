@@ -1,4 +1,5 @@
 #include "app.h"
+#include "watch.h"
 #include "delay.h"
 
 void app_init(void) {
