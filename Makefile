@@ -5,6 +5,8 @@ GOSSAMER_PATH=gossamer
 # or omit it and provide it on the command line (make BOARD=foo).
 BOARD=sensorwatch_green
 
+TINYUSB_CDC=1
+
 # Leave this line here.
 include $(GOSSAMER_PATH)/make.mk
 
@@ -25,17 +27,23 @@ endif
 
 # Add your include directories here.
 INCLUDES += \
+  -I./tinyusb/src \
   -I./watch-library/shared/watch \
+  -I./watch-library/hardware/watch \
 
 # Add your source files here.
 SRCS += \
+  ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_gpio.c \
+  ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/hardware/watch/watch_tcc.c \
+  ./watch-library/hardware/watch/watch_usb_descriptors.c \
+  ./watch-library/hardware/watch/watch_usb_cdc.c \
   ./app.c \
 
 # Finally, leave this line at the bottom of the file.

@@ -85,18 +85,6 @@ void irq_handler_system(void);
   */
 void watch_reset_to_bootloader(void);
 
-/** @brief Call periodically from app main loop to service CDC RX/TX.
-  */
-void cdc_task(void);
-
-/** @brief Reads up to len bytes from the USB serial.
-  * @param file ignored, you can pass in 0
-  * @param ptr pointer to a buffer of at least len bytes
-  * @param len the number of bytes you wish to read, max 256.
-  * @return The number of bytes read, or zero if no bytes were read.
-  */
-int read(int file, char *ptr, int len);
-
 /** @brief Disables the TRNG twice in order to work around silicon erratum 1.16.1.
  *  FIXME: find a better place for this, a couple of watch faces need it.
  */

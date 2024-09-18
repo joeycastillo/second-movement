@@ -29,21 +29,6 @@
 /// Called by main.c while setting up the app. You should not call this from your app.
 void _watch_init(void);
 
-/// Called by buzzer and LED teardown functions. You should not call this from your app.
-void _watch_disable_tcc(void);
-
-/// Enable USB task timer. Called by USB enable routine in main(). You should not call this from your app.
-void _watch_enable_tc0(void);
-
-/// Disable USB task timer. You should not call this from your app.
-void _watch_disable_tc0(void);
-
-/// Enable CDC task timer. Called by USB enable routine in main(). You should not call this from your app.
-void _watch_enable_tc1(void);
-
-/// Disable CDC task timer. You should not call this from your app.
-void _watch_disable_tc1(void);
-
 /// Called by main.c if plugged in to USB. You should not call this from your app.
 void _watch_enable_usb(void);
 

@@ -23,11 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef _WATCH_PRIVATE_CDC_H_INCLUDED
-#define _WATCH_PRIVATE_CDC_H_INCLUDED
+#pragma once
 
 int _write(int file, char *ptr, int len);
 int _read(int file, char *ptr, int len);
 void cdc_task(void);
-
-#endif

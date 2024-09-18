@@ -23,11 +23,8 @@
  * SOFTWARE.
  */
 
-#include "watch_private_cdc.h"
-
 #include <stddef.h>
-
-#include "watch_utility.h"
+#include "watch_usb_cdc.h"
 #include "tusb.h"
 
 /*
@@ -51,16 +48,6 @@ static char s_read_buf[CDC_READ_BUF_SZ] = {0};
 static size_t s_read_buf_pos = 0;
 static size_t s_read_buf_len = 0;
 
-// Mask TC1 interrupts, preventing calls to cdc_task()
-static inline void prv_critical_section_enter(void) {
-    NVIC_DisableIRQ(TC1_IRQn);
-}
-
-// Unmask TC1 interrupts, allowing calls to cdc_task()
-static inline void prv_critical_section_exit(void) {
-    NVIC_EnableIRQ(TC1_IRQn);
-}
-
 int _write(int file, char *ptr, int len) {
     (void) file;
 
@@ -69,8 +56,6 @@ int _write(int file, char *ptr, int len) {
     }
 
     int bytes_written = 0;
-
-    prv_critical_section_enter();
 
     for (int i = 0; i < len; i++) {
         s_write_buf[s_write_buf_pos] = ptr[i];
@@ -81,18 +66,13 @@ int _write(int file, char *ptr, int len) {
         bytes_written++;
     }
 
-    prv_critical_section_exit();
-
     return bytes_written;
 }
 
 int _read(int file, char *ptr, int len) {
     (void) file;
 
-    prv_critical_section_enter();
-
     if (ptr == NULL || len <= 0 || s_read_buf_len == 0) {
-        prv_critical_section_exit();
         return -1;
     }
 
@@ -112,8 +92,6 @@ int _read(int file, char *ptr, int len) {
     // Update circular buffer position and length
     s_read_buf_len -= len;
     s_read_buf_pos = CDC_READ_BUF_IDX(s_read_buf_pos - len);
-
-    prv_critical_section_exit();
 
     return len;
 }
