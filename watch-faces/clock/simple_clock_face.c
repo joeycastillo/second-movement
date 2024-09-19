@@ -73,7 +73,6 @@ void simple_clock_face_activate(movement_settings_t *settings, void *context) {
 bool simple_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
     simple_clock_state_t *state = (simple_clock_state_t *)context;
     char buf[11];
-    uint8_t pos;
 
     watch_date_time date_time;
     uint32_t previous_date_time;
@@ -106,7 +105,6 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                 break;
             } else if ((date_time.reg >> 12) == (previous_date_time >> 12) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before minutes is the same.
-                pos = 6;
                 sprintf(buf, "%02d%02d", date_time.unit.minute, date_time.unit.second);
             } else {
                 // other stuff changed; let's do it all.
