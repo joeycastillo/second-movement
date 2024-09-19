@@ -128,15 +128,17 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                     set_leading_zero = true;
                 }
 
-                pos = 0;
+                watch_display_top_left(watch_utility_get_weekday(date_time));
+                sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+                watch_display_top_right(buf);
+                watch_display_hours(buf + 2);
+                watch_display_minutes(buf + 4);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
                     if (!watch_tick_animation_is_running()) watch_start_tick_animation(500);
-                    sprintf(buf, "%s%2d%2d%02d  ", watch_utility_get_weekday(date_time), date_time.unit.day, date_time.unit.hour, date_time.unit.minute);
                 } else {
-                    sprintf(buf, "%s%2d%2d%02d%02d", watch_utility_get_weekday(date_time), date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+                    watch_display_seconds(buf + 6);
                 }
             }
-            watch_display_string(buf, pos);
 
             if (set_leading_zero)
                 watch_display_string("0", 4);
