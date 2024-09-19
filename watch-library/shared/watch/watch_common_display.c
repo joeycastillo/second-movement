@@ -150,101 +150,112 @@ void watch_display_string(char *string, uint8_t position) {
     }
 }
 
-void watch_display_top_left(char *string) {
-    watch_display_character(string[0], 0);
-    if (string[1]) {
-        watch_display_character(string[1], 1);
+void watch_display_text(WatchDisplayLocation location, char *string) {
+    switch (location) {
+        case WATCH_POSITION_TOP_LEFT:
+            watch_display_character(string[0], 0);
+            if (string[1]) {
+                watch_display_character(string[1], 1);
+            }
+            break;
+        case WATCH_POSITION_TOP_RIGHT:
+            watch_display_character(string[0], 2);
+            if (string[1]) {
+                watch_display_character(string[1], 3);
+            }
+            break;
+        case WATCH_POSITION_BOTTOM:
+            {
+                #ifdef USE_CUSTOM_LCD
+                watch_clear_pixel(0, 22);
+                #endif
+                int i = 0;
+                while (string[i] != 0) {
+                    watch_display_character(string[i], 4 + i);
+                    i++;
+                }
+            }
+            break;
+        case WATCH_POSITION_HOURS:
+            watch_display_character(string[0], 4);
+            if (string[1]) {
+                watch_display_character(string[1], 5);
+            }
+            break;
+        case WATCH_POSITION_MINUTES:
+            watch_display_character(string[0], 6);
+            if (string[1]) {
+                watch_display_character(string[1], 7);
+            }
+            break;
+        case WATCH_POSITION_SECONDS:
+            watch_display_character(string[0], 8);
+            if (string[1]) {
+                watch_display_character(string[1], 9);
+            }
+            break;
+        case WATCH_POSITION_FULL:
+        default:
+            // This is deprecated, but we use it for the legacy behavior.
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            watch_display_string(string, 0);
+            #pragma GCC diagnostic pop
     }
 }
 
-void watch_display_top_left_with_fallback(char *string, char *fallback) {
+void watch_display_text_with_fallback(WatchDisplayLocation location, char *string, char *fallback) {
 #ifdef USE_CUSTOM_LCD
     (void)fallback;
-    watch_display_character(string[0], 0);
-    if (string[1]) {
-        watch_display_character(string[1], 1);
-    } else {
-        return;
-    }
-    if (string[2]) {
-        // position 3 is at index 10 in the display mapping
-        watch_display_character(string[2], 10);
+
+    switch (location) {
+        case WATCH_POSITION_TOP_LEFT:
+            watch_display_character(string[0], 0);
+            if (string[1]) {
+                watch_display_character(string[1], 1);
+            } else {
+                return;
+            }
+            if (string[2]) {
+                // position 3 is at index 10 in the display mapping
+                watch_display_character(string[2], 10);
+            }
+            break;
+        case WATCH_POSITION_BOTTOM:
+        {
+            watch_clear_pixel(0, 22);
+            int i = 0;
+            int offset = 0;
+            size_t len = strlen(string);
+            if (len == 7 && string[0] == '1') {
+                watch_set_pixel(0, 22);
+                offset = 1;
+                i++;
+            }
+            while (string[i] != 0) {
+                watch_display_character(string[i], 4 + i - offset);
+                i++;
+            }
+        }
+            break;
+        case WATCH_POSITION_TOP_RIGHT:
+        case WATCH_POSITION_HOURS:
+        case WATCH_POSITION_MINUTES:
+        case WATCH_POSITION_SECONDS:
+            watch_display_text(location, string);
+            break;
+        case WATCH_POSITION_FULL:
+        default:
+            // This is deprecated, but we use it for the legacy behavior.
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            watch_display_string(string, 0);
+            #pragma GCC diagnostic pop
     }
 #else
     (void)string;
-    watch_display_top_left(fallback);
+    watch_display_text(location, fallback);
 #endif
-}
-
-void watch_display_top_right(char *string) {
-    watch_display_character(string[0], 2);
-    if (string[1]) {
-        watch_display_character(string[1], 3);
-    }
-}
-
-void watch_display_top_right_with_fallback(char *string, char *fallback) {
-#ifdef USE_CUSTOM_LCD
-    (void)fallback;
-    watch_display_top_right(string);
-#else
-    (void)string;
-    watch_display_top_right(fallback);
-#endif
-}
-
-void watch_display_main_line(char *string) {
-#ifdef USE_CUSTOM_LCD
-    watch_clear_pixel(0, 22);
-#endif
-    int i = 0;
-    while (string[i] != 0) {
-        watch_display_character(string[i], 4 + i);
-        i++;
-    }
-}
-
-void watch_display_main_line_with_fallback(char *string, char *fallback) {
-#ifdef USE_CUSTOM_LCD
-    (void)fallback;
-    watch_clear_pixel(0, 22);
-    int i = 0;
-    int offset = 0;
-    size_t len = strlen(string);
-    if (len == 7 && string[0] == '1') {
-        watch_set_pixel(0, 22);
-        offset = 1;
-        i++;
-    }
-    while (string[i] != 0) {
-        watch_display_character(string[i], 4 + i - offset);
-        i++;
-    }
-#else
-    (void)string;
-    watch_display_main_line(fallback);
-#endif
-}
-
-void watch_display_hours(char *string) {
-    watch_display_character(string[0], 4);
-    if (string[1]) {
-        watch_display_character(string[1], 5);
-    }
-}
-
-void watch_display_minutes(char *string) {
-    watch_display_character(string[0], 6);
-    if (string[1]) {
-        watch_display_character(string[1], 7);
-    }
-}
-
-void watch_display_seconds(char *string) {
-    watch_display_character(string[0], 8);
-    if (string[1]) {
-        watch_display_character(string[1], 9);
-    }
 }
 
 void watch_set_colon(void) {

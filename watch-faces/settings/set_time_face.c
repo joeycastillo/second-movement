@@ -127,8 +127,8 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     }
 
     char buf[11];
-    watch_display_top_left((char *) set_time_face_titles[current_page]);
-    watch_display_top_right("  ");
+    watch_display_text(WATCH_POSITION_TOP_LEFT, (char *) set_time_face_titles[current_page]);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     if (current_page < 3) {
         watch_set_colon();
         if (settings->bit.clock_mode_24h) {
@@ -150,27 +150,27 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
             memset(buf, ' ', sizeof(buf));
         } else {
             watch_set_colon();
-            if (movement_timezone_offsets[settings->bit.time_zone] < 0) watch_display_top_right(" -");
+            if (movement_timezone_offsets[settings->bit.time_zone] < 0) watch_display_text(WATCH_POSITION_TOP_RIGHT, " -");
             sprintf(buf, "%2d%02d  ", (int8_t) abs(movement_timezone_offsets[settings->bit.time_zone] / 60), (int8_t) (movement_timezone_offsets[settings->bit.time_zone] % 60) * (movement_timezone_offsets[settings->bit.time_zone] < 0 ? -1 : 1));
         }
     }
 
-    watch_display_main_line(buf);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
     // blink up the parameter we're setting
     if (event.subsecond % 2 && !_quick_ticks_running) {
         switch (current_page) {
             case 0:
             case 3:
-                watch_display_hours("  ");
+                watch_display_text(WATCH_POSITION_HOURS, "  ");
                 break;
             case 1:
             case 4:
-                watch_display_minutes("  ");
+                watch_display_text(WATCH_POSITION_MINUTES, "  ");
                 break;
             case 2:
             case 5:
-                watch_display_seconds("  ");
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
                 break;
         }
     }
