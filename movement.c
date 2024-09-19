@@ -33,6 +33,8 @@
 #include "app.h"
 #include "watch.h"
 #include "usb.h"
+#include "watch_usb_cdc.h"
+#include "watch_private.h"
 #include "movement.h"
 
 /// FIXMME: #SecondMovement needs to bring back the following includes (and remove the default signal_tune)
@@ -154,6 +156,10 @@ void cb_alarm_fired(void);
 void cb_fast_tick(void);
 void cb_tick(void);
 
+void yield(void) {
+    tud_task();
+    cdc_task();
+}
 static inline void _movement_reset_inactivity_countdown(void) {
     movement_state.le_mode_ticks = movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval];
     movement_state.timeout_ticks = movement_timeout_inactivity_deadlines[movement_state.settings.bit.to_interval];
@@ -383,6 +389,17 @@ uint8_t movement_claim_backup_register(void) {
 }
 
 void app_init(void) {
+    _watch_init();
+
+    // check if we are plugged into USB power.
+    HAL_GPIO_VBUS_DET_in();
+    HAL_GPIO_VBUS_DET_pulldown();
+    if (HAL_GPIO_VBUS_DET_read()){
+        /// if so, enable USB functionality.
+        _watch_enable_usb();
+    }
+    HAL_GPIO_VBUS_DET_off();
+
 #if defined(NO_FREQCORR)
     watch_rtc_freqcorr_write(0, 0);
 #elif defined(WATCH_IS_BLUE_BOARD)
@@ -628,6 +645,12 @@ bool app_loop(void) {
 
     // if the LED is on, we need to stay awake to keep the TCC running.
     if (movement_state.light_ticks != -1) can_sleep = false;
+
+    // if we are plugged into USB, we can't sleep because we need to keep the serial shell running.
+    if (usb_is_enabled()) {
+        yield();
+        can_sleep = false;
+    }
 
     return can_sleep;
 }
