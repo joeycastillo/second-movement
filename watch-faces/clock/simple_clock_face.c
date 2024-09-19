@@ -120,7 +120,7 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                     if (date_time.unit.hour == 0) date_time.unit.hour = 12;
                 }
 #endif
-                watch_display_top_left(watch_utility_get_weekday(date_time));
+                watch_display_top_left((char *) watch_utility_get_weekday(date_time));
                 sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
                 watch_display_top_right(buf);
                 watch_display_hours(buf + 2);
