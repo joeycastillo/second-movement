@@ -23,6 +23,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "set_time_face.h"
 #include "watch.h"
 #include "watch_utility.h"
@@ -126,13 +127,15 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     }
 
     char buf[11];
+    watch_display_top_left((char *) set_time_face_titles[current_page]);
+    watch_display_top_right("  ");
     if (current_page < 3) {
         watch_set_colon();
         if (settings->bit.clock_mode_24h) {
             watch_set_indicator(WATCH_INDICATOR_24H);
-            sprintf(buf, "%s  %2d%02d%02d", set_time_face_titles[current_page], date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+            sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
         } else {
-            sprintf(buf, "%s  %2d%02d%02d", set_time_face_titles[current_page], (date_time.unit.hour % 12) ? (date_time.unit.hour % 12) : 12, date_time.unit.minute, date_time.unit.second);
+            sprintf(buf, "%2d%02d%02d", (date_time.unit.hour % 12) ? (date_time.unit.hour % 12) : 12, date_time.unit.minute, date_time.unit.second);
             if (date_time.unit.hour < 12) watch_clear_indicator(WATCH_INDICATOR_PM);
             else watch_set_indicator(WATCH_INDICATOR_PM);
         }
@@ -140,36 +143,37 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
         watch_clear_colon();
         watch_clear_indicator(WATCH_INDICATOR_24H);
         watch_clear_indicator(WATCH_INDICATOR_PM);
-        sprintf(buf, "%s  %2d%02d%02d", set_time_face_titles[current_page], date_time.unit.year + 20, date_time.unit.month, date_time.unit.day);
+        sprintf(buf, "%2d%02d%02d", date_time.unit.year + 20, date_time.unit.month, date_time.unit.day);
     } else {
         if (event.subsecond % 2) {
             watch_clear_colon();
-            sprintf(buf, "%s        ", set_time_face_titles[current_page]);
+            memset(buf, ' ', sizeof(buf));
         } else {
             watch_set_colon();
-            sprintf(buf, "%s %3d%02d  ", set_time_face_titles[current_page], (int8_t) (movement_timezone_offsets[settings->bit.time_zone] / 60), (int8_t) (movement_timezone_offsets[settings->bit.time_zone] % 60) * (movement_timezone_offsets[settings->bit.time_zone] < 0 ? -1 : 1));
+            if (movement_timezone_offsets[settings->bit.time_zone] < 0) watch_display_top_right(" -");
+            sprintf(buf, "%2d%02d  ", (int8_t) abs(movement_timezone_offsets[settings->bit.time_zone] / 60), (int8_t) (movement_timezone_offsets[settings->bit.time_zone] % 60) * (movement_timezone_offsets[settings->bit.time_zone] < 0 ? -1 : 1));
         }
     }
+
+    watch_display_main_line(buf);
 
     // blink up the parameter we're setting
     if (event.subsecond % 2 && !_quick_ticks_running) {
         switch (current_page) {
             case 0:
             case 3:
-                buf[4] = buf[5] = ' ';
+                watch_display_hours("  ");
                 break;
             case 1:
             case 4:
-                buf[6] = buf[7] = ' ';
+                watch_display_minutes("  ");
                 break;
             case 2:
             case 5:
-                buf[8] = buf[9] = ' ';
+                watch_display_seconds("  ");
                 break;
         }
     }
-
-    watch_display_string(buf, 0);
 
     return true;
 }
