@@ -189,14 +189,10 @@ bool set_time_hackwatch_face_loop(movement_event_t event, movement_settings_t *s
     }
 
     char buf[11];
-    bool set_leading_zero = false;
     if (current_page < 3) {
         watch_set_colon();
         if (settings->bit.clock_mode_24h) {
-            if (!settings->bit.clock_24h_leading_zero)
-                watch_set_indicator(WATCH_INDICATOR_24H);
-            else if (date_time_settings.unit.hour < 10)
-                set_leading_zero = true;
+            watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf,
                     "%s  %2d%02d%02d",
                     set_time_hackwatch_face_titles[current_page],
@@ -262,8 +258,6 @@ bool set_time_hackwatch_face_loop(movement_event_t event, movement_settings_t *s
     }
 
     watch_display_string(buf, 0);
-    if (set_leading_zero)
-        watch_display_string("0", 4);
 
     return true;
 }

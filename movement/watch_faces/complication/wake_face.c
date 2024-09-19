@@ -38,15 +38,12 @@ void _wake_face_update_display(movement_settings_t *settings, wake_face_state_t 
     uint8_t hour = state->hour;
 
     watch_clear_display();
-    bool set_leading_zero = false;
-    if ( !settings->bit.clock_mode_24h ) {
+    if ( settings->bit.clock_mode_24h )
+        watch_set_indicator(WATCH_INDICATOR_24H);
+    else {
         if ( hour >= 12 )
             watch_set_indicator(WATCH_INDICATOR_PM);
         hour = hour % 12 ? hour % 12 : 12;
-    } else if ( !settings->bit.clock_24h_leading_zero ) {
-        watch_set_indicator(WATCH_INDICATOR_24H);
-    } else if ( hour < 10 ) {
-        set_leading_zero = true;
     }
 
     if ( state->mode )
@@ -57,8 +54,6 @@ void _wake_face_update_display(movement_settings_t *settings, wake_face_state_t 
 
     watch_set_colon();
     watch_display_string(lcdbuf, 0);
-    if ( set_leading_zero )
-        watch_display_string("0", 4);
 }
 
 //

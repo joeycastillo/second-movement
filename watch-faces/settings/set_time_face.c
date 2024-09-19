@@ -126,14 +126,10 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     }
 
     char buf[11];
-    bool set_leading_zero = false;
     if (current_page < 3) {
         watch_set_colon();
         if (settings->bit.clock_mode_24h) {
-            if (!settings->bit.clock_24h_leading_zero)
-                watch_set_indicator(WATCH_INDICATOR_24H);
-            else if (date_time.unit.hour < 10)
-                set_leading_zero = true;
+            watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf, "%s  %2d%02d%02d", set_time_face_titles[current_page], date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
         } else {
             sprintf(buf, "%s  %2d%02d%02d", set_time_face_titles[current_page], (date_time.unit.hour % 12) ? (date_time.unit.hour % 12) : 12, date_time.unit.minute, date_time.unit.second);
@@ -174,8 +170,6 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     }
 
     watch_display_string(buf, 0);
-    if (set_leading_zero)
-        watch_display_string("0", 4);
 
     return true;
 }
