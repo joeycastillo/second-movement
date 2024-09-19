@@ -132,8 +132,8 @@ void watch_buzzer_abort_sequence(void) {
     _tcc_write_RUNSTDBY(false);
 }
 
-void TC3_Handler(void) {
-    // interrupt handler vor TC3 (globally!)
+void irq_handler_tc3(void) {
+    // interrupt handler for TC3 (globally!)
     cb_watch_buzzer_seq();
     TC3->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
 }
