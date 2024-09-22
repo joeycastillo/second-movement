@@ -106,6 +106,8 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
             } else if ((date_time.reg >> 12) == (previous_date_time >> 12) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before minutes is the same.
                 sprintf(buf, "%02d%02d", date_time.unit.minute, date_time.unit.second);
+                watch_display_text(WATCH_POSITION_MINUTES, buf);
+                watch_display_text(WATCH_POSITION_SECONDS, buf + 2);
             } else {
                 // other stuff changed; let's do it all.
 #ifndef CLOCK_FACE_24H_ONLY
