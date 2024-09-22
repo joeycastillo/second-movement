@@ -29,6 +29,9 @@ endif
 INCLUDES += \
   -I./ \
   -I./tinyusb/src \
+  -I./littlefs \
+  -I./filesystem \
+  -I./shell \
   -I./watch-library/shared/watch \
   -I./watch-library/hardware/watch \
   -I./watch-faces/clock \
@@ -36,6 +39,11 @@ INCLUDES += \
 
 # Add your source files here.
 SRCS += \
+  ./littlefs/lfs.c \
+  ./littlefs/lfs_util.c \
+  ./filesystem/filesystem.c \
+  ./shell/shell.c \
+  ./shell/shell_cmd_list.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \

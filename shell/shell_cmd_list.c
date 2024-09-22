@@ -30,6 +30,7 @@
 
 #include "filesystem.h"
 #include "watch.h"
+#include "delay.h"
 
 static int help_cmd(int argc, char *argv[]);
 static int flash_cmd(int argc, char *argv[]);

@@ -36,10 +36,10 @@
 #include "watch_usb_cdc.h"
 #include "watch_private.h"
 #include "movement.h"
+#include "filesystem.h"
+#include "shell.h"
 
-/// FIXMME: #SecondMovement needs to bring back the following includes (and remove the default signal_tune)
-// #include "filesystem.h"
-// #include "shell.h"
+/// FIXME: #SecondMovement needs to bring back the following include (and remove the default signal_tune)
 // #include "movement_custom_signal_tunes.h"
 int8_t signal_tune[] = {
     BUZZER_NOTE_C8, 5,
@@ -429,8 +429,7 @@ void app_init(void) {
     movement_state.next_available_backup_register = 4;
     _movement_reset_inactivity_countdown();
 
-/// FIXME: #SecondMovement needs filesystem support
-    // filesystem_init();
+    filesystem_init();
 
 #if __EMSCRIPTEN__
     int32_t time_zone_offset = EM_ASM_INT({
@@ -636,8 +635,7 @@ bool app_loop(void) {
 
     // if we are plugged into USB, handle the serial shell
     if (usb_is_enabled()) {
-        /// FIXME: #SecondMovement needs to bring back the shell
-        // shell_task();
+        shell_task();
     }
 
     event.subsecond = 0;

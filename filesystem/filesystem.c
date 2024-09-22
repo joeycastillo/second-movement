@@ -1,11 +1,37 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2022-2024 Joey Castillo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <peripheral_clk_config.h>
 #include "filesystem.h"
 #include "watch.h"
 #include "lfs.h"
-#include "hpl_flash.h"
+
+#ifndef min
+#define min(x, y) ((x) > (y) ? (y) : (x))
+#endif
 
 int lfs_storage_read(const struct lfs_config *cfg, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size);
 int lfs_storage_prog(const struct lfs_config *cfg, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size);
@@ -32,7 +58,7 @@ int lfs_storage_sync(const struct lfs_config *cfg) {
     return !watch_storage_sync();
 }
 
-const struct lfs_config cfg = {
+const struct lfs_config watch_lfs_cfg = {
     // block device operations
     .read  = lfs_storage_read,
     .prog  = lfs_storage_prog,
@@ -49,7 +75,7 @@ const struct lfs_config cfg = {
     .block_cycles = 100,
 };
 
-static lfs_t lfs;
+lfs_t eeprom_filesystem;
 static lfs_file_t file;
 static struct lfs_info info;
 
@@ -64,12 +90,12 @@ int32_t filesystem_get_free_space(void) {
 	int err;
 
 	uint32_t free_blocks = 0;
-	err = lfs_fs_traverse(&lfs, _traverse_df_cb, &free_blocks);
+	err = lfs_fs_traverse(&eeprom_filesystem, _traverse_df_cb, &free_blocks);
 	if(err < 0){
 		return err;
 	}
 
-	uint32_t available = cfg.block_count * cfg.block_size - free_blocks * cfg.block_size;
+	uint32_t available = watch_lfs_cfg.block_count * watch_lfs_cfg.block_size - free_blocks * watch_lfs_cfg.block_size;
 
 	return (int32_t)available;
 }
@@ -112,15 +138,15 @@ static int filesystem_ls(lfs_t *lfs, const char *path) {
 }
 
 bool filesystem_init(void) {
-    int err = lfs_mount(&lfs, &cfg);
+    int err = lfs_mount(&eeprom_filesystem, &watch_lfs_cfg);
 
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
-    if (err < 0) {
+    if (1) {
         printf("Ignore that error! Formatting filesystem...\r\n");
-        err = lfs_format(&lfs, &cfg);
+        err = lfs_format(&eeprom_filesystem, &watch_lfs_cfg);
         if (err < 0) return false;
-        err = lfs_mount(&lfs, &cfg);
+        err = lfs_mount(&eeprom_filesystem, &watch_lfs_cfg) == LFS_ERR_OK;
         printf("Filesystem mounted with %ld bytes free.\r\n", filesystem_get_free_space());
     }
 
@@ -129,15 +155,15 @@ bool filesystem_init(void) {
 
 int _filesystem_format(void);
 int _filesystem_format(void) {
-    int err = lfs_unmount(&lfs);
+    int err = lfs_unmount(&eeprom_filesystem);
     if (err < 0) {
         printf("Couldn't unmount - continuing to format, but you should reboot afterwards!\r\n");
     }
 
-    err = lfs_format(&lfs, &cfg);
+    err = lfs_format(&eeprom_filesystem, &watch_lfs_cfg);
     if (err < 0) return err;
 
-    err = lfs_mount(&lfs, &cfg);
+    err = lfs_mount(&eeprom_filesystem, &watch_lfs_cfg);
     if (err < 0) return err;
     printf("Filesystem re-mounted with %ld bytes free.\r\n", filesystem_get_free_space());
     return 0;
@@ -145,15 +171,15 @@ int _filesystem_format(void) {
 
 bool filesystem_file_exists(char *filename) {
     info.type = 0;
-    lfs_stat(&lfs, filename, &info);
+    lfs_stat(&eeprom_filesystem, filename, &info);
     return info.type == LFS_TYPE_REG;
 }
 
 bool filesystem_rm(char *filename) {
     info.type = 0;
-    lfs_stat(&lfs, filename, &info);
+    lfs_stat(&eeprom_filesystem, filename, &info);
     if (filesystem_file_exists(filename)) {
-        return lfs_remove(&lfs, filename) == LFS_ERR_OK;
+        return lfs_remove(&eeprom_filesystem, filename) == LFS_ERR_OK;
     } else {
         printf("rm: %s: No such file\r\n", filename);
         return false;
@@ -172,11 +198,11 @@ bool filesystem_read_file(char *filename, char *buf, int32_t length) {
     memset(buf, 0, length);
     int32_t file_size = filesystem_get_file_size(filename);
     if (file_size > 0) {
-        int err = lfs_file_open(&lfs, &file, filename, LFS_O_RDONLY);
+        int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_RDONLY);
         if (err < 0) return false;
-        err = lfs_file_read(&lfs, &file, buf, min(length, file_size));
+        err = lfs_file_read(&eeprom_filesystem, &file, buf, min(length, file_size));
         if (err < 0) return false;
-        return lfs_file_close(&lfs, &file) == LFS_ERR_OK;
+        return lfs_file_close(&eeprom_filesystem, &file) == LFS_ERR_OK;
     }
 
     return false;
@@ -186,11 +212,11 @@ bool filesystem_read_line(char *filename, char *buf, int32_t *offset, int32_t le
     memset(buf, 0, length + 1);
     int32_t file_size = filesystem_get_file_size(filename);
     if (file_size > 0) {
-        int err = lfs_file_open(&lfs, &file, filename, LFS_O_RDONLY);
+        int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_RDONLY);
         if (err < 0) return false;
-        err = lfs_file_seek(&lfs, &file, *offset, LFS_SEEK_SET);
+        err = lfs_file_seek(&eeprom_filesystem, &file, *offset, LFS_SEEK_SET);
         if (err < 0) return false;
-        err = lfs_file_read(&lfs, &file, buf, min(length - 1, file_size - *offset));
+        err = lfs_file_read(&eeprom_filesystem, &file, buf, min(length - 1, file_size - *offset));
         if (err < 0) return false;
         for(int i = 0; i < length; i++) {
             (*offset)++;
@@ -199,7 +225,7 @@ bool filesystem_read_line(char *filename, char *buf, int32_t *offset, int32_t le
                 break;
             }
         }
-        return lfs_file_close(&lfs, &file) == LFS_ERR_OK;
+        return lfs_file_close(&eeprom_filesystem, &file) == LFS_ERR_OK;
     }
 
     return false;
@@ -207,7 +233,7 @@ bool filesystem_read_line(char *filename, char *buf, int32_t *offset, int32_t le
 
 static void filesystem_cat(char *filename) {
     info.type = 0;
-    lfs_stat(&lfs, filename, &info);
+    lfs_stat(&eeprom_filesystem, filename, &info);
     if (filesystem_file_exists(filename)) {
         if (info.size > 0) {
             char *buf = malloc(info.size + 1);
@@ -224,26 +250,26 @@ static void filesystem_cat(char *filename) {
 }
 
 bool filesystem_write_file(char *filename, char *text, int32_t length) {
-    int err = lfs_file_open(&lfs, &file, filename, LFS_O_RDWR | LFS_O_CREAT | LFS_O_TRUNC);
+    int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_RDWR | LFS_O_CREAT | LFS_O_TRUNC);
     if (err < 0) return false;
-    err = lfs_file_write(&lfs, &file, text, length);
+    err = lfs_file_write(&eeprom_filesystem, &file, text, length);
     if (err < 0) return false;
-    return lfs_file_close(&lfs, &file) == LFS_ERR_OK;
+    return lfs_file_close(&eeprom_filesystem, &file) == LFS_ERR_OK;
 }
 
 bool filesystem_append_file(char *filename, char *text, int32_t length) {
-    int err = lfs_file_open(&lfs, &file, filename, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_APPEND);
+    int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_APPEND);
     if (err < 0) return false;
-    err = lfs_file_write(&lfs, &file, text, length);
+    err = lfs_file_write(&eeprom_filesystem, &file, text, length);
     if (err < 0) return false;
-    return lfs_file_close(&lfs, &file) == LFS_ERR_OK;
+    return lfs_file_close(&eeprom_filesystem, &file) == LFS_ERR_OK;
 }
 
 int filesystem_cmd_ls(int argc, char *argv[]) {
     if (argc >= 2) {
-        filesystem_ls(&lfs, argv[1]);
+        filesystem_ls(&eeprom_filesystem, argv[1]);
     } else {
-        filesystem_ls(&lfs, "/");
+        filesystem_ls(&eeprom_filesystem, "/");
     }
     return 0;
 }

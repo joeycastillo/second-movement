@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2022-2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef FILESYSTEM_H_
-#define FILESYSTEM_H_
+#pragma once
+
 #include <stdio.h>
 #include <stdbool.h>
 #include "watch.h"
@@ -102,5 +102,3 @@ int filesystem_cmd_df(int argc, char *argv[]);
 int filesystem_cmd_rm(int argc, char *argv[]);
 int filesystem_cmd_format(int argc, char *argv[]);
 int filesystem_cmd_echo(int argc, char *argv[]);
-
-#endif // FILESYSTEM_H_
