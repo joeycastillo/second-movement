@@ -391,6 +391,13 @@ uint8_t movement_claim_backup_register(void) {
 void app_init(void) {
     _watch_init();
 
+    watch_date_time date_time = watch_rtc_get_date_time();
+    if (date_time.reg == 0) {
+        // at first boot, set year to 2024
+        date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
+        watch_rtc_set_date_time(date_time);
+    }
+
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
