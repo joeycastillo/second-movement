@@ -108,7 +108,7 @@ void cb_watch_buzzer_seq(void) {
         }
         if (_sequence[_seq_position] && _sequence[_seq_position + 1]) {
             // read note
-            BuzzerNote note = _sequence[_seq_position];
+            watch_buzzer_note_t note = _sequence[_seq_position];
             if (note != BUZZER_NOTE_REST) {
                 watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
                 watch_set_buzzer_on();
@@ -167,11 +167,11 @@ inline void watch_set_buzzer_off(void) {
     HAL_GPIO_BUZZER_off();
 }
 
-void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
+void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
     watch_buzzer_play_note_with_volume(note, duration_ms, WATCH_BUZZER_VOLUME_LOUD);
 }
 
-void watch_buzzer_play_note_with_volume(BuzzerNote note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
+void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
     } else  {

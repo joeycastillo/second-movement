@@ -38,7 +38,7 @@
 */
 
 typedef struct Note {
-    BuzzerNote note;
+    watch_buzzer_note_t note;
     char * name;
 } Note;
 

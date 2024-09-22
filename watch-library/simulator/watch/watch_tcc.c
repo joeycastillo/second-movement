@@ -85,7 +85,7 @@ void cb_watch_buzzer_seq(void *userData) {
         }
         if (_sequence[_seq_position] && _sequence[_seq_position + 1]) {
             // read note
-            BuzzerNote note = _sequence[_seq_position];
+            watch_buzzer_note_t note = _sequence[_seq_position];
             if (note == BUZZER_NOTE_REST) {
                 watch_set_buzzer_off();
             } else {
@@ -171,7 +171,7 @@ void watch_set_buzzer_off(void) {
     });
 }
 
-void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
+void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
     } else {

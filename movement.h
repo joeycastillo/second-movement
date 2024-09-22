@@ -256,7 +256,7 @@ typedef struct {
     // alarm stuff
     int16_t alarm_ticks;
     bool is_buzzing;
-    BuzzerNote alarm_note;
+    watch_buzzer_note_t alarm_note;
 
     // button tracking for long press
     uint16_t light_down_timestamp;
@@ -308,6 +308,6 @@ void movement_request_wake(void);
 
 void movement_play_signal(void);
 void movement_play_alarm(void);
-void movement_play_alarm_beeps(uint8_t rounds, BuzzerNote alarm_note);
+void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 
 uint8_t movement_claim_backup_register(void);

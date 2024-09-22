@@ -62,7 +62,7 @@ void breathing_face_activate(movement_settings_t *settings, void *context) {
 const int NOTE_LENGTH = 80;
 
 void beep_in (void) {
-        const BuzzerNote notes[] = {
+        const watch_buzzer_note_t notes[] = {
             BUZZER_NOTE_C4,
             BUZZER_NOTE_D4,
             BUZZER_NOTE_E4,
@@ -78,7 +78,7 @@ void beep_in (void) {
 }
 
 void beep_in_hold (void) {
-        const BuzzerNote notes[] = {
+        const watch_buzzer_note_t notes[] = {
             BUZZER_NOTE_E4,
             BUZZER_NOTE_REST,
             BUZZER_NOTE_E4,
@@ -94,7 +94,7 @@ void beep_in_hold (void) {
 }
 
 void beep_out (void) {
-        const BuzzerNote notes[] = {
+        const watch_buzzer_note_t notes[] = {
             BUZZER_NOTE_E4,
             BUZZER_NOTE_D4,
             BUZZER_NOTE_C4,
@@ -110,7 +110,7 @@ void beep_out (void) {
 }
 
 void beep_out_hold (void) {
-        const BuzzerNote notes[] = {
+        const watch_buzzer_note_t notes[] = {
             BUZZER_NOTE_C4,
             BUZZER_NOTE_REST * 2,
             BUZZER_NOTE_C4,

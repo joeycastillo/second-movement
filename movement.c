@@ -373,7 +373,7 @@ void movement_play_alarm(void) {
     movement_play_alarm_beeps(5, BUZZER_NOTE_C8);
 }
 
-void movement_play_alarm_beeps(uint8_t rounds, BuzzerNote alarm_note) {
+void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
     if (rounds == 0) rounds = 1;
     if (rounds > 20) rounds = 20;
     movement_request_wake();
