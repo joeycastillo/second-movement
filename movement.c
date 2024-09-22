@@ -584,7 +584,7 @@ bool app_loop(void) {
     }
 
     // if we have timed out of our timeout countdown, give the app a hint that they can resign.
-    if (movement_state.timeout_ticks == 0) {
+    if (movement_state.timeout_ticks == 0 && movement_state.current_face_idx != 0) {
         movement_state.timeout_ticks = -1;
         if (movement_state.settings.bit.to_always == false) {
             // if "timeout always" is false, give the current watch face a chance to exit gracefully...
