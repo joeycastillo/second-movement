@@ -110,7 +110,7 @@ void cb_watch_buzzer_seq(void) {
             // read note
             BuzzerNote note = _sequence[_seq_position];
             if (note != BUZZER_NOTE_REST) {
-                watch_set_buzzer_period(NotePeriods[note]);
+                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
                 watch_set_buzzer_on();
             } else watch_set_buzzer_off();
             // set duration ticks and move to next tone
@@ -148,9 +148,9 @@ inline void watch_enable_buzzer(void) {
     }
 }
 
-inline void watch_set_buzzer_period(uint32_t period) {
+void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty) {
     tcc_set_period(0, period, true);
-    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, period / 2, true);
+    tcc_set_cc(0, (WATCH_BUZZER_TCC_CHANNEL) % 4, period / (100 / duty), true);
 }
 
 void watch_disable_buzzer(void) {
@@ -168,10 +168,14 @@ inline void watch_set_buzzer_off(void) {
 }
 
 void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
+    watch_buzzer_play_note_with_volume(note, duration_ms, WATCH_BUZZER_VOLUME_LOUD);
+}
+
+void watch_buzzer_play_note_with_volume(BuzzerNote note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
-    } else {
-        watch_set_buzzer_period(NotePeriods[note]);
+    } else  {
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25);
         watch_set_buzzer_on();
     }
     delay_ms(duration_ms);

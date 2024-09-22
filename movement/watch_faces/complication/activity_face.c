@@ -334,7 +334,7 @@ static void _activity_chirp_tick_transmit(void *context) {
         return;
     }
     uint16_t period = chirpy_get_tone_period(tone);
-    watch_set_buzzer_period(period);
+    watch_set_buzzer_period_and_duty_cycle(period, 25);
     watch_set_buzzer_on();
 }
 
@@ -351,7 +351,7 @@ static void _activity_chirp_tick_countdown(void *context) {
     }
     // Sound or turn off buzzer
     if ((state->chirpy_tick_state.seq_pos % 8) == 0) {
-        watch_set_buzzer_period(NotePeriods[BUZZER_NOTE_A5]);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[BUZZER_NOTE_A5], 25);
         watch_set_buzzer_on();
         if (state->chirpy_tick_state.seq_pos == 0) {
             watch_display_string(" ---  ", 4);

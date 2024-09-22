@@ -36,7 +36,8 @@
 bool watch_is_buzzer_or_led_enabled(void);
 
 /** @addtogroup tcc Buzzer and LED Control (via the TCC peripheral)
-  * @brief This section covers functions related to the piezo buzzer embedded in the F-91W's back plate.
+  * @brief This section covers functions related to Timer Counter for Control peripheral, which drives the piezo buzzer
+  *        embedded in the F-91W's back plate as well as the LED that backlights the display.
   */
 /// @{
 /** @brief Enables the TCC peripheral, which drives the buzzer.
@@ -46,8 +47,11 @@ void watch_enable_buzzer(void);
 /** @brief Sets the period of the buzzer.
   * @param period The period of a single cycle for the TCC peripheral. You can determine the period for
   *               a desired frequency with the following formula: period = 1000000 / freq
+  * @param duty The duty cycle of the buzzer, from 0 to 50 (percent ON time). Do not use values over 50.
+  * @note Unless you _really_ know what you're doing, use 25% for the duty cycle. If you're just aiming
+  *       to play a tone at a given volume, use watch_buzzer_play_note_with_volume instead.
   */
-void watch_set_buzzer_period(uint32_t period);
+void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty);
 
 /** @brief Disables the TCC peripheral that drives the buzzer.
   * @note If you are using PWM to set custom LED colors, this method will also disable the LED PWM driver,
@@ -64,6 +68,12 @@ void watch_set_buzzer_on(void);
 /** @brief Turns the buzzer output off.
   */
 void watch_set_buzzer_off(void);
+
+/// @brief An enum for controlling the volume of the buzzer.
+typedef enum {
+    WATCH_BUZZER_VOLUME_SOFT = 0,
+    WATCH_BUZZER_VOLUME_LOUD
+} watch_buzzer_volume_t;
 
 /// @brief 87 notes for use with watch_buzzer_play_note
 typedef enum BuzzerNote {
@@ -157,13 +167,22 @@ typedef enum BuzzerNote {
     BUZZER_NOTE_REST             ///< no sound
 } BuzzerNote;
 
-/** @brief Plays the given note for a set duration.
+/** @brief Plays the given note for a set duration at the loudest possible volume.
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.
   * @note Note that this will block your UI for the duration of the note's play time, and it will
   *       after this call, the buzzer period will be set to the period of this note.
   */
 void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms);
+
+/** @brief Plays the given note for a set duration.
+  * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
+  * @param duration_ms The duration of the note.
+  * @param volume either WATCH_BUZZER_VOLUME_SOFT or WATCH_BUZZER_VOLUME_LOUD
+  * @note This will block your UI for the duration of the note's play time, and after this call, the
+  *       buzzer will stop sounding, but the TCC period will remain set to the period of this note.
+  */
+void watch_buzzer_play_note_with_volume(BuzzerNote note, uint16_t duration_ms, watch_buzzer_volume_t volume);
 
 /// @brief An array of periods for all the notes on a piano, corresponding to the names in BuzzerNote.
 extern const uint16_t NotePeriods[108];

@@ -89,7 +89,7 @@ void cb_watch_buzzer_seq(void *userData) {
             if (note == BUZZER_NOTE_REST) {
                 watch_set_buzzer_off();
             } else {
-                watch_set_buzzer_period(NotePeriods[note]);
+                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
                 watch_set_buzzer_on();
             }
             // set duration ticks and move to next tone
@@ -118,7 +118,8 @@ void watch_enable_buzzer(void) {
     });
 }
 
-void watch_set_buzzer_period(uint32_t period) {
+void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty_cycle) {
+    (void) duty_cycle;
     if (!buzzer_enabled) return;
     buzzer_period = period;
 }
@@ -174,7 +175,7 @@ void watch_buzzer_play_note(BuzzerNote note, uint16_t duration_ms) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
     } else {
-        watch_set_buzzer_period(NotePeriods[note]);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
         watch_set_buzzer_on();
     }
 

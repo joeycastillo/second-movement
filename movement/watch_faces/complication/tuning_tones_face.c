@@ -84,7 +84,7 @@ static void update_buzzer(const tuning_tones_state_t *state)
 {
     if (state->playing) {
         watch_set_buzzer_off();
-        watch_set_buzzer_period(NotePeriods[notes[state->note_ind].note]);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[notes[state->note_ind].note], 25);
         watch_set_buzzer_on();
     }
 }

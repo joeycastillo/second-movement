@@ -168,7 +168,7 @@ static void _cdf_scale_tick(void *context) {
     }
     uint32_t freq = 700 + tick_state->seq_pos * 200;
     uint32_t period = 1000000 / freq;
-    watch_set_buzzer_period(period);
+    watch_set_buzzer_period_and_duty_cycle(period, 25);
     watch_set_buzzer_on();
     ++tick_state->seq_pos;
 }
@@ -183,7 +183,7 @@ static void _cdf_data_tick(void *context) {
         return;
     }
     uint16_t period = chirpy_get_tone_period(tone);
-    watch_set_buzzer_period(period);
+    watch_set_buzzer_period_and_duty_cycle(period, 25);
     watch_set_buzzer_on();
 }
 
@@ -234,7 +234,7 @@ static void _cdf_countdown_tick(void *context) {
     }
     // Sound or turn off buzzer
     if ((tick_state->seq_pos % 8) == 0) {
-        watch_set_buzzer_period(NotePeriods[BUZZER_NOTE_A5]);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[BUZZER_NOTE_A5], 25);
         watch_set_buzzer_on();
     } else if ((tick_state->seq_pos % 8) == 1) {
         watch_set_buzzer_off();
