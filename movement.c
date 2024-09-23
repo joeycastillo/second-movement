@@ -403,7 +403,7 @@ void app_init(void) {
 }
 
 void app_wake_from_backup(void) {
-    movement_state.settings.reg = watch_get_backup_data(0);
+    /// TODO: #SecondMovement needs to restore settings from file system.
 }
 
 void app_setup(void) {
