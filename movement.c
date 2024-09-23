@@ -377,6 +377,22 @@ void app_init(void) {
 #endif
     movement_state.settings.bit.led_red_color = MOVEMENT_DEFAULT_RED_COLOR;
     movement_state.settings.bit.led_green_color = MOVEMENT_DEFAULT_GREEN_COLOR;
+#if defined(WATCH_BLUE_TCC_CHANNEL) && !defined(WATCH_GREEN_TCC_CHANNEL)
+    // If there is a blue LED but no green LED, this is a blue Special Edition board.
+    // In the past, the "green color" showed up as the blue color on the blue board.
+    if (MOVEMENT_DEFAULT_RED_COLOR == 0 && MOVEMENT_DEFAULT_BLUE_COLOR == 0) {
+        // If the red color is 0 and the blue color is 0, we'll fall back to the old
+        // behavior, since otherwise there would be no default LED color.
+        movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_GREEN_COLOR;
+    } else {
+        // however if either the red or blue color is nonzero, we'll assume the user
+        // has used the new defaults and knows what color they want. this could be red
+        // if blue is 0, or a custom color if both are nonzero.
+        movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
+    }
+#else
+    movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
+#endif
     movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
     movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
     movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;

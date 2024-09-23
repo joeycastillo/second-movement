@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2022-2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@
  * SOFTWARE.
  */
 
-#ifndef PREFERENCES_FACE_H_
-#define PREFERENCES_FACE_H_
+#pragma once
 
 /*
  * PREFERENCES face
@@ -40,11 +39,15 @@
  *      for example, both Simple Clock, World Clock and Sunrise/Sunset will
  *      display the time in 24 hour format if the 24 hour clock is selected here.
  *
- *  BT - Button tone.
- *      This setting is only relevant if you installed the buzzer connector,
- *      and it toggles the beep when changing modes. If Y, the buzzer will
- *      sound a tone when Mode is pressed. Change to N to make the Mode
- *      button silent.
+ *  MO - Mode button.
+ *      This setting allows you to choose whether the Mode button should emit
+ *      a beep when pressed, and if so, how loud it should be. Options are
+ *      "-" (no beep), "L" (low volume) and "H" (high volume).
+ *
+ *  MO - Mode button.
+ *      This setting allows you to choose whether the Mode button should emit
+ *      a beep when pressed, and if so, how loud it should be. Options are
+ *      "-" (no beep), "L" (low volume) and "H" (high volume).
  *
  *  TO - Timeout.
  *      Sets the time until screens that time out (like Settings and Time Set)
@@ -78,6 +81,24 @@
 
 #include "movement.h"
 
+typedef enum {
+    PREFERENCES_PAGE_CLOCK_MODE = 0,
+    PREFERENCES_PAGE_BUTTON_SOUND,
+    PREFERENCES_PAGE_TIMEOUT,
+    PREFERENCES_PAGE_LOW_ENERGY,
+    PREFERENCES_PAGE_LED_DURATION,
+    PREFERENCES_PAGE_LED_RED,
+    PREFERENCES_PAGE_LED_GREEN,
+    PREFERENCES_PAGE_LED_BLUE,
+    PREFERENCES_PAGE_NUM_PREFERENCES,
+} preferences_page_t;
+
+
+typedef struct {
+    bool setting_enabled[PREFERENCES_PAGE_NUM_PREFERENCES];
+    preferences_page_t current_page;
+} preferences_state_t;
+
 void preferences_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void preferences_face_activate(movement_settings_t *settings, void *context);
 bool preferences_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
@@ -90,5 +111,3 @@ void preferences_face_resign(movement_settings_t *settings, void *context);
     preferences_face_resign, \
     NULL, \
 })
-
-#endif // PREFERENCES_FACE_H_

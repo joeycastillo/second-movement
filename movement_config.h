@@ -29,6 +29,7 @@
 
 const watch_face_t watch_faces[] = {
     simple_clock_face,
+    preferences_face,
     set_time_face,
 };
 
@@ -40,7 +41,7 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 2) // or (0)
+#define MOVEMENT_SECONDARY_FACE_INDEX (0) // (MOVEMENT_NUM_FACES - 2)
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT
@@ -48,8 +49,9 @@ const watch_face_t watch_faces[] = {
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */
-#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
 #define MOVEMENT_DEFAULT_RED_COLOR 0x0
+#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
+#define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
 
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE false
