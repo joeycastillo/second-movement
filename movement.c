@@ -200,9 +200,9 @@ void movement_request_tick_frequency(uint8_t freq) {
 
 void movement_illuminate_led(void) {
     if (movement_state.settings.bit.led_duration != 0b111) {
-        watch_set_led_color_rgb(movement_state.settings.bit.led_red_color ? (0xF | movement_state.settings.bit.led_red_color << 4) : 0,
-                                movement_state.settings.bit.led_green_color ? (0xF | movement_state.settings.bit.led_green_color << 4) : 0,
-                                movement_state.settings.bit.led_blue_color ? (0xF | movement_state.settings.bit.led_blue_color << 4) : 0);
+        watch_set_led_color_rgb(movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4,
+                                movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4,
+                                movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4);
         if (movement_state.settings.bit.led_duration == 0) {
             movement_state.light_ticks = 1;
         } else {
