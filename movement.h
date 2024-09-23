@@ -290,6 +290,8 @@ void movement_move_to_next_face(void);
 bool movement_default_loop_handler(movement_event_t event, movement_settings_t *settings);
 
 void movement_illuminate_led(void);
+void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue);
+void movement_force_led_off(void);
 
 void movement_request_tick_frequency(uint8_t freq);
 

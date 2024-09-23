@@ -75,10 +75,99 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
     switch (event.event_type) {
         case EVENT_TICK:
         case EVENT_ACTIVATE:
-            // Do nothing; handled below.
+            watch_display_text(WATCH_POSITION_FULL, (char *)preferences_face_titles[state->current_page]);
+            watch_clear_all_indicators();
+            watch_clear_colon();
+
+            // blink active setting on even-numbered quarter-seconds
+            if (event.subsecond % 2) {
+                char buf[8];
+                switch (state->current_page) {
+                    case PREFERENCES_PAGE_CLOCK_MODE:
+                        if (settings->bit.clock_mode_24h) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
+                        else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
+                        break;
+                    case PREFERENCES_PAGE_BUTTON_SOUND:
+                        if (settings->bit.button_should_sound) {
+                            watch_display_text(WATCH_POSITION_TOP_RIGHT, " Y");
+                        } else {
+                            watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
+                        }
+                        break;
+                    case PREFERENCES_PAGE_TIMEOUT:
+                        switch (settings->bit.to_interval) {
+                            case 0:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "60 SeC");
+                                break;
+                            case 1:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "2 n&in");
+                                break;
+                            case 2:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "5 n&in");
+                                break;
+                            case 3:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "30n&in");
+                                break;
+                        }
+                        break;
+                    case PREFERENCES_PAGE_LOW_ENERGY:
+                        switch (settings->bit.le_interval) {
+                            case 0:
+                                watch_display_text(WATCH_POSITION_BOTTOM, " Never");
+                                break;
+                            case 1:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "10n&in");
+                                break;
+                            case 2:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "1 hour");
+                                break;
+                            case 3:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "2 hour");
+                                break;
+                            case 4:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "6 hour");
+                                break;
+                            case 5:
+                                watch_display_text(WATCH_POSITION_BOTTOM, "12 hr");
+                                break;
+                            case 6:
+                                watch_display_text(WATCH_POSITION_BOTTOM, " 1 day");
+                                break;
+                            case 7:
+                                watch_display_text(WATCH_POSITION_BOTTOM, " 7 day");
+                                break;
+                        }
+                        break;
+                    case PREFERENCES_PAGE_LED_DURATION:
+                        if (settings->bit.led_duration == 0) {
+                            watch_display_text(WATCH_POSITION_BOTTOM, "instnt");
+                        } else if (settings->bit.led_duration == 0b111) {
+                            watch_display_text(WATCH_POSITION_BOTTOM, "no LEd");
+                        } else {
+                            sprintf(buf, " %1d SeC", settings->bit.led_duration * 2 - 1);
+                            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+                        }
+                        break;
+                    case PREFERENCES_PAGE_LED_RED:
+                        sprintf(buf, "%2d", settings->bit.led_red_color);
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                        break;
+                    case PREFERENCES_PAGE_LED_GREEN:
+                        sprintf(buf, "%2d", settings->bit.led_green_color);
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                        break;
+                    case PREFERENCES_PAGE_LED_BLUE:
+                        sprintf(buf, "%2d", settings->bit.led_blue_color);
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                        break;
+                    case PREFERENCES_PAGE_NUM_PREFERENCES:
+                        // nothing to do here, just silencing the warning
+                        break;
+                }
+            }
             break;
         case EVENT_MODE_BUTTON_UP:
-            watch_set_led_off();
+            movement_force_led_off();
             movement_move_to_next_face();
             return false;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -129,117 +218,22 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
             return movement_default_loop_handler(event, settings);
     }
 
-    watch_display_text(WATCH_POSITION_FULL, (char *)preferences_face_titles[state->current_page]);
-    watch_clear_all_indicators();
-    watch_clear_colon();
-
-    // blink active setting on even-numbered quarter-seconds
-    if (event.subsecond % 2) {
-        char buf[8];
-        switch (state->current_page) {
-            case PREFERENCES_PAGE_CLOCK_MODE:
-                if (settings->bit.clock_mode_24h) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
-                else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
-                break;
-            case PREFERENCES_PAGE_BUTTON_SOUND:
-                if (settings->bit.button_should_sound) {
-                    watch_display_text(WATCH_POSITION_TOP_RIGHT, " Y");
-                } else {
-                    watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
-                }
-                break;
-            case PREFERENCES_PAGE_TIMEOUT:
-                switch (settings->bit.to_interval) {
-                    case 0:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "60 SeC");
-                        break;
-                    case 1:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "2 n&in");
-                        break;
-                    case 2:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "5 n&in");
-                        break;
-                    case 3:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "30n&in");
-                        break;
-                }
-                break;
-            case PREFERENCES_PAGE_LOW_ENERGY:
-                switch (settings->bit.le_interval) {
-                    case 0:
-                        watch_display_text(WATCH_POSITION_BOTTOM, " Never");
-                        break;
-                    case 1:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "10n&in");
-                        break;
-                    case 2:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "1 hour");
-                        break;
-                    case 3:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "2 hour");
-                        break;
-                    case 4:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "6 hour");
-                        break;
-                    case 5:
-                        watch_display_text(WATCH_POSITION_BOTTOM, "12 hr");
-                        break;
-                    case 6:
-                        watch_display_text(WATCH_POSITION_BOTTOM, " 1 day");
-                        break;
-                    case 7:
-                        watch_display_text(WATCH_POSITION_BOTTOM, " 7 day");
-                        break;
-                }
-                break;
-            case PREFERENCES_PAGE_LED_DURATION:
-                if (settings->bit.led_duration == 0) {
-                    watch_display_text(WATCH_POSITION_BOTTOM, "instnt");
-                } else if (settings->bit.led_duration == 0b111) {
-                    watch_display_text(WATCH_POSITION_BOTTOM, "no LEd");
-                } else {
-                    sprintf(buf, " %1d SeC", settings->bit.led_duration * 2 - 1);
-                    watch_display_text(WATCH_POSITION_BOTTOM, buf);
-                }
-                break;
-            case PREFERENCES_PAGE_LED_RED:
-                sprintf(buf, "%2d", settings->bit.led_red_color);
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                break;
-                break;
-            case PREFERENCES_PAGE_LED_GREEN:
-                sprintf(buf, "%2d", settings->bit.led_green_color);
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                break;
-                break;
-            case PREFERENCES_PAGE_LED_BLUE:
-                sprintf(buf, "%2d", settings->bit.led_blue_color);
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                break;
-            case PREFERENCES_PAGE_NUM_PREFERENCES:
-                // nothing to do here, just silencing the warning
-                break;
-        }
-    }
-
-    // on LED color select screns, preview the color.
     if (state->current_page == PREFERENCES_PAGE_LED_RED ||
         state->current_page == PREFERENCES_PAGE_LED_GREEN ||
         state->current_page == PREFERENCES_PAGE_LED_BLUE) {
-        watch_set_led_color_rgb(settings->bit.led_red_color ? (0xF | settings->bit.led_red_color << 4) : 0,
-                                settings->bit.led_green_color ? (0xF | settings->bit.led_green_color << 4) : 0,
-                                settings->bit.led_blue_color ? (0xF | settings->bit.led_blue_color << 4) : 0);
-        // return false so the watch stays awake (needed for the PWM driver to function).
+        movement_force_led_on(settings->bit.led_red_color | settings->bit.led_red_color << 4,
+                              settings->bit.led_green_color | settings->bit.led_green_color << 4,
+                              settings->bit.led_blue_color | settings->bit.led_blue_color << 4);
         return false;
+    } else {
+        movement_force_led_off();
+        return true;
     }
-
-    watch_set_led_off();
-    return true;
 }
 
 void preferences_face_resign(movement_settings_t *settings, void *context) {
     (void) settings;
     (void) context;
-    watch_set_led_off();
+    movement_force_led_off();
     watch_store_backup_data(settings->reg, 0);
 }

@@ -212,7 +212,13 @@ void movement_illuminate_led(void) {
     }
 }
 
-static void _movement_led_off(void) {
+void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue) {
+    // this is hacky, we need a way for watch faces to set an arbitrary color and prevent Movement from turning it right back off.
+    watch_set_led_color_rgb(red, green, blue);
+    movement_state.light_ticks = 32767;
+}
+
+void movement_force_led_off(void) {
     watch_set_led_off();
     movement_state.light_ticks = -1;
     _movement_disable_fast_tick_if_possible();
@@ -230,7 +236,7 @@ bool movement_default_loop_handler(movement_event_t event, movement_settings_t *
             break;
         case EVENT_LIGHT_BUTTON_UP:
             if (movement_state.settings.bit.led_duration == 0) {
-                _movement_led_off();
+                movement_force_led_off();
             }
             break;
         case EVENT_MODE_LONG_PRESS:
@@ -512,7 +518,7 @@ bool app_loop(void) {
         if (HAL_GPIO_BTN_LIGHT_read()) {
             movement_state.light_ticks = 1;
         } else {
-            _movement_led_off();
+            movement_force_led_off();
         }
     }
 
