@@ -3,7 +3,7 @@ GOSSAMER_PATH=gossamer
 
 # If your firmware targets a specific board, specify it here,
 # or omit it and provide it on the command line (make BOARD=foo).
-BOARD=sensorwatch_green
+BOARD=sensorwatch_pro
 
 TINYUSB_CDC=1
 
