@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2022-2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include "world_clock_face.h"
 #include "watch.h"
 #include "watch_utility.h"
+#include "watch_common_display.h"
 
 void world_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
     (void) settings;
@@ -53,7 +54,6 @@ void world_clock_face_activate(movement_settings_t *settings, void *context) {
 
 static bool world_clock_face_do_display_mode(movement_event_t event, movement_settings_t *settings, world_clock_state_t *state) {
     char buf[11];
-    uint8_t pos;
 
     uint32_t timestamp;
     uint32_t previous_date_time;
@@ -71,15 +71,16 @@ static bool world_clock_face_do_display_mode(movement_event_t event, movement_se
             date_time = watch_utility_date_time_from_unix_time(timestamp, movement_timezone_offsets[state->settings.bit.timezone_index] * 60);
             previous_date_time = state->previous_date_time;
             state->previous_date_time = date_time.reg;
-
             if ((date_time.reg >> 6) == (previous_date_time >> 6) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before seconds is the same, don't waste cycles setting those segments.
-                pos = 8;
-                sprintf(buf, "%02d", date_time.unit.second);
+                watch_display_character_lp_seconds('0' + date_time.unit.second / 10, 8);
+                watch_display_character_lp_seconds('0' + date_time.unit.second % 10, 9);
+                break;
             } else if ((date_time.reg >> 12) == (previous_date_time >> 12) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
                 // everything before minutes is the same.
-                pos = 6;
                 sprintf(buf, "%02d%02d", date_time.unit.minute, date_time.unit.second);
+                watch_display_text(WATCH_POSITION_MINUTES, buf);
+                watch_display_text(WATCH_POSITION_SECONDS, buf + 2);
             } else {
                 // other stuff changed; let's do it all.
                 if (!settings->bit.clock_mode_24h) {
@@ -92,26 +93,18 @@ static bool world_clock_face_do_display_mode(movement_event_t event, movement_se
                     date_time.unit.hour %= 12;
                     if (date_time.unit.hour == 0) date_time.unit.hour = 12;
                 }
-                pos = 0;
+                watch_display_character(movement_valid_position_0_chars[state->settings.bit.char_0], 0);
+                watch_display_character(movement_valid_position_0_chars[state->settings.bit.char_1], 1);
+                sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                watch_display_text(WATCH_POSITION_HOURS, buf + 2);
+                watch_display_text(WATCH_POSITION_MINUTES, buf + 4);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
                     if (!watch_tick_animation_is_running()) watch_start_tick_animation(500);
-                    sprintf(buf, "%c%c%2d%2d%02d  ",
-                        movement_valid_position_0_chars[state->settings.bit.char_0],
-                        movement_valid_position_1_chars[state->settings.bit.char_1],
-                        date_time.unit.day,
-                        date_time.unit.hour,
-                        date_time.unit.minute);
                 } else {
-                    sprintf(buf, "%c%c%2d%2d%02d%02d",
-                        movement_valid_position_0_chars[state->settings.bit.char_0],
-                        movement_valid_position_1_chars[state->settings.bit.char_1],
-                        date_time.unit.day,
-                        date_time.unit.hour,
-                        date_time.unit.minute,
-                        date_time.unit.second);
+                    watch_display_text(WATCH_POSITION_SECONDS, buf + 6);
                 }
             }
-            watch_display_string(buf, pos);
             break;
         case EVENT_ALARM_LONG_PRESS:
             movement_request_tick_frequency(4);
@@ -190,7 +183,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, movement_
         }
     }
 
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_FULL, buf);
 
     return true;
 }
