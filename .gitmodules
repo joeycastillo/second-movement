@@ -7,3 +7,6 @@
 [submodule "gossamer"]
 	path = gossamer
 	url = git@github.com:joeycastillo/gossamer.git
+[submodule "utz"]
+	path = utz
+	url = git@github.com:joeycastillo/utz.git
