@@ -51,45 +51,6 @@ int8_t signal_tune[] = {
 
 #include "movement_config.h"
 
-
-// Default to no secondary face behaviour.
-#ifndef MOVEMENT_SECONDARY_FACE_INDEX
-#define MOVEMENT_SECONDARY_FACE_INDEX 0
-#endif
-
-// Set default LED colors if not set
-#ifndef MOVEMENT_DEFAULT_RED_COLOR
-#define MOVEMENT_DEFAULT_RED_COLOR 0x0
-#endif
-#ifndef MOVEMENT_DEFAULT_GREEN_COLOR
-#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
-#endif
-
-// Default to 12h mode
-#ifndef MOVEMENT_DEFAULT_24H_MODE
-#define MOVEMENT_DEFAULT_24H_MODE false
-#endif
-
-// Default to mode button sounding on press
-#ifndef MOVEMENT_DEFAULT_BUTTON_SOUND
-#define MOVEMENT_DEFAULT_BUTTON_SOUND true
-#endif
-
-// Default to switch back to main watch face after 60 seconds
-#ifndef MOVEMENT_DEFAULT_TIMEOUT_INTERVAL
-#define MOVEMENT_DEFAULT_TIMEOUT_INTERVAL 0
-#endif
-
-// Default to switch to low energy mode after 2 hours
-#ifndef MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL
-#define MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL 2
-#endif
-
-// Default to 1 second led duration
-#ifndef MOVEMENT_DEFAULT_LED_DURATION
-#define MOVEMENT_DEFAULT_LED_DURATION 1
-#endif
-
 #if __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
