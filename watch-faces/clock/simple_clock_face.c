@@ -51,11 +51,7 @@ void simple_clock_face_activate(movement_settings_t *settings, void *context) {
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
-#ifdef CLOCK_FACE_24H_ONLY
-    watch_set_indicator(WATCH_INDICATOR_24H);
-#else
     if (settings->bit.clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
-#endif
 
     // handle chime indicator
     if (state->signal_enabled) watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -110,7 +106,6 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                 watch_display_text(WATCH_POSITION_SECONDS, buf + 2);
             } else {
                 // other stuff changed; let's do it all.
-#ifndef CLOCK_FACE_24H_ONLY
                 if (!settings->bit.clock_mode_24h) {
                     // if we are in 12 hour mode, do some cleanup.
                     if (date_time.unit.hour < 12) {
@@ -121,7 +116,6 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                     date_time.unit.hour %= 12;
                     if (date_time.unit.hour == 0) date_time.unit.hour = 12;
                 }
-#endif
                 watch_display_text(WATCH_POSITION_TOP_LEFT, (char *) watch_utility_get_weekday(date_time));
                 sprintf(buf, "%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
