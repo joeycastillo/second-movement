@@ -167,7 +167,7 @@ static int __month_to_secs(int month, int is_leap)
 
 // Function adapted from `src/time/__tm_to_secs.c` of musl libc
 // https://musl.libc.org
-uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint32_t utc_offset) {
+uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, int32_t utc_offset) {
     int is_leap;
 
     // POSIX tm struct starts year at 1900 and month at 0
@@ -185,7 +185,7 @@ uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_
     return timestamp;
 }
 
-uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, uint32_t utc_offset) {
+uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t utc_offset) {
     return watch_utility_convert_to_unix_time(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second, utc_offset);
 }
 
@@ -195,7 +195,7 @@ uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, uint32_
 #define DAYS_PER_100Y (365*100 + 24)
 #define DAYS_PER_4Y   (365*4   + 1)
 
-watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, uint32_t utc_offset) {
+watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset) {
     watch_date_time retval;
     retval.reg = 0;
     int32_t days, secs;

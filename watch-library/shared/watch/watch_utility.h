@@ -91,14 +91,14 @@ uint8_t is_leap(uint16_t year);
   * @note Implemented by Wesley Ellis (tahnok) and based on BSD-licensed code by Josh Haberman:
   *       https://blog.reverberate.org/2020/05/12/optimizing-date-algorithms.html
   */
-uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint32_t utc_offset);
+uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, int32_t utc_offset);
 
 /** @brief Returns the UNIX time (seconds since 1970) for a given watch_date_time struct.
   * @param date_time The watch_date_time that you wish to convert.
   * @param utc_offset The number of seconds that date_time is offset from UTC, or 0 if the time is UTC.
   * @return A UNIX timestamp for the given watch_date_time and UTC offset.
   */
-uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, uint32_t utc_offset);
+uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t utc_offset);
 
 /** @brief Converts a duration in seconds to a watch_duration_t struct.
   * @param seconds A positive number of seconds that you wish to convert to a formatted duration.
@@ -114,7 +114,7 @@ watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds);
   * @note Adapted from MIT-licensed code from musl, Copyright © 2005-2014 Rich Felker, et al.:
   *       https://github.com/esmil/musl/blob/1cc81f5cb0df2b66a795ff0c26d7bbc4d16e13c6/src/time/__secs_to_tm.c
   */
-watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, uint32_t utc_offset);
+watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset);
 
 /** @brief Converts a watch_date_time for 12-hour display.
   * @param date_time A pointer to the watch_date_time that you wish to convert for display. Note that this
