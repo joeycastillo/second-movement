@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "watch.h"
+#include "utz.h"
 
 // Movement Preferences
 // These four 32-bit structs store information about the wearer and their preferences. Tentatively, the plan is
@@ -314,3 +315,6 @@ void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 
 uint8_t movement_claim_backup_register(void);
+
+int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index);
+int32_t movement_get_current_timezone_offset(void);

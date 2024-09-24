@@ -30,6 +30,7 @@ INCLUDES += \
   -I./ \
   -I./tinyusb/src \
   -I./littlefs \
+  -I./utz \
   -I./filesystem \
   -I./shell \
   -I./watch-library/shared/watch \
@@ -42,6 +43,8 @@ SRCS += \
   ./littlefs/lfs.c \
   ./littlefs/lfs_util.c \
   ./filesystem/filesystem.c \
+  ./utz/utz.c \
+  ./utz/zones.c \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \

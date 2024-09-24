@@ -38,6 +38,7 @@
 #include "movement.h"
 #include "filesystem.h"
 #include "shell.h"
+#include "utz.h"
 
 /// FIXME: #SecondMovement needs to bring back the following include (and remove the default signal_tune)
 // #include "movement_custom_signal_tunes.h"
@@ -61,50 +62,6 @@ watch_date_time scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
 const int16_t movement_timeout_inactivity_deadlines[4] = {60, 120, 300, 1800};
 movement_event_t event;
-
-const int16_t movement_timezone_offsets[] = {
-    0,      //  0 :   0:00:00 (UTC)
-    60,     //  1 :   1:00:00 (Central European Time)
-    120,    //  2 :   2:00:00 (South African Standard Time)
-    180,    //  3 :   3:00:00 (Arabia Standard Time)
-    210,    //  4 :   3:30:00 (Iran Standard Time)
-    240,    //  5 :   4:00:00 (Georgia Standard Time)
-    270,    //  6 :   4:30:00 (Afghanistan Time)
-    300,    //  7 :   5:00:00 (Pakistan Standard Time)
-    330,    //  8 :   5:30:00 (Indian Standard Time)
-    345,    //  9 :   5:45:00 (Nepal Time)
-    360,    // 10 :   6:00:00 (Kyrgyzstan time)
-    390,    // 11 :   6:30:00 (Myanmar Time)
-    420,    // 12 :   7:00:00 (Thailand Standard Time)
-    480,    // 13 :   8:00:00 (China Standard Time, Australian Western Standard Time)
-    525,    // 14 :   8:45:00 (Australian Central Western Standard Time)
-    540,    // 15 :   9:00:00 (Japan Standard Time, Korea Standard Time)
-    570,    // 16 :   9:30:00 (Australian Central Standard Time)
-    600,    // 17 :  10:00:00 (Australian Eastern Standard Time)
-    630,    // 18 :  10:30:00 (Lord Howe Standard Time)
-    660,    // 19 :  11:00:00 (Solomon Islands Time)
-    720,    // 20 :  12:00:00 (New Zealand Standard Time)
-    765,    // 21 :  12:45:00 (Chatham Standard Time)
-    780,    // 22 :  13:00:00 (Tonga Time)
-    825,    // 23 :  13:45:00 (Chatham Daylight Time)
-    840,    // 24 :  14:00:00 (Line Islands Time)
-    -720,   // 25 : -12:00:00 (Baker Island Time)
-    -660,   // 26 : -11:00:00 (Niue Time)
-    -600,   // 27 : -10:00:00 (Hawaii-Aleutian Standard Time)
-    -570,   // 28 :  -9:30:00 (Marquesas Islands Time)
-    -540,   // 29 :  -9:00:00 (Alaska Standard Time)
-    -480,   // 30 :  -8:00:00 (Pacific Standard Time)
-    -420,   // 31 :  -7:00:00 (Mountain Standard Time)
-    -360,   // 32 :  -6:00:00 (Central Standard Time)
-    -300,   // 33 :  -5:00:00 (Eastern Standard Time)
-    -270,   // 34 :  -4:30:00 (Venezuelan Standard Time)
-    -240,   // 35 :  -4:00:00 (Atlantic Standard Time)
-    -210,   // 36 :  -3:30:00 (Newfoundland Standard Time)
-    -180,   // 37 :  -3:00:00 (Brasilia Time)
-    -150,   // 38 :  -2:30:00 (Newfoundland Daylight Time)
-    -120,   // 39 :  -2:00:00 (Fernando de Noronha Time)
-    -60,    // 40 :  -1:00:00 (Azores Standard Time)
-};
 
 const char movement_valid_position_0_chars[] = " AaBbCcDdEeFGgHhIiJKLMNnOoPQrSTtUuWXYZ-='+\\/0123456789";
 const char movement_valid_position_1_chars[] = " ABCDEFHlJLNORTtUX-='01378";
@@ -348,6 +305,30 @@ uint8_t movement_claim_backup_register(void) {
     return movement_state.next_available_backup_register++;
 }
 
+int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index) {
+    watch_date_time date_time = watch_rtc_get_date_time();
+    uzone_t time_zone;
+    uoffset_t offset;
+    udatetime_t udate_time = {
+        .date.dayofmonth = date_time.unit.day,
+        .date.dayofweek = dayofweek(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - UYEAR_OFFSET, date_time.unit.month, date_time.unit.day),
+        .date.month = date_time.unit.month,
+        .date.year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - UYEAR_OFFSET,
+        .time.hour = date_time.unit.hour,
+        .time.minute = date_time.unit.minute,
+        .time.second = date_time.unit.second
+    };
+
+    unpack_zone(&zone_defns[zone_index], "", &time_zone);
+    get_current_offset(&time_zone, &udate_time, &offset);
+
+    return offset.hours * 3600 + offset.minutes * 60;
+}
+
+int32_t movement_get_current_timezone_offset(void) {
+    return movement_get_current_timezone_offset_for_zone(movement_state.settings.bit.time_zone);
+}
+
 void app_init(void) {
     _watch_init();
 
@@ -381,6 +362,7 @@ void app_init(void) {
     movement_state.settings.bit.clock_mode_24h = true;
 #else
     movement_state.settings.bit.clock_mode_24h = MOVEMENT_DEFAULT_24H_MODE;
+    movement_state.settings.bit.time_zone = 15;
 #endif
     movement_state.settings.bit.led_red_color = MOVEMENT_DEFAULT_RED_COLOR;
     movement_state.settings.bit.led_green_color = MOVEMENT_DEFAULT_GREEN_COLOR;
