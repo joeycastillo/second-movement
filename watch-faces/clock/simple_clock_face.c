@@ -122,6 +122,7 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
                 watch_display_text(WATCH_POSITION_HOURS, buf + 2);
                 watch_display_text(WATCH_POSITION_MINUTES, buf + 4);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
+                    watch_display_character(' ', 9);
                     if (!watch_tick_animation_is_running()) watch_start_tick_animation(500);
                 } else {
                     watch_display_text(WATCH_POSITION_SECONDS, buf + 6);
