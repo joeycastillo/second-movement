@@ -36,6 +36,7 @@ INCLUDES += \
   -I./watch-library/shared/watch \
   -I./watch-library/hardware/watch \
   -I./watch-faces/clock \
+  -I./watch-faces/complication \
   -I./watch-faces/settings \
 
 # Add your source files here.
