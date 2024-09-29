@@ -119,6 +119,7 @@ void watch_stop_blink(void) {
 void watch_start_tick_animation(uint32_t duration) {
     watch_display_character(' ', 8);
 
+    slcd_disable();
     slcd_set_frame_counter_enabled(1, false);
     slcd_set_circular_shift_animation_enabled(false);
 
@@ -129,8 +130,9 @@ void watch_start_tick_animation(uint32_t duration) {
     }
     slcd_set_frame_counter_enabled(1, true);
 
-    slcd_configure_circular_shift_animation(0b00000001, 2, SLCD_CSRSHIFT_LEFT, 1);
+    slcd_configure_circular_shift_animation(0b00000001, 1, SLCD_CSRSHIFT_LEFT, 1);
     slcd_set_circular_shift_animation_enabled(true);
+    slcd_enable();
 }
 
 bool watch_tick_animation_is_running(void) {
