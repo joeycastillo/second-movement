@@ -150,7 +150,7 @@ void watch_display_string(char *string, uint8_t position) {
     }
 }
 
-void watch_display_text(WatchDisplayLocation location, char *string) {
+void watch_display_text(watch_position_t location, char *string) {
     switch (location) {
         case WATCH_POSITION_TOP_LEFT:
             watch_display_character(string[0], 0);
@@ -204,7 +204,7 @@ void watch_display_text(WatchDisplayLocation location, char *string) {
     }
 }
 
-void watch_display_text_with_fallback(WatchDisplayLocation location, char *string, char *fallback) {
+void watch_display_text_with_fallback(watch_position_t location, char *string, char *fallback) {
 #ifdef USE_CUSTOM_LCD
     (void)fallback;
 
@@ -286,14 +286,14 @@ void watch_clear_decimal_if_available(void) {
 #endif
 }
 
-void watch_set_indicator(WatchIndicatorSegment indicator) {
+void watch_set_indicator(watch_indicator_t indicator) {
     uint32_t value = IndicatorSegments[indicator];
     uint8_t com = SLCD_COMNUM(value);
     uint8_t seg = SLCD_SEGNUM(value);
     watch_set_pixel(com, seg);
 }
 
-void watch_clear_indicator(WatchIndicatorSegment indicator) {
+void watch_clear_indicator(watch_indicator_t indicator) {
     uint32_t value = IndicatorSegments[indicator];
     uint8_t com = SLCD_COMNUM(value);
     uint8_t seg = SLCD_SEGNUM(value);

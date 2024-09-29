@@ -64,7 +64,7 @@ static bool clock_should_set_leading_zero(movement_settings_t *settings) {
     return clock_is_in_24h_mode(settings) && settings->bit.clock_24h_leading_zero;
 }
 
-static void clock_indicate(WatchIndicatorSegment indicator, bool on) {
+static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
         watch_set_indicator(indicator);
     } else {

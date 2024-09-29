@@ -47,7 +47,7 @@
 #define SLCD_SEGNUM(segid) ((segid)&0xFF)
 
 /// An enum listing the icons and indicators available on the watch.
-typedef enum WatchIndicatorSegment {
+typedef enum {
     WATCH_INDICATOR_SIGNAL = 0, ///< The hourly signal indicator; also useful for indicating that sensors are on.
     WATCH_INDICATOR_BELL,       ///< The small bell indicating that an alarm is set.
     WATCH_INDICATOR_PM,         ///< The PM indicator, indicating that a time is in the afternoon.
@@ -57,10 +57,10 @@ typedef enum WatchIndicatorSegment {
     // These next indicators are only available on the new custom LCD:
     WATCH_INDICATOR_BATTERY,    ///< The battery indicator. Will fall back to the LAP icon on the original F-91W LCD.
     WATCH_INDICATOR_SLEEP,      ///< The sleep indicator. No fallback here; use the tick animation to indicate sleep.
-} WatchIndicatorSegment;
+} watch_indicator_t;
 
 /// An enum listing the locations on the display where text can be placed.
-typedef enum WatchDisplayLocation {
+typedef enum {
     WATCH_POSITION_FULL = 0,    ///< Display 10 characters to the full screen, in the standard F-91W layout.
     WATCH_POSITION_TOP_LEFT,    ///< Display 2 or 3 characters in the top left of the screen.
     WATCH_POSITION_TOP_RIGHT,   ///< Display 2 digits in the top right of the screen.
@@ -68,7 +68,7 @@ typedef enum WatchDisplayLocation {
     WATCH_POSITION_HOURS,       ///< Display 2 characters in the hours portion of the main line.
     WATCH_POSITION_MINUTES,     ///< Display 2 characters in the minutes portion of the main line.
     WATCH_POSITION_SECONDS,     ///< Display 2 characters in the seconds portion of the main line.
-} WatchDisplayLocation;
+} watch_position_t;
 
 /** @brief Enables the Segment LCD display.
   * Call this before attempting to set pixels or display strings.
@@ -108,10 +108,10 @@ void watch_display_string(char *string, uint8_t position) __attribute__ ((deprec
 
 /**
  * @brief Displays a string at the provided location.
- * @param location @see WatchDisplayLocation, the location where you wish to display the string.
+ * @param location @see watch_position_t, the location where you wish to display the string.
  * @param string A null-terminated string with two characters to display.
  */
-void watch_display_text(WatchDisplayLocation location, char *string);
+void watch_display_text(watch_position_t location, char *string);
 
 /**
  * @brief Displays a string at the provided location on the new LCD, with a fallback for the original.
@@ -154,7 +154,7 @@ void watch_display_text(WatchDisplayLocation location, char *string);
  *
  *       Needless to say, some fine-tuning may be necessary to get the best results on both displays.
  */
-void watch_display_text_with_fallback(WatchDisplayLocation location, char *string, char *fallback);
+void watch_display_text_with_fallback(watch_position_t location, char *string, char *fallback);
 
 /** @brief Turns the colon segment on.
   */
@@ -175,17 +175,17 @@ void watch_set_decimal_if_available(void);
 void watch_clear_decimal_if_available(void);
 
 /** @brief Sets an indicator on the LCD. Use this to turn on one of the indicator segments.
-  * @param indicator One of the indicator segments from the enum. @see WatchIndicatorSegment
+  * @param indicator One of the indicator segments from the enum. @see watch_indicator_t
   */
-void watch_set_indicator(WatchIndicatorSegment indicator);
+void watch_set_indicator(watch_indicator_t indicator);
 
 /** @brief Clears an indicator on the LCD. Use this to turn off one of the indicator segments.
-  * @param indicator One of the indicator segments from the enum. @see WatchIndicatorSegment
+  * @param indicator One of the indicator segments from the enum. @see watch_indicator_t
   */
-void watch_clear_indicator(WatchIndicatorSegment indicator);
+void watch_clear_indicator(watch_indicator_t indicator);
 
 /** @brief Clears all indicator segments.
-  * @see WatchIndicatorSegment
+  * @see watch_indicator_t
   */
 void watch_clear_all_indicators(void);
 
