@@ -177,12 +177,16 @@ static void clock_display_clock(clock_state_t *clock, watch_date_time current) {
 }
 
 static void clock_display_low_energy(watch_date_time date_time) {
+    if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
+        clock_indicate_pm(date_time);
+        date_time = clock_24h_to_12h(date_time);
+    }
     char buf[10 + 1];
 
     snprintf(
         buf,
         sizeof(buf),
-        "%s%2d%2d%02d  ",
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%s%02d%02d%02d  " : "%s%2d%2d%02d  ",
         watch_utility_get_weekday(date_time),
         date_time.unit.day,
         date_time.unit.hour,
