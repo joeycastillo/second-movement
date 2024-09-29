@@ -116,21 +116,22 @@ static void clock_toggle_time_signal(clock_state_t *clock) {
     clock_indicate_time_signal(clock);
 }
 
-static void clock_display_all(watch_date_time date_time, bool leading_zero) {
-    char buf[10 + 1];
+static void clock_display_all(watch_date_time date_time) {
+    char buf[8 + 1];
 
     snprintf(
         buf,
         sizeof(buf),
-        leading_zero? "%s%02d%02d%02d%02d" : "%s%2d%2d%02d%02d",
-        watch_utility_get_weekday(date_time),
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d%02d" : "%2d%2d%02d%02d",
         date_time.unit.day,
         date_time.unit.hour,
         date_time.unit.minute,
         date_time.unit.second
     );
 
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(date_time), watch_utility_get_weekday(date_time));
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
 }
 
 static bool clock_display_some(watch_date_time current, watch_date_time previous) {
@@ -172,7 +173,7 @@ static void clock_display_clock(clock_state_t *clock, watch_date_time current) {
             clock_indicate_pm(current);
             current = clock_24h_to_12h(current);
         }
-        clock_display_all(current, movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H);
+        clock_display_all(current);
     }
 }
 
@@ -181,19 +182,20 @@ static void clock_display_low_energy(watch_date_time date_time) {
         clock_indicate_pm(date_time);
         date_time = clock_24h_to_12h(date_time);
     }
-    char buf[10 + 1];
+    char buf[8 + 1];
 
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%s%02d%02d%02d  " : "%s%2d%2d%02d  ",
-        watch_utility_get_weekday(date_time),
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d  " : "%2d%2d%02d  ",
         date_time.unit.day,
         date_time.unit.hour,
         date_time.unit.minute
     );
 
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(date_time), watch_utility_get_weekday(date_time));
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
 }
 
 static void clock_start_tick_tock_animation(void) {
