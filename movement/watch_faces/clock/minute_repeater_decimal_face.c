@@ -90,7 +90,7 @@ void minute_repeater_decimal_face_activate(movement_settings_t *settings, void *
     else watch_clear_indicator(WATCH_INDICATOR_BELL);
 
     // show alarm indicator if there is an active alarm
-    _update_alarm_indicator(settings->bit.alarm_enabled, state);
+    _update_alarm_indicator(movement_alarm_enabled(), state);
 
     watch_set_colon();
 
@@ -158,7 +158,7 @@ bool minute_repeater_decimal_face_loop(movement_event_t event, movement_settings
             }
             watch_display_string(buf, pos);
             // handle alarm indicator
-            if (state->alarm_enabled != settings->bit.alarm_enabled) _update_alarm_indicator(settings->bit.alarm_enabled, state);
+            if (state->alarm_enabled != movement_alarm_enabled()) _update_alarm_indicator(movement_alarm_enabled(), state);
             break;
         case EVENT_ALARM_LONG_PRESS:
             state->signal_enabled = !state->signal_enabled;

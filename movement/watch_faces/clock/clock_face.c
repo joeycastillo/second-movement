@@ -69,7 +69,7 @@ static void clock_indicate(watch_indicator_t indicator, bool on) {
 }
 
 static void clock_indicate_alarm(movement_settings_t *settings) {
-    clock_indicate(WATCH_INDICATOR_SIGNAL, settings->bit.alarm_enabled);
+    clock_indicate(WATCH_INDICATOR_SIGNAL, movement_alarm_enabled());
 }
 
 static void clock_indicate_time_signal(clock_state_t *clock) {

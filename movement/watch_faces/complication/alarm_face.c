@@ -169,7 +169,7 @@ static void _alarm_update_alarm_enabled(movement_settings_t *settings, alarm_sta
             }
         }
     }
-    settings->bit.alarm_enabled = active_alarms;
+    movement_set_alarm_enabled(active_alarms);
 }
 
 static void _alarm_play_short_beep(uint8_t pitch_idx) {

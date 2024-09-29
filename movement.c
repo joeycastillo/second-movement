@@ -353,6 +353,14 @@ void movement_set_use_imperial_units(bool value) {
     movement_state.settings.bit.use_imperial_units = value;
 }
 
+bool movement_alarm_enabled(void) {
+    return movement_state.settings.bit.alarm_enabled;
+}
+
+void movement_set_alarm_enabled(bool value) {
+    movement_state.settings.bit.alarm_enabled = value;
+}
+
 void app_init(void) {
     _watch_init();
 

@@ -333,3 +333,9 @@ void movement_set_clock_mode_24h(movement_clock_mode_t value);
 
 bool movement_use_imperial_units(void);
 void movement_set_use_imperial_units(bool value);
+
+/// TODO: For #SecondMovement: Should we have a counter that watch faces increment when they enable an alarm, and decrement when they disable it?
+/// Or should there be a watch face function where watch faces can tell us if they have an alarm enabled?
+/// Worth considering a better way to handle this.
+bool movement_alarm_enabled(void);
+void movement_set_alarm_enabled(bool value);
