@@ -45,11 +45,15 @@ typedef struct {
     uint32_t days;    // 0-4294967295
 } watch_duration_t;
 
-/** @brief Returns a two-letter weekday for the given timestamp, suitable for display
-  *        in positions 0-1 of the watch face
+/** @brief Returns a two-letter weekday for the given timestamp, suitable for display in positions 0-1 of the watch face
   * @param date_time The watch_date_time whose weekday you want.
   */
 const char * watch_utility_get_weekday(watch_date_time date_time);
+
+/** @brief Returns a three-letter weekday for the given timestamp, suitable for display on the custom LCD
+  * @param date_time The watch_date_time whose weekday you want.
+  */
+const char * watch_utility_get_long_weekday(watch_date_time date_time);
 
 /** @brief Returns a number between 1-7 representing the weekday according to ISO8601 : week starts on Monday and has index 1, Sunday has index 7
  * @param year The year of the date

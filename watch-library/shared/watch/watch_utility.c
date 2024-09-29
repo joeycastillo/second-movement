@@ -30,6 +30,11 @@ const char * watch_utility_get_weekday(watch_date_time date_time) {
     return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
 }
 
+const char * watch_utility_get_long_weekday(watch_date_time date_time) {
+    static const char weekdays[7][4] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+    return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
+}
+
 // Per ISO8601 week starts on Monday with index 1
 uint8_t watch_utility_get_iso8601_weekday_number(uint16_t year, uint8_t month, uint8_t day) {
     year -= WATCH_RTC_REFERENCE_YEAR;
