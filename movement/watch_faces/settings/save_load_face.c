@@ -48,7 +48,6 @@ static void save(save_load_state_t *state) {
 
 static void load(save_load_state_t *state, movement_settings_t *settings) {
     watch_store_backup_data(state->slot[state->index].b0, 0);
-    settings->reg = state->slot[state->index].b0;
     watch_store_backup_data(state->slot[state->index].b1, 1);
     watch_store_backup_data(state->slot[state->index].b2, 2);
     watch_store_backup_data(state->slot[state->index].b3, 3);

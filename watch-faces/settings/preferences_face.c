@@ -247,5 +247,5 @@ void preferences_face_resign(movement_settings_t *settings, void *context) {
     (void) settings;
     (void) context;
     movement_force_led_off();
-    watch_store_backup_data(settings->reg, 0);
+    movement_store_settings();
 }

@@ -399,6 +399,10 @@ void movement_set_backlight_dwell(uint8_t value) {
     movement_state.settings.bit.led_duration = value;
 }
 
+void movement_store_settings(void) {
+    watch_store_backup_data(movement_state.settings.reg, 0);
+}
+
 bool movement_alarm_enabled(void) {
     return movement_state.settings.bit.alarm_enabled;
 }
