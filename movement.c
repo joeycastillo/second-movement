@@ -329,6 +329,14 @@ int32_t movement_get_current_timezone_offset(void) {
     return movement_get_current_timezone_offset_for_zone(movement_state.settings.bit.time_zone);
 }
 
+int32_t movement_get_timezone_index(void) {
+    return movement_state.settings.bit.time_zone;
+}
+
+void movement_set_timezone_index(uint8_t value) {
+    movement_state.settings.bit.time_zone = value;
+}
+
 bool movement_button_should_sound(void) {
     return movement_state.settings.bit.button_should_sound;
 }

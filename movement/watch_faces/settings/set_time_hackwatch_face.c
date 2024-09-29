@@ -27,6 +27,7 @@
 #include "set_time_hackwatch_face.h"
 #include "watch.h"
 #include "watch_utility.h"
+#include "zones.h"
 
 char set_time_hackwatch_face_titles[][3] = {"HR", "M1", "SE", "YR", "MO", "DA", "ZO"};
 #define set_time_hackwatch_face_NUM_SETTINGS (sizeof(set_time_hackwatch_face_titles) / sizeof(*set_time_hackwatch_face_titles))
@@ -125,10 +126,10 @@ bool set_time_hackwatch_face_loop(movement_event_t event, movement_settings_t *s
                         date_time_settings.unit.day++;
                     break;
                 case 6: // time zone
-                    if (settings->bit.time_zone > 0) {
-                        settings->bit.time_zone--;
+                    if (movement_get_timezone_index() > 0) {
+                        movement_set_timezone_index(movement_get_timezone_index() - 1);
                     } else {
-                        settings->bit.time_zone = 40;
+                        movement_set_timezone_index(NUM_ZONE_NAMES - 1);
                     }
                     break;
             }
@@ -167,8 +168,8 @@ bool set_time_hackwatch_face_loop(movement_event_t event, movement_settings_t *s
                     date_time_settings.unit.day = date_time_settings.unit.day + 1;
                     break;
                 case 6: // time zone
-                    settings->bit.time_zone++;
-                    if (settings->bit.time_zone > 40) settings->bit.time_zone = 0;
+                    movement_set_timezone_index(movement_get_timezone_index() + 1);
+                    if (movement_get_timezone_index() >= NUM_ZONE_NAMES) movement_set_timezone_index(0);
                     break;
             }
             if (date_time_settings.unit.day > days_in_month(date_time_settings.unit.month, date_time_settings.unit.year + WATCH_RTC_REFERENCE_YEAR))

@@ -58,7 +58,7 @@ void habit_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     habit_state_t *state = (habit_state_t *)*context_ptr;
     state->lookback = 0;
     state->last_update = watch_utility_offset_timestamp(
-        today_unix(settings->bit.time_zone), -24, 0, 0);
+        today_unix(movement_get_current_timezone_offset()), -24, 0, 0);
   }
 }
 
@@ -111,7 +111,7 @@ bool habit_face_loop(movement_event_t event, movement_settings_t *settings,
                      void *context) {
   habit_state_t *state = (habit_state_t *)context;
 
-  const uint32_t today_now_unix = today_unix(settings->bit.time_zone);
+  const uint32_t today_now_unix = today_unix(movement_get_current_timezone_offset());
   const bool can_do = (state->lookback & 1) == 0;
 
   switch (event.event_type) {
