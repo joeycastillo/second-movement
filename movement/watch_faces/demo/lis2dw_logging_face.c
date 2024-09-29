@@ -128,13 +128,9 @@ void lis2dw_logging_face_setup(movement_settings_t *settings, uint8_t watch_face
     }
 }
 
-void lis2dw_logging_face_activate(movement_settings_t *settings, void *context) {
-    lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
-    // force two settings: never enter low energy mode, and always snap back to screen 0.
-    // this assumes the accelerometer face is first in the watch_faces list.
-    settings->bit.le_interval = 0;
-    settings->bit.to_always = true;
-
+void lis2dh_logging_face_activate(movement_settings_t *settings, void *context) {
+    (void) settings;
+    lis2dh_logger_state_t *logger_state = (lis2dh_logger_state_t *)context;
     logger_state->display_index = 0;
     logger_state->log_ticks = 0;
     watch_enable_digital_input(A4);
