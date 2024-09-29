@@ -62,6 +62,7 @@ typedef enum {
 /// An enum listing the locations on the display where text can be placed.
 typedef enum {
     WATCH_POSITION_FULL = 0,    ///< Display 10 characters to the full screen, in the standard F-91W layout.
+    WATCH_POSITION_TOP,         ///< Display 2 (classic) or 5 (custom) characters at the top of the screen. On custom LCD, overwrites top right positon.
     WATCH_POSITION_TOP_LEFT,    ///< Display 2 or 3 characters in the top left of the screen.
     WATCH_POSITION_TOP_RIGHT,   ///< Display 2 digits in the top right of the screen.
     WATCH_POSITION_BOTTOM,      ///< Display 6 characters at the bottom of the screen, the main line.

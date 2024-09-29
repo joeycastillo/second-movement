@@ -54,6 +54,7 @@ static const uint32_t IndicatorSegments[] = {
 void watch_display_character(uint8_t character, uint8_t position) {
 #ifdef USE_CUSTOM_LCD
     if (character == 'R') character = 'r'; // We can't display uppercase R on this display.
+    else if (character == 'T' && position > 1 && position < 8) character = 't'; // lowercase t is the only option for these positions
 #else
     // special cases for positions 4 and 6
     if (position == 4 || position == 6) {
@@ -155,6 +156,7 @@ void watch_display_string(const char *string, uint8_t position) {
 
 void watch_display_text(watch_position_t location, const char *string) {
     switch (location) {
+        case WATCH_POSITION_TOP:
         case WATCH_POSITION_TOP_LEFT:
             watch_display_character(string[0], 0);
             if (string[1]) {
@@ -198,7 +200,6 @@ void watch_display_text(watch_position_t location, const char *string) {
             }
             break;
         case WATCH_POSITION_FULL:
-        default:
             // This is deprecated, but we use it for the legacy behavior.
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -212,6 +213,14 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
     (void)fallback;
 
     switch (location) {
+        case WATCH_POSITION_TOP:
+            for (size_t i = 0; i < strlen(string); i++) {
+                if (i < 2) watch_display_character(string[i], i);
+                else if (i == 2) watch_display_character(string[i], 10);
+                else if (i < 5) watch_display_character(string[i], i - 1);
+                else break;
+            }
+            break;
         case WATCH_POSITION_TOP_LEFT:
             watch_display_character(string[0], 0);
             if (string[1]) {
@@ -248,7 +257,6 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
             watch_display_text(location, string);
             break;
         case WATCH_POSITION_FULL:
-        default:
             // This is deprecated, but we use it for the legacy behavior.
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
