@@ -106,25 +106,25 @@ static void draw(countdown_state_t *state, uint8_t subsecond) {
             result = div(result.quot, 60);
             state->hours = result.quot;
             state->minutes = result.rem;
-            sprintf(buf, "CD  %2d%02d%02d", state->hours, state->minutes, state->seconds);
+            sprintf(buf, "%2d%02d%02d", state->hours, state->minutes, state->seconds);
             break;
         case cd_reset:
         case cd_paused:
             watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-            sprintf(buf, "CD  %2d%02d%02d", state->hours, state->minutes, state->seconds);
+            sprintf(buf, "%2d%02d%02d", state->hours, state->minutes, state->seconds);
             break;
         case cd_setting:
-            sprintf(buf, "CD  %2d%02d%02d", state->hours, state->minutes, state->seconds);
+            sprintf(buf, "%2d%02d%02d", state->hours, state->minutes, state->seconds);
             if (!quick_ticks_running && subsecond % 2) {
                 switch(state->selection) {
                     case 0:
-                        buf[4] = buf[5] = ' ';
+                        buf[0] = buf[1] = ' ';
                         break;
                     case 1:
-                        buf[6] = buf[7] = ' ';
+                        buf[2] = buf[3] = ' ';
                         break;
                     case 2:
-                        buf[8] = buf[9] = ' ';
+                        buf[4] = buf[5] = ' ';
                         break;
                     default:
                         break;
@@ -132,7 +132,7 @@ static void draw(countdown_state_t *state, uint8_t subsecond) {
             }
             break;
     }
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void pause(countdown_state_t *state) {
@@ -213,6 +213,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "TIMER", "CD");
             draw(state, event.subsecond);
             break;
         case EVENT_TICK:
