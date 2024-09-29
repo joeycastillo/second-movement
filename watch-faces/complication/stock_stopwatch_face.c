@@ -26,6 +26,7 @@
 #include <string.h>
 #include "stock_stopwatch_face.h"
 #include "watch.h"
+#include "watch_common_display.h"
 #include "watch_utility.h"
 #include "watch_rtc.h"
 
@@ -131,11 +132,15 @@ static void _display_ticks(uint32_t ticks) {
     uint8_t sec_100 = (ticks & 0x7F) * 100 / 128;
     uint32_t seconds = ticks >> 7;
     uint32_t minutes = seconds / 60;
-    if (_hours)
-        sprintf(buf, "%2u%02lu%02lu%02u", _hours, minutes, (seconds % 60), sec_100);
-    else
-        sprintf(buf, "  %02lu%02lu%02u", minutes, (seconds % 60), sec_100);
-    watch_display_string(buf, 2);
+    if (_hours) {
+        sprintf(buf, "%2u", _hours);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    } else {
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    }
+
+    sprintf(buf, "%02lu%02lu%02u", minutes, (seconds % 60), sec_100);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 /// @brief Displays the current stopwatch time on the LCD (more optimized than _display_ticks())
@@ -154,22 +159,29 @@ static void _draw() {
                     // minutes have changed, draw everything
                     _old_minutes = minutes;
                     minutes %= 60;
-                    if (_hours)
+                    if (_hours) {
                         // with hour indicator
-                        sprintf(buf, "%2u%02u%02lu%02u", _hours, minutes, seconds, sec_100);
-                    else
+                        sprintf(buf, "%2u", _hours);
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                    } else {
                         // no hour indicator
-                        sprintf(buf, "  %02u%02lu%02u", minutes, seconds, sec_100);
-                    watch_display_string(buf, 2);
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+                    }
+                    sprintf(buf, "%02u%02lu%02u", minutes, seconds, sec_100);
+                    watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 } else {
                     // just draw seconds
-                    sprintf(buf, "%02lu%02u", seconds, sec_100);
-                    watch_display_string(buf, 6);
+                    sprintf(buf, "%02lu", seconds);
+                    // note that we're drawing the seconds in the "minutes" position, since this
+                    // watch face uses the "seconds" position for hundredths of seconds
+                    watch_display_text(WATCH_POSITION_MINUTES, buf);
+                    watch_display_character_lp_seconds('0' + sec_100 / 10, 8);
+                    watch_display_character_lp_seconds('0' + sec_100 % 10, 9);
                 }
             } else {
                 // only draw 100ths of seconds
-                sprintf(buf, "%02u", sec_100);
-                watch_display_string(buf, 8);
+                watch_display_character_lp_seconds('0' + sec_100 / 10, 8);
+                watch_display_character_lp_seconds('0' + sec_100 % 10, 9);
             }
         } else {
             _display_ticks(_ticks);
@@ -236,7 +248,7 @@ bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             _set_colon();
-            watch_display_string("ST  ", 0);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "STW", "ST");
             _update_lap_indicator();
             if (_is_running) movement_request_tick_frequency(16);
             _display_ticks(_lap_ticks ? _lap_ticks : _ticks);
