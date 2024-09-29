@@ -29,6 +29,7 @@
 
 const watch_face_t watch_faces[] = {
     simple_clock_face,
+    beats_face,
     world_clock_face,
     countdown_face,
     preferences_face,
