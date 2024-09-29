@@ -353,6 +353,20 @@ void movement_set_use_imperial_units(bool value) {
     movement_state.settings.bit.use_imperial_units = value;
 }
 
+movement_color_t movement_backlight_color(void) {
+    return (movement_color_t) {
+        .red = movement_state.settings.bit.led_red_color,
+        .green = movement_state.settings.bit.led_green_color,
+        .blue = movement_state.settings.bit.led_blue_color
+    };
+}
+
+void movement_set_backlight_color(movement_color_t color) {
+    movement_state.settings.bit.led_red_color = color.red;
+    movement_state.settings.bit.led_green_color = color.green;
+    movement_state.settings.bit.led_blue_color = color.blue;
+}
+
 bool movement_alarm_enabled(void) {
     return movement_state.settings.bit.alarm_enabled;
 }

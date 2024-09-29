@@ -71,6 +71,7 @@ void preferences_face_activate(movement_settings_t *settings, void *context) {
 
 bool preferences_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
     preferences_state_t *state = (preferences_state_t *)context;
+    movement_color_t color; // to use in the switch if we need it
 
     switch (event.event_type) {
         case EVENT_TICK:
@@ -149,15 +150,18 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                         }
                         break;
                     case PREFERENCES_PAGE_LED_RED:
-                        sprintf(buf, "%2d", settings->bit.led_red_color);
+                        color = movement_backlight_color();
+                        sprintf(buf, "%2d", color.red);
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
                         break;
                     case PREFERENCES_PAGE_LED_GREEN:
-                        sprintf(buf, "%2d", settings->bit.led_green_color);
+                        color = movement_backlight_color();
+                        sprintf(buf, "%2d", color.green);
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
                         break;
                     case PREFERENCES_PAGE_LED_BLUE:
-                        sprintf(buf, "%2d", settings->bit.led_blue_color);
+                        color = movement_backlight_color();
+                        sprintf(buf, "%2d", color.blue);
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
                         break;
                     case PREFERENCES_PAGE_NUM_PREFERENCES:
@@ -198,13 +202,19 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                     }
                     break;
                 case PREFERENCES_PAGE_LED_RED:
-                    settings->bit.led_red_color = settings->bit.led_red_color + 1;
+                    color = movement_backlight_color();
+                    color.red++;
+                    movement_set_backlight_color(color);
                     break;
                 case PREFERENCES_PAGE_LED_GREEN:
-                    settings->bit.led_green_color = settings->bit.led_green_color + 1;
+                    color = movement_backlight_color();
+                    color.green++;
+                    movement_set_backlight_color(color);
                     break;
                 case PREFERENCES_PAGE_LED_BLUE:
-                    settings->bit.led_blue_color = settings->bit.led_blue_color + 1;
+                    color = movement_backlight_color();
+                    color.blue++;
+                    movement_set_backlight_color(color);
                     break;
                 case PREFERENCES_PAGE_NUM_PREFERENCES:
                     // nothing to do here, just silencing the warning
@@ -221,9 +231,11 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
     if (state->current_page == PREFERENCES_PAGE_LED_RED ||
         state->current_page == PREFERENCES_PAGE_LED_GREEN ||
         state->current_page == PREFERENCES_PAGE_LED_BLUE) {
-        movement_force_led_on(settings->bit.led_red_color | settings->bit.led_red_color << 4,
-                              settings->bit.led_green_color | settings->bit.led_green_color << 4,
-                              settings->bit.led_blue_color | settings->bit.led_blue_color << 4);
+        movement_color_t color = movement_backlight_color();
+        // this bitwise math turns #000 into #000000, #111 into #111111, etc.
+        movement_force_led_on(color.red | color.red << 4,
+                              color.green | color.green << 4,
+                              color.blue | color.blue << 4);
         return false;
     } else {
         movement_force_led_off();

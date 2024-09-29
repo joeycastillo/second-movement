@@ -47,6 +47,13 @@ typedef enum {
     MOVEMENT_NUM_CLOCK_MODES
 } movement_clock_mode_t;
 
+/// struct for Movement LED color
+typedef struct {
+    uint8_t red : 4;
+    uint8_t green : 4;
+    uint8_t blue : 4;
+} movement_color_t;
+
 // movement_settings_t contains global settings that cover watch behavior, including preferences around clock and unit
 // display, time zones, buzzer behavior, LED color and low energy mode timeouts.
 typedef union {
@@ -333,6 +340,9 @@ void movement_set_clock_mode_24h(movement_clock_mode_t value);
 
 bool movement_use_imperial_units(void);
 void movement_set_use_imperial_units(bool value);
+
+movement_color_t movement_backlight_color(void);
+void movement_set_backlight_color(movement_color_t color);
 
 /// TODO: For #SecondMovement: Should we have a counter that watch faces increment when they enable an alarm, and decrement when they disable it?
 /// Or should there be a watch face function where watch faces can tell us if they have an alarm enabled?
