@@ -2,10 +2,10 @@
 GOSSAMER_PATH=gossamer
 
 # Which board are we building for?
-BOARD=sensorwatch_pro
+BOARD=sensorwatch_red
 
 # Which screen are we building for?
-DISPLAY=CUSTOM
+DISPLAY=CLASSIC
 
 TINYUSB_CDC=1
 
