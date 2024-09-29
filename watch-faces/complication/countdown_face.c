@@ -239,15 +239,11 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
         case EVENT_LIGHT_BUTTON_UP:
             switch(state->mode) {
                 case cd_running:
+                case cd_reset:
                     movement_illuminate_led();
                     break;
                 case cd_paused:
                     reset(state);
-                    button_beep(settings);
-                    break;
-                case cd_reset:
-                    state->mode = cd_setting;
-                    movement_request_tick_frequency(4);
                     button_beep(settings);
                     break;
                 case cd_setting:
@@ -286,18 +282,21 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             break;
         case EVENT_ALARM_LONG_PRESS:
             switch(state->mode) {
+                case cd_reset:
+                    // long press in reset mode enters settings
+                    state->mode = cd_setting;
+                    movement_request_tick_frequency(4);
+                    button_beep(settings);
+                    break;
                 case cd_setting:
+                    // long press in settings mode starts quick ticks for adjusting the time
                     quick_ticks_running = true;
                     movement_request_tick_frequency(8);
                     break;
-                default:
-                    // Toggle auto-repeat
-                    button_beep(settings);
-                    state->repeat = !state->repeat;
-                    if(state->repeat)
-                        watch_set_indicator(WATCH_INDICATOR_BELL);
-                    else
-                        watch_clear_indicator(WATCH_INDICATOR_BELL);
+                case cd_running:
+                case cd_paused:
+                    // do nothing
+                    break;
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
@@ -313,6 +312,14 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                         state->seconds = 0;
                         break;
                 }
+            } else {
+                // Toggle auto-repeat
+                button_beep(settings);
+                state->repeat = !state->repeat;
+                if(state->repeat)
+                    watch_set_indicator(WATCH_INDICATOR_BELL);
+                else
+                    watch_clear_indicator(WATCH_INDICATOR_BELL);
             }
             break;
         case EVENT_ALARM_LONG_UP:
@@ -326,8 +333,8 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-        // intentionally squelch the light default event; we only show the light when cd is running
         case EVENT_LIGHT_BUTTON_DOWN:
+            // intentionally squelch the light default event; we only show the light when cd is running or reset
             break;
         default:
             movement_default_loop_handler(event, settings);
