@@ -141,7 +141,7 @@ void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
     }
 }
 
-void watch_display_string(char *string, uint8_t position) {
+void watch_display_string(const char *string, uint8_t position) {
     size_t i = 0;
     while(string[i] != 0) {
         watch_display_character(string[i], position + i);
@@ -150,7 +150,7 @@ void watch_display_string(char *string, uint8_t position) {
     }
 }
 
-void watch_display_text(watch_position_t location, char *string) {
+void watch_display_text(watch_position_t location, const char *string) {
     switch (location) {
         case WATCH_POSITION_TOP_LEFT:
             watch_display_character(string[0], 0);
@@ -204,7 +204,7 @@ void watch_display_text(watch_position_t location, char *string) {
     }
 }
 
-void watch_display_text_with_fallback(watch_position_t location, char *string, char *fallback) {
+void watch_display_text_with_fallback(watch_position_t location, const char *string, const char *fallback) {
 #ifdef USE_CUSTOM_LCD
     (void)fallback;
 

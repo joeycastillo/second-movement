@@ -104,14 +104,14 @@ void watch_clear_display(void);
   * @note This method does not clear the display; if for example you display a two-character string at
           position 0, positions 2-9 will retain whatever state they were previously displaying.
   */
-void watch_display_string(char *string, uint8_t position) __attribute__ ((deprecated("Use watch_display_text and watch_display_text_with_fallback instead.")));
+void watch_display_string(const char *string, uint8_t position) __attribute__ ((deprecated("Use watch_display_text and watch_display_text_with_fallback instead.")));
 
 /**
  * @brief Displays a string at the provided location.
  * @param location @see watch_position_t, the location where you wish to display the string.
  * @param string A null-terminated string with two characters to display.
  */
-void watch_display_text(watch_position_t location, char *string);
+void watch_display_text(watch_position_t location, const char *string);
 
 /**
  * @brief Displays a string at the provided location on the new LCD, with a fallback for the original.
@@ -154,7 +154,7 @@ void watch_display_text(watch_position_t location, char *string);
  *
  *       Needless to say, some fine-tuning may be necessary to get the best results on both displays.
  */
-void watch_display_text_with_fallback(watch_position_t location, char *string, char *fallback);
+void watch_display_text_with_fallback(watch_position_t location, const char *string, const char *fallback);
 
 /** @brief Turns the colon segment on.
   */
