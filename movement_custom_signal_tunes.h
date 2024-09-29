@@ -22,8 +22,7 @@
  * SOFTWARE.
  */
 
-#ifndef MOVEMENT_CUSTOM_SIGNAL_TUNES_H_
-#define MOVEMENT_CUSTOM_SIGNAL_TUNES_H_
+#pragma once
 
 #ifdef SIGNAL_TUNE_DEFAULT
 int8_t signal_tune[] = {
@@ -201,5 +200,3 @@ int8_t signal_tune[] = {
     0
 };
 #endif // SIGNAL_TUNE_HARRY_POTTER_LONG
-
-#endif // MOVEMENT_CUSTOM_SIGNAL_TUNES_H_

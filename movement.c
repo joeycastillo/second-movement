@@ -40,17 +40,9 @@
 #include "shell.h"
 #include "utz.h"
 
-/// FIXME: #SecondMovement needs to bring back the following include (and remove the default signal_tune)
-// #include "movement_custom_signal_tunes.h"
-int8_t signal_tune[] = {
-    BUZZER_NOTE_C8, 5,
-    BUZZER_NOTE_REST, 6,
-    BUZZER_NOTE_C8, 5,
-    0
-};
-
-
 #include "movement_config.h"
+
+#include "movement_custom_signal_tunes.h"
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
