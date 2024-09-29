@@ -57,10 +57,10 @@ static inline void _tc3_stop() {
 
 static void _tc3_initialize() {
     // setup and initialize TC3 for a 64 Hz interrupt
-    tc_init(3, GENERIC_CLOCK_3, TC_PRESCALER_DIV64);
+    tc_init(3, GENERIC_CLOCK_3, TC_PRESCALER_DIV2);
     tc_set_counter_mode(3, TC_COUNTER_MODE_8BIT);
     tc_set_run_in_standby(3, true);
-    tc_count8_set_period(3, 7); // 32 Khz divided by 64 divided by 8 equals 64 Hz
+    tc_count8_set_period(3, 7); // 1024 Hz divided by 2 divided by 8 equals 64 Hz
     /// FIXME: #SecondMovement, we need a gossamer wrapper for interrupts.
     TC3->COUNT8.INTENSET.bit.OVF = 1;
     NVIC_ClearPendingIRQ(TC3_IRQn);
