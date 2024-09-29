@@ -345,6 +345,14 @@ void movement_set_clock_mode_24h(movement_clock_mode_t value) {
     movement_state.settings.bit.clock_mode_24h = (value == MOVEMENT_CLOCK_MODE_24H);
 }
 
+bool movement_use_imperial_units(void) {
+    return movement_state.settings.bit.use_imperial_units;
+}
+
+void movement_set_use_imperial_units(bool value) {
+    movement_state.settings.bit.use_imperial_units = value;
+}
+
 void app_init(void) {
     _watch_init();
 

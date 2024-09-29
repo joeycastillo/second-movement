@@ -107,13 +107,13 @@ bool minmax_face_loop(movement_event_t event, movement_settings_t *settings, voi
     switch (event.event_type) {
 	case EVENT_ACTIVATE:
 	    temp_c = _get_displayed_temperature_c(state);
-	    _minmax_face_update_display(temp_c, settings->bit.use_imperial_units);
+	    _minmax_face_update_display(temp_c, movement_use_imperial_units());
             break;
 
 	case EVENT_LIGHT_LONG_PRESS:
-            settings->bit.use_imperial_units = !settings->bit.use_imperial_units;
+        movement_set_use_imperial_units(!movement_use_imperial_units());
 	    temp_c = _get_displayed_temperature_c(state);
-	    _minmax_face_update_display(temp_c, settings->bit.use_imperial_units);
+	    _minmax_face_update_display(temp_c, movement_use_imperial_units());
             break;
 
 	case EVENT_ALARM_BUTTON_UP:
@@ -124,7 +124,7 @@ bool minmax_face_loop(movement_event_t event, movement_settings_t *settings, voi
 		watch_display_string("MX", 0);
 	    }
 	    temp_c = _get_displayed_temperature_c(state);
-	    _minmax_face_update_display(temp_c, settings->bit.use_imperial_units);
+	    _minmax_face_update_display(temp_c, movement_use_imperial_units());
             break;
 
 	case EVENT_TIMEOUT:

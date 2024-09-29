@@ -70,19 +70,19 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            _alarm_thermometer_face_update(settings->bit.use_imperial_units);
+            _alarm_thermometer_face_update(movement_use_imperial_units());
             break;
         case EVENT_TICK:
             if (watch_rtc_get_date_time().unit.second % 5 == 0) {
                 switch (state->mode) {
                     case MODE_NORMAL:
-                        _alarm_thermometer_face_update(settings->bit.use_imperial_units);
+                        _alarm_thermometer_face_update(movement_use_imperial_units());
                         break;
                     case MODE_ALARM:
                         for (size_t i = LAST_SIZE - 1; i > 0; i--) {
                             state->last[i] = state->last[i - 1];
                         }
-                        state->last[0] = roundf(_alarm_thermometer_face_update(settings->bit.use_imperial_units) * 10.0f);
+                        state->last[0] = roundf(_alarm_thermometer_face_update(movement_use_imperial_units()) * 10.0f);
                         bool constant = true;
                         for (size_t i = 1; i < LAST_SIZE; i++) {
                             if (state->last[i - 1] != state->last[i]) {
@@ -116,7 +116,7 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
                 case MODE_ALARM:
                     state->mode = MODE_NORMAL;
                     watch_clear_indicator(WATCH_INDICATOR_BELL);
-                    _alarm_thermometer_face_update(settings->bit.use_imperial_units);
+                    _alarm_thermometer_face_update(movement_use_imperial_units());
                     break;
             }
             if (movement_button_should_sound()) {
@@ -125,8 +125,8 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->mode != MODE_FREEZE) {
-                settings->bit.use_imperial_units = !settings->bit.use_imperial_units;
-                _alarm_thermometer_face_update(settings->bit.use_imperial_units);
+                movement_set_use_imperial_units(!movement_use_imperial_units());
+                _alarm_thermometer_face_update(movement_use_imperial_units());
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
@@ -137,7 +137,7 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
                 watch_start_tick_animation(1000);
             }
             if (watch_rtc_get_date_time().unit.minute % 5 == 0) {
-                _alarm_thermometer_face_update(settings->bit.use_imperial_units);
+                _alarm_thermometer_face_update(movement_use_imperial_units());
                 watch_display_string("  ", 8);
             }
             break;

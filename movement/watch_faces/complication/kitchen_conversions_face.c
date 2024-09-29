@@ -84,9 +84,9 @@ static void reset_state(kitchen_conversions_state_t *state, movement_settings_t 
     state->pg = measurement;
     state->measurement_i = 0;
     state->from_i = 0;
-    state->from_is_us = settings->bit.use_imperial_units; // If uses imperial, most likely to be US
+    state->from_is_us = movement_use_imperial_units(); // If uses imperial, most likely to be US
     state->to_i = 0;
-    state->to_is_us = settings->bit.use_imperial_units;
+    state->to_is_us = movement_use_imperial_units();
     state->selection_value = 0;
     state->selection_index = 0;
     state->light_held = false;
@@ -395,12 +395,12 @@ bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *
 
             case from:
                 state->from_i = 0;
-                state->from_is_us = settings->bit.use_imperial_units;
+                state->from_is_us = movement_use_imperial_units();
                 break;
 
             case to:
                 state->to_i = 0;
-                state->to_is_us = settings->bit.use_imperial_units;
+                state->to_is_us = movement_use_imperial_units();
                 break;
 
             case input:

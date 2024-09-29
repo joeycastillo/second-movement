@@ -100,18 +100,18 @@ bool thermistor_logging_face_loop(movement_event_t event, movement_settings_t *s
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             logger_state->ts_ticks = 2;
-            _thermistor_logging_face_update_display(logger_state, settings->bit.use_imperial_units, movement_clock_mode_24h());
+            _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             logger_state->display_index = (logger_state->display_index + 1) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
             logger_state->ts_ticks = 0;
             // fall through
         case EVENT_ACTIVATE:
-            _thermistor_logging_face_update_display(logger_state, settings->bit.use_imperial_units, movement_clock_mode_24h());
+            _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_TICK:
             if (logger_state->ts_ticks && --logger_state->ts_ticks == 0) {
-                _thermistor_logging_face_update_display(logger_state, settings->bit.use_imperial_units, movement_clock_mode_24h());
+                _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             }
             break;
         case EVENT_BACKGROUND_TASK:

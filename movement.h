@@ -330,3 +330,6 @@ void movement_set_button_should_sound(bool value);
 
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);
+
+bool movement_use_imperial_units(void);
+void movement_set_use_imperial_units(bool value);
