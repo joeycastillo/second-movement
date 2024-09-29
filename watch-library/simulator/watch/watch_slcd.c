@@ -79,6 +79,10 @@ void watch_start_character_blink(char character, uint32_t duration) {
     blink_interval_id = emscripten_set_interval(watch_invoke_blink_callback, (double)duration, NULL);
 }
 
+void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration) {
+    /// TODO: For #SecondMovement, implement this on simulator
+}
+
 void watch_stop_blink(void) {
     emscripten_clear_timeout(blink_interval_id);
     blink_interval_id = -1;

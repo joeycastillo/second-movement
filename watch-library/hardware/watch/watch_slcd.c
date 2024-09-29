@@ -106,9 +106,51 @@ void watch_start_character_blink(char character, uint32_t duration) {
     watch_display_character(character, 7);
     watch_clear_pixel(2, 10); // clear segment B of position 7 since it can't blink
 
+    slcd_disable();
     slcd_set_blink_enabled(false);
-    slcd_configure_blink(false, 0x07, 0x07, 0);
+    slcd_configure_blink(false, 0x0F, 0x0F, 0);
     slcd_set_blink_enabled(true);
+    slcd_enable();
+}
+
+void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration) {
+#ifdef USE_CUSTOM_LCD
+    uint8_t mask = 0;
+    switch (indicator) {
+    case WATCH_INDICATOR_COLON:
+        mask = 0b0001;
+        break;
+    case WATCH_INDICATOR_LAP:
+        mask = 0b0010;
+        break;
+    case WATCH_INDICATOR_BATTERY:
+        mask = 0b0100;
+        break;
+    case WATCH_INDICATOR_SLEEP:
+        mask = 0b1000;
+        break;
+    default:
+        return;
+    }
+    watch_set_indicator(indicator);
+
+    if (duration <= _slcd_fc_min_ms_bypass) {
+        slcd_configure_frame_counter(0, (duration / (1000 / _slcd_framerate)) - 1, false);
+    } else {
+        slcd_configure_frame_counter(0, ((duration / (1000 / _slcd_framerate)) / 8 - 1), true);
+    }
+    slcd_set_frame_counter_enabled(0, true);
+
+
+    slcd_disable();
+    slcd_set_blink_enabled(false);
+    slcd_configure_blink(false, mask, 0, 0);
+    slcd_set_blink_enabled(true);
+    slcd_enable();
+#else
+    (void) indicator;
+    (void) duration;
+#endif
 }
 
 void watch_stop_blink(void) {

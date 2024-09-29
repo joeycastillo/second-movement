@@ -57,6 +57,9 @@ typedef enum {
     // These next indicators are only available on the new custom LCD:
     WATCH_INDICATOR_BATTERY,    ///< The battery indicator. Will fall back to the LAP icon on the original F-91W LCD.
     WATCH_INDICATOR_SLEEP,      ///< The sleep indicator. No fallback here; use the tick animation to indicate sleep.
+
+    // You can generally address the colon using dedicated functions, but it's also available here if needed.
+    WATCH_INDICATOR_COLON,      ///< The colon between hours and minutes.
 } watch_indicator_t;
 
 /// An enum listing the locations on the display where text can be placed.
@@ -197,15 +200,26 @@ void watch_clear_all_indicators(void);
   * @param character The character you wish to blink.
   * @param duration The duration of the on/off cycle in milliseconds, from 50 to ~4250 ms.
   * @note Segment B of position 7 cannot blink autonomously, so not all characters will work well.
-  *       Supported characters for blinking:
+  *       Supported characters for blinking on classic LCD :
   *        * Punctuation: underscore, apostrophe, comma, hyphen, equals sign, tilde (top segment only)
   *        * Numbers: 5, 6, ampersand (lowercase 7)
   *        * Letters: b, C, c, E, F, h, i, L, l, n, o, S, t
+  *       Supported characters for blinking on custom LCD :
+  *        * Only the segments making up the capital letter 'C' (ADEF)
   */
 void watch_start_character_blink(char character, uint32_t duration);
 
+/** @brief Blinks an indicator on the custom LCD.
+  * @details You can blink the LAP, ARROWS, SLEEP and COLON indicators on the custom LCD.
+  *          Alas you cannot autonomously blink any indicators on the original F-91W LCD.
+  * @param indicator The indicator you wish to blink.
+  * @param duration The duration of the on/off cycle in milliseconds, from 50 to ~4250 ms.
+  */
+void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration);
+
 /** @brief Stops and clears all blinking segments.
   * @details This will stop all blinking in position 7, and clear all segments in that digit.
+  *          On the Pro LCD, this will also stop the blinking of all indicators.
   */
 void watch_stop_blink(void);
 

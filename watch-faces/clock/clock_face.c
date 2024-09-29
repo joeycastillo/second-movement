@@ -201,12 +201,14 @@ static void clock_display_low_energy(watch_date_time date_time) {
 static void clock_start_tick_tock_animation(void) {
     if (!watch_sleep_animation_is_running()) {
         watch_start_sleep_animation(500);
+        watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
     }
 }
 
 static void clock_stop_tick_tock_animation(void) {
     if (watch_sleep_animation_is_running()) {
         watch_stop_sleep_animation();
+        watch_stop_blink();
     }
 }
 
