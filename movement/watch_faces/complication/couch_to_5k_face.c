@@ -214,7 +214,7 @@ bool couch_to_5k_face_loop(movement_event_t event, movement_settings_t *settings
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (settings->bit.button_should_sound) {
+            if (movement_button_should_sound()) {
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
             }
             paused = !paused;

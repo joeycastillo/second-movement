@@ -119,7 +119,7 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
                     _alarm_thermometer_face_update(settings->bit.use_imperial_units);
                     break;
             }
-            if (settings->bit.button_should_sound) {
+            if (movement_button_should_sound()) {
                 watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
             }
             break;

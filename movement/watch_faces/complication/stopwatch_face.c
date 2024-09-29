@@ -116,7 +116,7 @@ bool stopwatch_face_loop(movement_event_t event, movement_settings_t *settings, 
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
-            if (settings->bit.button_should_sound) {
+            if (movement_button_should_sound()) {
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
             }
             stopwatch_state->running = !stopwatch_state->running;

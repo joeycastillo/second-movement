@@ -408,38 +408,38 @@ bool periodic_face_loop(movement_event_t event, movement_settings_t *settings, v
             else stop_quick_cyc();
         }
 
-        _handle_mode_still_pressed(state, settings->bit.button_should_sound);
+        _handle_mode_still_pressed(state, movement_button_should_sound());
         break;
     case EVENT_LIGHT_BUTTON_UP:
         if (state->mode <= SCREEN_ELEMENT) {
-            _handle_backward(state, settings->bit.button_should_sound);
+            _handle_backward(state, movement_button_should_sound());
         }
         else {
             state->mode = SCREEN_ELEMENT;
-            _display_screen(state, settings->bit.button_should_sound);
+            _display_screen(state, movement_button_should_sound());
         }
         break;
     case EVENT_LIGHT_BUTTON_DOWN:
         break;
     case EVENT_ALARM_BUTTON_UP:
         if (state->mode <= SCREEN_ELEMENT) {
-            _handle_forward(state, settings->bit.button_should_sound);
+            _handle_forward(state, movement_button_should_sound());
         }
         else {
             state->mode = SCREEN_ELEMENT;
-            _display_screen(state, settings->bit.button_should_sound);
+            _display_screen(state, movement_button_should_sound());
         }
         break;
     case EVENT_ALARM_LONG_PRESS:
         if (state->mode <= SCREEN_ELEMENT) {
             start_quick_cyc();
-            _handle_forward(state, settings->bit.button_should_sound);
+            _handle_forward(state, movement_button_should_sound());
         }
         break;
     case EVENT_LIGHT_LONG_PRESS:
         if (state->mode <= SCREEN_ELEMENT) {
             start_quick_cyc();
-            _handle_backward(state, settings->bit.button_should_sound);
+            _handle_backward(state, movement_button_should_sound());
         }
         else {
             movement_illuminate_led();
@@ -453,10 +453,10 @@ bool periodic_face_loop(movement_event_t event, movement_settings_t *settings, v
                 state->mode = (state->mode + 1) % SCREENS_COUNT;
             if (state->mode == SCREEN_ELEMENT){
                 _display_screen(state, false);
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_A6, 50);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_A6, 50);
             }
             else
-                _display_screen(state, settings->bit.button_should_sound);
+                _display_screen(state, movement_button_should_sound());
         }
         break;
     case EVENT_MODE_LONG_PRESS:
@@ -467,11 +467,11 @@ bool periodic_face_loop(movement_event_t event, movement_settings_t *settings, v
             return true;
         case SCREEN_ELEMENT:
             state->mode = SCREEN_TITLE;
-            _display_screen(state, settings->bit.button_should_sound);
+            _display_screen(state, movement_button_should_sound());
             break;
         default:
             state->mode = SCREEN_ELEMENT;
-            _display_screen(state, settings->bit.button_should_sound);
+            _display_screen(state, movement_button_should_sound());
             break;
         }
         _ts_ticks = 2;

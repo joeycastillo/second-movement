@@ -88,7 +88,7 @@ static const char labels[][2] = {
 
 /* Beep function */
 static inline void beep(movement_settings_t *settings) {
-    if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+    if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
 /* Prep for a new round */

@@ -166,7 +166,7 @@ static inline int32_t _get_tz_offset(movement_settings_t *settings)
 static inline void _beep_button(movement_settings_t *settings)
 {
     // Play a beep as confirmation for a button press (if applicable)
-    if (!settings->bit.button_should_sound)
+    if (!movement_button_should_sound())
         return;
 
     watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
@@ -175,7 +175,7 @@ static inline void _beep_button(movement_settings_t *settings)
 /* Beep for entering settings */
 static inline void _beep_enable(movement_settings_t *settings)
 {
-    if (!settings->bit.button_should_sound)
+    if (!movement_button_should_sound())
         return;
 
     watch_buzzer_play_note(BUZZER_NOTE_G7, 50);
@@ -186,7 +186,7 @@ static inline void _beep_enable(movement_settings_t *settings)
 /* Beep for leaving settings */
 static inline void _beep_disable(movement_settings_t *settings)
 {
-    if (!settings->bit.button_should_sound)
+    if (!movement_button_should_sound())
         return;
 
     watch_buzzer_play_note(BUZZER_NOTE_C8, 50);

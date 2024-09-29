@@ -61,7 +61,7 @@ static inline void load_countdown(countdown_state_t *state) {
 
 static inline void button_beep(movement_settings_t *settings) {
     // play a beep as confirmation for a button press (if applicable)
-    if (settings->bit.button_should_sound)
+    if (movement_button_should_sound())
         watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 

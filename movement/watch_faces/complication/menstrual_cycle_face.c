@@ -86,7 +86,7 @@ const char menstrual_cycle_face_titles[MENSTRUAL_CYCLE_FACE_NUM_PAGES][11] = {
 
 /* Beep function */
 static inline void beep(movement_settings_t *settings) {
-    if (settings->bit.button_should_sound) 
+    if (movement_button_should_sound())
         watch_buzzer_play_note(BUZZER_NOTE_E8, 75);
 }
 

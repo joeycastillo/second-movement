@@ -331,7 +331,7 @@ bool timer_face_loop(movement_event_t event, movement_settings_t *settings, void
                 case pausing:
                 case running:
                     _reset(state);
-                    if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+                    if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
                     break;
                 default:
                     break;

@@ -318,3 +318,6 @@ uint8_t movement_claim_backup_register(void);
 
 int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index);
 int32_t movement_get_current_timezone_offset(void);
+
+bool movement_button_should_sound(void);
+void movement_set_button_should_sound(bool value);

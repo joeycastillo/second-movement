@@ -130,16 +130,16 @@ bool tally_face_loop(movement_event_t event, movement_settings_t *settings, void
                 bool light_pressed = watch_get_pin_level(BTN_LIGHT);
                 bool alarm_pressed = watch_get_pin_level(BTN_ALARM);
                 if (light_pressed && alarm_pressed) stop_quick_cyc();
-                else if (light_pressed) tally_face_increment(state, settings->bit.button_should_sound);
-                else if (alarm_pressed) tally_face_decrement(state, settings->bit.button_should_sound);
+                else if (light_pressed) tally_face_increment(state, movement_button_should_sound());
+                else if (alarm_pressed) tally_face_decrement(state, movement_button_should_sound());
                 else stop_quick_cyc();
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
-            tally_face_decrement(state, settings->bit.button_should_sound);
+            tally_face_decrement(state, movement_button_should_sound());
             break;
         case EVENT_ALARM_LONG_PRESS:
-            tally_face_decrement(state, settings->bit.button_should_sound);
+            tally_face_decrement(state, movement_button_should_sound());
             start_quick_cyc();
             break;
         case EVENT_MODE_LONG_PRESS:
@@ -151,14 +151,14 @@ bool tally_face_loop(movement_event_t event, movement_settings_t *settings, void
                 state->tally_idx = _tally_default[state->tally_default_idx]; // reset tally index
                 _init_val = true;
                 //play a reset tune
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
-                print_tally(state, settings->bit.button_should_sound);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
+                print_tally(state, movement_button_should_sound());
             }
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            tally_face_increment(state, settings->bit.button_should_sound);
+            tally_face_increment(state, movement_button_should_sound());
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
         case EVENT_ALARM_BUTTON_DOWN:
@@ -171,18 +171,18 @@ bool tally_face_loop(movement_event_t event, movement_settings_t *settings, void
             if (TALLY_FACE_PRESETS_SIZE() > 1 && _init_val){
                 state->tally_default_idx = (state->tally_default_idx + 1) % TALLY_FACE_PRESETS_SIZE();
                 state->tally_idx = _tally_default[state->tally_default_idx];
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
-                if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
-                print_tally(state, settings->bit.button_should_sound);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
+                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
+                print_tally(state, movement_button_should_sound());
             }
             else{
-                tally_face_increment(state, settings->bit.button_should_sound);
+                tally_face_increment(state, movement_button_should_sound());
                 start_quick_cyc();
             }
             break;
         case EVENT_ACTIVATE:
-            print_tally(state, settings->bit.button_should_sound);
+            print_tally(state, movement_button_should_sound());
             break;
         case EVENT_TIMEOUT:
             // ignore timeout

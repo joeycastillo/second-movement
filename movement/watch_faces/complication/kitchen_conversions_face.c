@@ -257,7 +257,7 @@ static void display(kitchen_conversions_state_t *state, movement_settings_t *set
             watch_set_indicator(WATCH_INDICATOR_BELL);
             watch_display_string("Err", 5);
 
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_sequence(calc_fail_seq, NULL);
         }
         else
@@ -277,7 +277,7 @@ static void display(kitchen_conversions_state_t *state, movement_settings_t *set
                 watch_display_string("0", 7);
             }
 
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_sequence(calc_success_seq, NULL);
         }
         watch_display_string("=", 1);
@@ -373,7 +373,7 @@ bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *
             }
 
             // Play boop
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
         }
 
@@ -420,7 +420,7 @@ bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *
             display(state, settings, event.subsecond);
 
             // Play beep
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
 
             state->light_held = false;
@@ -445,7 +445,7 @@ bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *
                 display(state, settings, event.subsecond);
 
                 // Play bleep
-                if (settings->bit.button_should_sound)
+                if (movement_button_should_sound())
                     watch_buzzer_play_note(BUZZER_NOTE_E7, 50);
             }
         }

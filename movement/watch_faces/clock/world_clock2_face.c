@@ -251,7 +251,7 @@ static bool mode_display(movement_event_t event, movement_settings_t *settings, 
 	    refresh_face = true;
             movement_request_tick_frequency(1);
 
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
 	    break;
         case EVENT_MODE_BUTTON_UP:
@@ -330,7 +330,7 @@ static bool mode_settings(movement_event_t event, movement_settings_t *settings,
 	    refresh_face = true;
             movement_request_tick_frequency(1);
 
-            if (settings->bit.button_should_sound)
+            if (movement_button_should_sound())
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
 	    break;
 	case EVENT_LIGHT_LONG_PRESS:
@@ -338,7 +338,7 @@ static bool mode_settings(movement_event_t event, movement_settings_t *settings,
 	    zone = state->current_zone;
 	    state->zones[zone].selected = !state->zones[zone].selected;
 
-            if (settings->bit.button_should_sound) {
+            if (movement_button_should_sound()) {
                 if (state->zones[zone].selected) {
                     beep_enable();
                 } else {

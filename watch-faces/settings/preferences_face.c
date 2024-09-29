@@ -88,7 +88,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                         else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
                         break;
                     case PREFERENCES_PAGE_BUTTON_SOUND:
-                        if (settings->bit.button_should_sound) {
+                        if (movement_button_should_sound()) {
                             watch_display_text(WATCH_POSITION_TOP_RIGHT, " Y");
                         } else {
                             watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
@@ -182,7 +182,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                     settings->bit.clock_mode_24h = !settings->bit.clock_mode_24h;
                     break;
                 case PREFERENCES_PAGE_BUTTON_SOUND:
-                    settings->bit.button_should_sound = !settings->bit.button_should_sound;
+                    movement_set_button_should_sound(!movement_button_should_sound());
                     break;
                 case PREFERENCES_PAGE_TIMEOUT:
                     settings->bit.to_interval = settings->bit.to_interval + 1;

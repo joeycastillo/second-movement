@@ -125,7 +125,7 @@ void TC2_Handler(void) {
 
 static inline void _button_beep(movement_settings_t *settings) {
     // play a beep as confirmation for a button press (if applicable)
-    if (settings->bit.button_should_sound) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+    if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
 /// @brief Display minutes, seconds and fractions derived from 128 Hz tick counter
