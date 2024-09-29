@@ -66,17 +66,19 @@ bool beats_face_loop(movement_event_t event, void *context) {
                 state->next_subsecond_update = (event.subsecond + 1 + (BEAT_REFRESH_FREQUENCY * 2 / 3)) % BEAT_REFRESH_FREQUENCY;
                 state->last_centibeat_displayed = centibeats;
             }
-            sprintf(buf, "bt  %6lu", centibeats);
+            sprintf(buf, "%6lu", centibeats);
 
-            watch_display_text(WATCH_POSITION_FULL, buf);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             if (!watch_tick_animation_is_running()) watch_start_tick_animation(432);
             date_time = watch_rtc_get_date_time();
             centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
-            sprintf(buf, "bt  %4lu  ", centibeats / 100);
+            sprintf(buf, "%4lu  ", centibeats / 100);
 
-            watch_display_text(WATCH_POSITION_FULL, buf);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
         default:
             movement_default_loop_handler(event);
