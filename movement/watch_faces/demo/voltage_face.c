@@ -66,9 +66,9 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // clear seconds area and start tick animation if necessary
-            if (!watch_tick_animation_is_running()) {
+            if (!watch_sleep_animation_is_running()) {
                 watch_display_string("  ", 8);
-                watch_start_tick_animation(1000);
+                watch_start_sleep_animation(1000);
             }
             // update once an hour
             if (date_time.unit.minute == 0) {

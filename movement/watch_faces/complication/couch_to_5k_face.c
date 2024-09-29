@@ -228,7 +228,7 @@ bool couch_to_5k_face_loop(movement_event_t event,
             // fast-updating values like seconds, since the display won't
             // update again for 60 seconds. You should also consider starting
             // the tick animation, to show the wearer that this is sleep mode:
-            // watch_start_tick_animation(500);
+            // watch_start_sleep_animation(500);
             break;
         default:
             // Movement's default loop handler will step in for any cases you

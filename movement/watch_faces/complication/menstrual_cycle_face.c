@@ -324,8 +324,8 @@ bool menstrual_cycle_face_loop(movement_event_t event, void *context) {
             state->current_page = current_page;
             state->days_prev_period = 0;
             watch_clear_indicator(WATCH_INDICATOR_BELL);
-            if (watch_tick_animation_is_running())
-                watch_stop_tick_animation();
+            if (watch_sleep_animation_is_running())
+                watch_stop_sleep_animation();
             break;
         case EVENT_ALARM_LONG_PRESS:
             switch (current_page) {
@@ -445,8 +445,8 @@ bool menstrual_cycle_face_loop(movement_event_t event, void *context) {
             break;
         case first_period:
             if (state->dates.reg) {
-                if (!watch_tick_animation_is_running())
-                    watch_start_tick_animation(500); // Tracking activated
+                if (!watch_sleep_animation_is_running())
+                    watch_start_sleep_animation(500); // Tracking activated
             }
             else if (event.subsecond % 5) { // blink active for 3 quarter-seconds
                 sprintf(buf, "%2d", state->days_prev_period);

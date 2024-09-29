@@ -116,7 +116,7 @@ void watch_stop_blink(void) {
     slcd_set_blink_enabled(false);
 }
 
-void watch_start_tick_animation(uint32_t duration) {
+void watch_start_sleep_animation(uint32_t duration) {
 #ifdef USE_CUSTOM_LCD
     (void) duration;
     watch_set_indicator(WATCH_INDICATOR_SLEEP);
@@ -140,12 +140,12 @@ void watch_start_tick_animation(uint32_t duration) {
 #endif
 }
 
-bool watch_tick_animation_is_running(void) {
+bool watch_sleep_animation_is_running(void) {
     // TODO: wrap this in gossamer call
     return SLCD->CTRLD.bit.CSREN;
 }
 
-void watch_stop_tick_animation(void) {
+void watch_stop_sleep_animation(void) {
 #ifdef USE_CUSTOM_LCD
      watch_clear_indicator(WATCH_INDICATOR_SLEEP);
 #else

@@ -128,11 +128,11 @@ bool alarm_thermometer_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (!watch_tick_animation_is_running()) {
+            if (!watch_sleep_animation_is_running()) {
                 state->mode = MODE_NORMAL;
                 watch_clear_indicator(WATCH_INDICATOR_BELL);
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-                watch_start_tick_animation(1000);
+                watch_start_sleep_animation(1000);
             }
             if (watch_rtc_get_date_time().unit.minute % 5 == 0) {
                 _alarm_thermometer_face_update(movement_use_imperial_units());

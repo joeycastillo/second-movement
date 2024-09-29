@@ -72,8 +72,8 @@ void close_enough_clock_face_setup(uint8_t watch_face_index, void ** context_ptr
 void close_enough_clock_face_activate(void *context) {
     close_enough_clock_state_t *state = (close_enough_clock_state_t *)context;
 
-    if (watch_tick_animation_is_running()) {
-        watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
     }
 
     if (movement_clock_mode_24h()) {

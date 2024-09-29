@@ -117,7 +117,7 @@ bool frequency_correction_face_loop(movement_event_t event, void *context) {
         case EVENT_TIMEOUT:
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            watch_start_tick_animation(500);
+            watch_start_sleep_animation(500);
             break;
         default:
             movement_default_loop_handler(event);

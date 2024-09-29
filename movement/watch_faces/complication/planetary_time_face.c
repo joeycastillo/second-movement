@@ -279,7 +279,7 @@ void planetary_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 }
 
 void planetary_time_face_activate(void *context) {
-    if (watch_tick_animation_is_running()) watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
 #if __EMSCRIPTEN__
     int16_t browser_lat = EM_ASM_INT({ return lat; });
@@ -319,7 +319,7 @@ bool planetary_time_face_loop(movement_event_t event, void *context) {
             state->day_ruler = !state->day_ruler;
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            watch_start_tick_animation(500);
+            watch_start_sleep_animation(500);
             break;
         default:
             return movement_default_loop_handler(event);

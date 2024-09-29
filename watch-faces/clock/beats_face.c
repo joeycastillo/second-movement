@@ -72,7 +72,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (!watch_tick_animation_is_running()) watch_start_tick_animation(432);
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(432);
             date_time = watch_rtc_get_date_time();
             centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
             sprintf(buf, "%4lu  ", centibeats / 100);

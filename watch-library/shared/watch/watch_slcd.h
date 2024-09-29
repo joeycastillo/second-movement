@@ -219,15 +219,15 @@ void watch_stop_blink(void);
   *          Sleep mode, since that mode turns off the LCD).
   * @param duration The duration of each frame in ms. 500 milliseconds produces a classic tick/tock.
   */
-void watch_start_tick_animation(uint32_t duration);
+void watch_start_sleep_animation(uint32_t duration);
 
 /** @brief Checks if the tick animation is currently running.
   * @return true if the animation is running; false otherwise.
   */
-bool watch_tick_animation_is_running(void);
+bool watch_sleep_animation_is_running(void);
 
 /** @brief Stops the tick/tock animation and clears all animating segments.
   * @details This will stop the animation and clear all segments in position 8.
   */
-void watch_stop_tick_animation(void);
+void watch_stop_sleep_animation(void);
 /// @}

@@ -58,7 +58,7 @@ void wareki_activate(void *context) {
 
     wareki_state_t *state = (wareki_state_t *)context;
 
-    if (watch_tick_animation_is_running()) watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
     state->active = false;
 
@@ -198,7 +198,7 @@ bool wareki_loop(movement_event_t event, void *context) {
             // If you did not resign in EVENT_TIMEOUT, you can use this event to update the display once a minute.
             // Avoid displaying fast-updating values like seconds, since the display won't update again for 60 seconds.
             // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
-            // watch_start_tick_animation(500);
+            // watch_start_sleep_animation(500);
             //break;
         default:
             // Movement's default loop handler will step in for any cases you don't handle above:

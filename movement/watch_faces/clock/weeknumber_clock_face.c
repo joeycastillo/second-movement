@@ -47,7 +47,7 @@ void weeknumber_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 void weeknumber_clock_face_activate(void *context) {
     weeknumber_clock_state_t *state = (weeknumber_clock_state_t *)context;
 
-    if (watch_tick_animation_is_running()) watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
     if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
 
@@ -111,7 +111,7 @@ bool weeknumber_clock_face_loop(movement_event_t event, void *context) {
                 }
                 pos = 0;
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
-                    if (!watch_tick_animation_is_running()) watch_start_tick_animation(500);
+                    if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
                     sprintf(buf, "%s%2d%2d%02d  ", watch_utility_get_weekday(date_time), date_time.unit.day, date_time.unit.hour, date_time.unit.minute);
                 } else {
                     sprintf(buf, "%s%2d%2d%02d%02d", watch_utility_get_weekday(date_time), date_time.unit.day, date_time.unit.hour, date_time.unit.minute, watch_utility_get_weeknumber(date_time.unit.year, date_time.unit.month, date_time.unit.day));

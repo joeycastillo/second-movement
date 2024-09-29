@@ -96,7 +96,7 @@ static void watch_invoke_tick_callback(void *userData) {
     }
 }
 
-void watch_start_tick_animation(uint32_t duration) {
+void watch_start_sleep_animation(uint32_t duration) {
     if (tick_interval_id != -1) return;
     watch_display_character(' ', 8);
 
@@ -104,11 +104,11 @@ void watch_start_tick_animation(uint32_t duration) {
     tick_interval_id = emscripten_set_interval(watch_invoke_tick_callback, (double)duration, NULL);
 }
 
-bool watch_tick_animation_is_running(void) {
+bool watch_sleep_animation_is_running(void) {
     return tick_interval_id != -1;
 }
 
-void watch_stop_tick_animation(void) {
+void watch_stop_sleep_animation(void) {
     emscripten_clear_timeout(tick_interval_id);
     tick_interval_id = -1;
     tick_state = false;

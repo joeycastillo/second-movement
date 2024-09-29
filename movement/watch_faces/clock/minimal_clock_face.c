@@ -85,7 +85,7 @@ bool minimal_clock_face_loop(movement_event_t event, void *context) {
             // If you did not resign in EVENT_TIMEOUT, you can use this event to update the display once a minute.
             // Avoid displaying fast-updating values like seconds, since the display won't update again for 60 seconds.
             // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
-            // watch_start_tick_animation(500);
+            // watch_start_sleep_animation(500);
             _minimal_clock_face_update_display();
             break;
         default:

@@ -77,7 +77,7 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
 }
 
 void stopwatch_face_activate(void *context) {
-    if (watch_tick_animation_is_running()) watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
     stopwatch_state_t *stopwatch_state = (stopwatch_state_t *)context;
     if (stopwatch_state->running) {
@@ -143,7 +143,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             // explicitly ignore the timeout event so we stay on screen
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (!watch_tick_animation_is_running()) watch_start_tick_animation(1000);
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
             if (!stopwatch_state->running) {
                 // since the tick animation is running, displaying the stopped time could be misleading,
                 // as it could imply that the stopwatch is running. instead, show a blank display to

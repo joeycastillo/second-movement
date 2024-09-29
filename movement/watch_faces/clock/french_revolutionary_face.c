@@ -74,7 +74,7 @@ bool french_revolutionary_face_loop(movement_event_t event, void *context) {
             if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
                 buf[8] = ' ';
                 buf[9] = ' ';
-                if (!watch_tick_animation_is_running()) { watch_start_tick_animation(500); }
+                if (!watch_sleep_animation_is_running()) { watch_start_sleep_animation(500); }
             }
 
             // Update the display with our decimal time

@@ -343,7 +343,7 @@ void planetary_hours_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 }
 
 void planetary_hours_face_activate(void *context) {
-    if (watch_tick_animation_is_running()) watch_stop_tick_animation();
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
 #if __EMSCRIPTEN__
     int16_t browser_lat = EM_ASM_INT({ return lat; });

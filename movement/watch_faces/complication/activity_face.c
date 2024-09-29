@@ -697,7 +697,7 @@ bool activity_face_loop(movement_event_t event, void *context) {
             }
             else {
                 _activity_update_logging_screen(state);
-                watch_start_tick_animation(500);
+                watch_start_sleep_animation(500);
             }
             break;
         default:
