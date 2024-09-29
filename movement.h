@@ -314,6 +314,7 @@ void movement_cancel_background_task(void);
 void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time date_time);
 void movement_cancel_background_task_for_face(uint8_t watch_face_index);
 
+void movement_request_sleep(void);
 void movement_request_wake(void);
 
 void movement_play_signal(void);

@@ -243,6 +243,15 @@ void movement_cancel_background_task_for_face(uint8_t watch_face_index) {
     movement_state.has_scheduled_background_task = other_tasks_scheduled;
 }
 
+void movement_request_sleep(void) {
+    /// FIXME: for #SecondMovement: This was a feature request to allow watch faces to request sleep.
+    /// Setting the ticks to 1 means the watch will sleep after the next tick. I'd like to say let's
+    /// set it to 0, have the watch face loop return false, and then we'll fall asleep immediately.
+    /// But could this lead to a race condition where the callback decrements to -1 before the loop?
+    /// This is the safest way but consider more testing here.
+    movement_state.le_mode_ticks = 1;
+}
+
 void movement_request_wake() {
     movement_state.needs_wake = true;
     _movement_reset_inactivity_countdown();
