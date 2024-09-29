@@ -43,9 +43,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 #else
-#include "../../../watch-library/hardware/include/saml22j18a.h"
-#include "../../../watch-library/hardware/include/component/tc.h"
-#include "../../../watch-library/hardware/hri/hri_tc_l22.h"
+#include "tc.h"
 #endif
 
 // distant future for background task: January 1, 2083
@@ -88,37 +86,34 @@ static inline void _cb_start() {
 #else
 
 static inline void _cb_start() {
-    // start the TC2 timer
-    hri_tc_set_CTRLA_ENABLE_bit(TC2);
+    // start the TC1 timer
+    tc_enable(1);
     _is_running = true;
 }
 
 static inline void _cb_stop() {
-    // stop the TC2 timer
-    hri_tc_clear_CTRLA_ENABLE_bit(TC2);
+    // stop the TC1 timer
+    tc_disable(1);
     _is_running = false;
 }
 
 static void _cb_initialize() {
-    // setup and initialize TC2 for a 64 Hz interrupt
-    hri_mclk_set_APBCMASK_TC2_bit(MCLK);
-    hri_gclk_write_PCHCTRL_reg(GCLK, TC2_GCLK_ID, GCLK_PCHCTRL_GEN_GCLK3 | GCLK_PCHCTRL_CHEN);
+    tc_init(1, GENERIC_CLOCK_3, TC_PRESCALER_DIV4);
+    tc_set_counter_mode(1, TC_COUNTER_MODE_8BIT);
+    tc_set_run_in_standby(1, true);
     _cb_stop();
-    hri_tc_write_CTRLA_reg(TC2, TC_CTRLA_SWRST);
-    hri_tc_wait_for_sync(TC2, TC_SYNCBUSY_SWRST);
-    hri_tc_write_CTRLA_reg(TC2, TC_CTRLA_PRESCALER_DIV64 | // 32 Khz divided by 64 divided by 4 results in a 128 Hz interrupt
-                           TC_CTRLA_MODE_COUNT8 | 
-                           TC_CTRLA_RUNSTDBY);
-    hri_tccount8_write_PER_reg(TC2, 3);
-    hri_tc_set_INTEN_OVF_bit(TC2);
-    NVIC_ClearPendingIRQ(TC2_IRQn);
-    NVIC_EnableIRQ (TC2_IRQn);
+    tc_count8_set_period(1, 1); // 1024 Hz divided by 4 divided by 2 results in a 128 Hz interrupt
+    /// FIXME: #SecondMovement, we need a gossamer wrapper for interrupts.
+    TC1->COUNT8.INTENSET.bit.OVF = 1;
+    NVIC_ClearPendingIRQ(TC1_IRQn);
+    NVIC_EnableIRQ (TC1_IRQn);
 }
 
-void TC2_Handler(void) {
-    // interrupt handler for TC2 (globally!)
+void irq_handler_tc1(void);
+void irq_handler_tc1(void) {
+    // interrupt handler for TC1 (globally!)
     _ticks++;
-    TC2->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
+    TC1->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
 }
 
 #endif
@@ -273,7 +268,7 @@ bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
                 movement_cancel_background_task();
             }
             _draw();
-            _button_beep(settings);
+            _button_beep();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             if (state->light_on_button) movement_illuminate_led();
@@ -295,7 +290,7 @@ bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
                 } else if (_ticks) {
                     // reset stopwatch
                     _ticks = _lap_ticks = _blink_ticks = _old_minutes = _old_seconds = _hours = 0;
-                    _button_beep(settings);
+                    _button_beep();
                 }
             }
             _display_ticks(_ticks);
