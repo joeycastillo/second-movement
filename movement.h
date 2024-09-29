@@ -60,7 +60,6 @@ typedef union {
     struct {
         bool button_should_sound : 1;       // if true, pressing a button emits a sound.
         uint8_t to_interval : 2;            // an inactivity interval for asking the active face to resign.
-        bool to_always : 1;                 // if true, always time out from the active face to face 0. otherwise only faces that time out will resign (the default).
         uint8_t le_interval : 3;            // 0 to disable low energy mode, or an inactivity interval for going into low energy mode.
         uint8_t led_duration : 3;           // how many seconds to shine the LED for (x2), 0 to shine only while the button is depressed, or all bits set to disable the LED altogether.
         uint8_t led_red_color : 4;          // for general purpose illumination, the red LED value (0-15)
@@ -77,7 +76,7 @@ typedef union {
 
         /// TODO: for #SecondMovement: move alarm_enabled out of preferences
         bool alarm_enabled : 1;             // indicates whether there is at least one alarm enabled.
-        uint8_t reserved : 1;               // room for more preferences if needed.
+        uint8_t reserved : 2;               // room for more preferences if needed.
     } bit;
     uint32_t reg;
 } movement_settings_t;

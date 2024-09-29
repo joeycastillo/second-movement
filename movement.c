@@ -601,10 +601,7 @@ bool app_loop(void) {
     // if we have timed out of our timeout countdown, give the app a hint that they can resign.
     if (movement_state.timeout_ticks == 0 && movement_state.current_face_idx != 0) {
         movement_state.timeout_ticks = -1;
-        if (movement_state.settings.bit.to_always == false) {
-            // if "timeout always" is false, give the current watch face a chance to exit gracefully...
-            event.event_type = EVENT_TIMEOUT;
-        }
+        event.event_type = EVENT_TIMEOUT;
         event.subsecond = movement_state.subsecond;
         // if we run through the loop again to time out, we need to reconsider whether or not we can sleep.
         // if the first trip said true, but this trip said false, we need the false to override, thus
@@ -616,10 +613,6 @@ bool app_loop(void) {
         bool can_sleep2 = wf->loop(event, &movement_state.settings, watch_face_contexts[movement_state.current_face_idx]);
         can_sleep = can_sleep && can_sleep2;
         event.event_type = EVENT_NONE;
-        if (movement_state.settings.bit.to_always && movement_state.current_face_idx != 0) {
-            // ...but if the user has "timeout always" set, give it the boot.
-            movement_move_to_face(0);
-        }
     }
 
     // Now that we've handled all display update tasks, handle the alarm.
