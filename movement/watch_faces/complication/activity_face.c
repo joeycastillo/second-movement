@@ -296,7 +296,7 @@ static void _activity_update_logging_screen(movement_settings_t *settings, activ
         watch_clear_indicator(WATCH_INDICATOR_LAP);
         watch_date_time now = watch_rtc_get_date_time();
         uint8_t hour = now.unit.hour;
-        if (!settings->bit.clock_mode_24h) {
+        if (!movement_clock_mode_24h()) {
             watch_clear_indicator(WATCH_INDICATOR_24H);
             if (hour < 12)
                 watch_clear_indicator(WATCH_INDICATOR_PM);

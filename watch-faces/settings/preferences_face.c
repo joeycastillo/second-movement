@@ -84,7 +84,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                 char buf[8];
                 switch (state->current_page) {
                     case PREFERENCES_PAGE_CLOCK_MODE:
-                        if (settings->bit.clock_mode_24h) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
+                        if (movement_clock_mode_24h()) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
                         else watch_display_text(WATCH_POSITION_BOTTOM, "12h");
                         break;
                     case PREFERENCES_PAGE_BUTTON_SOUND:
@@ -179,7 +179,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
         case EVENT_ALARM_BUTTON_UP:
             switch (state->current_page) {
                 case PREFERENCES_PAGE_CLOCK_MODE:
-                    settings->bit.clock_mode_24h = !settings->bit.clock_mode_24h;
+                    movement_set_clock_mode_24h(((movement_clock_mode_24h() + 1) % MOVEMENT_NUM_CLOCK_MODES));
                     break;
                 case PREFERENCES_PAGE_BUTTON_SOUND:
                     movement_set_button_should_sound(!movement_button_should_sound());

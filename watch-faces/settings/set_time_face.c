@@ -132,7 +132,7 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     if (current_page < 3) {
         watch_set_colon();
-        if (settings->bit.clock_mode_24h) {
+        if (movement_clock_mode_24h()) {
             watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
         } else {

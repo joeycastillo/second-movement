@@ -448,7 +448,7 @@ static void _setting_display(movement_event_t event, movement_settings_t *settin
     int i = state->current_index + 1;
     if (state->current_page > 2) {
         watch_set_colon();
-        if (settings->bit.clock_mode_24h) {
+        if (movement_clock_mode_24h()) {
             watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf, "%s%2d%2d%02d  ", settings_titles[state->current_page], i, date_time.unit.hour, date_time.unit.minute);
         } else {

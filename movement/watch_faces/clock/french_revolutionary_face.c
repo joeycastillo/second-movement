@@ -102,7 +102,7 @@ bool french_revolutionary_face_loop(movement_event_t event, movement_settings_t 
             else { watch_display_string("--", 8); }
             break;
         case EVENT_LIGHT_LONG_PRESS:
-            // In case anyone really wants that upper time in 12-hour format. I thought about using the global setting (settings->bit.clock_mode_24h)
+            // In case anyone really wants that upper time in 12-hour format. I thought about using the global setting (movement_clock_mode_24h())
             // for this preference, but thought someone who prefers 12-hour format normally, might prefer 24hr when compared to a 10hr decimal day,
             // so this is separate for now.
             state->use_am_pm = !state->use_am_pm;

@@ -93,7 +93,7 @@ static void _sunrise_sunset_face_update(movement_settings_t *settings, sunrise_s
         }
 
         watch_set_colon();
-        if (settings->bit.clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
+        if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
 
         rise += hours_from_utc;
         set += hours_from_utc;
@@ -113,7 +113,7 @@ static void _sunrise_sunset_face_update(movement_settings_t *settings, sunrise_s
 
         if (date_time.reg < scratch_time.reg || show_next_match) {
             if (state->rise_index == 0 || show_next_match) {
-                if (!settings->bit.clock_mode_24h) {
+                if (!movement_clock_mode_24h()) {
                     if (watch_utility_convert_to_12_hour(&scratch_time)) watch_set_indicator(WATCH_INDICATOR_PM);
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }
@@ -140,7 +140,7 @@ static void _sunrise_sunset_face_update(movement_settings_t *settings, sunrise_s
 
         if (date_time.reg < scratch_time.reg || show_next_match) {
             if (state->rise_index == 0 || show_next_match) {
-                if (!settings->bit.clock_mode_24h) {
+                if (!movement_clock_mode_24h()) {
                     if (watch_utility_convert_to_12_hour(&scratch_time)) watch_set_indicator(WATCH_INDICATOR_PM);
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }

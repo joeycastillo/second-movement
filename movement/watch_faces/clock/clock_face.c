@@ -53,11 +53,7 @@ typedef struct {
 } clock_state_t;
 
 static bool clock_is_in_24h_mode(movement_settings_t *settings) {
-#ifdef CLOCK_FACE_24H_ONLY
-    return true;
-#else
-    return settings->bit.clock_mode_24h;
-#endif
+    return movement_clock_mode_24h();
 }
 
 static bool clock_should_set_leading_zero(movement_settings_t *settings) {
@@ -89,7 +85,7 @@ static bool clock_is_pm(watch_date_time date_time) {
 }
 
 static void clock_indicate_pm(movement_settings_t *settings, watch_date_time date_time) {
-    if (settings->bit.clock_mode_24h) { return; }
+    if (movement_clock_mode_24h()) { return; }
     clock_indicate(WATCH_INDICATOR_PM, clock_is_pm(date_time));
 }
 

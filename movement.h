@@ -41,6 +41,12 @@
 //   stuff we'll want to make available to all watch faces and stash in the BKUP[3] register.
 // This allows these preferences to be stored before entering BACKUP mode and and restored after waking from reset.
 
+typedef enum {
+    MOVEMENT_CLOCK_MODE_12H = 0,
+    MOVEMENT_CLOCK_MODE_24H,
+    MOVEMENT_NUM_CLOCK_MODES
+} movement_clock_mode_t;
+
 // movement_settings_t contains global settings that cover watch behavior, including preferences around clock and unit
 // display, time zones, buzzer behavior, LED color and low energy mode timeouts.
 typedef union {
@@ -321,3 +327,6 @@ int32_t movement_get_current_timezone_offset(void);
 
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);
+
+movement_clock_mode_t movement_clock_mode_24h(void);
+void movement_set_clock_mode_24h(movement_clock_mode_t value);

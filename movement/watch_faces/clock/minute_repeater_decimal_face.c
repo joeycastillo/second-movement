@@ -83,7 +83,7 @@ void minute_repeater_decimal_face_activate(movement_settings_t *settings, void *
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
-    if (settings->bit.clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
+    if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
 
     // handle chime indicator
     if (state->signal_enabled) watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -138,7 +138,7 @@ bool minute_repeater_decimal_face_loop(movement_event_t event, movement_settings
                 sprintf(buf, "%02d%02d", date_time.unit.minute, date_time.unit.second);
             } else {
                 // other stuff changed; let's do it all.
-                if (!settings->bit.clock_mode_24h) {
+                if (!movement_clock_mode_24h()) {
                     // if we are in 12 hour mode, do some cleanup.
                     if (date_time.unit.hour < 12) {
                         watch_clear_indicator(WATCH_INDICATOR_PM);
@@ -183,7 +183,7 @@ bool minute_repeater_decimal_face_loop(movement_event_t event, movement_settings
             int minutes = date_time.unit.minute % 10;
 
             // chiming hours
-            if (!settings->bit.clock_mode_24h) {
+            if (!movement_clock_mode_24h()) {
                 hours = date_time.unit.hour % 12;                
                 if (hours == 0) hours = 12;
             }

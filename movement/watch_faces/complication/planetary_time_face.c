@@ -218,11 +218,11 @@ static void _planetary_time(movement_event_t event, movement_settings_t *setting
         return;
     }
 
-    if (settings->bit.clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
+    if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
 
     // PM for night hours, otherwise the night hours are counted from 13
     if ( state->night ) {
-        if (settings->bit.clock_mode_24h) night_hour_count = 12;
+        if (movement_clock_mode_24h()) night_hour_count = 12;
         else watch_set_indicator(WATCH_INDICATOR_PM);
     }
 

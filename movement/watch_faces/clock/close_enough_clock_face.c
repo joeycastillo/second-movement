@@ -77,7 +77,7 @@ void close_enough_clock_face_activate(movement_settings_t *settings, void *conte
         watch_stop_tick_animation();
     }
 
-    if (settings->bit.clock_mode_24h) {
+    if (movement_clock_mode_24h()) {
         watch_set_indicator(WATCH_INDICATOR_24H);
     }
 
@@ -155,7 +155,7 @@ bool close_enough_clock_face_loop(movement_event_t event, movement_settings_t *s
                 close_enough_hour = (close_enough_hour + 1) % 24;
             }
 
-            if (!settings->bit.clock_mode_24h) {
+            if (!movement_clock_mode_24h()) {
                 // if we are in 12 hour mode, do some cleanup.
                 if (close_enough_hour < 12) {
                     watch_clear_indicator(WATCH_INDICATOR_PM);

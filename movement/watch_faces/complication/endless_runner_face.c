@@ -602,7 +602,7 @@ bool endless_runner_face_loop(movement_event_t event, movement_settings_t *setti
                 display_title(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            display_time(watch_rtc_get_date_time(), settings->bit.clock_mode_24h);
+            display_time(watch_rtc_get_date_time(), movement_clock_mode_24h());
             break;
         default:
             return movement_default_loop_handler(event, settings);

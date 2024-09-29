@@ -191,7 +191,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, movement_settings_t *s
     char buf[11];
     if (current_page < 3) {
         watch_set_colon();
-        if (settings->bit.clock_mode_24h) {
+        if (movement_clock_mode_24h()) {
             watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf,
                     "%s  %2d%02d%02d",

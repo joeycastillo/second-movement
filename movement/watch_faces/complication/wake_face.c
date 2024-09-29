@@ -38,7 +38,7 @@ void _wake_face_update_display(movement_settings_t *settings, wake_face_state_t 
     uint8_t hour = state->hour;
 
     watch_clear_display();
-    if ( settings->bit.clock_mode_24h )
+    if ( movement_clock_mode_24h() )
         watch_set_indicator(WATCH_INDICATOR_24H);
     else {
         if ( hour >= 12 )

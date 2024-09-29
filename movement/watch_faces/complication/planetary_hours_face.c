@@ -253,7 +253,7 @@ static void _planetary_hours(movement_settings_t *settings, planetary_hours_stat
         return;
     }
 
-    if (settings->bit.clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
+    if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
 
     // roll over hour iterator
     if ( state->hour < 0 ) state->hour = 23;
@@ -305,7 +305,7 @@ static void _planetary_hours(movement_settings_t *settings, planetary_hours_stat
     else if ( scratch_time.unit.minute < 59 ) scratch_time.unit.minute++;
 
     // if we are in 12 hour mode, do some cleanup
-    if (!settings->bit.clock_mode_24h) {
+    if (!movement_clock_mode_24h()) {
         if (scratch_time.unit.hour < 12) {
             watch_clear_indicator(WATCH_INDICATOR_PM);
         } else {
