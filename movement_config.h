@@ -28,6 +28,7 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
+    clock_face,
     simple_clock_face,
     beats_face,
     world_clock_face,

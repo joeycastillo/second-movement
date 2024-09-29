@@ -34,7 +34,7 @@
 #include "clock_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
 
 // 2.2 volts will happen when the battery has maybe 5-10% remaining?
 // we can refine this later.
@@ -51,14 +51,6 @@ typedef struct {
     bool time_signal_enabled;
     bool battery_low;
 } clock_state_t;
-
-static bool clock_is_in_24h_mode(movement_settings_t *settings) {
-    return movement_clock_mode_24h();
-}
-
-static bool clock_should_set_leading_zero(movement_settings_t *settings) {
-    return clock_is_in_24h_mode(settings) && settings->bit.clock_24h_leading_zero;
-}
 
 static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
@@ -77,7 +69,7 @@ static void clock_indicate_time_signal(clock_state_t *clock) {
 }
 
 static void clock_indicate_24h(movement_settings_t *settings) {
-    clock_indicate(WATCH_INDICATOR_24H, clock_is_in_24h_mode(settings));
+    clock_indicate(WATCH_INDICATOR_24H, !!movement_clock_mode_24h());
 }
 
 static bool clock_is_pm(watch_date_time date_time) {
@@ -138,7 +130,7 @@ static void clock_display_all(watch_date_time date_time, bool leading_zero) {
         date_time.unit.second
     );
 
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_FULL, buf);
 }
 
 static bool clock_display_some(watch_date_time current, watch_date_time previous) {
@@ -163,7 +155,8 @@ static bool clock_display_some(watch_date_time current, watch_date_time previous
             current.unit.second
         );
 
-        watch_display_string(buf, 6);
+        watch_display_text(WATCH_POSITION_MINUTES, buf);
+        watch_display_text(WATCH_POSITION_SECONDS, buf + 2);
 
         return true;
 
@@ -175,12 +168,11 @@ static bool clock_display_some(watch_date_time current, watch_date_time previous
 
 static void clock_display_clock(movement_settings_t *settings, clock_state_t *clock, watch_date_time current) {
     if (!clock_display_some(current, clock->date_time.previous)) {
-        if (!clock_is_in_24h_mode(settings)) {
-            // if we are in 12 hour mode, do some cleanup.
+        if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm(settings, current);
             current = clock_24h_to_12h(current);
         }
-        clock_display_all(current, clock_should_set_leading_zero(settings));
+        clock_display_all(current, movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H);
     }
 }
 
@@ -197,7 +189,7 @@ static void clock_display_low_energy(watch_date_time date_time) {
         date_time.unit.minute
     );
 
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_FULL, buf);
 }
 
 static void clock_start_tick_tock_animation(void) {

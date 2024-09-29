@@ -42,8 +42,9 @@
 // This allows these preferences to be stored before entering BACKUP mode and and restored after waking from reset.
 
 typedef enum {
-    MOVEMENT_CLOCK_MODE_12H = 0,
-    MOVEMENT_CLOCK_MODE_24H,
+    MOVEMENT_CLOCK_MODE_12H = 0,    /// use 12 hour clock
+    MOVEMENT_CLOCK_MODE_24H,        /// use 24 hour clock
+    MOVEMENT_CLOCK_MODE_024H,       /// use 24 hour clock with leading zero
     MOVEMENT_NUM_CLOCK_MODES
 } movement_clock_mode_t;
 
