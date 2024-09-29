@@ -45,9 +45,6 @@ void preferences_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         for (int i = 0; i < PREFERENCES_PAGE_NUM_PREFERENCES; i++) {
             state->setting_enabled[i] = true;
         }
-#ifdef CLOCK_FACE_24H_ONLY
-        state->setting_enabled[PREFERENCES_PAGE_CLOCK_MODE] = false;
-#endif
 #ifndef WATCH_RED_TCC_CHANNEL
         state->setting_enabled[PREFERENCES_PAGE_LED_RED] = false;
 #endif
