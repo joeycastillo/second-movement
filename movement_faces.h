@@ -29,7 +29,7 @@
 #include "beats_face.h"
 #include "world_clock_face.h"
 #include "countdown_face.h"
-#include "stock_stopwatch_face.h"
+#include "fast_stopwatch_face.h"
 #include "set_time_face.h"
 #include "preferences_face.h"
 // New includes go above this line.

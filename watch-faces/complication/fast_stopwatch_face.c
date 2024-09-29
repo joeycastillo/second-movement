@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "stock_stopwatch_face.h"
+#include "fast_stopwatch_face.h"
 #include "watch.h"
 #include "watch_common_display.h"
 #include "watch_utility.h"
@@ -209,12 +209,12 @@ static inline void _set_colon() {
     _colon = true;
 }
 
-void stock_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void fast_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(stock_stopwatch_state_t));
-        memset(*context_ptr, 0, sizeof(stock_stopwatch_state_t));
-        stock_stopwatch_state_t *state = (stock_stopwatch_state_t *)*context_ptr;
+        *context_ptr = malloc(sizeof(fast_stopwatch_state_t));
+        memset(*context_ptr, 0, sizeof(fast_stopwatch_state_t));
+        fast_stopwatch_state_t *state = (fast_stopwatch_state_t *)*context_ptr;
         _ticks = _lap_ticks = _blink_ticks = _old_minutes = _old_seconds = _hours = 0;
     _is_running = _colon = false;
         state->light_on_button = true;
@@ -225,7 +225,7 @@ void stock_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     }
 }
 
-void stock_stopwatch_face_activate(void *context) {
+void fast_stopwatch_face_activate(void *context) {
     (void) context;
     if (_is_running) {
         // The background task will keep the watch from entering low energy mode while the stopwatch is on screen.
@@ -233,8 +233,8 @@ void stock_stopwatch_face_activate(void *context) {
     }
 }
 
-bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
-    stock_stopwatch_state_t *state = (stock_stopwatch_state_t *)context;
+bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
+    fast_stopwatch_state_t *state = (fast_stopwatch_state_t *)context;
 
     // handle overflow of fast ticks
     while (_ticks >= (128 * 60 * 60)) {
@@ -321,7 +321,7 @@ bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-void stock_stopwatch_face_resign(void *context) {
+void fast_stopwatch_face_resign(void *context) {
     (void) context;
     // cancel the keepalive task
     movement_cancel_background_task();

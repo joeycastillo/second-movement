@@ -29,7 +29,7 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    stock_stopwatch_face,
+    fast_stopwatch_face,
     beats_face,
     world_clock_face,
     countdown_face,

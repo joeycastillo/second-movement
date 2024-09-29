@@ -34,7 +34,7 @@
  * when the timer is stopped resets it.
  *
  * This face does not count sub-seconds.
- * See also: "stock_stopwatch_face.h"
+ * See also: "fast_stopwatch_face.h"
  */
 
 #include "movement.h"

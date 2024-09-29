@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef STOCK_STOPWATCH_FACE_H_
-#define STOCK_STOPWATCH_FACE_H_
+#ifndef FAST_STOPWATCH_FACE_H_
+#define FAST_STOPWATCH_FACE_H_
 
 /*
  * STOCK STOPWATCH face
@@ -45,7 +45,7 @@
  *    It either turns on with each button press or remains off.
  *
  * NOTE:
- * This watch face relies heavily on static vars in stock_stopwatch.c.
+ * This watch face relies heavily on static vars in fast_stopwatch.c.
  * The disadvantage is that you cannot use more than one instance of this
  * watch face on your custom firmware - but then again, who would want that?
  * The advantage is that accessing vars is more direct and faster, and we
@@ -56,12 +56,12 @@
 
 typedef struct {
     bool light_on_button;   // determines whether the light button actually triggers the led
-} stock_stopwatch_state_t;
+} fast_stopwatch_state_t;
 
-void stock_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void stock_stopwatch_face_activate(void *context);
-bool stock_stopwatch_face_loop(movement_event_t event, void *context);
-void stock_stopwatch_face_resign(void *context);
+void fast_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void fast_stopwatch_face_activate(void *context);
+bool fast_stopwatch_face_loop(movement_event_t event, void *context);
+void fast_stopwatch_face_resign(void *context);
 
 #if __EMSCRIPTEN__
 void em_cb_handler(void *userData);
@@ -69,12 +69,12 @@ void em_cb_handler(void *userData);
 void TC2_Handler(void);
 #endif
 
-#define stock_stopwatch_face ((const watch_face_t){ \
-    stock_stopwatch_face_setup, \
-    stock_stopwatch_face_activate, \
-    stock_stopwatch_face_loop, \
-    stock_stopwatch_face_resign, \
+#define fast_stopwatch_face ((const watch_face_t){ \
+    fast_stopwatch_face_setup, \
+    fast_stopwatch_face_activate, \
+    fast_stopwatch_face_loop, \
+    fast_stopwatch_face_resign, \
     NULL, \
 })
 
-#endif // STOCK_STOPWATCH_FACE_H_
+#endif // FAST_STOPWATCH_FACE_H_

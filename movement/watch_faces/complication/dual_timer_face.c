@@ -34,11 +34,11 @@
  * IMPORTANT: This watch face uses the same TC2 callback counter as the Stock Stopwatch
  * watch-face. It works through calling a global handler function. The two watch-faces
  * therefore can't coexist within the same firmware. If you want to compile this watch-face
- * then you need to remove the line <../watch_faces/complication/stock_stopwatch_face.c \>
+ * then you need to remove the line <../watch_faces/complication/fast_stopwatch_face.c \>
  * from the Makefile.
  */
 
-// FROM stock_stopwatch_face.c ////////////////////////////////////////////////
+// FROM fast_stopwatch_face.c ////////////////////////////////////////////////
 // Copyright (c) 2022 Andreas Nebinger
 
 #if __EMSCRIPTEN__
@@ -107,7 +107,7 @@ static void _dual_timer_cb_initialize() {
     NVIC_EnableIRQ (TC2_IRQn);
 }
 
-// you need to take stock_stopwatch.c out of the Makefile or this will create a conflict
+// you need to take fast_stopwatch.c out of the Makefile or this will create a conflict
 // you have to choose between one of the stopwatches
  void TC2_Handler(void) {
     // interrupt handler for TC2 (globally!)

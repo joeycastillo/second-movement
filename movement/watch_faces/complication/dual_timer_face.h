@@ -63,7 +63,7 @@
  * IMPORTANT: This watch face uses the same TC2 callback counter as the Stock Stopwatch
  * watch-face. It works through calling a global handler function. The two watch-faces
  * therefore can't coexist within the same firmware. If you want to compile this watch-face
- * then you need to remove the line <../watch_faces/complication/stock_stopwatch_face.c \>
+ * then you need to remove the line <../watch_faces/complication/fast_stopwatch_face.c \>
  * from the Makefile.
  */
 
