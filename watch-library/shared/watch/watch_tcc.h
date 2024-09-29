@@ -207,7 +207,7 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
 void watch_buzzer_abort_sequence(void);
 
 #ifndef __EMSCRIPTEN__
-void irq_handler_tc3(void);
+void irq_handler_tc0(void);
 #endif
 
 /** @addtogroup led LED Control

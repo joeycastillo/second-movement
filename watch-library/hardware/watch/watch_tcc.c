@@ -43,32 +43,32 @@ static void _tcc_write_RUNSTDBY(bool value) {
     tcc_enable(0);
 }
 
-static inline void _tc3_start() {
-    // start the TC3 timer
-    tc_enable(3);
+static inline void _tc0_start() {
+    // start the TC0 timer
+    tc_enable(0);
     _callback_running = true;
 }
 
-static inline void _tc3_stop() {
-    // stop the TC3 timer
-    tc_disable(3);
+static inline void _tc0_stop() {
+    // stop the TC0 timer
+    tc_disable(0);
     _callback_running = false;
 }
 
-static void _tc3_initialize() {
-    // setup and initialize TC3 for a 64 Hz interrupt
-    tc_init(3, GENERIC_CLOCK_3, TC_PRESCALER_DIV2);
-    tc_set_counter_mode(3, TC_COUNTER_MODE_8BIT);
-    tc_set_run_in_standby(3, true);
-    tc_count8_set_period(3, 7); // 1024 Hz divided by 2 divided by 8 equals 64 Hz
+static void _tc0_initialize() {
+    // setup and initialize TC0 for a 64 Hz interrupt
+    tc_init(0, GENERIC_CLOCK_3, TC_PRESCALER_DIV2);
+    tc_set_counter_mode(0, TC_COUNTER_MODE_8BIT);
+    tc_set_run_in_standby(0, true);
+    tc_count8_set_period(0, 7); // 1024 Hz divided by 2 divided by 8 equals 64 Hz
     /// FIXME: #SecondMovement, we need a gossamer wrapper for interrupts.
-    TC3->COUNT8.INTENSET.bit.OVF = 1;
-    NVIC_ClearPendingIRQ(TC3_IRQn);
-    NVIC_EnableIRQ (TC3_IRQn);
+    TC0->COUNT8.INTENSET.bit.OVF = 1;
+    NVIC_ClearPendingIRQ(TC0_IRQn);
+    NVIC_EnableIRQ (TC0_IRQn);
 }
 
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
-    if (_callback_running) _tc3_stop();
+    if (_callback_running) _tc0_stop();
     watch_set_buzzer_off();
     _sequence = note_sequence;
     _cb_finished = callback_on_end;
@@ -77,12 +77,12 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
     _repeat_counter = -1;
     // prepare buzzer
     watch_enable_buzzer();
-    // setup TC3 timer
-    _tc3_initialize();
+    // setup TC0 timer
+    _tc0_initialize();
     // TCC should run in standby mode
     _tcc_write_RUNSTDBY(true);
     // start the timer (for the 64 hz callback)
-    _tc3_start();
+    _tc0_start();
 }
 
 void cb_watch_buzzer_seq(void) {
@@ -126,16 +126,16 @@ void cb_watch_buzzer_seq(void) {
 
 void watch_buzzer_abort_sequence(void) {
     // ends/aborts the sequence
-    if (_callback_running) _tc3_stop();
+    if (_callback_running) _tc0_stop();
     watch_set_buzzer_off();
     // disable standby mode for TCC
     _tcc_write_RUNSTDBY(false);
 }
 
-void irq_handler_tc3(void) {
-    // interrupt handler for TC3 (globally!)
+void irq_handler_tc0(void) {
+    // interrupt handler for TC0 (globally!)
     cb_watch_buzzer_seq();
-    TC3->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
+    TC0->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
 }
 
 bool watch_is_buzzer_or_led_enabled(void){
