@@ -52,6 +52,9 @@ static const uint32_t IndicatorSegments[] = {
 #endif
 
 void watch_display_character(uint8_t character, uint8_t position) {
+#ifdef USE_CUSTOM_LCD
+    if (character == 'R') character = 'r'; // We can't display uppercase R on this display.
+#else
     // special cases for positions 4 and 6
     if (position == 4 || position == 6) {
         if (character == '7') character = '&'; // "lowercase" 7
@@ -87,7 +90,7 @@ void watch_display_character(uint8_t character, uint8_t position) {
     } else {
         if (character == 'I') character = 'l'; // uppercase I only works in position 0
     }
-
+#endif
     digit_mapping_t segmap = Watch_Display_Mapping[position];
     uint8_t segdata = Watch_Character_Set[character - 0x20];
 
