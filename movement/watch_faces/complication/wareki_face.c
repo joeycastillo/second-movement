@@ -19,19 +19,6 @@ void wareki_setup(movement_settings_t *settings, uint8_t watch_face_index, void 
         *context_ptr = malloc(sizeof(wareki_state_t));
         memset(*context_ptr, 0, sizeof(wareki_state_t));
         // Do any one-time tasks in here; the inside of this conditional happens only at boot.
-
-        //debug code 
-        // watch_date_time datetime = watch_rtc_get_date_time();
-        // datetime.unit.year  = 2022 - WATCH_RTC_REFERENCE_YEAR;
-        // datetime.unit.month = 12;
-        // datetime.unit.day   = 31;
-        // datetime.unit.hour  = 23;
-        // datetime.unit.minute= 59;
-        // datetime.unit.second= 30;
-        // watch_rtc_set_date_time(datetime);
-        // settings->bit.clock_mode_24h = true; //24時間表記
-        // settings->bit.to_interval = 1;//0=60sec 1=2m 2=5m 3=30m
-        // watch_store_backup_data(settings->reg, 0);
     }
 
 }
