@@ -301,7 +301,7 @@ void menstrual_cycle_face_activate(movement_settings_t *settings, void *context)
     state->period_today = 0;
     state->current_page = 0;
     state->reset_tracking = 0;
-    state->utc_offset = movement_timezone_offsets[settings->bit.time_zone] * 60;
+    state->utc_offset = movement_get_current_timezone_offset();
     movement_request_tick_frequency(4); // we need to manually blink some pixels
 }
 

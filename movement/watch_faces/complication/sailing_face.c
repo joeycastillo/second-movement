@@ -34,7 +34,7 @@
 #define DEFAULT_MINUTES { 5,4,1,0,0,0 }
 
 static inline int32_t get_tz_offset(movement_settings_t *settings) {
-    return movement_timezone_offsets[settings->bit.time_zone] * 60;
+    return movement_get_current_timezone_offset();
 }
 
 static int lap = 0;

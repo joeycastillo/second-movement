@@ -37,7 +37,7 @@ static const int8_t _sound_seq_start[] = {BUZZER_NOTE_C8, 2, 0};
 static uint8_t _beeps_to_play;    // temporary counter for ring signals playing
 
 static inline int32_t _get_tz_offset(movement_settings_t *settings) {
-    return movement_timezone_offsets[settings->bit.time_zone] * 60;
+    return movement_get_current_timezone_offset();
 }
 
 static void _signal_callback() {

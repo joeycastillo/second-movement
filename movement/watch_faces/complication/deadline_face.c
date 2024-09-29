@@ -159,7 +159,7 @@ static inline int _days_in_month(int16_t month, int16_t year)
 /* Return time zone offset */
 static inline int32_t _get_tz_offset(movement_settings_t *settings)
 {
-    return movement_timezone_offsets[settings->bit.time_zone] * 60;
+    return movement_get_current_timezone_offset();
 }
 
 /* Beep for a button press*/

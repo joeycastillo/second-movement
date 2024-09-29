@@ -31,7 +31,7 @@ static uint8_t focus_min = 25;
 static uint8_t break_min = 5;
 
 static inline int32_t get_tz_offset(movement_settings_t *settings) {
-    return movement_timezone_offsets[settings->bit.time_zone] * 60;
+    return movement_get_current_timezone_offset();
 }
 
 static uint8_t get_length(tomato_state_t *state) {
