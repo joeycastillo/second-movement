@@ -1,9 +1,11 @@
 # Keep this first line.
 GOSSAMER_PATH=gossamer
 
-# If your firmware targets a specific board, specify it here,
-# or omit it and provide it on the command line (make BOARD=foo).
+# Which board are we building for?
 BOARD=sensorwatch_pro
+
+# Which screen are we building for?
+DISPLAY=CUSTOM
 
 TINYUSB_CDC=1
 
