@@ -340,6 +340,12 @@ void movement_set_clock_mode_24h(movement_clock_mode_t value);
 bool movement_use_imperial_units(void);
 void movement_set_use_imperial_units(bool value);
 
+uint8_t movement_get_fast_tick_timeout(void);
+void movement_set_fast_tick_timeout(uint8_t value);
+
+uint8_t movement_get_low_energy_timeout(void);
+void movement_set_low_energy_timeout(uint8_t value);
+
 movement_color_t movement_backlight_color(void);
 void movement_set_backlight_color(movement_color_t color);
 

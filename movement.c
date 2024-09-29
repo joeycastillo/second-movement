@@ -353,6 +353,22 @@ void movement_set_use_imperial_units(bool value) {
     movement_state.settings.bit.use_imperial_units = value;
 }
 
+uint8_t movement_get_fast_tick_timeout(void) {
+    return movement_state.settings.bit.to_interval;
+}
+
+void movement_set_fast_tick_timeout(uint8_t value) {
+    movement_state.settings.bit.to_interval = value;
+}
+
+uint8_t movement_get_low_energy_timeout(void) {
+    return movement_state.settings.bit.le_interval;
+}
+
+void movement_set_low_energy_timeout(uint8_t value) {
+    movement_state.settings.bit.le_interval = value;
+}
+
 movement_color_t movement_backlight_color(void) {
     return (movement_color_t) {
         .red = movement_state.settings.bit.led_red_color,

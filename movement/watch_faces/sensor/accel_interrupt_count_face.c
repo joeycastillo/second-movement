@@ -82,7 +82,7 @@ void accel_interrupt_count_face_activate(movement_settings_t *settings, void *co
     state->is_setting = false;
 
     // force LE interval to never sleep
-    settings->bit.le_interval = 0;
+    movement_set_low_energy_timeout(0);
 }
 
 bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {

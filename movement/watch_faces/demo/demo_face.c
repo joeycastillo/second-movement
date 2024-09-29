@@ -57,7 +57,7 @@ void demo_face_activate(movement_settings_t *settings, void *context) {
     (void) context;
     movement_request_tick_frequency(0);
     // ensure the watch never enters low energy mode
-    settings->bit.le_interval = 0;
+    movement_set_low_energy_timeout(0);
     settings->bit.led_duration = 3;
 }
 

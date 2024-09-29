@@ -96,7 +96,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                         }
                         break;
                     case PREFERENCES_PAGE_TIMEOUT:
-                        switch (settings->bit.to_interval) {
+                        switch (movement_get_fast_tick_timeout()) {
                             case 0:
                                 watch_display_text(WATCH_POSITION_BOTTOM, "60 SeC");
                                 break;
@@ -112,7 +112,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                         }
                         break;
                     case PREFERENCES_PAGE_LOW_ENERGY:
-                        switch (settings->bit.le_interval) {
+                        switch (movement_get_low_energy_timeout()) {
                             case 0:
                                 watch_display_text(WATCH_POSITION_BOTTOM, " Never");
                                 break;
@@ -189,10 +189,10 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                     movement_set_button_should_sound(!movement_button_should_sound());
                     break;
                 case PREFERENCES_PAGE_TIMEOUT:
-                    settings->bit.to_interval = settings->bit.to_interval + 1;
+                    movement_set_fast_tick_timeout((movement_get_fast_tick_timeout() + 1));
                     break;
                 case PREFERENCES_PAGE_LOW_ENERGY:
-                    settings->bit.le_interval = settings->bit.le_interval + 1;
+                    movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
                     break;
                 case PREFERENCES_PAGE_LED_DURATION:
                     settings->bit.led_duration = settings->bit.led_duration + 1;

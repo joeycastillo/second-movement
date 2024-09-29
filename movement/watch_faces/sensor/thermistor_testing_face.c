@@ -46,7 +46,7 @@ void thermistor_testing_face_setup(movement_settings_t *settings, uint8_t watch_
     (void) context_ptr;
     // force one setting: never enter low energy mode.
     // I'm using this watch face to test the temperature sensor boards; there's no need for it.
-    settings->bit.le_interval = 0;
+    movement_set_low_energy_timeout(0);
 }
 
 void thermistor_testing_face_activate(movement_settings_t *settings, void *context) {
