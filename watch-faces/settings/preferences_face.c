@@ -140,12 +140,12 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                         }
                         break;
                     case PREFERENCES_PAGE_LED_DURATION:
-                        if (settings->bit.led_duration == 0) {
+                        if (movement_get_backlight_dwell() == 0) {
                             watch_display_text(WATCH_POSITION_BOTTOM, "instnt");
-                        } else if (settings->bit.led_duration == 0b111) {
+                        } else if (movement_get_backlight_dwell() == 0b111) {
                             watch_display_text(WATCH_POSITION_BOTTOM, "no LEd");
                         } else {
-                            sprintf(buf, " %1d SeC", settings->bit.led_duration * 2 - 1);
+                            sprintf(buf, " %1d SeC", (movement_get_backlight_dwell() * 2 - 1) % 10);
                             watch_display_text(WATCH_POSITION_BOTTOM, buf);
                         }
                         break;
@@ -195,10 +195,10 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
                     movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
                     break;
                 case PREFERENCES_PAGE_LED_DURATION:
-                    settings->bit.led_duration = settings->bit.led_duration + 1;
-                    if (settings->bit.led_duration > 3) {
+                    movement_set_backlight_dwell(movement_get_backlight_dwell() + 1);
+                    if (movement_get_backlight_dwell() > 3) {
                         // set all bits to disable the LED
-                        settings->bit.led_duration = 0b111;
+                        movement_set_backlight_dwell(0b111);
                     }
                     break;
                 case PREFERENCES_PAGE_LED_RED:

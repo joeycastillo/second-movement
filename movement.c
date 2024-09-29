@@ -383,6 +383,14 @@ void movement_set_backlight_color(movement_color_t color) {
     movement_state.settings.bit.led_blue_color = color.blue;
 }
 
+uint8_t movement_get_backlight_dwell(void) {
+    return movement_state.settings.bit.led_duration;
+}
+
+void movement_set_backlight_dwell(uint8_t value) {
+    movement_state.settings.bit.led_duration = value;
+}
+
 bool movement_alarm_enabled(void) {
     return movement_state.settings.bit.alarm_enabled;
 }
