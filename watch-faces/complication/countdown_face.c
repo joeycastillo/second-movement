@@ -329,8 +329,13 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             times_up(settings, state);
             break;
         case EVENT_TIMEOUT:
-            abort_quick_ticks(state);
-            movement_move_to_face(0);
+            if (state->mode == cd_setting) {
+                state->selection = 0;
+                state->mode = cd_reset;
+                store_countdown(state);
+                movement_request_tick_frequency(1);
+                button_beep(settings);
+            }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_LIGHT_BUTTON_DOWN:
