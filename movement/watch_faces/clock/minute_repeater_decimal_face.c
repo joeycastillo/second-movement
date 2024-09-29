@@ -66,8 +66,7 @@ static void _update_alarm_indicator(bool settings_alarm_enabled, minute_repeater
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-void minute_repeater_decimal_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void minute_repeater_decimal_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -78,7 +77,7 @@ void minute_repeater_decimal_face_setup(movement_settings_t *settings, uint8_t w
     }
 }
 
-void minute_repeater_decimal_face_activate(movement_settings_t *settings, void *context) {
+void minute_repeater_decimal_face_activate(void *context) {
     minute_repeater_decimal_state_t *state = (minute_repeater_decimal_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -98,7 +97,7 @@ void minute_repeater_decimal_face_activate(movement_settings_t *settings, void *
     state->previous_date_time = 0xFFFFFFFF;
 }
 
-bool minute_repeater_decimal_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool minute_repeater_decimal_face_loop(movement_event_t event, void *context) {
     minute_repeater_decimal_state_t *state = (minute_repeater_decimal_state_t *)context;
     char buf[11];
     uint8_t pos;
@@ -216,19 +215,17 @@ bool minute_repeater_decimal_face_loop(movement_event_t event, movement_settings
            
             break; 
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void minute_repeater_decimal_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void minute_repeater_decimal_face_resign(void *context) {
     (void) context;
 }
 
-bool minute_repeater_decimal_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool minute_repeater_decimal_face_wants_background_task(void *context) {
     minute_repeater_decimal_state_t *state = (minute_repeater_decimal_state_t *)context;
     if (!state->signal_enabled) return false;
 

@@ -31,8 +31,7 @@
 
 uint16_t lightmeter_mod(uint16_t m, uint16_t n) { return (m%n + n)%n; }  
 
-void lightmeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void lightmeter_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(lightmeter_state_t));
@@ -45,8 +44,7 @@ void lightmeter_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void lightmeter_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void lightmeter_face_activate(void *context) {
     lightmeter_state_t *state = (lightmeter_state_t*) context;
     state->waiting_for_conversion = 0;
     lightmeter_show_ev(state); // Print most current reading
@@ -101,8 +99,7 @@ void lightmeter_show_ev(lightmeter_state_t *state) {
     return;
 }
 
-bool lightmeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool lightmeter_face_loop(movement_event_t event, void *context) {
     lightmeter_state_t *state = (lightmeter_state_t*) context;
     
     opt3001_Config_t c;
@@ -160,14 +157,13 @@ bool lightmeter_face_loop(movement_event_t event, movement_settings_t *settings,
             break;
 
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
     return true;
 }
 
-void lightmeter_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void lightmeter_face_resign(void *context) {
     (void) context;
     opt3001_writeConfig(lightmeter_addr, lightmeter_off);
     watch_disable_i2c();

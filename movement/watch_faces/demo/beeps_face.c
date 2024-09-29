@@ -26,8 +26,7 @@
 #include <string.h>
 #include "beeps_face.h"
 
-void beeps_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void beeps_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(beeps_state_t));
@@ -36,8 +35,7 @@ void beeps_face_setup(movement_settings_t *settings, uint8_t watch_face_index, v
     }
 }
 
-void beeps_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void beeps_face_activate(void *context) {
     (void) context;
 }
 
@@ -48,7 +46,7 @@ static void _beep_face_update_lcd(beeps_state_t *state) {
     watch_display_string(buf, 0);
 }
 
-bool beeps_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool beeps_face_loop(movement_event_t event, void *context) {
     beeps_state_t *state = (beeps_state_t *)context;
 
     switch (event.event_type) {
@@ -237,13 +235,12 @@ bool beeps_face_loop(movement_event_t event, movement_settings_t *settings, void
             }
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
-void beeps_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void beeps_face_resign(void *context) {
     (void) context;
 }
 

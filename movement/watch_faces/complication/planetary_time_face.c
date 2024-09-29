@@ -112,7 +112,7 @@ static void _planetary_icon(uint8_t planet) {
 /** @details solar phase can be a day phase between sunrise and sunset or an alternating night phase.
  *  This function calculates the start and end of the current phase based on a given geographic location.
  */
-static void _planetary_solar_phase(movement_settings_t *settings, planetary_time_state_t *state) {
+static void _planetary_solar_phase(planetary_time_state_t *state) {
     uint8_t phase;
     double sunrise, sunset;
     uint32_t now_epoch, sunrise_epoch, sunset_epoch, midnight_epoch;
@@ -200,7 +200,7 @@ static void _planetary_solar_phase(movement_settings_t *settings, planetary_time
  *  This function calculates the current planetary hour and divides it up into relative minutes and seconds.
  *  It also calculates the current planetary ruler of the hour and of the day.
  */
-static void _planetary_time(movement_event_t event, movement_settings_t *settings, planetary_time_state_t *state) {
+static void _planetary_time(movement_event_t event, planetary_time_state_t *state) {
     char buf[14];
     char ruler[3];
     double night_hour_count = 0.0;
@@ -214,7 +214,7 @@ static void _planetary_time(movement_event_t event, movement_settings_t *setting
 
     // when current phase ends calculate the next phase
     if ( watch_utility_date_time_to_unix_time(state->scratch, 0) >= state->phase_end ) {
-        _planetary_solar_phase(settings, state);
+        _planetary_solar_phase(state);
         return;
     }
 
@@ -270,17 +270,15 @@ static void _planetary_time(movement_event_t event, movement_settings_t *setting
 
 // PUBLIC WATCH FACE FUNCTIONS ////////////////////////////////////////////////
 
-void planetary_time_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void planetary_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(planetary_time_state_t));
         memset(*context_ptr, 0, sizeof(planetary_time_state_t));
     }
 }
 
-void planetary_time_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void planetary_time_face_activate(void *context) {
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
 #if __EMSCRIPTEN__
@@ -297,21 +295,21 @@ void planetary_time_face_activate(movement_settings_t *settings, void *context) 
     planetary_time_state_t *state = (planetary_time_state_t *)context;
     
     // calculate phase
-    _planetary_solar_phase(settings, state);
+    _planetary_solar_phase(state);
 }
 
-bool planetary_time_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool planetary_time_face_loop(movement_event_t event, void *context) {
     planetary_time_state_t *state = (planetary_time_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            _planetary_time(event, settings, state);
+            _planetary_time(event, state);
             if ( state->freq > 1 )
                 // for hours with shorter seconds let's increase the tick to not skip seconds in the display
                 movement_request_tick_frequency( 8 );
             break;
         case EVENT_TICK:
-            _planetary_time(event, settings, state);
+            _planetary_time(event, state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             state->ruler = (state->ruler + 1) % 3;
@@ -324,14 +322,13 @@ bool planetary_time_face_loop(movement_event_t event, movement_settings_t *setti
             watch_start_tick_animation(500);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void planetary_time_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void planetary_time_face_resign(void *context) {
     (void) context;
     movement_request_tick_frequency( 1 );
 }

@@ -46,7 +46,7 @@ static void save(save_load_state_t *state) {
     filesystem_write_file(filename, (char*)&savefile, sizeof(savefile_t));
 }
 
-static void load(save_load_state_t *state, movement_settings_t *settings) {
+static void load(save_load_state_t *state) {
     watch_store_backup_data(state->slot[state->index].b0, 0);
     watch_store_backup_data(state->slot[state->index].b1, 1);
     watch_store_backup_data(state->slot[state->index].b2, 2);
@@ -72,8 +72,7 @@ static void load_saves_to_state(save_load_state_t *state) {
     }
 }
 
-void save_load_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void save_load_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(save_load_state_t));
@@ -81,8 +80,7 @@ void save_load_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void save_load_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void save_load_face_activate(void *context) {
     save_load_state_t *state = (save_load_state_t *)context;
     state->index = 0;
     state->update_timeout = 0;
@@ -102,7 +100,7 @@ static void update_display(save_load_state_t *state) {
     }
 }
 
-bool save_load_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool save_load_face_loop(movement_event_t event, void *context) {
     save_load_state_t *state = (save_load_state_t *)context;
 
     switch (event.event_type) {
@@ -127,7 +125,7 @@ bool save_load_face_loop(movement_event_t event, movement_settings_t *settings, 
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->slot[state->index].version) {
-                load(state, settings);
+                load(state);
                 watch_display_string("Loaded", 4);
                 state->update_timeout = 3;
             }
@@ -136,14 +134,13 @@ bool save_load_face_loop(movement_event_t event, movement_settings_t *settings, 
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void save_load_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void save_load_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

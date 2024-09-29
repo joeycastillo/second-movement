@@ -40,8 +40,7 @@ static void smallchess_init_board(smallchess_face_state_t *state) {
     memset(state->moveable_dests, 0xff, sizeof(state->moveable_dests));
 }
 
-void smallchess_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void smallchess_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(smallchess_face_state_t));
@@ -54,8 +53,7 @@ void smallchess_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void smallchess_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void smallchess_face_activate(void *context) {
     (void) context;
 }
 
@@ -463,8 +461,7 @@ static void _smallchess_handle_button_event(smallchess_face_state_t *state, move
     }
 }
 
-bool smallchess_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool smallchess_face_loop(movement_event_t event, void *context) {
     smallchess_face_state_t *state = (smallchess_face_state_t *)context;
 
     switch (event.event_type) {
@@ -490,15 +487,14 @@ bool smallchess_face_loop(movement_event_t event, movement_settings_t *settings,
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void smallchess_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void smallchess_face_resign(void *context) {
     (void) context;
     watch_set_led_off();
 }

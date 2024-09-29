@@ -70,11 +70,11 @@ typedef struct {
     thermistor_logger_data_point_t data[THERMISTOR_LOGGING_NUM_DATA_POINTS];
 } thermistor_logger_state_t;
 
-void thermistor_logging_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void thermistor_logging_face_activate(movement_settings_t *settings, void *context);
-bool thermistor_logging_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void thermistor_logging_face_resign(movement_settings_t *settings, void *context);
-bool thermistor_logging_face_wants_background_task(movement_settings_t *settings, void *context);
+void thermistor_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void thermistor_logging_face_activate(void *context);
+bool thermistor_logging_face_loop(movement_event_t event, void *context);
+void thermistor_logging_face_resign(void *context);
+bool thermistor_logging_face_wants_background_task(void *context);
 
 #define thermistor_logging_face ((const watch_face_t){ \
     thermistor_logging_face_setup, \

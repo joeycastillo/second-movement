@@ -49,10 +49,10 @@ typedef struct {
     double daylen;
 } day_night_percentage_state_t;
 
-void day_night_percentage_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void day_night_percentage_face_activate(movement_settings_t *settings, void *context);
-bool day_night_percentage_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void day_night_percentage_face_resign(movement_settings_t *settings, void *context);
+void day_night_percentage_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void day_night_percentage_face_activate(void *context);
+bool day_night_percentage_face_loop(movement_event_t event, void *context);
+void day_night_percentage_face_resign(void *context);
 
 #define day_night_percentage_face ((const watch_face_t){ \
     day_night_percentage_face_setup, \

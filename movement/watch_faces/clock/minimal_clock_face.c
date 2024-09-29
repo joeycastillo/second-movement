@@ -26,7 +26,7 @@
 #include <string.h>
 #include "minimal_clock_face.h"
 
-static void _minimal_clock_face_update_display(movement_settings_t *settings) {
+static void _minimal_clock_face_update_display() {
     watch_date_time date_time = watch_rtc_get_date_time();
     char buffer[11];
 
@@ -40,8 +40,7 @@ static void _minimal_clock_face_update_display(movement_settings_t *settings) {
     watch_display_string(buffer, 4);
 }
 
-void minimal_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void minimal_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(minimal_clock_state_t));
@@ -51,24 +50,23 @@ void minimal_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void minimal_clock_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void minimal_clock_face_activate(void *context) {
     (void) context;
     // Handle any tasks related to your watch face coming on screen.
     watch_set_colon();
 }
 
-bool minimal_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool minimal_clock_face_loop(movement_event_t event, void *context) {
     (void) context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             // Show your initial UI here.
-            _minimal_clock_face_update_display(settings);
+            _minimal_clock_face_update_display();
             break;
         case EVENT_TICK:
             // If needed, update your display here.
-            _minimal_clock_face_update_display(settings);
+            _minimal_clock_face_update_display();
             break;
         case EVENT_LIGHT_BUTTON_UP:
             // You can use the Light button for your own purposes. Note that by default, Movement will also
@@ -88,7 +86,7 @@ bool minimal_clock_face_loop(movement_event_t event, movement_settings_t *settin
             // Avoid displaying fast-updating values like seconds, since the display won't update again for 60 seconds.
             // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
             // watch_start_tick_animation(500);
-            _minimal_clock_face_update_display(settings);
+            _minimal_clock_face_update_display();
             break;
         default:
             // Movement's default loop handler will step in for any cases you don't handle above:
@@ -96,7 +94,7 @@ bool minimal_clock_face_loop(movement_event_t event, movement_settings_t *settin
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
@@ -108,8 +106,7 @@ bool minimal_clock_face_loop(movement_event_t event, movement_settings_t *settin
     return true;
 }
 
-void minimal_clock_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void minimal_clock_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

@@ -65,10 +65,10 @@ typedef struct {
     savefile_t slot[SAVE_LOAD_SLOTS];
 } save_load_state_t;
 
-void save_load_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void save_load_face_activate(movement_settings_t *settings, void *context);
-bool save_load_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void save_load_face_resign(movement_settings_t *settings, void *context);
+void save_load_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void save_load_face_activate(void *context);
+bool save_load_face_loop(movement_event_t event, void *context);
+void save_load_face_resign(void *context);
 
 #define save_load_face ((const watch_face_t){ \
     save_load_face_setup, \

@@ -48,11 +48,11 @@ typedef struct {
     uint32_t mode : 1;
 } wake_face_state_t;
 
-void wake_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr);
-void wake_face_activate(movement_settings_t *settings, void *context);
-bool wake_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void wake_face_resign(movement_settings_t *settings, void *context);
-bool wake_face_wants_background_task(movement_settings_t *settings, void *context);
+void wake_face_setup(uint8_t watch_face_index, void **context_ptr);
+void wake_face_activate(void *context);
+bool wake_face_loop(movement_event_t event, void *context);
+void wake_face_resign(void *context);
+bool wake_face_wants_background_task(void *context);
 
 #define wake_face ((const watch_face_t){ \
     wake_face_setup, \

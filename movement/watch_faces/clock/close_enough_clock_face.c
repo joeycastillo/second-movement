@@ -61,8 +61,7 @@ static void _update_alarm_indicator(bool settings_alarm_enabled, close_enough_cl
     };
 }
 
-void close_enough_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void close_enough_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -70,7 +69,7 @@ void close_enough_clock_face_setup(movement_settings_t *settings, uint8_t watch_
     }
 }
 
-void close_enough_clock_face_activate(movement_settings_t *settings, void *context) {
+void close_enough_clock_face_activate(void *context) {
     close_enough_clock_state_t *state = (close_enough_clock_state_t *)context;
 
     if (watch_tick_animation_is_running()) {
@@ -89,7 +88,7 @@ void close_enough_clock_face_activate(movement_settings_t *settings, void *conte
     state->prev_min_checked = -1;
 }
 
-bool close_enough_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool close_enough_clock_face_loop(movement_event_t event, void *context) {
     close_enough_clock_state_t *state = (close_enough_clock_state_t *)context;
 
     char buf[11];
@@ -221,13 +220,12 @@ bool close_enough_clock_face_loop(movement_event_t event, movement_settings_t *s
             break;
 
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void close_enough_clock_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void close_enough_clock_face_resign(void *context) {
     (void) context;
 }

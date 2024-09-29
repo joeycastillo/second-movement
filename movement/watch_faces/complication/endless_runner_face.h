@@ -45,10 +45,10 @@ typedef struct {
     /* 24 bits, likely aligned to 32 bits = 4 bytes */
 } endless_runner_state_t;
 
-void endless_runner_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void endless_runner_face_activate(movement_settings_t *settings, void *context);
-bool endless_runner_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void endless_runner_face_resign(movement_settings_t *settings, void *context);
+void endless_runner_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void endless_runner_face_activate(void *context);
+bool endless_runner_face_loop(movement_event_t event, void *context);
+void endless_runner_face_resign(void *context);
 
 #define endless_runner_face ((const watch_face_t){ \
     endless_runner_face_setup, \

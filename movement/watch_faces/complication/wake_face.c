@@ -33,8 +33,7 @@
 //
 
 static
-void _wake_face_update_display(movement_settings_t *settings, wake_face_state_t *state) {
-    (void) settings;
+void _wake_face_update_display(wake_face_state_t *state) {
     uint8_t hour = state->hour;
 
     watch_clear_display();
@@ -60,8 +59,7 @@ void _wake_face_update_display(movement_settings_t *settings, wake_face_state_t 
 // Exported
 //
 
-void wake_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void) settings;
+void wake_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -75,17 +73,14 @@ void wake_face_setup(movement_settings_t *settings, uint8_t watch_face_index, vo
     }
 }
 
-void wake_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wake_face_activate(void *context) {
     (void) context;
 }
-void wake_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wake_face_resign(void *context) {
     (void) context;
 }
 
-bool wake_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool wake_face_wants_background_task(void *context) {
     wake_face_state_t *state = (wake_face_state_t *)context;
 
     bool rc = false;
@@ -103,30 +98,29 @@ bool wake_face_wants_background_task(movement_settings_t *settings, void *contex
     return rc;
 }
 
-bool wake_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool wake_face_loop(movement_event_t event, void *context) {
     wake_face_state_t *state = (wake_face_state_t *)context;
 
     switch (event.event_type) {
     case EVENT_ACTIVATE:
     case EVENT_TICK:
-        _wake_face_update_display(settings, state);
+        _wake_face_update_display(state);
         break;
     case EVENT_LIGHT_BUTTON_UP:
         state->hour = (state->hour + 1) % 24;
-        _wake_face_update_display(settings, state);
+        _wake_face_update_display(state);
         break;
     case EVENT_LIGHT_LONG_PRESS:
         state->hour = (state->hour + 6) % 24;
-        _wake_face_update_display(settings, state);
+        _wake_face_update_display(state);
         break;
     case EVENT_ALARM_BUTTON_UP:
         state->minute = (state->minute + 10) % 60;
-        _wake_face_update_display(settings, state);
+        _wake_face_update_display(state);
         break;
     case EVENT_ALARM_LONG_PRESS:
         state->mode ^= 1;
-        _wake_face_update_display(settings, state);
+        _wake_face_update_display(state);
         break;
     case EVENT_BACKGROUND_TASK:
         movement_play_alarm();
@@ -141,7 +135,7 @@ bool wake_face_loop(movement_event_t event, movement_settings_t *settings, void 
         // don't light up every time light is hit
         break;
     default:
-        movement_default_loop_handler(event, settings);
+        movement_default_loop_handler(event);
         break;
     }
 

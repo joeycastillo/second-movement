@@ -121,9 +121,8 @@ static void _display(couch_to_5k_state_t *state, char *buf){
 }
 
 
-void couch_to_5k_face_setup(movement_settings_t *settings, uint8_t
+void couch_to_5k_face_setup(uint8_t
                           watch_face_index, void ** context_ptr) {
-    (void) settings;
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(couch_to_5k_state_t));
@@ -163,15 +162,14 @@ void couch_to_5k_face_setup(movement_settings_t *settings, uint8_t
     // watch wakes from deep sleep.
 }
 
-void couch_to_5k_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void couch_to_5k_face_activate(void *context) {
     (void) context;
     // Handle any tasks related to your watch face coming on screen.
     watch_set_colon();
 }
 
 
-bool couch_to_5k_face_loop(movement_event_t event, movement_settings_t *settings,
+bool couch_to_5k_face_loop(movement_event_t event,
                          void *context) {
     couch_to_5k_state_t *state = (couch_to_5k_state_t *)context;
     static char buf[11];
@@ -241,7 +239,7 @@ bool couch_to_5k_face_loop(movement_event_t event, movement_settings_t *settings
             // skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for
             // these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you
@@ -258,8 +256,7 @@ bool couch_to_5k_face_loop(movement_event_t event, movement_settings_t *settings
     return true;
 }
 
-void couch_to_5k_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void couch_to_5k_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

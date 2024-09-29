@@ -64,10 +64,10 @@ typedef struct {
     uint8_t selection;
 } rpn_calculator_state_t;
 
-void rpn_calculator_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void rpn_calculator_face_activate(movement_settings_t *settings, void *context);
-bool rpn_calculator_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void rpn_calculator_face_resign(movement_settings_t *settings, void *context);
+void rpn_calculator_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void rpn_calculator_face_activate(void *context);
+bool rpn_calculator_face_loop(movement_event_t event, void *context);
+void rpn_calculator_face_resign(void *context);
 
 #define rpn_calculator_face ((const watch_face_t){ \
     rpn_calculator_face_setup, \

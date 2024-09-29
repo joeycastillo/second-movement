@@ -46,18 +46,16 @@ struct {
     bool animating;
 } databank_state;
 
-void databank_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void databank_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     // These next two lines just silence the compiler warnings associated with unused parameters.
     // We have no use for the settings or the watch_face_index, so we make that explicit here.
-    (void) settings;
     (void) context_ptr;
     (void) watch_face_index;
     // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
 }
 
-void databank_face_activate(movement_settings_t *settings, void *context) {
+void databank_face_activate(void *context) {
     // same as above: silence the warning, we don't need to check the settings.
-    (void) settings;
     (void) context;
     // we do however need to set some things in our context. Here we cast it to the correct type...
     databank_state.current_word = 0;
@@ -85,8 +83,7 @@ static void display()
     }
 }
 
-bool databank_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool databank_face_loop(movement_event_t event, void *context) {
     (void) context;
     int max_words = (strlen(pi_data[databank_state.databank_page * 2 + 1]) - 1) / 6 + 1;
 
@@ -132,16 +129,15 @@ bool databank_face_loop(movement_event_t event, movement_settings_t *settings, v
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void databank_face_resign(movement_settings_t *settings, void *context) {
+void databank_face_resign(void *context) {
     // our watch face, like most watch faces, has nothing special to do when resigning.
     // watch faces that enable a peripheral or interact with a sensor may want to turn it off here.
-    (void) settings;
     (void) context;
 }

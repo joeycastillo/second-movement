@@ -79,7 +79,7 @@ static int8_t calc_success_seq[5] = {BUZZER_NOTE_G6, 10, BUZZER_NOTE_C7, 10, 0};
 static int8_t calc_fail_seq[5] = {BUZZER_NOTE_C7, 10, BUZZER_NOTE_G6, 10, 0};
 
 // Resets all state variables to 0
-static void reset_state(kitchen_conversions_state_t *state, movement_settings_t *settings)
+static void reset_state(kitchen_conversions_state_t *state)
 {
     state->pg = measurement;
     state->measurement_i = 0;
@@ -92,9 +92,8 @@ static void reset_state(kitchen_conversions_state_t *state, movement_settings_t 
     state->light_held = false;
 }
 
-void kitchen_conversions_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr)
+void kitchen_conversions_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
-    (void)settings;
     (void)watch_face_index;
     if (*context_ptr == NULL)
     {
@@ -105,9 +104,8 @@ void kitchen_conversions_face_setup(movement_settings_t *settings, uint8_t watch
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void kitchen_conversions_face_activate(movement_settings_t *settings, void *context)
+void kitchen_conversions_face_activate(void *context)
 {
-    (void)settings;
     kitchen_conversions_state_t *state = (kitchen_conversions_state_t *)context;
 
     // Handle any tasks related to your watch face coming on screen.
@@ -168,7 +166,7 @@ static void display_units(uint8_t measurement_i, uint8_t list_i)
     watch_display_string(get_unit_list(measurement_i)[list_i].name, 4);
 }
 
-static void display(kitchen_conversions_state_t *state, movement_settings_t *settings, uint8_t subsec)
+static void display(kitchen_conversions_state_t *state, uint8_t subsec)
 {
     watch_clear_display();
 
@@ -290,7 +288,7 @@ static void display(kitchen_conversions_state_t *state, movement_settings_t *set
     }
 }
 
-bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
+bool kitchen_conversions_face_loop(movement_event_t event, void *context)
 {
     kitchen_conversions_state_t *state = (kitchen_conversions_state_t *)context;
 
@@ -465,15 +463,14 @@ bool kitchen_conversions_face_loop(movement_event_t event, movement_settings_t *
         break;
 
     default:
-        return movement_default_loop_handler(event, settings);
+        return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void kitchen_conversions_face_resign(movement_settings_t *settings, void *context)
+void kitchen_conversions_face_resign(void *context)
 {
-    (void)settings;
     (void)context;
 
     // handle any cleanup before your watch face goes off-screen.

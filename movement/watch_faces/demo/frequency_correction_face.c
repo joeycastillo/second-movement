@@ -69,8 +69,7 @@ static void _disable_output() {
     while (RTC->MODE2.SYNCBUSY.bit.ENABLE);
 }
 
-void frequency_correction_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void frequency_correction_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(frequency_correction_state_t));
@@ -79,14 +78,12 @@ void frequency_correction_face_setup(movement_settings_t *settings, uint8_t watc
     }
 }
 
-void frequency_correction_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void frequency_correction_face_activate(void *context) {
     frequency_correction_state_t *state = (frequency_correction_state_t *)context;
     _enable_output(state->period_event_output);
 }
 
-bool frequency_correction_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool frequency_correction_face_loop(movement_event_t event, void *context) {
     frequency_correction_state_t *state = (frequency_correction_state_t *)context;
     int8_t freqcorr;
 
@@ -123,15 +120,14 @@ bool frequency_correction_face_loop(movement_event_t event, movement_settings_t 
             watch_start_tick_animation(500);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void frequency_correction_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void frequency_correction_face_resign(void *context) {
     (void) context;
 
     _disable_output();
@@ -139,27 +135,23 @@ void frequency_correction_face_resign(movement_settings_t *settings, void *conte
 
 #else
 
-void frequency_correction_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void frequency_correction_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
 }
 
-void frequency_correction_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void frequency_correction_face_activate(void *context) {
     (void) context;
 }
 
-bool frequency_correction_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool frequency_correction_face_loop(movement_event_t event, void *context) {
     (void) context;
     (void) event;
 
     return true;
 }
 
-void frequency_correction_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void frequency_correction_face_resign(void *context) {
     (void) context;
 }
 

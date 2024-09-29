@@ -67,10 +67,10 @@ typedef struct {
     bool displaying_sol;
 } mars_time_state_t;
 
-void mars_time_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void mars_time_face_activate(movement_settings_t *settings, void *context);
-bool mars_time_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void mars_time_face_resign(movement_settings_t *settings, void *context);
+void mars_time_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void mars_time_face_activate(void *context);
+bool mars_time_face_loop(movement_event_t event, void *context);
+void mars_time_face_resign(void *context);
 
 #define mars_time_face ((const watch_face_t){ \
     mars_time_face_setup, \

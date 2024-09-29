@@ -172,11 +172,11 @@ static const opt3001_Config_t lightmeter_off = {
 
 uint16_t lightmeter_mod(uint16_t m, uint16_t n); 
 
-void lightmeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void lightmeter_face_activate(movement_settings_t *settings, void *context);
+void lightmeter_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void lightmeter_face_activate(void *context);
 void lightmeter_show_ev(lightmeter_state_t *state);
-bool lightmeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void lightmeter_face_resign(movement_settings_t *settings, void *context);
+bool lightmeter_face_loop(movement_event_t event, void *context);
+void lightmeter_face_resign(void *context);
 
 static const uint8_t lightmeter_addr = 0x44;
 

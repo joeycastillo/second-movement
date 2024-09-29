@@ -104,8 +104,7 @@ static void display_dice_roll_animation(probability_state_t *state) {
 // ---------------------------
 // Standard watch face methods
 // ---------------------------
-void probability_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void probability_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(probability_state_t));
@@ -117,8 +116,7 @@ void probability_face_setup(movement_settings_t *settings, uint8_t watch_face_in
     #endif
 }
 
-void probability_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void probability_face_activate(void *context) {
     probability_state_t *state = (probability_state_t *)context;
 
     state->dice_sides = DEFAULT_DICE_SIDES;
@@ -126,8 +124,7 @@ void probability_face_activate(movement_settings_t *settings, void *context) {
     watch_display_string("PR", 0);
 }
 
-bool probability_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool probability_face_loop(movement_event_t event, void *context) {
     probability_state_t *state = (probability_state_t *)context;
 
     if (state->is_rolling && event.event_type != EVENT_TICK) {
@@ -167,14 +164,13 @@ bool probability_face_loop(movement_event_t event, movement_settings_t *settings
             watch_display_string("SLEEP ", 4);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void probability_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void probability_face_resign(void *context) {
     (void) context;
 }

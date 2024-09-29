@@ -48,9 +48,8 @@ typedef struct {
   bool display_total;
 } habit_state_t;
 
-void habit_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
+void habit_face_setup(uint8_t watch_face_index,
                       void **context_ptr) {
-  (void)settings;
   (void)watch_face_index;
   if (*context_ptr == NULL) {
     *context_ptr = malloc(sizeof(habit_state_t));
@@ -101,13 +100,12 @@ static inline void display_state(habit_state_t *state) {
   }
 }
 
-void habit_face_activate(movement_settings_t *settings, void *context) {
-  (void)settings;
+void habit_face_activate(void *context) {
   habit_state_t *state = (habit_state_t *)context;
   display_state(state);
 }
 
-bool habit_face_loop(movement_event_t event, movement_settings_t *settings,
+bool habit_face_loop(movement_event_t event,
                      void *context) {
   habit_state_t *state = (habit_state_t *)context;
 
@@ -146,12 +144,11 @@ bool habit_face_loop(movement_event_t event, movement_settings_t *settings,
     break;
   }
   default:
-    return movement_default_loop_handler(event, settings);
+    return movement_default_loop_handler(event);
   }
   return true;
 }
 
-void habit_face_resign(movement_settings_t *settings, void *context) {
-  (void)settings;
+void habit_face_resign(void *context) {
   (void)context;
 }

@@ -96,8 +96,7 @@ static uint8_t short_data[] = {
 static uint8_t *nanosec_buffer = 0;
 static uint16_t nanosec_buffer_size = 0;
 
-void chirpy_demo_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void)settings;
+void chirpy_demo_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void)watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(chirpy_demo_state_t));
@@ -107,8 +106,7 @@ void chirpy_demo_face_setup(movement_settings_t *settings, uint8_t watch_face_in
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void chirpy_demo_face_activate(movement_settings_t *settings, void *context) {
-    (void)settings;
+void chirpy_demo_face_activate(void *context) {
     chirpy_demo_state_t *state = (chirpy_demo_state_t *)context;
 
     memset(context, 0, sizeof(chirpy_demo_state_t));
@@ -254,8 +252,7 @@ static void _cdm_setup_chirp(chirpy_demo_state_t *state) {
     state->tick_state.tick_fun = _cdf_countdown_tick;
 }
 
-bool chirpy_demo_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void)settings;
+bool chirpy_demo_face_loop(movement_event_t event, void *context) {
     chirpy_demo_state_t *state = (chirpy_demo_state_t *)context;
 
     switch (event.event_type) {
@@ -323,8 +320,7 @@ bool chirpy_demo_face_loop(movement_event_t event, movement_settings_t *settings
         return true;
 }
 
-void chirpy_demo_face_resign(movement_settings_t *settings, void *context) {
-    (void)settings;
+void chirpy_demo_face_resign(void *context) {
     (void)context;
 
     if (nanosec_buffer != 0) {

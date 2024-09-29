@@ -78,10 +78,10 @@ typedef struct {
     discgolf_mode_t mode;       // Watch face mode
 } discgolf_state_t;
 
-void discgolf_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void discgolf_face_activate(movement_settings_t *settings, void *context);
-bool discgolf_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void discgolf_face_resign(movement_settings_t *settings, void *context);
+void discgolf_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void discgolf_face_activate(void *context);
+bool discgolf_face_loop(movement_event_t event, void *context);
+void discgolf_face_resign(void *context);
 
 #define discgolf_face ((const watch_face_t){ \
     discgolf_face_setup, \

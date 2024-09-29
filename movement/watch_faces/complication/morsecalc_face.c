@@ -106,8 +106,7 @@ void morsecalc_input(morsecalc_state_t * mcs) {
     return;    
 }
 
-void morsecalc_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void morsecalc_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(morsecalc_state_t)); 
@@ -122,15 +121,14 @@ void morsecalc_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     return;
 }
 
-void morsecalc_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void morsecalc_face_activate(void *context) {
     morsecalc_state_t *mcs = (morsecalc_state_t *) context;
     mcs->mc = 0;
     morsecalc_display_stack(mcs);
     return;
 }
 
-bool morsecalc_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool morsecalc_face_loop(movement_event_t event, void *context) {
     morsecalc_state_t *mcs = (morsecalc_state_t *) context;
     switch(event.event_type) {
     // input
@@ -190,15 +188,14 @@ bool morsecalc_face_loop(movement_event_t event, movement_settings_t *settings, 
         // don't light up every time light is hit
         break;
     default:
-        movement_default_loop_handler(event, settings);
+        movement_default_loop_handler(event);
         break;
 	}
     
     return true;
 }
 
-void morsecalc_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void morsecalc_face_resign(void *context) {
     morsecalc_state_t *mcs = (morsecalc_state_t *) context;
     mcs->led_is_on = 0;
 	watch_set_led_off();

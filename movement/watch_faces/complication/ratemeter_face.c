@@ -30,19 +30,16 @@
 #define RATEMETER_FACE_FREQUENCY_FACTOR (4ul) // refresh rate will be 2 to this power Hz (0 for 1 Hz, 2 for 4 Hz, etc.)
 #define RATEMETER_FACE_FREQUENCY (1 << RATEMETER_FACE_FREQUENCY_FACTOR)
 
-void ratemeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void ratemeter_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) *context_ptr = malloc(sizeof(ratemeter_state_t));
 }
 
-void ratemeter_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void ratemeter_face_activate(void *context) {
     memset(context, 0, sizeof(ratemeter_state_t));
 }
 
-bool ratemeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool ratemeter_face_loop(movement_event_t event, void *context) {
     ratemeter_state_t *ratemeter_state = (ratemeter_state_t *)context;
     char buf[14];
     switch (event.event_type) {
@@ -79,14 +76,13 @@ bool ratemeter_face_loop(movement_event_t event, movement_settings_t *settings, 
             movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void ratemeter_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void ratemeter_face_resign(void *context) {
     (void) context;
 }

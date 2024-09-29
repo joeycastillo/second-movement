@@ -51,8 +51,7 @@ static void _update_alarm_indicator(bool settings_alarm_enabled, repetition_minu
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-void repetition_minute_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void repetition_minute_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -63,7 +62,7 @@ void repetition_minute_face_setup(movement_settings_t *settings, uint8_t watch_f
     }
 }
 
-void repetition_minute_face_activate(movement_settings_t *settings, void *context) {
+void repetition_minute_face_activate(void *context) {
     repetition_minute_state_t *state = (repetition_minute_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -83,7 +82,7 @@ void repetition_minute_face_activate(movement_settings_t *settings, void *contex
     state->previous_date_time = 0xFFFFFFFF;
 }
 
-bool repetition_minute_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool repetition_minute_face_loop(movement_event_t event, void *context) {
     repetition_minute_state_t *state = (repetition_minute_state_t *)context;
     char buf[11];
     uint8_t pos;
@@ -199,19 +198,17 @@ bool repetition_minute_face_loop(movement_event_t event, movement_settings_t *se
            
             break; 
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void repetition_minute_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void repetition_minute_face_resign(void *context) {
     (void) context;
 }
 
-bool repetition_minute_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool repetition_minute_face_wants_background_task(void *context) {
     repetition_minute_state_t *state = (repetition_minute_state_t *)context;
     if (!state->signal_enabled) return false;
 

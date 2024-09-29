@@ -36,9 +36,8 @@ static int16_t _text_pos;
 static const char* _text_looping;
 static const char title_text[] = "Periodic Table";
 
-void periodic_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr)
+void periodic_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
-    (void)settings;
     (void)watch_face_index;
     if (*context_ptr == NULL)
     {
@@ -47,9 +46,8 @@ void periodic_face_setup(movement_settings_t *settings, uint8_t watch_face_index
     }
 }
 
-void periodic_face_activate(movement_settings_t *settings, void *context)
+void periodic_face_activate(void *context)
 {
-    (void)settings;
     periodic_state_t *state = (periodic_state_t *)context;
 
     state->atomic_num = 0;
@@ -390,7 +388,7 @@ static void _handle_mode_still_pressed(periodic_state_t *state, bool should_soun
     }
 }
 
-bool periodic_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
+bool periodic_face_loop(movement_event_t event, void *context)
 {
     periodic_state_t *state = (periodic_state_t *)context;
     switch (event.event_type)
@@ -488,15 +486,14 @@ bool periodic_face_loop(movement_event_t event, movement_settings_t *settings, v
         watch_start_tick_animation(500);
         break;
     default:
-        return movement_default_loop_handler(event, settings);
+        return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void periodic_face_resign(movement_settings_t *settings, void *context)
+void periodic_face_resign(void *context)
 {
-    (void)settings;
     (void)context;
 
     // handle any cleanup before your watch face goes off-screen.

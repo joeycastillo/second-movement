@@ -55,8 +55,7 @@ static void recalculate(watch_date_time utc_now, day_night_percentage_state_t *s
     state->result = sun_rise_set(utc_now.unit.year + WATCH_RTC_REFERENCE_YEAR, utc_now.unit.month, utc_now.unit.day, lon, lat, &state->rise, &state->set);
 }
 
-void day_night_percentage_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void day_night_percentage_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -67,12 +66,11 @@ void day_night_percentage_face_setup(movement_settings_t *settings, uint8_t watc
     }
 }
 
-void day_night_percentage_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void day_night_percentage_face_activate(void *context) {
     (void) context;
 }
 
-bool day_night_percentage_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool day_night_percentage_face_loop(movement_event_t event, void *context) {
     day_night_percentage_state_t *state = (day_night_percentage_state_t *)context;
 
     char buf[12];
@@ -126,14 +124,13 @@ bool day_night_percentage_face_loop(movement_event_t event, movement_settings_t 
 
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void day_night_percentage_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void day_night_percentage_face_resign(void *context) {
     (void) context;
 }
 

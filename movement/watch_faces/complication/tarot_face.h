@@ -73,10 +73,10 @@ typedef struct {
     bool is_picking;
 } tarot_state_t;
 
-void tarot_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void tarot_face_activate(movement_settings_t *settings, void *context);
-bool tarot_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void tarot_face_resign(movement_settings_t *settings, void *context);
+void tarot_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void tarot_face_activate(void *context);
+bool tarot_face_loop(movement_event_t event, void *context);
+void tarot_face_resign(void *context);
 
 #define tarot_face ((const watch_face_t){ \
     tarot_face_setup, \

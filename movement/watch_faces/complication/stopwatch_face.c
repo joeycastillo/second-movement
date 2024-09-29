@@ -35,8 +35,7 @@ static const watch_date_time distant_future = {
     .unit = {0, 0, 0, 1, 1, 63}
 };
 
-void stopwatch_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(stopwatch_state_t));
@@ -77,8 +76,7 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
     }
 }
 
-void stopwatch_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void stopwatch_face_activate(void *context) {
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
     stopwatch_state_t *stopwatch_state = (stopwatch_state_t *)context;
@@ -93,7 +91,7 @@ void stopwatch_face_activate(movement_settings_t *settings, void *context) {
     }
 }
 
-bool stopwatch_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool stopwatch_face_loop(movement_event_t event, void *context) {
     stopwatch_state_t *stopwatch_state = (stopwatch_state_t *)context;
 
     switch (event.event_type) {
@@ -158,14 +156,13 @@ bool stopwatch_face_loop(movement_event_t event, movement_settings_t *settings, 
             }
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void stopwatch_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void stopwatch_face_resign(void *context) {
     (void) context;
 
     // regardless of whether we're running or stopped, cancel the task

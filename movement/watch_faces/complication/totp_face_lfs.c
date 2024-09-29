@@ -189,8 +189,7 @@ static void totp_face_lfs_read_file(char *filename) {
     }
 }
 
-void totp_face_lfs_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void totp_face_lfs_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(totp_lfs_state_t));
@@ -241,8 +240,7 @@ static void totp_face_set_record(totp_lfs_state_t *totp_state, int i) {
     totp_state->steps = totp_state->timestamp / record->period;
 }
 
-void totp_face_lfs_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void totp_face_lfs_activate(void *context) {
     memset(context, 0, sizeof(totp_lfs_state_t));
     totp_lfs_state_t *totp_state = (totp_lfs_state_t *)context;
 
@@ -279,8 +277,7 @@ static void totp_face_display(totp_lfs_state_t *totp_state) {
     watch_display_string(buf, 0);
 }
 
-bool totp_face_lfs_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool totp_face_lfs_loop(movement_event_t event, void *context) {
 
     totp_lfs_state_t *totp_state = (totp_lfs_state_t *)context;
 
@@ -311,14 +308,13 @@ bool totp_face_lfs_loop(movement_event_t event, movement_settings_t *settings, v
             movement_illuminate_led();
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void totp_face_lfs_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void totp_face_lfs_resign(void *context) {
     (void) context;
 }

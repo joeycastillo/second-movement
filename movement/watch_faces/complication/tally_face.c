@@ -50,8 +50,7 @@ static const int16_t _tally_default[] = {
 
 #define TALLY_FACE_PRESETS_SIZE() (sizeof(_tally_default) / sizeof(int16_t))
 
-void tally_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void tally_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(tally_state_t));
@@ -63,8 +62,7 @@ void tally_face_setup(movement_settings_t *settings, uint8_t watch_face_index, v
     }
 }
 
-void tally_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tally_face_activate(void *context) {
     (void) context;
     _quick_ticks_running = false;
 }
@@ -110,7 +108,7 @@ static bool tally_face_should_move_back(tally_state_t *state) {
     return state->tally_idx == _tally_default[state->tally_default_idx];
 }
 
-bool tally_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool tally_face_loop(movement_event_t event, void *context) {
     tally_state_t *state = (tally_state_t *)context;
     static bool using_led = false;
 
@@ -188,7 +186,7 @@ bool tally_face_loop(movement_event_t event, movement_settings_t *settings, void
             // ignore timeout
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -209,7 +207,6 @@ void print_tally(tally_state_t *state, bool sound_on) {
     watch_display_string(buf, 0);
 }
 
-void tally_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tally_face_resign(void *context) {
     (void) context;
 }

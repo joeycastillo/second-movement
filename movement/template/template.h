@@ -39,10 +39,10 @@ typedef struct {
     uint8_t unused;
 } <#watch_face_name#>_state_t;
 
-void <#watch_face_name#>_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void <#watch_face_name#>_face_activate(movement_settings_t *settings, void *context);
-bool <#watch_face_name#>_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void <#watch_face_name#>_face_resign(movement_settings_t *settings, void *context);
+void <#watch_face_name#>_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void <#watch_face_name#>_face_activate(void *context);
+bool <#watch_face_name#>_face_loop(movement_event_t event, void *context);
+void <#watch_face_name#>_face_resign(void *context);
 
 #define <#watch_face_name#>_face ((const watch_face_t){ \
     <#watch_face_name#>_face_setup, \

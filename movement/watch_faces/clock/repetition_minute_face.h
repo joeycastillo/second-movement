@@ -66,11 +66,11 @@ typedef struct {
 void play_hour_chime(void);
 void play_quarter_chime(void);
 void play_minute_chime(void);
-void repetition_minute_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void repetition_minute_face_activate(movement_settings_t *settings, void *context);
-bool repetition_minute_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void repetition_minute_face_resign(movement_settings_t *settings, void *context);
-bool repetition_minute_face_wants_background_task(movement_settings_t *settings, void *context);
+void repetition_minute_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void repetition_minute_face_activate(void *context);
+bool repetition_minute_face_loop(movement_event_t event, void *context);
+void repetition_minute_face_resign(void *context);
+bool repetition_minute_face_wants_background_task(void *context);
 
 #define repetition_minute_face ((const watch_face_t){ \
     repetition_minute_face_setup, \

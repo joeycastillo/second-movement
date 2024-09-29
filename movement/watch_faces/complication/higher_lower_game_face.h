@@ -90,10 +90,10 @@ typedef struct {
     // Anything you need to keep track of, put it here!
 } higher_lower_game_face_state_t;
 
-void higher_lower_game_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void higher_lower_game_face_activate(movement_settings_t *settings, void *context);
-bool higher_lower_game_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void higher_lower_game_face_resign(movement_settings_t *settings, void *context);
+void higher_lower_game_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void higher_lower_game_face_activate(void *context);
+bool higher_lower_game_face_loop(movement_event_t event, void *context);
+void higher_lower_game_face_resign(void *context);
 
 #define higher_lower_game_face ((const watch_face_t){ \
     higher_lower_game_face_setup, \

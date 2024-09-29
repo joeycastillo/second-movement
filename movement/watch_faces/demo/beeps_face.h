@@ -44,10 +44,10 @@ typedef struct {
     uint8_t frequency;
 } beeps_state_t;
 
-void beeps_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void beeps_face_activate(movement_settings_t *settings, void *context);
-bool beeps_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void beeps_face_resign(movement_settings_t *settings, void *context);
+void beeps_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void beeps_face_activate(void *context);
+bool beeps_face_loop(movement_event_t event, void *context);
+void beeps_face_resign(void *context);
 
 #define beeps_face ((const watch_face_t){ \
     beeps_face_setup, \

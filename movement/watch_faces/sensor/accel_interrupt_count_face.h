@@ -43,11 +43,11 @@ typedef struct {
     bool is_setting;
 } accel_interrupt_count_state_t;
 
-void accel_interrupt_count_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void accel_interrupt_count_face_activate(movement_settings_t *settings, void *context);
-bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void accel_interrupt_count_face_resign(movement_settings_t *settings, void *context);
-bool accel_interrupt_count_face_wants_background_task(movement_settings_t *settings, void *context);
+void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void accel_interrupt_count_face_activate(void *context);
+bool accel_interrupt_count_face_loop(movement_event_t event, void *context);
+void accel_interrupt_count_face_resign(void *context);
+bool accel_interrupt_count_face_wants_background_task(void *context);
 
 #define accel_interrupt_count_face ((const watch_face_t){ \
     accel_interrupt_count_face_setup, \

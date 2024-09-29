@@ -37,8 +37,7 @@ const char preferences_face_titles[PREFERENCES_PAGE_NUM_PREFERENCES][11] = {
     "LT   blue ",   // Light: blue component (for watches with blue LED)
 };
 
-void preferences_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void preferences_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(preferences_state_t));
@@ -62,14 +61,13 @@ void preferences_face_setup(movement_settings_t *settings, uint8_t watch_face_in
     }
 }
 
-void preferences_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void preferences_face_activate(void *context) {
     preferences_state_t *state = (preferences_state_t *)context;
     state->current_page = 0;
     movement_request_tick_frequency(4); // we need to manually blink some pixels
 }
 
-bool preferences_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool preferences_face_loop(movement_event_t event, void *context) {
     preferences_state_t *state = (preferences_state_t *)context;
     movement_color_t color; // to use in the switch if we need it
 
@@ -225,7 +223,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     if (state->current_page == PREFERENCES_PAGE_LED_RED ||
@@ -243,8 +241,7 @@ bool preferences_face_loop(movement_event_t event, movement_settings_t *settings
     }
 }
 
-void preferences_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void preferences_face_resign(void *context) {
     (void) context;
     movement_force_led_off();
     movement_store_settings();

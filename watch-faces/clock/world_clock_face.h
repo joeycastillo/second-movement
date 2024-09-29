@@ -65,10 +65,10 @@ typedef struct {
     int32_t current_offset;
 } world_clock_state_t;
 
-void world_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void world_clock_face_activate(movement_settings_t *settings, void *context);
-bool world_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void world_clock_face_resign(movement_settings_t *settings, void *context);
+void world_clock_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void world_clock_face_activate(void *context);
+bool world_clock_face_loop(movement_event_t event, void *context);
+void world_clock_face_resign(void *context);
 
 uint8_t world_clock_face_get_weekday(uint16_t day, uint16_t month, uint16_t year);
 

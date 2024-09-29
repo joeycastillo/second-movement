@@ -53,10 +53,10 @@ typedef struct {
     uint8_t features_to_show : 2 ; // what features are to be displayed?
 } decimal_time_face_state_t;
 
-void decimal_time_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void decimal_time_face_activate(movement_settings_t *settings, void *context);
-bool decimal_time_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void decimal_time_face_resign(movement_settings_t *settings, void *context);
+void decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void decimal_time_face_activate(void *context);
+bool decimal_time_face_loop(movement_event_t event, void *context);
+void decimal_time_face_resign(void *context);
 // void decimal_time_face_wants_background_task();
 
 

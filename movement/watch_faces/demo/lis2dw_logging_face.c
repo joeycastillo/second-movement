@@ -36,7 +36,7 @@
 // Pressing the alarm button enters the log mode, where the main display shows the number of interrupts detected in each of the last
 // 24 hours (the hour is shown in the top right digit and AM/PM indicator, if the clock is set to 12 hour mode)
 
-static void _lis2dw_logging_face_update_display(movement_settings_t *settings, lis2dw_logger_state_t *logger_state, lis2dw_wakeup_source wakeup_source) {
+static void _lis2dw_logging_face_update_display(lis2dw_logger_state_t *logger_state, lis2dw_wakeup_source wakeup_source) {
     char buf[14];
     char time_indication_character;
     int8_t pos;
@@ -111,8 +111,7 @@ static void _lis2dw_logging_face_log_data(lis2dw_logger_state_t *logger_state) {
     logger_state->z_interrupts_this_hour = 0;
 }
 
-void lis2dw_logging_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void lis2dw_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(lis2dw_logger_state_t));
@@ -128,15 +127,14 @@ void lis2dw_logging_face_setup(movement_settings_t *settings, uint8_t watch_face
     }
 }
 
-void lis2dh_logging_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void lis2dh_logging_face_activate(void *context) {
     lis2dh_logger_state_t *logger_state = (lis2dh_logger_state_t *)context;
     logger_state->display_index = 0;
     logger_state->log_ticks = 0;
     watch_enable_digital_input(A4);
 }
 
-bool lis2dw_logging_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool lis2dw_logging_face_loop(movement_event_t event, void *context) {
     lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
     lis2dw_wakeup_source wakeup_source = 0;
     lis2dw_interrupt_source interrupt_source = 0;
@@ -145,13 +143,13 @@ bool lis2dw_logging_face_loop(movement_event_t event, movement_settings_t *setti
         case EVENT_LIGHT_BUTTON_DOWN:
             logger_state->axis_index = (logger_state->axis_index + 1) % 4;
             logger_state->log_ticks = 255;
-            _lis2dw_logging_face_update_display(settings, logger_state, wakeup_source);
+            _lis2dw_logging_face_update_display(logger_state, wakeup_source);
             break;
         case EVENT_ALARM_BUTTON_UP:
             if (logger_state->log_ticks) logger_state->display_index = (logger_state->display_index + 1) % LIS2DW_LOGGING_NUM_DATA_POINTS;
             logger_state->log_ticks = 255;
             logger_state->axis_index = 0;
-            _lis2dw_logging_face_update_display(settings, logger_state, wakeup_source);
+            _lis2dw_logging_face_update_display(logger_state, wakeup_source);
             break;
         case EVENT_ACTIVATE:
         case EVENT_TICK:
@@ -171,27 +169,25 @@ bool lis2dw_logging_face_loop(movement_event_t event, movement_settings_t *setti
             } else {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
             }
-            _lis2dw_logging_face_update_display(settings, logger_state, wakeup_source);
+            _lis2dw_logging_face_update_display(logger_state, wakeup_source);
             break;
         case EVENT_BACKGROUND_TASK:
             _lis2dw_logging_face_log_data(logger_state);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void lis2dw_logging_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void lis2dw_logging_face_resign(void *context) {
     (void) context;
     watch_disable_digital_input(A4);
 }
 
-bool lis2dw_logging_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool lis2dw_logging_face_wants_background_task(void *context) {
     lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
     watch_date_time date_time = watch_rtc_get_date_time();
 

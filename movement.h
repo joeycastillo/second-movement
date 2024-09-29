@@ -154,9 +154,6 @@ extern const char movement_valid_position_1_chars[];
   *          like configuring a pin mode or a peripheral, you may want to do that here too.
   *          This function will be called again after waking from sleep mode, since sleep mode disables all
   *          of the device's pins and peripherals.
-  * @param settings A pointer to the global Movement settings. You can use this to inform how you present your
-  *                 display to the user (i.e. taking into account whether they have silenced the buttons, or if
-  *                 they prefer 12 or 24-hour mode). You can also change these settings if you like.
   * @param watch_face_index The index of this watch face in the global array of watch faces; 0 is the first face,
   *                         1 is the second, etc. You may stash this value in your context if you wish to reference
   *                         it later; your watch face's index is set at launch and will not change.
@@ -166,7 +163,7 @@ extern const char movement_valid_position_1_chars[];
   *                    data required for your watch face.
   *
   */
-typedef void (*watch_face_setup)(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
+typedef void (*watch_face_setup)(uint8_t watch_face_index, void ** context_ptr);
 
 /** @brief Prepare to go on-screen.
   * @details This function is called just before your watch enters the foreground. If your watch face has any
@@ -174,11 +171,10 @@ typedef void (*watch_face_setup)(movement_settings_t *settings, uint8_t watch_fa
   *          watch face depends on data from a peripheral (like an I2C sensor), you will likely want to enable
   *          that peripheral here. In addition, if your watch face requires an update frequncy other than 1 Hz,
   *          you may want to request that here using the movement_request_tick_frequency function.
-  * @param settings A pointer to the global Movement settings. @see watch_face_setup.
   * @param context A pointer to your watch face's context. @see watch_face_setup.
   *
   */
-typedef void (*watch_face_activate)(movement_settings_t *settings, void *context);
+typedef void (*watch_face_activate)(void *context);
 
 /** @brief Handle events and update the display.
   * @details This function is called in response to an event. You should set up a switch statement that handles,
@@ -191,7 +187,6 @@ typedef void (*watch_face_activate)(movement_settings_t *settings, void *context
   *          fail to do this, the user will become stuck on your watch face.
   * @param event A struct containing information about the event, including its type. @see movement_event_type_t
   *              for a list of all possible event types.
-  * @param settings A pointer to the global Movement settings. @see watch_face_setup.
   * @param context A pointer to your application's context. @see watch_face_setup.
   * @return true if your watch face is prepared for the system to enter STANDBY mode; false to keep the system awake.
   *         You should almost always return true.
@@ -211,16 +206,15 @@ typedef void (*watch_face_activate)(movement_settings_t *settings, void *context
           unlikely the user is wearing or looking at the watch.
           EVENT_BACKGROUND_TASK is also a special case. @see watch_face_wants_background_task for details.
   */
-typedef bool (*watch_face_loop)(movement_event_t event, movement_settings_t *settings, void *context);
+typedef bool (*watch_face_loop)(movement_event_t event, void *context);
 
 /** @brief Prepare to go off-screen.
   * @details This function is called before your watch face enters the background. If you requested a tick
   *          frequency other than the standard 1 Hz, **you must call movement_request_tick_frequency(1) here**
   *          to reset to 1 Hz. You should also disable any peripherals you enabled when you entered the foreground.
-  * @param settings A pointer to the global Movement settings. @see watch_face_setup.
   * @param context A pointer to your application's context. @see watch_face_setup.
   */
-typedef void (*watch_face_resign)(movement_settings_t *settings, void *context);
+typedef void (*watch_face_resign)(void *context);
 
 /** @brief OPTIONAL. Request an opportunity to run a background task.
   * @details Most apps will not need this function, but if you provide it, Movement will call it once per minute in
@@ -240,11 +234,10 @@ typedef void (*watch_face_resign)(movement_settings_t *settings, void *context);
   *           - If your background task involves an external pin or peripheral, request background tasks no more than once per hour.
   *           - If you need to enable a pin or a peripheral to perform your task, return it to its original state afterwards.
   *
-  * @param settings A pointer to the global Movement settings. @see watch_face_setup.
   * @param context A pointer to your application's context. @see watch_face_setup.
   * @return true to request a background task; false otherwise.
   */
-typedef bool (*watch_face_wants_background_task)(movement_settings_t *settings, void *context);
+typedef bool (*watch_face_wants_background_task)(void *context);
 
 typedef struct {
     watch_face_setup setup;
@@ -301,7 +294,7 @@ typedef struct {
 void movement_move_to_face(uint8_t watch_face_index);
 void movement_move_to_next_face(void);
 
-bool movement_default_loop_handler(movement_event_t event, movement_settings_t *settings);
+bool movement_default_loop_handler(movement_event_t event);
 
 void movement_illuminate_led(void);
 void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue);

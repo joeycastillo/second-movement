@@ -67,10 +67,10 @@ typedef struct {
 } countdown_state_t;
 
 
-void countdown_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void countdown_face_activate(movement_settings_t *settings, void *context);
-bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void countdown_face_resign(movement_settings_t *settings, void *context);
+void countdown_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void countdown_face_activate(void *context);
+bool countdown_face_loop(movement_event_t event, void *context);
+void countdown_face_resign(void *context);
 
 #define countdown_face ((const watch_face_t){ \
     countdown_face_setup, \

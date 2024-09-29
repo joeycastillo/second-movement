@@ -38,10 +38,10 @@
 
 #include "movement.h"
 
-void thermistor_testing_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void thermistor_testing_face_activate(movement_settings_t *settings, void *context);
-bool thermistor_testing_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void thermistor_testing_face_resign(movement_settings_t *settings, void *context);
+void thermistor_testing_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void thermistor_testing_face_activate(void *context);
+bool thermistor_testing_face_loop(movement_event_t event, void *context);
+void thermistor_testing_face_resign(void *context);
 
 #define thermistor_testing_face ((const watch_face_t){ \
     thermistor_testing_face_setup, \

@@ -136,10 +136,10 @@
  */
 static const char MORSECODE_TREE[] = " etianmsurwdkgohvf\0l\0pjbxcyzq\0C\x35\x34V\x33\0R\0\x32W\0+\0\0\0\0\x31\x36=/\0\0S(\0\x37\0\0\0\x38\0\x39\x30\0\0\0\0\0E\0\0\0\0\0\0?_\0\0\0\0\"\0\0.\0\0\0\0@\0\0\0'\0\0-\0\0\0\0\0\0\0\0;!\0)\0\0\0\0\0,\0\0\0\0:\0\0\0\0\0\0";
 
-void morsecalc_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void morsecalc_face_activate(movement_settings_t *settings, void *context);
-bool morsecalc_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void morsecalc_face_resign(movement_settings_t *settings, void *context);
+void morsecalc_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void morsecalc_face_activate(void *context);
+bool morsecalc_face_loop(movement_event_t event, void *context);
+void morsecalc_face_resign(void *context);
 
 typedef struct {
 	calc_state_t *cs;

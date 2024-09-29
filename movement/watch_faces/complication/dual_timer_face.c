@@ -226,8 +226,7 @@ static void dual_timer_display(dual_timer_state_t *state) {
 
 // PUBLIC WATCH FACE FUNCTIONS ////////////////////////////////////////////////
 
-void dual_timer_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void dual_timer_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(dual_timer_state_t));
@@ -239,15 +238,14 @@ void dual_timer_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void dual_timer_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void dual_timer_face_activate(void *context) {
     (void) context;
     if (_is_running) {
         movement_schedule_background_task(distant_future);
     }
 }
 
-bool dual_timer_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool dual_timer_face_loop(movement_event_t event, void *context) {
     dual_timer_state_t *state = (dual_timer_state_t *)context;
 
     // timers stop at 99:23:59:59:99
@@ -319,14 +317,13 @@ bool dual_timer_face_loop(movement_event_t event, movement_settings_t *settings,
             dual_timer_display(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void dual_timer_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void dual_timer_face_resign(void *context) {
     (void) context;
     movement_cancel_background_task();
     // handle any cleanup before your watch face goes off-screen.

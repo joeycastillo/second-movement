@@ -111,10 +111,10 @@ typedef struct {
     interval_timer_setting_t timer[INTERVAL_TIMERS];
 } interval_face_state_t;
 
-void interval_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void interval_face_activate(movement_settings_t *settings, void *context);
-bool interval_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void interval_face_resign(movement_settings_t *settings, void *context);
+void interval_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void interval_face_activate(void *context);
+bool interval_face_loop(movement_event_t event, void *context);
+void interval_face_resign(void *context);
 
 #define interval_face ((const watch_face_t) { \
     interval_face_setup, \

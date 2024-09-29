@@ -34,8 +34,7 @@ static void _update_alarm_indicator(bool settings_alarm_enabled, simple_clock_st
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-void simple_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void simple_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -46,7 +45,7 @@ void simple_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_i
     }
 }
 
-void simple_clock_face_activate(movement_settings_t *settings, void *context) {
+void simple_clock_face_activate(void *context) {
     simple_clock_state_t *state = (simple_clock_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -66,7 +65,7 @@ void simple_clock_face_activate(movement_settings_t *settings, void *context) {
     state->previous_date_time = 0xFFFFFFFF;
 }
 
-bool simple_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool simple_clock_face_loop(movement_event_t event, void *context) {
     simple_clock_state_t *state = (simple_clock_state_t *)context;
     char buf[11];
 
@@ -143,19 +142,17 @@ bool simple_clock_face_loop(movement_event_t event, movement_settings_t *setting
             movement_play_signal();
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void simple_clock_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_clock_face_resign(void *context) {
     (void) context;
 }
 
-bool simple_clock_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool simple_clock_face_wants_background_task(void *context) {
     simple_clock_state_t *state = (simple_clock_state_t *)context;
     if (!state->signal_enabled) return false;
 

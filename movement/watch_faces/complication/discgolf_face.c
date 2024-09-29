@@ -87,7 +87,7 @@ static const char labels[][2] = {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Beep function */
-static inline void beep(movement_settings_t *settings) {
+static inline void beep() {
     if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
@@ -146,8 +146,7 @@ static inline void store_best(discgolf_state_t *state) {
 }
 
 /* Configuration at boot, the high score array can be initialized with your high scores if they're known */
-void discgolf_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void discgolf_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -162,8 +161,7 @@ void discgolf_face_setup(movement_settings_t *settings, uint8_t watch_face_index
     }
 }
 
-void discgolf_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void discgolf_face_activate(void *context) {
     watch_clear_colon();
     discgolf_state_t *state = (discgolf_state_t *)context;
 
@@ -178,8 +176,7 @@ void discgolf_face_activate(movement_settings_t *settings, void *context) {
     movement_request_tick_frequency(4);
 }
 
-bool discgolf_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool discgolf_face_loop(movement_event_t event, void *context) {
     
     discgolf_state_t *state = (discgolf_state_t *)context;
 
@@ -238,7 +235,7 @@ bool discgolf_face_loop(movement_event_t event, movement_settings_t *settings, v
                     state->mode = dg_idle;
                     break;
             }
-            beep(settings);
+            beep();
             break;
         case EVENT_ALARM_BUTTON_UP:
             switch (state->mode) {
@@ -264,14 +261,14 @@ bool discgolf_face_loop(movement_event_t event, movement_settings_t *settings, v
                 state->mode = dg_setting;
                 store_best(state);
                 reset(state);
-                beep(settings);
+                beep();
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
             /* Snap back to currently playing hole if we've established one*/
             if ( (state->mode == dg_idle) && (state->hole != state->playing) && (state->playing <= holes[state->course]) ) {
                 state->hole = state->playing;
-                beep(settings);
+                beep();
             }
             break;
         default:
@@ -319,8 +316,7 @@ bool discgolf_face_loop(movement_event_t event, movement_settings_t *settings, v
     return true;
 }
 
-void discgolf_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void discgolf_face_resign(void *context) {
     (void) context;
     watch_clear_indicator(WATCH_INDICATOR_LAP);
 }

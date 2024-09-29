@@ -40,10 +40,9 @@ static void tempchart_save(void) {
     filesystem_write_file("tempchart.ini", (char*)&tempchart_state, sizeof(tempchart_state));
 }
 
-void tempchart_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void tempchart_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     // These next two lines just silence the compiler warnings associated with unused parameters.
     // We have no use for the settings or the watch_face_index, so we make that explicit here.
-    (void) settings;
     (void) context_ptr;
     (void) watch_face_index;
     // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
@@ -58,9 +57,8 @@ void tempchart_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
 
 }
 
-void tempchart_face_activate(movement_settings_t *settings, void *context) {
+void tempchart_face_activate(void *context) {
     // same as above: silence the warning, we don't need to check the settings.
-    (void) settings;
     (void) context;
 }
 
@@ -74,8 +72,7 @@ static void display(void) {
     watch_display_string(buf, 0);
 }
 
-bool tempchart_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool tempchart_face_loop(movement_event_t event, void *context) {
     (void) context;
 
     switch (event.event_type) {
@@ -122,23 +119,21 @@ bool tempchart_face_loop(movement_event_t event, movement_settings_t *settings, 
             break;
 
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void tempchart_face_resign(movement_settings_t *settings, void *context) {
+void tempchart_face_resign(void *context) {
     // our watch face, like most watch faces, has nothing special to do when resigning.
     // watch faces that enable a peripheral or interact with a sensor may want to turn it off here.
-    (void) settings;
     (void) context;
 }
 
 //background freq correction
-bool tempchart_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool tempchart_face_wants_background_task(void *context) {
     (void) context;
     watch_date_time date_time = watch_rtc_get_date_time();
 

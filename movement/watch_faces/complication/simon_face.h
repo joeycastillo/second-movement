@@ -90,10 +90,10 @@ typedef struct {
     SimonPlayingState playing_state;
 } simon_state_t;
 
-void simon_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr);
-void simon_face_activate(movement_settings_t *settings, void *context);
-bool simon_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void simon_face_resign(movement_settings_t *settings, void *context);
+void simon_face_setup(uint8_t watch_face_index, void **context_ptr);
+void simon_face_activate(void *context);
+bool simon_face_loop(movement_event_t event, void *context);
+void simon_face_resign(void *context);
 
 #define simon_face                                                             \
     ((const watch_face_t){                                                       \

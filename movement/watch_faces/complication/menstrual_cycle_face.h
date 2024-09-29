@@ -64,10 +64,10 @@ typedef struct {
     bool reset_tracking;
 } menstrual_cycle_state_t;
 
-void menstrual_cycle_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void menstrual_cycle_face_activate(movement_settings_t *settings, void *context);
-bool menstrual_cycle_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void menstrual_cycle_face_resign(movement_settings_t *settings, void *context);
+void menstrual_cycle_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void menstrual_cycle_face_activate(void *context);
+bool menstrual_cycle_face_loop(movement_event_t event, void *context);
+void menstrual_cycle_face_resign(void *context);
 
 #define menstrual_cycle_face ((const watch_face_t){ \
     menstrual_cycle_face_setup, \

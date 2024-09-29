@@ -169,11 +169,10 @@ static void _activity_clear_buffers() {
 }
 
 static void _activity_display_choice(activity_state_t *state);
-static void _activity_update_logging_screen(movement_settings_t *settings, activity_state_t *state);
+static void _activity_update_logging_screen(activity_state_t *state);
 static uint8_t _activity_get_next_byte(uint8_t *next_byte);
 
-void activity_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void)settings;
+void activity_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void)watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(activity_state_t));
@@ -184,8 +183,7 @@ void activity_face_setup(movement_settings_t *settings, uint8_t watch_face_index
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void activity_face_activate(movement_settings_t *settings, void *context) {
-    (void)settings;
+void activity_face_activate(void *context) {
     (void)context;
 
     // Not using this function. Calling _activity_activate from the event handler.
@@ -194,7 +192,7 @@ void activity_face_activate(movement_settings_t *settings, void *context) {
 }
 
 // Called from the ACTIVATE event handler in the loop
-static void _activity_activate(movement_settings_t *settings, activity_state_t *state) {
+static void _activity_activate(activity_state_t *state) {
     // If waking from low-energy state and currently logging: update seconds values
     // Those are not up-to-date because ticks have not been coming
     if (state->le_state != 0 && state->mode == ACTM_LOGGING) {
@@ -204,7 +202,7 @@ static void _activity_activate(movement_settings_t *settings, activity_state_t *
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
         uint32_t total_seconds = now_timestamp - start_timestamp;
         state->curr_total_sec = total_seconds;
-        _activity_update_logging_screen(settings, state);
+        _activity_update_logging_screen(state);
     }
     // Regular activation: start from defaults
     else {
@@ -239,7 +237,7 @@ const uint8_t activity_anim_pixels[][2] = {
     // {2, 4}, // MID
 };
 
-static void _activity_update_logging_screen(movement_settings_t *settings, activity_state_t *state) {
+static void _activity_update_logging_screen(activity_state_t *state) {
     watch_duration_t duration;
 
     watch_display_string("AC  ", 0);
@@ -450,7 +448,7 @@ static void _activity_finish_logging(activity_state_t *state) {
     watch_display_string("AC   dONE ", 0);
 }
 
-static void _activity_handle_tick(movement_settings_t *settings, activity_state_t *state) {
+static void _activity_handle_tick(activity_state_t *state) {
     // Display stopwatch-like duration while logging, alternating with time
     if (state->mode == ACTM_LOGGING || state->mode == ACTM_PAUSED) {
         ++state->counter;
@@ -463,7 +461,7 @@ static void _activity_handle_tick(movement_settings_t *settings, activity_state_
         }
         // Still logging: refresh display
         else {
-            _activity_update_logging_screen(settings, state);
+            _activity_update_logging_screen(state);
         }
     }
     // Display countown animation, and exit face when down
@@ -536,7 +534,7 @@ static void _activity_handle_tick(movement_settings_t *settings, activity_state_
     }
 }
 
-static void _activity_alarm_long(movement_settings_t *settings, activity_state_t *state) {
+static void _activity_alarm_long(activity_state_t *state) {
     // On choose face: start logging activity
     if (state->mode == ACTM_CHOOSE) {
         // If buffer is full: Ignore this long press
@@ -549,7 +547,7 @@ static void _activity_alarm_long(movement_settings_t *settings, activity_state_t
         state->counter = -1;
         state->mode = ACTM_LOGGING;
         watch_set_indicator(WATCH_INDICATOR_LAP);
-        _activity_update_logging_screen(settings, state);
+        _activity_update_logging_screen(state);
     }
     // If logging or paused: end logging
     else if (state->mode == ACTM_LOGGING || state->mode == ACTM_PAUSED) {
@@ -589,7 +587,7 @@ static void _activity_alarm_long(movement_settings_t *settings, activity_state_t
     }
 }
 
-static void _activity_alarm_short(movement_settings_t *settings, activity_state_t *state) {
+static void _activity_alarm_short(activity_state_t *state) {
     // In the choose face, short ALARM cycles through activities
     if (state->mode == ACTM_CHOOSE) {
         state->type_ix = (state->type_ix + 1) % num_enabled_activities;
@@ -599,13 +597,13 @@ static void _activity_alarm_short(movement_settings_t *settings, activity_state_
     else if (state->mode == ACTM_LOGGING) {
         state->mode = ACTM_PAUSED;
         state->counter = 0;
-        _activity_update_logging_screen(settings, state);
+        _activity_update_logging_screen(state);
     }
     // If paused: Update paused seconds count and return to logging
     else if (state->mode == ACTM_PAUSED) {
         state->mode = ACTM_LOGGING;
         state->counter = 0;
-        _activity_update_logging_screen(settings, state);
+        _activity_update_logging_screen(state);
     }
     // If chirping: stoppit
     else if (state->mode == ACTM_CHIRPING) {
@@ -649,15 +647,15 @@ static void _activity_light_short(activity_state_t *state) {
     // Otherwise, we don't do light.
 }
 
-bool activity_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool activity_face_loop(movement_event_t event, void *context) {
     activity_state_t *state = (activity_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            _activity_activate(settings, state);
+            _activity_activate(state);
             break;
         case EVENT_TICK:
-            _activity_handle_tick(settings, state);
+            _activity_handle_tick(state);
             break;
         case EVENT_MODE_BUTTON_UP:
             if (state->mode != ACTM_LOGGING && state->mode != ACTM_PAUSED && state->mode != ACTM_CHIRPING) {
@@ -672,12 +670,12 @@ bool activity_face_loop(movement_event_t event, movement_settings_t *settings, v
             // We also receive ALARM press that woke us up from LE state
             // Don't want to act on that as if it were a real button press for us
             if (state->le_state != 2)
-                _activity_alarm_short(settings, state);
+                _activity_alarm_short(state);
             else
                 state->le_state = 0;
             break;
         case EVENT_ALARM_LONG_PRESS:
-            _activity_alarm_long(settings, state);
+            _activity_alarm_long(state);
             break;
         case EVENT_TIMEOUT:
             if (state->mode != ACTM_LOGGING && state->mode != ACTM_PAUSED &&
@@ -698,12 +696,12 @@ bool activity_face_loop(movement_event_t event, movement_settings_t *settings, v
                 watch_clear_indicator(WATCH_INDICATOR_PM);
             }
             else {
-                _activity_update_logging_screen(settings, state);
+                _activity_update_logging_screen(state);
                 watch_start_tick_animation(500);
             }
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -714,8 +712,7 @@ bool activity_face_loop(movement_event_t event, movement_settings_t *settings, v
         return true;
 }
 
-void activity_face_resign(movement_settings_t *settings, void *context) {
-    (void)settings;
+void activity_face_resign(void *context) {
     (void)context;
 
     // Face should only ever temporarily request a higher frequency, so by the time we're resigning,

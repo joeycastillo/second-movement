@@ -92,10 +92,10 @@ typedef struct {
     sunrise_sunset_state_t sunstate;
 } planetary_hours_state_t;
 
-void planetary_hours_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void planetary_hours_face_activate(movement_settings_t *settings, void *context);
-bool planetary_hours_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void planetary_hours_face_resign(movement_settings_t *settings, void *context);
+void planetary_hours_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void planetary_hours_face_activate(void *context);
+bool planetary_hours_face_loop(movement_event_t event, void *context);
+void planetary_hours_face_resign(void *context);
 
 #define planetary_hours_face ((const watch_face_t){ \
     planetary_hours_face_setup, \

@@ -45,8 +45,7 @@ static void _display_left_aligned(uint8_t value) {
     }
 }
 
-void simple_clock_bin_led_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void simple_clock_bin_led_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(simple_clock_bin_led_state_t));
         memset(*context_ptr, 0, sizeof(simple_clock_bin_led_state_t));
@@ -55,7 +54,7 @@ void simple_clock_bin_led_face_setup(movement_settings_t *settings, uint8_t watc
     }
 }
 
-void simple_clock_bin_led_face_activate(movement_settings_t *settings, void *context) {
+void simple_clock_bin_led_face_activate(void *context) {
     simple_clock_bin_led_state_t *state = (simple_clock_bin_led_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -75,7 +74,7 @@ void simple_clock_bin_led_face_activate(movement_settings_t *settings, void *con
     state->previous_date_time = 0xFFFFFFFF;
 }
 
-bool simple_clock_bin_led_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool simple_clock_bin_led_face_loop(movement_event_t event, void *context) {
     simple_clock_bin_led_state_t *state = (simple_clock_bin_led_state_t *)context;
     char buf[11];
     uint8_t pos;
@@ -200,19 +199,17 @@ bool simple_clock_bin_led_face_loop(movement_event_t event, movement_settings_t 
             }
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void simple_clock_bin_led_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_clock_bin_led_face_resign(void *context) {
     (void) context;
 }
 
-bool simple_clock_bin_led_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool simple_clock_bin_led_face_wants_background_task(void *context) {
     simple_clock_bin_led_state_t *state = (simple_clock_bin_led_state_t *)context;
     if (!state->signal_enabled) return false;
 

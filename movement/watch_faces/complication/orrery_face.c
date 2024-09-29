@@ -46,7 +46,7 @@ static const char orrery_celestial_body_names[NUM_AVAILABLE_BODIES][3] = {
     "NE"    // Neptune
 };
 
-static void _orrery_face_recalculate(movement_settings_t *settings, orrery_state_t *state) {
+static void _orrery_face_recalculate(orrery_state_t *state) {
     watch_date_time date_time = watch_rtc_get_date_time();
     uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
     date_time = watch_utility_date_time_from_unix_time(timestamp, 0);
@@ -94,7 +94,7 @@ static void _orrery_face_recalculate(movement_settings_t *settings, orrery_state
     state->coords[2] = r[2];
 }
 
-static void _orrery_face_update(movement_event_t event, movement_settings_t *settings, orrery_state_t *state) {
+static void _orrery_face_update(movement_event_t event, orrery_state_t *state) {
     char buf[11];
     switch (state->mode) {
         case ORRERY_MODE_SELECTING_BODY:
@@ -127,7 +127,7 @@ static void _orrery_face_update(movement_event_t event, movement_settings_t *set
             watch_clear_display();
              // this takes a moment and locks the UI, flash C for "Calculating"
             watch_start_character_blink('C', 100);
-            _orrery_face_recalculate(settings, state);
+            _orrery_face_recalculate(state);
             watch_stop_blink();
             state->mode = ORRERY_MODE_DISPLAYING_X;
             // fall through
@@ -149,8 +149,7 @@ static void _orrery_face_update(movement_event_t event, movement_settings_t *set
     }
 }
 
-void orrery_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void orrery_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(orrery_state_t));
@@ -158,20 +157,18 @@ void orrery_face_setup(movement_settings_t *settings, uint8_t watch_face_index, 
     }
 }
 
-void orrery_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void orrery_face_activate(void *context) {
     (void) context;
     movement_request_tick_frequency(4);
 }
 
-bool orrery_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool orrery_face_loop(movement_event_t event, void *context) {
     orrery_state_t *state = (orrery_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-            _orrery_face_update(event, settings, state);
+            _orrery_face_update(event, state);
             break;
         case EVENT_ALARM_BUTTON_UP:
             switch (state->mode) {
@@ -191,34 +188,33 @@ bool orrery_face_loop(movement_event_t event, movement_settings_t *settings, voi
                     state->mode++;
                     break;
             }
-            _orrery_face_update(event, settings, state);
+            _orrery_face_update(event, state);
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->mode == ORRERY_MODE_SELECTING_BODY) {
                 // celestial body selected! this triggers a calculation in the update method.
                 state->mode = ORRERY_MODE_CALCULATING;
                 movement_request_tick_frequency(1);
-                _orrery_face_update(event, settings, state);
+                _orrery_face_update(event, state);
             } else if (state->mode != ORRERY_MODE_CALCULATING) {
                 // in all modes except "doing a calculation", return to the selection screen.
                 state->mode = ORRERY_MODE_SELECTING_BODY;
                 movement_request_tick_frequency(4);
-                _orrery_face_update(event, settings, state);
+                _orrery_face_update(event, state);
             }
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void orrery_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void orrery_face_resign(void *context) {
     orrery_state_t *state = (orrery_state_t *)context;
     state->mode = ORRERY_MODE_SELECTING_BODY;
 }

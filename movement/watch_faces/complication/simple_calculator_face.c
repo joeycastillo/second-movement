@@ -27,8 +27,7 @@
 #include <math.h>
 #include "simple_calculator_face.h"
 
-void simple_calculator_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void simple_calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(simple_calculator_state_t));
@@ -46,8 +45,7 @@ static void reset_to_zero(calculator_number_t *number) {
     number->thousands = 0;
 }
 
-void simple_calculator_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_calculator_face_activate(void *context) {
     simple_calculator_state_t *state = (simple_calculator_state_t *)context;
     state->placeholder = PLACEHOLDER_ONES;
     state->mode = MODE_ENTERING_FIRST_NUM;
@@ -266,7 +264,7 @@ static void reset_all(simple_calculator_state_t *state) {
     state->placeholder = PLACEHOLDER_ONES;
 }
 
-bool simple_calculator_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool simple_calculator_face_loop(movement_event_t event, void *context) {
     simple_calculator_state_t *state = (simple_calculator_state_t *)context;
     char display_string[10];
     char temp_display_string[10];  // Temporary buffer for blinking effect
@@ -451,14 +449,13 @@ bool simple_calculator_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void simple_calculator_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_calculator_face_resign(void *context) {
     (void) context;
     movement_request_tick_frequency(1);
 }

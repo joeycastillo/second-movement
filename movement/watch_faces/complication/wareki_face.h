@@ -15,10 +15,10 @@ typedef struct {
 } wareki_state_t;
 
 
-void wareki_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void wareki_activate(movement_settings_t *settings, void *context);
-bool wareki_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void wareki_resign(movement_settings_t *settings, void *context);
+void wareki_setup(uint8_t watch_face_index, void ** context_ptr);
+void wareki_activate(void *context);
+bool wareki_loop(movement_event_t event, void *context);
+void wareki_resign(void *context);
 void addYear(wareki_state_t* state,int count);
 void subYear(wareki_state_t* state,int count);
 

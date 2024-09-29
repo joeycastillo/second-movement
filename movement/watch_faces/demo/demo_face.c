@@ -43,8 +43,7 @@ typedef enum {
     DEMO_FACE_NUM_FACES
 } demo_face_index_t;
 
-void demo_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(demo_face_index_t));
@@ -52,8 +51,7 @@ void demo_face_setup(movement_settings_t *settings, uint8_t watch_face_index, vo
     }
 }
 
-void demo_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void demo_face_activate(void *context) {
     (void) context;
     movement_request_tick_frequency(0);
     // ensure the watch never enters low energy mode
@@ -61,8 +59,7 @@ void demo_face_activate(movement_settings_t *settings, void *context) {
     movement_set_backlight_dwell(3);
 }
 
-bool demo_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool demo_face_loop(movement_event_t event, void *context) {
     demo_face_index_t *screen = (demo_face_index_t *)context;
     switch (event.event_type) {
         case EVENT_ALARM_BUTTON_UP:
@@ -123,14 +120,13 @@ bool demo_face_loop(movement_event_t event, movement_settings_t *settings, void 
             // ignore timeout
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void demo_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void demo_face_resign(void *context) {
     (void) context;
 }

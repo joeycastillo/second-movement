@@ -122,15 +122,14 @@ static watch_date_time jde_to_date_time(double JDE) {
     return result;
 }
 
-static void calculate_datetimes(solstice_state_t *state, movement_settings_t *settings) {
+static void calculate_datetimes(solstice_state_t *state) {
     for (int i = 0; i < 4; i++) {
         // TODO: handle DST changes
         state->datetimes[i] = jde_to_date_time(calculate_solstice_equinox(2020 + state->year, i) + (movement_get_current_timezone_offset() / (3600.0*24.0)));
     }
 }
 
-void solstice_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void solstice_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(solstice_state_t));
@@ -150,8 +149,7 @@ void solstice_face_setup(movement_settings_t *settings, uint8_t watch_face_index
     }
 }
 
-void solstice_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void solstice_face_activate(void *context) {
     (void) context;
 }
 
@@ -162,7 +160,7 @@ static void show_main_screen(solstice_state_t *state) {
     watch_display_string(buf, 0);
 }
 
-static void show_date_time(movement_settings_t *settings, solstice_state_t *state) {
+static void show_date_time(solstice_state_t *state) {
     char buf[11];
     watch_date_time date_time = state->datetimes[state->index];
     if (!movement_clock_mode_24h()) {
@@ -179,12 +177,12 @@ static void show_date_time(movement_settings_t *settings, solstice_state_t *stat
     watch_display_string(buf, 0);
 }
 
-bool solstice_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool solstice_face_loop(movement_event_t event, void *context) {
     solstice_state_t *state = (solstice_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ALARM_LONG_PRESS:
-            show_date_time(settings, state);
+            show_date_time(state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             if (state->index == 0) {
@@ -223,14 +221,13 @@ bool solstice_face_loop(movement_event_t event, movement_settings_t *settings, v
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void solstice_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void solstice_face_resign(void *context) {
     (void) context;
 }
 

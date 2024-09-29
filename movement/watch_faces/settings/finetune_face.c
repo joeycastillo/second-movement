@@ -34,15 +34,13 @@ extern nanosec_state_t nanosec_state;
 int total_adjustment;
 int8_t finetune_page;
 
-void finetune_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void finetune_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void finetune_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void finetune_face_activate(void *context) {
     (void) context;
 
     // Handle any tasks related to your watch face coming on screen.
@@ -131,9 +129,8 @@ static void finetune_update_correction_time(void) {
     movement_move_to_face(0); // Go to main face after saving settings
 }
 
-bool finetune_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool finetune_face_loop(movement_event_t event, void *context) {
 
-    (void) settings;
     (void) context;
 
     switch (event.event_type) {
@@ -227,7 +224,7 @@ bool finetune_face_loop(movement_event_t event, movement_settings_t *settings, v
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -236,8 +233,7 @@ bool finetune_face_loop(movement_event_t event, movement_settings_t *settings, v
     return true;
 }
 
-void finetune_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void finetune_face_resign(void *context) {
     (void) context;
 
     if (total_adjustment != 0) {

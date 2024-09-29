@@ -205,8 +205,7 @@ static void _abort_quick_ticks() {
     }
 }
 
-void time_left_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void time_left_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(time_left_state_t));
@@ -230,8 +229,7 @@ void time_left_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void time_left_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void time_left_face_activate(void *context) {
     time_left_state_t *state = (time_left_state_t *)context;
 
     // stash the current year, useful in birthday setting mode
@@ -244,8 +242,7 @@ void time_left_face_activate(movement_settings_t *settings, void *context) {
     state->birth_date_when_activated.reg = state->birth_date.reg;
 }
 
-bool time_left_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool time_left_face_loop(movement_event_t event, void *context) {
     time_left_state_t *state = (time_left_state_t *)context;
 
     switch (event.event_type) {
@@ -326,15 +323,14 @@ bool time_left_face_loop(movement_event_t event, movement_settings_t *settings, 
             movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void time_left_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void time_left_face_resign(void *context) {
     time_left_state_t *state = (time_left_state_t *)context;
 
     if (state->current_page >= TIME_LEFT_FACE_SETTINGS_STATE) _resume_setting(state);

@@ -26,8 +26,7 @@
 #include <string.h>
 #include "flashlight_face.h"
 
-void flashlight_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void flashlight_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(flashlight_state_t));
@@ -37,15 +36,14 @@ void flashlight_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void flashlight_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void flashlight_face_activate(void *context) {
     (void) context;
 
     watch_enable_digital_output(A2);
     watch_set_pin_level(A2, false);
 }
 
-bool flashlight_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool flashlight_face_loop(movement_event_t event, void *context) {
     (void) context;
 
     switch (event.event_type) {
@@ -65,14 +63,13 @@ bool flashlight_face_loop(movement_event_t event, movement_settings_t *settings,
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void flashlight_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void flashlight_face_resign(void *context) {
     (void) context;
 
     watch_set_pin_level(A2, false);

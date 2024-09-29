@@ -44,9 +44,8 @@ static void _coin_animation(toss_up_state_t *state);
 
 // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////
 
-void toss_up_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void toss_up_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(toss_up_state_t));
         memset(*context_ptr, 0, sizeof(toss_up_state_t));
@@ -63,12 +62,11 @@ void toss_up_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     }
 }
 
-void toss_up_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void toss_up_face_activate(void *context) {
     (void) context;
 }
 
-bool toss_up_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool toss_up_face_loop(movement_event_t event, void *context) {
     toss_up_state_t *state = (toss_up_state_t *)context;
     uint8_t i = 0;
     switch (event.event_type) {
@@ -170,14 +168,13 @@ bool toss_up_face_loop(movement_event_t event, movement_settings_t *settings, vo
             _toss_up_face_display(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void toss_up_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void toss_up_face_resign(void *context) {
     (void) context;
 }
 

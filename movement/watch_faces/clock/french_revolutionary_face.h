@@ -63,10 +63,10 @@ typedef struct {
     uint8_t hour : 5;      // 0-10
 } fr_decimal_time;
 
-void french_revolutionary_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void french_revolutionary_face_activate(movement_settings_t *settings, void *context);
-bool french_revolutionary_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void french_revolutionary_face_resign(movement_settings_t *settings, void *context);
+void french_revolutionary_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void french_revolutionary_face_activate(void *context);
+bool french_revolutionary_face_loop(movement_event_t event, void *context);
+void french_revolutionary_face_resign(void *context);
 char fix_character_one(char digit);
 fr_decimal_time get_decimal_time(watch_date_time *date_time);
 void set_display_buffer(char *buf, french_revolutionary_state_t *state, fr_decimal_time *decimal_time, watch_date_time *date_time);

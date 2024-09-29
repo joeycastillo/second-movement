@@ -128,10 +128,10 @@ typedef struct {
     calculator_placeholder_t placeholder;
 } simple_calculator_state_t;
 
-void simple_calculator_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void simple_calculator_face_activate(movement_settings_t *settings, void *context);
-bool simple_calculator_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void simple_calculator_face_resign(movement_settings_t *settings, void *context);
+void simple_calculator_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void simple_calculator_face_activate(void *context);
+bool simple_calculator_face_loop(movement_event_t event, void *context);
+void simple_calculator_face_resign(void *context);
 
 #define simple_calculator_face ((const watch_face_t){ \
     simple_calculator_face_setup, \

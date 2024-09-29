@@ -34,7 +34,7 @@ const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"HR", "M1", "S
 
 static bool _quick_ticks_running;
 
-static void _handle_alarm_button(movement_settings_t *settings, watch_date_time date_time, uint8_t current_page) {
+static void _handle_alarm_button(watch_date_time date_time, uint8_t current_page) {
     // handles short or long pressing of the alarm button
 
     switch (current_page) {
@@ -74,27 +74,25 @@ static void _abort_quick_ticks() {
     }
 }
 
-void set_time_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void set_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) *context_ptr = malloc(sizeof(uint8_t));
 }
 
-void set_time_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void set_time_face_activate(void *context) {
     *((uint8_t *)context) = 0;
     movement_request_tick_frequency(4);
     _quick_ticks_running = false;
 }
 
-bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool set_time_face_loop(movement_event_t event, void *context) {
     uint8_t current_page = *((uint8_t *)context);
     watch_date_time date_time = watch_rtc_get_date_time();
 
     switch (event.event_type) {
         case EVENT_TICK:
             if (_quick_ticks_running) {
-                if (HAL_GPIO_BTN_ALARM_read()) _handle_alarm_button(settings, date_time, current_page);
+                if (HAL_GPIO_BTN_ALARM_read()) _handle_alarm_button(date_time, current_page);
                 else _abort_quick_ticks();
             }
             break;
@@ -117,14 +115,14 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
             break;
         case EVENT_ALARM_BUTTON_UP:
             _abort_quick_ticks();
-            _handle_alarm_button(settings, date_time, current_page);
+            _handle_alarm_button(date_time, current_page);
             break;
         case EVENT_TIMEOUT:
             _abort_quick_ticks();
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     char buf[11];
@@ -178,8 +176,7 @@ bool set_time_face_loop(movement_event_t event, movement_settings_t *settings, v
     return true;
 }
 
-void set_time_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void set_time_face_resign(void *context) {
     (void) context;
     watch_set_led_off();
     movement_store_settings();

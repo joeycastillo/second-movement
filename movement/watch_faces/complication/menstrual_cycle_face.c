@@ -85,7 +85,7 @@ const char menstrual_cycle_face_titles[MENSTRUAL_CYCLE_FACE_NUM_PAGES][11] = {
 };
 
 /* Beep function */
-static inline void beep(movement_settings_t *settings) {
+static inline void beep() {
     if (movement_button_should_sound())
         watch_buzzer_play_note(BUZZER_NOTE_E8, 75);
 }
@@ -250,9 +250,8 @@ static inline void update_shortest_longest_cycle(menstrual_cycle_state_t *state)
         state->cycles.bit.longest_cycle = cycle_length;
 }
 
-void menstrual_cycle_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void menstrual_cycle_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
     
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(menstrual_cycle_state_t));
@@ -295,8 +294,7 @@ void menstrual_cycle_face_setup(movement_settings_t *settings, uint8_t watch_fac
     }
 }
 
-void menstrual_cycle_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void menstrual_cycle_face_activate(void *context) {
     menstrual_cycle_state_t *state = (menstrual_cycle_state_t *)context;
     state->period_today = 0;
     state->current_page = 0;
@@ -305,7 +303,7 @@ void menstrual_cycle_face_activate(movement_settings_t *settings, void *context)
     movement_request_tick_frequency(4); // we need to manually blink some pixels
 }
 
-bool menstrual_cycle_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool menstrual_cycle_face_loop(movement_event_t event, void *context) {
     menstrual_cycle_state_t *state = (menstrual_cycle_state_t *)context;
     watch_date_time date_period;
     uint8_t current_page = state->current_page;
@@ -406,7 +404,7 @@ bool menstrual_cycle_face_loop(movement_event_t event, movement_settings_t *sett
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     watch_display_string((char *)menstrual_cycle_face_titles[current_page], 0);
@@ -466,7 +464,6 @@ bool menstrual_cycle_face_loop(movement_event_t event, movement_settings_t *sett
     return true;
 }
 
-void menstrual_cycle_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void menstrual_cycle_face_resign(void *context) {
     (void) context;
 }

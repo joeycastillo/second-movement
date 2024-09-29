@@ -59,7 +59,7 @@ static const char astronomy_celestial_body_names[NUM_AVAILABLE_BODIES][3] = {
     "NE"    // Neptune
 };
 
-static void _astronomy_face_recalculate(movement_settings_t *settings, astronomy_state_t *state) {
+static void _astronomy_face_recalculate(astronomy_state_t *state) {
 #if __EMSCRIPTEN__
     int16_t browser_lat = EM_ASM_INT({
         return lat;
@@ -116,7 +116,7 @@ static void _astronomy_face_recalculate(movement_settings_t *settings, astronomy
             state->distance);
 }
 
-static void _astronomy_face_update(movement_event_t event, movement_settings_t *settings, astronomy_state_t *state) {
+static void _astronomy_face_update(movement_event_t event, astronomy_state_t *state) {
     char buf[16];
     switch (state->mode) {
         case ASTRONOMY_MODE_SELECTING_BODY:
@@ -150,7 +150,7 @@ static void _astronomy_face_update(movement_event_t event, movement_settings_t *
             watch_clear_display();
              // this takes a moment and locks the UI, flash C for "Calculating"
             watch_start_character_blink('C', 100);
-            _astronomy_face_recalculate(settings, state);
+            _astronomy_face_recalculate(state);
             watch_stop_blink();
             state->mode = ASTRONOMY_MODE_DISPLAYING_ALT;
             // fall through
@@ -188,8 +188,7 @@ static void _astronomy_face_update(movement_event_t event, movement_settings_t *
     }
 }
 
-void astronomy_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void astronomy_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(astronomy_state_t));
@@ -197,8 +196,7 @@ void astronomy_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void astronomy_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void astronomy_face_activate(void *context) {
     astronomy_state_t *state = (astronomy_state_t *)context;
     movement_location_t movement_location = (movement_location_t) watch_get_backup_data(1);
     int16_t lat_centi = (int16_t)movement_location.bit.latitude;
@@ -211,13 +209,13 @@ void astronomy_face_activate(movement_settings_t *settings, void *context) {
     movement_request_tick_frequency(4);
 }
 
-bool astronomy_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool astronomy_face_loop(movement_event_t event, void *context) {
     astronomy_state_t *state = (astronomy_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-            _astronomy_face_update(event, settings, state);
+            _astronomy_face_update(event, state);
             break;
         case EVENT_ALARM_BUTTON_UP:
             switch (state->mode) {
@@ -237,19 +235,19 @@ bool astronomy_face_loop(movement_event_t event, movement_settings_t *settings, 
                     state->mode++;
                     break;
             }
-            _astronomy_face_update(event, settings, state);
+            _astronomy_face_update(event, state);
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->mode == ASTRONOMY_MODE_SELECTING_BODY) {
                 // celestial body selected! this triggers a calculation in the update method.
                 state->mode = ASTRONOMY_MODE_CALCULATING;
                 movement_request_tick_frequency(1);
-                _astronomy_face_update(event, settings, state);
+                _astronomy_face_update(event, state);
             } else if (state->mode != ASTRONOMY_MODE_CALCULATING) {
                 // in all modes except "doing a calculation", return to the selection screen.
                 state->mode = ASTRONOMY_MODE_SELECTING_BODY;
                 movement_request_tick_frequency(4);
-            _astronomy_face_update(event, settings, state);
+            _astronomy_face_update(event, state);
             }
             break;
         case EVENT_TIMEOUT:
@@ -259,15 +257,14 @@ bool astronomy_face_loop(movement_event_t event, movement_settings_t *settings, 
             // TODO?
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void astronomy_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void astronomy_face_resign(void *context) {
     astronomy_state_t *state = (astronomy_state_t *)context;
     state->mode = ASTRONOMY_MODE_SELECTING_BODY;
 }

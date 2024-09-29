@@ -73,11 +73,11 @@ typedef struct {
     uint32_t illuminated_segments[MAX_ILLUMINATED_SEGMENTS][2]; 
 } wyoscan_state_t;
 
-void wyoscan_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void wyoscan_face_activate(movement_settings_t *settings, void *context);
-bool wyoscan_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void wyoscan_face_resign(movement_settings_t *settings, void *context);
-bool wyoscan_face_wants_background_task(movement_settings_t *settings, void *context);
+void wyoscan_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void wyoscan_face_activate(void *context);
+bool wyoscan_face_loop(movement_event_t event, void *context);
+void wyoscan_face_resign(void *context);
+bool wyoscan_face_wants_background_task(void *context);
 
 #define wyoscan_face ((const watch_face_t){ \
     wyoscan_face_setup, \

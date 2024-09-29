@@ -27,8 +27,7 @@
 #include "counter_face.h"
 #include "watch.h"
 
-void counter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void counter_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(counter_state_t));
@@ -38,16 +37,14 @@ void counter_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     }
 }
 
-void counter_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void counter_face_activate(void *context) {
     counter_state_t *state = (counter_state_t *)context;
     if (state->beep_on) {
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     }
 }
 
-bool counter_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool counter_face_loop(movement_event_t event, void *context) {
 
     counter_state_t *state = (counter_state_t *)context;
 
@@ -83,7 +80,7 @@ bool counter_face_loop(movement_event_t event, movement_settings_t *settings, vo
             // ignore timeout
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -143,7 +140,6 @@ void print_counter(counter_state_t *state) {
     watch_display_string(buf, 0);
 }
 
-void counter_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void counter_face_resign(void *context) {
     (void) context;
 }

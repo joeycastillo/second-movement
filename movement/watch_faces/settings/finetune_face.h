@@ -60,10 +60,10 @@ typedef struct {
     uint8_t unused;
 } finetune_state_t;
 
-void finetune_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void finetune_face_activate(movement_settings_t *settings, void *context);
-bool finetune_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void finetune_face_resign(movement_settings_t *settings, void *context);
+void finetune_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void finetune_face_activate(void *context);
+bool finetune_face_loop(movement_event_t event, void *context);
+void finetune_face_resign(void *context);
 
 #define finetune_face ((const watch_face_t){ \
     finetune_face_setup, \

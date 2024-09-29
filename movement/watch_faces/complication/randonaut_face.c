@@ -50,8 +50,7 @@ static void _get_entropy(randonaut_state_t *state);
 
 // MOVEMENT WATCH FACE FUNCTIONS //////////////////////////////////////////////
 
-void randonaut_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void randonaut_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(randonaut_state_t));
@@ -61,8 +60,7 @@ void randonaut_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void randonaut_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void randonaut_face_activate(void *context) {
     randonaut_state_t *state = (randonaut_state_t *)context;
     _get_location_from_file(state);
     state->face.mode = 0;
@@ -72,7 +70,7 @@ void randonaut_face_activate(movement_settings_t *settings, void *context) {
     // Handle any tasks related to your watch face coming on screen.
 }
 
-bool randonaut_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool randonaut_face_loop(movement_event_t event, void *context) {
     randonaut_state_t *state = (randonaut_state_t *)context;
 
     switch (event.event_type) {
@@ -178,7 +176,7 @@ bool randonaut_face_loop(movement_event_t event, movement_settings_t *settings, 
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     _randonaut_face_display(state);
@@ -192,8 +190,7 @@ bool randonaut_face_loop(movement_event_t event, movement_settings_t *settings, 
     return true;
 }
 
-void randonaut_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void randonaut_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

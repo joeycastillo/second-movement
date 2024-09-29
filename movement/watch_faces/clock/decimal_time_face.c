@@ -29,10 +29,9 @@
 
 
 
-void decimal_time_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     // These next two lines just silence the compiler warnings associated with unused parameters.
     // We have no use for the settings or the watch_face_index, so we make that explicit here.
-    (void) settings;
     (void) watch_face_index;
     (void) context_ptr;
     // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
@@ -48,10 +47,9 @@ void decimal_time_face_setup(movement_settings_t *settings, uint8_t watch_face_i
 }
 
 
-void decimal_time_face_activate(movement_settings_t *settings, void *context) {
+void decimal_time_face_activate(void *context) {
 
     // same as above: silence the warning, we don't need to check the settings.
-    (void) settings;
 
     // we do however need to set some things in our context. Here we cast it to the correct type...
     decimal_time_face_state_t *state = (decimal_time_face_state_t *)context;
@@ -68,9 +66,8 @@ void decimal_time_face_activate(movement_settings_t *settings, void *context) {
 
 
 
-bool decimal_time_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool decimal_time_face_loop(movement_event_t event, void *context) {
 
-    (void) settings;
     decimal_time_face_state_t *state = (decimal_time_face_state_t *)context;
 
     char buf[16];
@@ -147,7 +144,7 @@ bool decimal_time_face_loop(movement_event_t event, movement_settings_t *setting
             break;
 
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
 
     }
@@ -155,10 +152,9 @@ bool decimal_time_face_loop(movement_event_t event, movement_settings_t *setting
     return true;
 }
 
-void decimal_time_face_resign(movement_settings_t *settings, void *context) {
+void decimal_time_face_resign(void *context) {
     // our watch face, like most watch faces, has nothing special to do when resigning.
     // there are no peripherals or sensors here to worry about turning off.
-    (void) settings;
     (void) context;
 
 }

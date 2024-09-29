@@ -40,11 +40,11 @@
 
 #include "movement.h"
 
-void tempchart_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void tempchart_face_activate(movement_settings_t *settings, void *context);
-bool tempchart_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void tempchart_face_resign(movement_settings_t *settings, void *context);
-bool tempchart_face_wants_background_task(movement_settings_t *settings, void *context);
+void tempchart_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void tempchart_face_activate(void *context);
+bool tempchart_face_loop(movement_event_t event, void *context);
+void tempchart_face_resign(void *context);
+bool tempchart_face_wants_background_task(void *context);
 
 
 #define tempchart_face ((const watch_face_t){ \

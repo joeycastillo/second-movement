@@ -45,10 +45,10 @@ typedef struct {
     uint8_t animation_frame;
 } simple_coin_flip_state_t;
 
-void simple_coin_flip_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void simple_coin_flip_face_activate(movement_settings_t *settings, void *context);
-bool simple_coin_flip_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void simple_coin_flip_face_resign(movement_settings_t *settings, void *context);
+void simple_coin_flip_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void simple_coin_flip_face_activate(void *context);
+bool simple_coin_flip_face_loop(movement_event_t event, void *context);
+void simple_coin_flip_face_resign(void *context);
 
 #define simple_coin_flip_face ((const watch_face_t){ \
     simple_coin_flip_face_setup, \

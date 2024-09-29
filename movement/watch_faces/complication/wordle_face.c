@@ -476,8 +476,7 @@ static void insert_random_guess(wordle_state_t *state) {
 }
 #endif
 
-void wordle_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void wordle_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(wordle_state_t));
@@ -490,8 +489,7 @@ void wordle_face_setup(movement_settings_t *settings, uint8_t watch_face_index, 
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void wordle_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wordle_face_activate(void *context) {
     wordle_state_t *state = (wordle_state_t *)context;
 #if WORDLE_USE_DAILY_STREAK != 0
     uint32_t now = get_day_unix_time();
@@ -511,7 +509,7 @@ void wordle_face_activate(movement_settings_t *settings, void *context) {
     display_title(state);
 }
 
-bool wordle_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool wordle_face_loop(movement_event_t event, void *context) {
     wordle_state_t *state = (wordle_state_t *)context;
 
     switch (event.event_type) {
@@ -590,13 +588,12 @@ bool wordle_face_loop(movement_event_t event, movement_settings_t *settings, voi
                 display_title(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
-void wordle_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wordle_face_resign(void *context) {
     (void) context;
 }
 

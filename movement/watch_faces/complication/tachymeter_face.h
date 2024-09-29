@@ -92,10 +92,10 @@ typedef struct {
     uint32_t total_speed;          // 3600 * 100 * distance / total_time
 } tachymeter_state_t;
 
-void tachymeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void tachymeter_face_activate(movement_settings_t *settings, void *context);
-bool tachymeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void tachymeter_face_resign(movement_settings_t *settings, void *context);
+void tachymeter_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void tachymeter_face_activate(void *context);
+bool tachymeter_face_loop(movement_event_t event, void *context);
+void tachymeter_face_resign(void *context);
 
 #define tachymeter_face ((const watch_face_t){ \
     tachymeter_face_setup, \

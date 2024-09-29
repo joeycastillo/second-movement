@@ -10,11 +10,10 @@ static bool _alarm_button_press;
 static bool _light_button_press;
 
 
-void wareki_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void wareki_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     
     //printf("wareki_setup() \n");
-    (void) settings;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(wareki_state_t));
         memset(*context_ptr, 0, sizeof(wareki_state_t));
@@ -53,11 +52,10 @@ static void draw_year_and_wareki(wareki_state_t *state) {
 }
 
 
-void wareki_activate(movement_settings_t *settings, void *context) {
+void wareki_activate(void *context) {
 
     //printf("wareki_activate() \n");
 
-    (void) settings;
     wareki_state_t *state = (wareki_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -101,7 +99,7 @@ void subYear(wareki_state_t* state,int count){
 }
 
 
-bool wareki_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool wareki_loop(movement_event_t event, void *context) {
     wareki_state_t *state = (wareki_state_t *)context;
 
     state->real_year = watch_rtc_get_date_time().unit.year + WATCH_RTC_REFERENCE_YEAR;
@@ -208,14 +206,13 @@ bool wareki_loop(movement_event_t event, movement_settings_t *settings, void *co
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void wareki_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wareki_resign(void *context) {
     (void) context;
 }
 

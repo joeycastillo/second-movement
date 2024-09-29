@@ -106,10 +106,10 @@ typedef struct {
     uint32_t previous_date_time;
 } world_clock2_state_t;
 
-void world_clock2_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr);
-void world_clock2_face_activate(movement_settings_t *settings, void *context);
-bool world_clock2_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void world_clock2_face_resign(movement_settings_t *settings, void *context);
+void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr);
+void world_clock2_face_activate(void *context);
+bool world_clock2_face_loop(movement_event_t event, void *context);
+void world_clock2_face_resign(void *context);
 
 #define world_clock2_face ((const watch_face_t){ \
     world_clock2_face_setup, \

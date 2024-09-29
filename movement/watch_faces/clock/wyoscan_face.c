@@ -90,8 +90,7 @@ static const int32_t clock_mapping[6][7][2] = {
     {{2,4}, {2,5}, {1,6}, {0,6}, {0,5}, {1,4}, {1,5}},
 };
 
-void wyoscan_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void wyoscan_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(wyoscan_state_t));
@@ -101,14 +100,13 @@ void wyoscan_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void wyoscan_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wyoscan_face_activate(void *context) {
     wyoscan_state_t *state = (wyoscan_state_t *)context;
     movement_request_tick_frequency(32);
     state->total_frames = 64;
 }
 
-bool wyoscan_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool wyoscan_face_loop(movement_event_t event, void *context) {
     wyoscan_state_t *state = (wyoscan_state_t *)context;
 
     watch_date_time date_time;
@@ -195,14 +193,13 @@ bool wyoscan_face_loop(movement_event_t event, movement_settings_t *settings, vo
         case EVENT_BACKGROUND_TASK:
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void wyoscan_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void wyoscan_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

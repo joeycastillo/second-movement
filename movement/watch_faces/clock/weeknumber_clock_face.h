@@ -44,11 +44,11 @@ typedef struct {
     bool alarm_enabled;
 } weeknumber_clock_state_t;
 
-void weeknumber_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void weeknumber_clock_face_activate(movement_settings_t *settings, void *context);
-bool weeknumber_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void weeknumber_clock_face_resign(movement_settings_t *settings, void *context);
-bool weeknumber_clock_face_wants_background_task(movement_settings_t *settings, void *context);
+void weeknumber_clock_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void weeknumber_clock_face_activate(void *context);
+bool weeknumber_clock_face_loop(movement_event_t event, void *context);
+void weeknumber_clock_face_resign(void *context);
+bool weeknumber_clock_face_wants_background_task(void *context);
 
 #define weeknumber_clock_face ((const watch_face_t){ \
     weeknumber_clock_face_setup, \

@@ -85,10 +85,10 @@ typedef struct {
     bool show;
 } dual_timer_state_t;
 
-void dual_timer_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void dual_timer_face_activate(movement_settings_t *settings, void *context);
-bool dual_timer_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void dual_timer_face_resign(movement_settings_t *settings, void *context);
+void dual_timer_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void dual_timer_face_activate(void *context);
+bool dual_timer_face_loop(movement_event_t event, void *context);
+void dual_timer_face_resign(void *context);
 
 #if __EMSCRIPTEN__
 void em_dual_timer_cb_handler(void *userData);

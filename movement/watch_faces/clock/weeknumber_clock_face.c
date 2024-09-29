@@ -33,8 +33,7 @@ static void _update_alarm_indicator(bool settings_alarm_enabled, weeknumber_cloc
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-void weeknumber_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void weeknumber_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -45,7 +44,7 @@ void weeknumber_clock_face_setup(movement_settings_t *settings, uint8_t watch_fa
     }
 }
 
-void weeknumber_clock_face_activate(movement_settings_t *settings, void *context) {
+void weeknumber_clock_face_activate(void *context) {
     weeknumber_clock_state_t *state = (weeknumber_clock_state_t *)context;
 
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
@@ -65,7 +64,7 @@ void weeknumber_clock_face_activate(movement_settings_t *settings, void *context
     state->previous_date_time = 0xFFFFFFFF;
 }
 
-bool weeknumber_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool weeknumber_clock_face_loop(movement_event_t event, void *context) {
     weeknumber_clock_state_t *state = (weeknumber_clock_state_t *)context;
     char buf[11];
     uint8_t pos;
@@ -133,20 +132,18 @@ bool weeknumber_clock_face_loop(movement_event_t event, movement_settings_t *set
             movement_play_signal();
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void weeknumber_clock_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void weeknumber_clock_face_resign(void *context) {
     (void) context;
 }
 
-bool weeknumber_clock_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool weeknumber_clock_face_wants_background_task(void *context) {
     weeknumber_clock_state_t *state = (weeknumber_clock_state_t *)context;
     if (!state->signal_enabled) return false;
 

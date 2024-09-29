@@ -211,10 +211,10 @@ typedef struct {
 
 // PUBLIC WATCH FACE FUNCTIONS ////////////////////////////////////////////////
 
-void place_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void place_face_activate(movement_settings_t *settings, void *context);
-bool place_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void place_face_resign(movement_settings_t *settings, void *context);
+void place_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void place_face_activate(void *context);
+bool place_face_loop(movement_event_t event, void *context);
+void place_face_resign(void *context);
 
 void place_latlon_to_olc(char *pluscode, double latitude, double longitude);
 void place_latlon_to_geohash(char *geohash, double latitude, double longitude);

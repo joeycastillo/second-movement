@@ -59,14 +59,13 @@ static inline void load_countdown(countdown_state_t *state) {
     state->seconds = state->set_seconds;
 }
 
-static inline void button_beep(movement_settings_t *settings) {
+static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound())
         watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
-static void schedule_countdown(countdown_state_t *state, movement_settings_t *settings) {
-    (void) settings;
+static void schedule_countdown(countdown_state_t *state) {
 
     // Calculate the new state->now_ts but don't update it until we've updated the target - 
     // avoid possible race where the old target is compared to the new time and immediately triggers
@@ -77,15 +76,15 @@ static void schedule_countdown(countdown_state_t *state, movement_settings_t *se
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
 }
 
-static void auto_repeat(countdown_state_t *state, movement_settings_t *settings) {
+static void auto_repeat(countdown_state_t *state) {
     movement_play_alarm();
     load_countdown(state);
-    schedule_countdown(state, settings);
+    schedule_countdown(state);
 }
 
-static void start(countdown_state_t *state, movement_settings_t *settings) {
+static void start(countdown_state_t *state) {
     state->mode = cd_running;
-    schedule_countdown(state, settings);
+    schedule_countdown(state);
 }
 
 
@@ -153,9 +152,9 @@ static void ring(countdown_state_t *state) {
     reset(state);
 }
 
-static void times_up(movement_settings_t *settings, countdown_state_t *state) {
+static void times_up(countdown_state_t *state) {
     if(state->repeat) {
-        auto_repeat(state, settings);
+        auto_repeat(state);
     }
     else {
         ring(state);
@@ -180,8 +179,7 @@ static void settings_increment(countdown_state_t *state) {
     return;
 }
 
-void countdown_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void countdown_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -195,8 +193,7 @@ void countdown_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void countdown_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void countdown_face_activate(void *context) {
     countdown_state_t *state = (countdown_state_t *)context;
     if(state->mode == cd_running) {
         watch_date_time now = watch_rtc_get_date_time();
@@ -211,8 +208,7 @@ void countdown_face_activate(movement_settings_t *settings, void *context) {
     quick_ticks_running = false;
 }
 
-bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool countdown_face_loop(movement_event_t event, void *context) {
     countdown_state_t *state = (countdown_state_t *)context;
 
     switch (event.event_type) {
@@ -244,7 +240,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                     break;
                 case cd_paused:
                     reset(state);
-                    button_beep(settings);
+                    button_beep();
                     break;
                 case cd_setting:
                     state->selection++;
@@ -253,7 +249,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                         state->mode = cd_reset;
                         store_countdown(state);
                         movement_request_tick_frequency(1);
-                        button_beep(settings);
+                        button_beep();
                     }
                     break;
             }
@@ -263,14 +259,14 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             switch(state->mode) {
                 case cd_running:
                     pause(state);
-                    button_beep(settings);
+                    button_beep();
                     break;
                 case cd_reset:
                 case cd_paused:
                     if (!(state->hours == 0 && state->minutes == 0 && state->seconds == 0)) {
                         // Only start the timer if we have a valid time.
-                        start(state, settings);
-                        button_beep(settings);
+                        start(state);
+                        button_beep();
                         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
                     }
                     break;
@@ -286,7 +282,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                     // long press in reset mode enters settings
                     state->mode = cd_setting;
                     movement_request_tick_frequency(4);
-                    button_beep(settings);
+                    button_beep();
                     break;
                 case cd_setting:
                     // long press in settings mode starts quick ticks for adjusting the time
@@ -314,7 +310,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                 }
             } else {
                 // Toggle auto-repeat
-                button_beep(settings);
+                button_beep();
                 state->repeat = !state->repeat;
                 if(state->repeat)
                     watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -326,7 +322,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             abort_quick_ticks(state);
             break;
         case EVENT_BACKGROUND_TASK:
-            times_up(settings, state);
+            times_up(state);
             break;
         case EVENT_TIMEOUT:
             if (state->mode == cd_setting) {
@@ -334,7 +330,7 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
                 state->mode = cd_reset;
                 store_countdown(state);
                 movement_request_tick_frequency(1);
-                button_beep(settings);
+                button_beep();
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
@@ -342,15 +338,14 @@ bool countdown_face_loop(movement_event_t event, movement_settings_t *settings, 
             // intentionally squelch the light default event; we only show the light when cd is running or reset
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void countdown_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void countdown_face_resign(void *context) {
     countdown_state_t *state = (countdown_state_t *)context;
     if (state->mode == cd_setting) {
         state->selection = 0;

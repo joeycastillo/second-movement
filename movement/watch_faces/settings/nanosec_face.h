@@ -86,11 +86,11 @@ typedef struct {
     int16_t aging_ppm_pa; // multiplied by 100. Aging per year. 
 } nanosec_state_t;
 
-void nanosec_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void nanosec_face_activate(movement_settings_t *settings, void *context);
-bool nanosec_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void nanosec_face_resign(movement_settings_t *settings, void *context);
-bool nanosec_face_wants_background_task(movement_settings_t *settings, void *context);
+void nanosec_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void nanosec_face_activate(void *context);
+bool nanosec_face_loop(movement_event_t event, void *context);
+void nanosec_face_resign(void *context);
+bool nanosec_face_wants_background_task(void *context);
 void nanosec_ui_save(void);
 void nanosec_save(void);
 float nanosec_get_aging(void);

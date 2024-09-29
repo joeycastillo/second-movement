@@ -47,10 +47,10 @@ typedef struct {
     uint8_t index;
 } solstice_state_t;
 
-void solstice_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void solstice_face_activate(movement_settings_t *settings, void *context);
-bool solstice_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void solstice_face_resign(movement_settings_t *settings, void *context);
+void solstice_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void solstice_face_activate(void *context);
+bool solstice_face_loop(movement_event_t event, void *context);
+void solstice_face_resign(void *context);
 
 #define solstice_face ((const watch_face_t){ \
     solstice_face_setup, \

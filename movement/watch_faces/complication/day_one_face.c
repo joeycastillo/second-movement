@@ -73,8 +73,7 @@ static void _day_one_face_increment(day_one_state_t *state) {
         state->birth_day = 1;
 }
 
-void day_one_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void day_one_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(day_one_state_t));
@@ -92,8 +91,7 @@ void day_one_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     }
 }
 
-void day_one_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void day_one_face_activate(void *context) {
     day_one_state_t *state = (day_one_state_t *)context;
 
     state->current_page = PAGE_DISPLAY;
@@ -107,8 +105,7 @@ void day_one_face_activate(movement_settings_t *settings, void *context) {
     state->birth_day = movement_birthdate.bit.day;
 }
 
-bool day_one_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool day_one_face_loop(movement_event_t event, void *context) {
     day_one_state_t *state = (day_one_state_t *)context;
 
     char buf[9];
@@ -252,15 +249,14 @@ bool day_one_face_loop(movement_event_t event, movement_settings_t *settings, vo
             }
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void day_one_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void day_one_face_resign(void *context) {
     day_one_state_t *state = (day_one_state_t *)context;
 
     // if the user changed their birth date, store it to the birth date register

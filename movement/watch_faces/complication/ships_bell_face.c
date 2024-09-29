@@ -61,8 +61,7 @@ static void ships_bell_draw(ships_bell_state_t *state) {
     watch_display_string(buf, 3);
 }
 
-void ships_bell_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void) settings;
+void ships_bell_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -71,8 +70,7 @@ void ships_bell_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void ships_bell_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void ships_bell_face_activate(void *context) {
 
     ships_bell_state_t *state = (ships_bell_state_t *) context;
     if (state->bell_enabled) watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -82,8 +80,7 @@ void ships_bell_face_activate(movement_settings_t *settings, void *context) {
     watch_set_colon();
 }
 
-bool ships_bell_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool ships_bell_face_loop(movement_event_t event, void *context) {
 
     ships_bell_state_t *state = (ships_bell_state_t *) context;
 
@@ -116,20 +113,18 @@ bool ships_bell_face_loop(movement_event_t event, movement_settings_t *settings,
             }
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void ships_bell_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void ships_bell_face_resign(void *context) {
     (void) context;
 }
 
-bool ships_bell_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool ships_bell_face_wants_background_task(void *context) {
 
     ships_bell_state_t *state = (ships_bell_state_t *) context;
     if (!state->bell_enabled) return false;

@@ -63,7 +63,7 @@ static void _alarm_set_signal(alarm_state_t *state) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-static void _alarm_face_draw(movement_settings_t *settings, alarm_state_t *state, uint8_t subsecond) {
+static void _alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     char buf[12];
 
     uint8_t i = 0;
@@ -119,20 +119,20 @@ static void _alarm_face_draw(movement_settings_t *settings, alarm_state_t *state
     _alarm_set_signal(state);
 }
 
-static void _alarm_initiate_setting(movement_settings_t *settings, alarm_state_t *state, uint8_t subsecond) {
+static void _alarm_initiate_setting(alarm_state_t *state, uint8_t subsecond) {
     state->is_setting = true;
     state->setting_state = 0;
     movement_request_tick_frequency(4);
-    _alarm_face_draw(settings, state, subsecond);
+    _alarm_face_draw(state, subsecond);
 }
 
-static void _alarm_resume_setting(movement_settings_t *settings, alarm_state_t *state, uint8_t subsecond) {
+static void _alarm_resume_setting(alarm_state_t *state, uint8_t subsecond) {
     state->is_setting = false;
     movement_request_tick_frequency(1);
-    _alarm_face_draw(settings, state, subsecond);
+    _alarm_face_draw(state, subsecond);
 }
 
-static void _alarm_update_alarm_enabled(movement_settings_t *settings, alarm_state_t *state) {
+static void _alarm_update_alarm_enabled(alarm_state_t *state) {
     // save indication for active alarms to movement settings
     bool active_alarms = false;
     watch_date_time now;
@@ -199,8 +199,7 @@ static void _abort_quick_ticks(alarm_state_t *state) {
     }
 }
 
-void alarm_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void) settings;
+void alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -218,24 +217,22 @@ void alarm_face_setup(movement_settings_t *settings, uint8_t watch_face_index, v
     }
 }
 
-void alarm_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void alarm_face_activate(void *context) {
     (void) context;
     watch_set_colon();
 }
 
-void alarm_face_resign(movement_settings_t *settings, void *context) {
+void alarm_face_resign(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     state->is_setting = false;
-    _alarm_update_alarm_enabled(settings, state);
+    _alarm_update_alarm_enabled(state);
     watch_set_led_off();
     state->alarm_quick_ticks = false;
     _wait_ticks = -1;
     movement_request_tick_frequency(1);
 }
 
-bool alarm_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool alarm_face_wants_background_task(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     watch_date_time now = watch_rtc_get_date_time();
     // just a failsafe: never fire more than one alarm within a minute
@@ -258,12 +255,11 @@ bool alarm_face_wants_background_task(movement_settings_t *settings, void *conte
     }
     state->alarm_handled_minute = -1;
     // update the movement's alarm indicator five times an hour
-    if (now.unit.minute % 12 == 0) _alarm_update_alarm_enabled(settings, state);
+    if (now.unit.minute % 12 == 0) _alarm_update_alarm_enabled(state);
     return false;
 }
 
-bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool alarm_face_loop(movement_event_t event, void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
 
     switch (event.event_type) {
@@ -291,25 +287,25 @@ bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void
         }
         // fall through
     case EVENT_ACTIVATE:
-        _alarm_face_draw(settings, state, event.subsecond);
+        _alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_LIGHT_BUTTON_UP:
         if (!state->is_setting) {
             movement_illuminate_led();
-            _alarm_initiate_setting(settings, state, event.subsecond);
+            _alarm_initiate_setting(state, event.subsecond);
             break;
         }
         state->setting_state += 1;
         if (state->setting_state >= ALARM_SETTING_STATES) {
             // we have done a full settings cycle, so resume to normal
-            _alarm_resume_setting(settings, state, event.subsecond);
+            _alarm_resume_setting(state, event.subsecond);
         }
         break;
     case EVENT_LIGHT_LONG_PRESS:
         if (state->is_setting) {
-            _alarm_resume_setting(settings, state, event.subsecond);
+            _alarm_resume_setting(state, event.subsecond);
         } else {
-            _alarm_initiate_setting(settings, state, event.subsecond);
+            _alarm_initiate_setting(state, event.subsecond);
         }
         break;
     case EVENT_ALARM_BUTTON_UP:
@@ -357,7 +353,7 @@ bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void
             // auto enable an alarm if user sets anything
             if (state->setting_state > alarm_setting_idx_alarm) state->alarm[state->alarm_idx].enabled = true;
         }
-        _alarm_face_draw(settings, state, event.subsecond);
+        _alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_ALARM_LONG_PRESS:
         if (!state->is_setting) {
@@ -382,7 +378,7 @@ bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void
                 break;
             }
         }
-        _alarm_face_draw(settings, state, event.subsecond);
+        _alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_ALARM_LONG_UP:
         if (state->is_setting) {
@@ -414,7 +410,7 @@ bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void
             state->alarm[state->alarm_playing_idx].beeps = 5;
             state->alarm[state->alarm_playing_idx].pitch = 1;
             state->alarm[state->alarm_playing_idx].enabled = false;
-            _alarm_update_alarm_enabled(settings, state);
+            _alarm_update_alarm_enabled(state);
         }
         break;
     case EVENT_TIMEOUT:
@@ -424,7 +420,7 @@ bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void
         // don't light up every time light is hit
         break;
     default:
-        movement_default_loop_handler(event, settings);
+        movement_default_loop_handler(event);
         break;
     }
 

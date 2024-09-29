@@ -72,8 +72,7 @@ static void _thermistor_logging_face_update_display(thermistor_logger_state_t *l
     watch_display_string(buf, 0);
 }
 
-void thermistor_logging_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void thermistor_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(thermistor_logger_state_t));
@@ -81,14 +80,13 @@ void thermistor_logging_face_setup(movement_settings_t *settings, uint8_t watch_
     }
 }
 
-void thermistor_logging_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_logging_face_activate(void *context) {
     thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
     logger_state->display_index = 0;
     logger_state->ts_ticks = 0;
 }
 
-bool thermistor_logging_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool thermistor_logging_face_loop(movement_event_t event, void *context) {
     thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
     switch (event.event_type) {
         case EVENT_TIMEOUT:
@@ -118,20 +116,18 @@ bool thermistor_logging_face_loop(movement_event_t event, movement_settings_t *s
             _thermistor_logging_face_log_data(logger_state);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void thermistor_logging_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_logging_face_resign(void *context) {
     (void) context;
 }
 
-bool thermistor_logging_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool thermistor_logging_face_wants_background_task(void *context) {
     (void) context;
     // this will get called at the top of each minute, so all we check is if we're at the top of the hour as well.
     // if we are, we ask for a background task.

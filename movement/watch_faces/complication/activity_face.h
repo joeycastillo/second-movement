@@ -71,10 +71,10 @@
 
 #include "movement.h"
 
-void activity_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void activity_face_activate(movement_settings_t *settings, void *context);
-bool activity_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void activity_face_resign(movement_settings_t *settings, void *context);
+void activity_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void activity_face_activate(void *context);
+bool activity_face_loop(movement_event_t event, void *context);
+void activity_face_resign(void *context);
 
 #define activity_face ((const watch_face_t){ \
     activity_face_setup, \

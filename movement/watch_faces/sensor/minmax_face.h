@@ -51,11 +51,11 @@ typedef struct {
   float hourly_maxs[LOGGING_DATA_POINTS];
 } minmax_state_t;
 
-void minmax_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void minmax_face_activate(movement_settings_t *settings, void *context);
-bool minmax_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void minmax_face_resign(movement_settings_t *settings, void *context);
-bool minmax_face_wants_background_task(movement_settings_t *settings, void *context);
+void minmax_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void minmax_face_activate(void *context);
+bool minmax_face_loop(movement_event_t event, void *context);
+void minmax_face_resign(void *context);
+bool minmax_face_wants_background_task(void *context);
 
 #define minmax_face ((const watch_face_t){ \
     minmax_face_setup, \

@@ -208,8 +208,7 @@ static void display_animation(tarot_state_t *state) {
 // ---------------------------
 // Standard watch face methods
 // ---------------------------
-void tarot_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void tarot_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(tarot_state_t));
@@ -221,8 +220,7 @@ void tarot_face_setup(movement_settings_t *settings, uint8_t watch_face_index, v
     #endif
 }
 
-void tarot_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tarot_face_activate(void *context) {
     tarot_state_t *state = (tarot_state_t *)context;
 
     watch_display_string("TA", 0);
@@ -231,8 +229,7 @@ void tarot_face_activate(movement_settings_t *settings, void *context) {
     state->major_arcana_only = true;
 }
 
-bool tarot_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool tarot_face_loop(movement_event_t event, void *context) {
     tarot_state_t *state = (tarot_state_t *)context;
 
     if (state->is_picking && event.event_type != EVENT_TICK) {
@@ -288,14 +285,13 @@ bool tarot_face_loop(movement_event_t event, movement_settings_t *settings, void
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void tarot_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tarot_face_resign(void *context) {
     (void) context;
 }

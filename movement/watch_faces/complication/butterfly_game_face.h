@@ -108,10 +108,10 @@ typedef struct {
     uint8_t score_p2 : 5;
 } butterfly_game_state_t;
 
-void butterfly_game_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void butterfly_game_face_activate(movement_settings_t *settings, void *context);
-bool butterfly_game_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void butterfly_game_face_resign(movement_settings_t *settings, void *context);
+void butterfly_game_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void butterfly_game_face_activate(void *context);
+bool butterfly_game_face_loop(movement_event_t event, void *context);
+void butterfly_game_face_resign(void *context);
 
 #define butterfly_game_face ((const watch_face_t){ \
     butterfly_game_face_setup, \

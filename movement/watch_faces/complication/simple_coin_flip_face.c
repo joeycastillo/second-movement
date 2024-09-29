@@ -34,8 +34,7 @@
 
 #define SIMPLE_COIN_FLIP_REQUIRE_LONG_PRESS_FOR_REFLIP true
 
-void simple_coin_flip_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void simple_coin_flip_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(simple_coin_flip_state_t));
@@ -43,8 +42,7 @@ void simple_coin_flip_face_setup(movement_settings_t *settings, uint8_t watch_fa
     }
 }
 
-void simple_coin_flip_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_coin_flip_face_activate(void *context) {
     (void) context;
 }
 
@@ -74,7 +72,7 @@ static void animation_2() {
     watch_set_pixel(2, 4);
 }
 
-bool simple_coin_flip_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool simple_coin_flip_face_loop(movement_event_t event, void *context) {
     simple_coin_flip_state_t *state = (simple_coin_flip_state_t *)context;
 
     switch (event.event_type) {
@@ -126,14 +124,13 @@ bool simple_coin_flip_face_loop(movement_event_t event, movement_settings_t *set
             movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void simple_coin_flip_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void simple_coin_flip_face_resign(void *context) {
     (void) context;
 }
 

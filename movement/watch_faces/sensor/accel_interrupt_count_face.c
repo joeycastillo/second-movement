@@ -55,8 +55,7 @@ static void _accel_interrupt_count_face_configure_threshold(uint8_t threshold) {
     lis2dw_configure_wakeup_int1(threshold, false, true);
 }
 
-void accel_interrupt_count_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(accel_interrupt_count_state_t));
@@ -75,7 +74,7 @@ void accel_interrupt_count_face_setup(movement_settings_t *settings, uint8_t wat
     }
 }
 
-void accel_interrupt_count_face_activate(movement_settings_t *settings, void *context) {
+void accel_interrupt_count_face_activate(void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
     // never in settings mode at the start
@@ -85,7 +84,7 @@ void accel_interrupt_count_face_activate(movement_settings_t *settings, void *co
     movement_set_low_energy_timeout(0);
 }
 
-bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
     if (state->is_setting) {
@@ -107,7 +106,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t
                 state->is_setting = false;
                 break;
             default:
-                movement_default_loop_handler(event, settings);
+                movement_default_loop_handler(event);
                 break;
         }
     } else {
@@ -142,7 +141,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t
                 }
                 return false;
             default:
-                movement_default_loop_handler(event, settings);
+                movement_default_loop_handler(event);
                 break;
         }
     }
@@ -150,13 +149,11 @@ bool accel_interrupt_count_face_loop(movement_event_t event, movement_settings_t
     return true;
 }
 
-void accel_interrupt_count_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void accel_interrupt_count_face_resign(void *context) {
     (void) context;
 }
 
-bool accel_interrupt_count_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool accel_interrupt_count_face_wants_background_task(void *context) {
     (void) context;
     return false;
 }

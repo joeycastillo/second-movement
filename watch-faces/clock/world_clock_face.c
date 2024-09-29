@@ -35,8 +35,7 @@ void _update_timezone_offset(world_clock_state_t *state) {
     state->current_offset = movement_get_current_timezone_offset_for_zone(state->settings.bit.timezone_index);
 }
 
-void world_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void world_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(world_clock_state_t));
@@ -51,8 +50,7 @@ void world_clock_face_setup(movement_settings_t *settings, uint8_t watch_face_in
     }
 }
 
-void world_clock_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void world_clock_face_activate(void *context) {
     world_clock_state_t *state = (world_clock_state_t *)context;
 
     state->current_screen = 0;
@@ -61,7 +59,7 @@ void world_clock_face_activate(movement_settings_t *settings, void *context) {
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 }
 
-static bool world_clock_face_do_display_mode(movement_event_t event, movement_settings_t *settings, world_clock_state_t *state) {
+static bool world_clock_face_do_display_mode(movement_event_t event, world_clock_state_t *state) {
     char buf[11];
 
     uint32_t previous_date_time;
@@ -121,13 +119,13 @@ static bool world_clock_face_do_display_mode(movement_event_t event, movement_se
             state->current_screen = 1;
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-static bool _world_clock_face_do_settings_mode(movement_event_t event, movement_settings_t *settings, world_clock_state_t *state) {
+static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clock_state_t *state) {
     switch (event.event_type) {
         case EVENT_MODE_BUTTON_UP:
             if (state->backup_register) watch_store_backup_data(state->settings.reg, state->backup_register);
@@ -141,7 +139,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, movement_
                 state->current_screen = 0;
                 if (state->backup_register) watch_store_backup_data(state->settings.reg, state->backup_register);
                 event.event_type = EVENT_ACTIVATE;
-                return world_clock_face_do_display_mode(event, settings, state);
+                return world_clock_face_do_display_mode(event, state);
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -198,17 +196,16 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, movement_
     return true;
 }
 
-bool world_clock_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool world_clock_face_loop(movement_event_t event, void *context) {
     world_clock_state_t *state = (world_clock_state_t *)context;
 
     if (state->current_screen == 0) {
-        return world_clock_face_do_display_mode(event, settings, state);
+        return world_clock_face_do_display_mode(event, state);
     } else {
-        return _world_clock_face_do_settings_mode(event, settings, state);
+        return _world_clock_face_do_settings_mode(event, state);
     }
 }
 
-void world_clock_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void world_clock_face_resign(void *context) {
     (void) context;
 }

@@ -40,10 +40,10 @@ typedef struct {
     size_t note_ind;
 } tuning_tones_state_t;
 
-void tuning_tones_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void tuning_tones_face_activate(movement_settings_t *settings, void *context);
-bool tuning_tones_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void tuning_tones_face_resign(movement_settings_t *settings, void *context);
+void tuning_tones_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void tuning_tones_face_activate(void *context);
+bool tuning_tones_face_loop(movement_event_t event, void *context);
+void tuning_tones_face_resign(void *context);
 
 #define tuning_tones_face ((const watch_face_t){ \
     tuning_tones_face_setup, \

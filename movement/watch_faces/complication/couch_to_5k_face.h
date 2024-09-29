@@ -70,10 +70,10 @@ typedef struct {
     uint16_t timer;
 } couch_to_5k_state_t;
 
-void couch_to_5k_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void couch_to_5k_face_activate(movement_settings_t *settings, void *context);
-bool couch_to_5k_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void couch_to_5k_face_resign(movement_settings_t *settings, void *context);
+void couch_to_5k_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void couch_to_5k_face_activate(void *context);
+bool couch_to_5k_face_loop(movement_event_t event, void *context);
+void couch_to_5k_face_resign(void *context);
 
 #define couch_to_5k_face ((const watch_face_t){ \
     couch_to_5k_face_setup, \

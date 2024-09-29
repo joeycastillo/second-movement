@@ -33,7 +33,7 @@
 #define sl_SELECTIONS 6
 #define DEFAULT_MINUTES { 5,4,1,0,0,0 }
 
-static inline int32_t get_tz_offset(movement_settings_t *settings) {
+static inline int32_t get_tz_offset() {
     return movement_get_current_timezone_offset();
 }
 
@@ -62,8 +62,7 @@ static void counting(sailing_state_t *state) {
     watch_set_indicator(WATCH_INDICATOR_LAP);
 }
 
-static void draw(sailing_state_t *state, uint8_t subsecond, movement_settings_t *settings) {
-    (void) settings;
+static void draw(sailing_state_t *state, uint8_t subsecond) {
 
     char tmp[24];
     char buf[16];
@@ -152,7 +151,7 @@ static void draw(sailing_state_t *state, uint8_t subsecond, movement_settings_t 
     watch_display_string(buf, 0);
 }
 
-static void ring(sailing_state_t *state, movement_settings_t *settings) {    
+static void ring(sailing_state_t *state) {    
 // if ring is called in background (while on another face), a button press can interrupt and cancel the execution.
 // To reduce the probability of cancelling all future alarms, the new alarm is set as soon as possible after calling ring.
     movement_cancel_background_task();
@@ -185,7 +184,7 @@ static void ring(sailing_state_t *state, movement_settings_t *settings) {
     beepflag++;
 }
 
-static void start(sailing_state_t *state, movement_settings_t *settings) {//gets called by starting / switching to next signal
+static void start(sailing_state_t *state) {//gets called by starting / switching to next signal
     while (beepseconds[beepflag] < state->minutes[state->index]*60) {
         state->index++;
     }
@@ -234,8 +233,7 @@ static void settings_increment(sailing_state_t *state) {
     return;
 }
 
-void sailing_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void sailing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -248,8 +246,7 @@ void sailing_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     }
 }
 
-void sailing_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void sailing_face_activate(void *context) {
     sailing_state_t *state = (sailing_state_t *)context;
     if(state->mode == sl_running) {
         watch_date_time now = watch_rtc_get_date_time();
@@ -281,8 +278,7 @@ void sailing_face_activate(movement_settings_t *settings, void *context) {
 }
 
 
-bool sailing_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool sailing_face_loop(movement_event_t event, void *context) {
     sailing_state_t *state = (sailing_state_t *)context;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -397,15 +393,14 @@ bool sailing_face_loop(movement_event_t event, movement_settings_t *settings, vo
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void sailing_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void sailing_face_resign(void *context) {
     sailing_state_t *state = (sailing_state_t *)context;
     if (state->mode == sl_setting) {
         state->selection = 0;

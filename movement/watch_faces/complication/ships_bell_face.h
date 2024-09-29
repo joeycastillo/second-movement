@@ -51,11 +51,11 @@ typedef struct {
     uint8_t on_watch;
 } ships_bell_state_t;
 
-void ships_bell_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void ships_bell_face_activate(movement_settings_t *settings, void *context);
-bool ships_bell_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void ships_bell_face_resign(movement_settings_t *settings, void *context);
-bool ships_bell_face_wants_background_task(movement_settings_t *settings, void *context);
+void ships_bell_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void ships_bell_face_activate(void *context);
+bool ships_bell_face_loop(movement_event_t event, void *context);
+void ships_bell_face_resign(void *context);
+bool ships_bell_face_wants_background_task(void *context);
 
 #define ships_bell_face ((const watch_face_t){ \
     ships_bell_face_setup, \

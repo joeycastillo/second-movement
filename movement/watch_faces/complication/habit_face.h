@@ -36,11 +36,11 @@
 
 #include "movement.h"
 
-void habit_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
+void habit_face_setup(uint8_t watch_face_index,
                       void **context_ptr);
-void habit_face_activate(movement_settings_t *settings, void *context);
-bool habit_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void habit_face_resign(movement_settings_t *settings, void *context);
+void habit_face_activate(void *context);
+bool habit_face_loop(movement_event_t event, void *context);
+void habit_face_resign(void *context);
 
 #define habit_face ((const watch_face_t){ \
     habit_face_setup, \

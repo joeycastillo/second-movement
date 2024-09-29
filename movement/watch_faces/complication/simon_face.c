@@ -201,9 +201,8 @@ static void _simon_change_speed(simon_state_t *state){
   }
 }
 
-void simon_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
+void simon_face_setup(uint8_t watch_face_index,
         void **context_ptr) {
-    (void)settings;
     (void)watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(simon_state_t));
@@ -220,7 +219,7 @@ void simon_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
 #endif
 }
 
-void simon_face_activate(movement_settings_t *settings, void *context) {
+void simon_face_activate(void *context) {
   (void) settings;
   (void) context;
   simon_state_t *state = (simon_state_t *)context;
@@ -229,7 +228,7 @@ void simon_face_activate(movement_settings_t *settings, void *context) {
    _timer = 0;
 }
 
-bool simon_face_loop(movement_event_t event, movement_settings_t *settings,
+bool simon_face_loop(movement_event_t event,
         void *context) {
     simon_state_t *state = (simon_state_t *)context;
 
@@ -321,14 +320,13 @@ bool simon_face_loop(movement_event_t event, movement_settings_t *settings,
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void simon_face_resign(movement_settings_t *settings, void *context) {
-    (void)settings;
+void simon_face_resign(void *context) {
     (void)context;
     watch_set_led_off();
     watch_set_buzzer_off();

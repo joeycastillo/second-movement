@@ -121,9 +121,8 @@ static void beep_disable() {
     watch_buzzer_play_note(BUZZER_NOTE_G7, 75);
 }
 
-void world_clock2_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr)
+void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
-    (void) settings;
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -136,9 +135,8 @@ void world_clock2_face_setup(movement_settings_t *settings, uint8_t watch_face_i
     }
 }
 
-void world_clock2_face_activate(movement_settings_t *settings, void *context)
+void world_clock2_face_activate(void *context)
 {
-    (void) settings;
     world_clock2_state_t *state = (world_clock2_state_t *) context;
 
     if (watch_tick_animation_is_running())
@@ -157,7 +155,7 @@ void world_clock2_face_activate(movement_settings_t *settings, void *context)
     refresh_face = true;
 }
 
-static bool mode_display(movement_event_t event, movement_settings_t *settings, world_clock2_state_t *state)
+static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 {
     char buf[11];
     uint8_t pos;
@@ -260,13 +258,13 @@ static bool mode_display(movement_event_t event, movement_settings_t *settings, 
             movement_move_to_next_face();
             break;
 	default:
-	    return movement_default_loop_handler(event, settings);
+	    return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-static bool mode_settings(movement_event_t event, movement_settings_t *settings, world_clock2_state_t *state)
+static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 {
     char buf[11];
     int8_t hours, minutes;
@@ -352,26 +350,25 @@ static bool mode_settings(movement_event_t event, movement_settings_t *settings,
             movement_move_to_next_face();
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-bool world_clock2_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
+bool world_clock2_face_loop(movement_event_t event, void *context)
 {
     world_clock2_state_t *state = (world_clock2_state_t *) context;
     switch (state->current_mode) {
 	case WORLD_CLOCK2_MODE_DISPLAY:
-	    return mode_display(event, settings, state);
+	    return mode_display(event, state);
 	case WORLD_CLOCK2_MODE_SETTINGS:
-	    return mode_settings(event, settings, state);
+	    return mode_settings(event, state);
     }
     return false;
 }
 
-void world_clock2_face_resign(movement_settings_t *settings, void *context)
+void world_clock2_face_resign(void *context)
 {
-    (void) settings;
     (void) context;
 }

@@ -113,7 +113,7 @@ static void _planetary_icon(uint8_t planet) {
  *  This function calculates the start and end of the current phase based on a given geographic location.
  *  It also calculates the start of the next following phase.
  */
-static void _planetary_solar_phases(movement_settings_t *settings, planetary_hours_state_t *state) {
+static void _planetary_solar_phases(planetary_hours_state_t *state) {
     uint8_t phase, h;
     double sunrise, sunset;
     double hour_duration, next_hour_duration;
@@ -222,7 +222,7 @@ static void _planetary_solar_phases(movement_settings_t *settings, planetary_hou
  *  This function calculates the current planetary hour and divides it up into relative minutes and seconds.
  *  It also calculates the current planetary ruler of the hour and of the day.
  */
-static void _planetary_hours(movement_settings_t *settings, planetary_hours_state_t *state) {
+static void _planetary_hours(planetary_hours_state_t *state) {
     char buf[14];
     char ruler[3];
     uint8_t weekday, planet, planetary_hour;
@@ -249,7 +249,7 @@ static void _planetary_hours(movement_settings_t *settings, planetary_hours_stat
 
     // when current phase ends calculate the next phase
     if ( watch_utility_date_time_to_unix_time(utc_now, 0) >= state->phase_end ) {
-        _planetary_solar_phases(settings, state);
+        _planetary_solar_phases(state);
         return;
     }
 
@@ -334,17 +334,15 @@ static void _planetary_hours(movement_settings_t *settings, planetary_hours_stat
 
 // PUBLIC WATCH FACE FUNCTIONS ////////////////////////////////////////////////
 
-void planetary_hours_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void planetary_hours_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(planetary_hours_state_t));
         memset(*context_ptr, 0, sizeof(planetary_hours_state_t));
     }
 }
 
-void planetary_hours_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void planetary_hours_face_activate(void *context) {
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
 #if __EMSCRIPTEN__
@@ -359,11 +357,11 @@ void planetary_hours_face_activate(movement_settings_t *settings, void *context)
 #endif
 
     planetary_hours_state_t *state = (planetary_hours_state_t *)context; 
-    _planetary_solar_phases(settings, state);
+    _planetary_solar_phases(state);
 
 }
 
-bool planetary_hours_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool planetary_hours_face_loop(movement_event_t event, void *context) {
     planetary_hours_state_t *state = (planetary_hours_state_t *)context;
 
     switch (event.event_type) {
@@ -371,32 +369,31 @@ bool planetary_hours_face_loop(movement_event_t event, movement_settings_t *sett
             // Show your initial UI here.
             watch_clear_indicator(WATCH_INDICATOR_PM);
             watch_clear_indicator(WATCH_INDICATOR_24H);
-            _planetary_hours(settings, state);
+            _planetary_hours(state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             state->ruler = (state->ruler + 1) % 3;
-            _planetary_hours(settings, state);
+            _planetary_hours(state);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             state->skip_to_current = true;
-            _planetary_hours(settings, state);
+            _planetary_hours(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
             state->hour++;
-            _planetary_hours(settings, state);
+            _planetary_hours(state);
             break;
         case EVENT_ALARM_LONG_PRESS:
             state->hour--;
-            _planetary_hours(settings, state);
+            _planetary_hours(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
-void planetary_hours_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void planetary_hours_face_resign(void *context) {
     (void) context;
 }
 

@@ -134,8 +134,7 @@ static void pulsometer_cycle_calibration(pulsometer_state_t *pulsometer, int8_t 
     pulsometer_display_calibration(pulsometer);
 }
 
-void pulsometer_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void pulsometer_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -149,8 +148,7 @@ void pulsometer_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void pulsometer_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void pulsometer_face_activate(void *context) {
 
     pulsometer_state_t *pulsometer = context;
 
@@ -161,8 +159,7 @@ void pulsometer_face_activate(movement_settings_t *settings, void *context) {
     pulsometer_display_measurement(pulsometer);
 }
 
-bool pulsometer_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool pulsometer_face_loop(movement_event_t event, void *context) {
 
     pulsometer_state_t *pulsometer = (pulsometer_state_t *) context;
 
@@ -190,14 +187,13 @@ bool pulsometer_face_loop(movement_event_t event, movement_settings_t *settings,
             movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void pulsometer_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void pulsometer_face_resign(void *context) {
     (void) context;
 }

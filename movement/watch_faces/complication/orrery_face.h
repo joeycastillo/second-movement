@@ -85,10 +85,10 @@ typedef struct {
     uint8_t animation_state;
 } orrery_state_t;
 
-void orrery_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void orrery_face_activate(movement_settings_t *settings, void *context);
-bool orrery_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void orrery_face_resign(movement_settings_t *settings, void *context);
+void orrery_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void orrery_face_activate(void *context);
+bool orrery_face_loop(movement_event_t event, void *context);
+void orrery_face_resign(void *context);
 
 #define orrery_face ((const watch_face_t){ \
     orrery_face_setup, \

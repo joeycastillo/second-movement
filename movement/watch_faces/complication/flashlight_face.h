@@ -42,10 +42,10 @@ typedef struct {
     uint8_t unused;
 } flashlight_state_t;
 
-void flashlight_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void flashlight_face_activate(movement_settings_t *settings, void *context);
-bool flashlight_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void flashlight_face_resign(movement_settings_t *settings, void *context);
+void flashlight_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void flashlight_face_activate(void *context);
+bool flashlight_face_loop(movement_event_t event, void *context);
+void flashlight_face_resign(void *context);
 
 #define flashlight_face ((const watch_face_t){ \
     flashlight_face_setup, \

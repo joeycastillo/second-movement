@@ -29,8 +29,7 @@
 
 const uint8_t BEAT_REFRESH_FREQUENCY = 8;
 
-void beats_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void beats_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
     if (*context_ptr == NULL) {
@@ -38,16 +37,14 @@ void beats_face_setup(movement_settings_t *settings, uint8_t watch_face_index, v
     }
 }
 
-void beats_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void beats_face_activate(void *context) {
     beats_face_state_t *state = (beats_face_state_t *)context;
     state->next_subsecond_update = 0;
     state->last_centibeat_displayed = 0;
     movement_request_tick_frequency(BEAT_REFRESH_FREQUENCY);
 }
 
-bool beats_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool beats_face_loop(movement_event_t event, void *context) {
     beats_face_state_t *state = (beats_face_state_t *)context;
     if (event.event_type == EVENT_TICK && event.subsecond != state->next_subsecond_update) {
          return true; // math is hard, don't do it if we don't have to.
@@ -82,15 +79,14 @@ bool beats_face_loop(movement_event_t event, movement_settings_t *settings, void
             watch_display_text(WATCH_POSITION_FULL, buf);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void beats_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void beats_face_resign(void *context) {
     (void) context;
 }
 

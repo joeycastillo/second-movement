@@ -38,8 +38,7 @@ static uint32_t _distance_from_struct(distance_digits_t dist_digits) {
     return retval;
 }
 
-void tachymeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void)settings;
+void tachymeter_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void)watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(tachymeter_state_t));
@@ -51,8 +50,7 @@ void tachymeter_face_setup(movement_settings_t *settings, uint8_t watch_face_ind
     }
 }
 
-void tachymeter_face_activate(movement_settings_t *settings, void *context) {
-    (void)settings;
+void tachymeter_face_activate(void *context) {
     (void)context;
     movement_request_tick_frequency(4); // 4Hz
 }
@@ -91,8 +89,7 @@ static void _tachymeter_face_totals_lcd(tachymeter_state_t *state, bool show_tim
     }
 }
 
-bool tachymeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void)settings;
+bool tachymeter_face_loop(movement_event_t event, void *context) {
     tachymeter_state_t *state = (tachymeter_state_t *)context;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -254,7 +251,7 @@ bool tachymeter_face_loop(movement_event_t event, movement_settings_t *settings,
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
     // return true if the watch can enter standby mode. If you are PWM'ing an LED or buzzing the buzzer here,
@@ -262,8 +259,7 @@ bool tachymeter_face_loop(movement_event_t event, movement_settings_t *settings,
     return true;
 }
 
-void tachymeter_face_resign(movement_settings_t *settings, void *context) {
-    (void)settings;
+void tachymeter_face_resign(void *context) {
     (void)context;
     // handle any cleanup before your watch face goes off-screen.
 }

@@ -101,10 +101,10 @@ typedef struct {
     uint16_t pos;
 } accelerometer_data_acquisition_state_t;
 
-void accelerometer_data_acquisition_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void accelerometer_data_acquisition_face_activate(movement_settings_t *settings, void *context);
-bool accelerometer_data_acquisition_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void accelerometer_data_acquisition_face_resign(movement_settings_t *settings, void *context);
+void accelerometer_data_acquisition_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void accelerometer_data_acquisition_face_activate(void *context);
+bool accelerometer_data_acquisition_face_loop(movement_event_t event, void *context);
+void accelerometer_data_acquisition_face_resign(void *context);
 
 #define accelerometer_data_acquisition_face ((const watch_face_t){ \
     accelerometer_data_acquisition_face_setup, \

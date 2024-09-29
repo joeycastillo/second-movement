@@ -39,19 +39,16 @@ static void _voltage_face_update_display(void) {
     watch_display_string(buf, 0);
 }
 
-void voltage_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void voltage_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
 }
 
-void voltage_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void voltage_face_activate(void *context) {
     (void) context;
 }
 
-bool voltage_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool voltage_face_loop(movement_event_t event, void *context) {
     (void) context;
     watch_date_time date_time;
     switch (event.event_type) {
@@ -81,14 +78,13 @@ bool voltage_face_loop(movement_event_t event, movement_settings_t *settings, vo
             }
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void voltage_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void voltage_face_resign(void *context) {
     (void) context;
 }

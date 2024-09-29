@@ -30,8 +30,7 @@
 static const int8_t _sound_seq_start[] = {BUZZER_NOTE_C8, 2, 0};
 static const int8_t _sound_seq_beat[] = {BUZZER_NOTE_C6, 2, 0};
 
-void metronome_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void metronome_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(metronome_state_t));
@@ -39,8 +38,7 @@ void metronome_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void metronome_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void metronome_face_activate(void *context) {
     metronome_state_t *state = (metronome_state_t *)context;
     movement_request_tick_frequency(2);
     if (state->bpm == 0) {
@@ -200,7 +198,7 @@ static void _metronome_update_setting(metronome_state_t *state) {
     watch_display_string(buf, 0);
 }
 
-bool metronome_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool metronome_face_loop(movement_event_t event, void *context) {
     metronome_state_t *state = (metronome_state_t *)context;
 
     switch (event.event_type) {
@@ -251,13 +249,12 @@ bool metronome_face_loop(movement_event_t event, movement_settings_t *settings, 
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
-void metronome_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void metronome_face_resign(void *context) {
     (void) context;
 }
 

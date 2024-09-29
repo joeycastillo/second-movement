@@ -81,10 +81,10 @@ typedef struct {
 } sailing_state_t;
 
 
-void sailing_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void sailing_face_activate(movement_settings_t *settings, void *context);
-bool sailing_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void sailing_face_resign(movement_settings_t *settings, void *context);
+void sailing_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void sailing_face_activate(void *context);
+bool sailing_face_loop(movement_event_t event, void *context);
+void sailing_face_resign(void *context);
 
 #define sailing_face ((const watch_face_t){ \
     sailing_face_setup, \

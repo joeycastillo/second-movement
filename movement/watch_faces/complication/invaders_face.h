@@ -65,10 +65,10 @@ typedef struct {
     bool sound_on;
 } invaders_state_t;
 
-void invaders_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void invaders_face_activate(movement_settings_t *settings, void *context);
-bool invaders_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void invaders_face_resign(movement_settings_t *settings, void *context);
+void invaders_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void invaders_face_activate(void *context);
+bool invaders_face_loop(movement_event_t event, void *context);
+void invaders_face_resign(void *context);
 
 #define invaders_face ((const watch_face_t){ \
     invaders_face_setup, \

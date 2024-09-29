@@ -83,8 +83,7 @@ static void _minmax_face_update_display(float temperature_c, bool in_fahrenheit)
 }
 
 
-void minmax_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void minmax_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(minmax_state_t));
@@ -93,14 +92,13 @@ void minmax_face_setup(movement_settings_t *settings, uint8_t watch_face_index, 
 }
 
 
-void minmax_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void minmax_face_activate(void *context) {
     minmax_state_t *state = (minmax_state_t *)context;
     state->show_min = true;
     watch_display_string("MN", 0); // Start with minimum temp
 }
 
-bool minmax_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool minmax_face_loop(movement_event_t event, void *context) {
     minmax_state_t *state = (minmax_state_t *)context;
     float temp_c;
 
@@ -134,20 +132,18 @@ bool minmax_face_loop(movement_event_t event, movement_settings_t *settings, voi
             _minmax_face_log_data(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
 
-void minmax_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void minmax_face_resign(void *context) {
     (void) context;
 }
 
 
-bool minmax_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool minmax_face_wants_background_task(void *context) {
     (void) context;
     // this will get called at the top of each minute; always request bg task
     return true;

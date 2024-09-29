@@ -71,10 +71,10 @@
 
 #include "movement.h"
 
-void pulsometer_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void pulsometer_face_activate(movement_settings_t *settings, void *context);
-bool pulsometer_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void pulsometer_face_resign(movement_settings_t *settings, void *context);
+void pulsometer_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void pulsometer_face_activate(void *context);
+bool pulsometer_face_loop(movement_event_t event, void *context);
+void pulsometer_face_resign(void *context);
 
 #define pulsometer_face ((const watch_face_t){ \
     pulsometer_face_setup, \

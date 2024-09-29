@@ -26,8 +26,7 @@
 #include <string.h>
 #include "french_revolutionary_face.h"
 
-void french_revolutionary_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void french_revolutionary_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(french_revolutionary_state_t));
@@ -42,15 +41,14 @@ void french_revolutionary_face_setup(movement_settings_t *settings, uint8_t watc
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void french_revolutionary_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void french_revolutionary_face_activate(void *context) {
     french_revolutionary_state_t *state = (french_revolutionary_state_t *)context;
 
     // Handle any tasks related to your watch face coming on screen.
     state->colon_set_after_splash = false;
 }
 
-bool french_revolutionary_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool french_revolutionary_face_loop(movement_event_t event, void *context) {
     french_revolutionary_state_t *state = (french_revolutionary_state_t *)context;
 
     char buf[11];
@@ -122,7 +120,7 @@ bool french_revolutionary_face_loop(movement_event_t event, movement_settings_t 
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
@@ -134,8 +132,7 @@ bool french_revolutionary_face_loop(movement_event_t event, movement_settings_t 
     return true;
 }
 
-void french_revolutionary_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void french_revolutionary_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

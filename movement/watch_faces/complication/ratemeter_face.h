@@ -42,10 +42,10 @@ typedef struct {
     int16_t ticks;
 } ratemeter_state_t;
 
-void ratemeter_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void ratemeter_face_activate(movement_settings_t *settings, void *context);
-bool ratemeter_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void ratemeter_face_resign(movement_settings_t *settings, void *context);
+void ratemeter_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void ratemeter_face_activate(void *context);
+bool ratemeter_face_loop(movement_event_t event, void *context);
+void ratemeter_face_resign(void *context);
 
 #define ratemeter_face ((const watch_face_t){ \
     ratemeter_face_setup, \

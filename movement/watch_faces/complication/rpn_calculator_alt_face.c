@@ -30,8 +30,7 @@
 
 static void show_fn(calculator_state_t *state, uint8_t subsecond);
 
-void rpn_calculator_alt_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -125,8 +124,7 @@ static void show_number(double num) {
 #define PUSH(x) (s->stack[++s->stack_size - 1] = x)
 #define POP() (s->stack[s->stack_size-- - 1])
 
-void rpn_calculator_alt_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void rpn_calculator_alt_face_activate(void *context) {
     calculator_state_t *s = (calculator_state_t *)context;
     s->min = s->max = NAN;
 }
@@ -344,9 +342,8 @@ static void show_stack_top(calculator_state_t *s) {
     }
 }
 
-bool rpn_calculator_alt_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
     calculator_state_t *s = (calculator_state_t *)context;
-    (void) settings;
 
     int proposed_stack_size;
 
@@ -410,7 +407,7 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, movement_settings_t *s
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -419,8 +416,7 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, movement_settings_t *s
     return true;
 }
 
-void rpn_calculator_alt_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void rpn_calculator_alt_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

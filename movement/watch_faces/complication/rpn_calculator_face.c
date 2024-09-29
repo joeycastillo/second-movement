@@ -232,8 +232,7 @@ static void draw(rpn_calculator_state_t *state, uint8_t subsecond) {
     watch_display_string(buf, 0);
 }
 
-void rpn_calculator_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void rpn_calculator_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(rpn_calculator_state_t));
@@ -245,15 +244,13 @@ void rpn_calculator_face_setup(movement_settings_t *settings, uint8_t watch_face
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void rpn_calculator_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void rpn_calculator_face_activate(void *context) {
     (void) context;
 
     // Handle any tasks related to your watch face coming on screen.
 }
 
-bool rpn_calculator_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool rpn_calculator_face_loop(movement_event_t event, void *context) {
 
     rpn_calculator_state_t *state = (rpn_calculator_state_t *)context;
 
@@ -333,7 +330,7 @@ bool rpn_calculator_face_loop(movement_event_t event, movement_settings_t *setti
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -342,8 +339,7 @@ bool rpn_calculator_face_loop(movement_event_t event, movement_settings_t *setti
     return true;
 }
 
-void rpn_calculator_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void rpn_calculator_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

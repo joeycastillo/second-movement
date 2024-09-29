@@ -71,21 +71,19 @@ static void _throw_animation(geomancy_state_t *state);
 
 // WATCH FACE FUNCTIONS ///////////////////////////////////////////////////////
 
-void geomancy_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void geomancy_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(geomancy_state_t));
         memset(*context_ptr, 0, sizeof(geomancy_state_t));
     }
 }
 
-void geomancy_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void geomancy_face_activate(void *context) {
     (void) context;
 }
 
-bool geomancy_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool geomancy_face_loop(movement_event_t event, void *context) {
     geomancy_state_t *state = (geomancy_state_t *)context;
 
     switch (event.event_type) {
@@ -137,13 +135,12 @@ bool geomancy_face_loop(movement_event_t event, movement_settings_t *settings, v
             geomancy_face_display(state);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
     return true;
 }
 
-void geomancy_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void geomancy_face_resign(void *context) {
     (void) context;
 }
 

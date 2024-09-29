@@ -75,10 +75,10 @@ typedef struct {
     movement_birthdate_t target_date;
 } time_left_state_t;
 
-void time_left_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void time_left_face_activate(movement_settings_t *settings, void *context);
-bool time_left_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void time_left_face_resign(movement_settings_t *settings, void *context);
+void time_left_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void time_left_face_activate(void *context);
+bool time_left_face_loop(movement_event_t event, void *context);
+void time_left_face_resign(void *context);
 
 #define time_left_face ((const watch_face_t){ \
     time_left_face_setup, \

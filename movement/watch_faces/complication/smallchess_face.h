@@ -74,10 +74,10 @@ typedef struct {
     uint8_t ai_from_square, ai_to_square;
 } smallchess_face_state_t;
 
-void smallchess_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void smallchess_face_activate(movement_settings_t *settings, void *context);
-bool smallchess_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void smallchess_face_resign(movement_settings_t *settings, void *context);
+void smallchess_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void smallchess_face_activate(void *context);
+bool smallchess_face_loop(movement_event_t event, void *context);
+void smallchess_face_resign(void *context);
 
 #define smallchess_face ((const watch_face_t){ \
     smallchess_face_setup, \

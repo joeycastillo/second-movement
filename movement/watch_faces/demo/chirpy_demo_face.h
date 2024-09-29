@@ -52,10 +52,10 @@
 
 #include "movement.h"
 
-void chirpy_demo_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void chirpy_demo_face_activate(movement_settings_t *settings, void *context);
-bool chirpy_demo_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void chirpy_demo_face_resign(movement_settings_t *settings, void *context);
+void chirpy_demo_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void chirpy_demo_face_activate(void *context);
+bool chirpy_demo_face_loop(movement_event_t event, void *context);
+void chirpy_demo_face_resign(void *context);
 
 #define chirpy_demo_face ((const watch_face_t){ \
     chirpy_demo_face_setup, \

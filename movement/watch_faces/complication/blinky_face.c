@@ -27,8 +27,7 @@
 #include "blinky_face.h"
 #include "watch.h"
 
-void blinky_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void blinky_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(blinky_face_state_t));
@@ -36,8 +35,7 @@ void blinky_face_setup(movement_settings_t *settings, uint8_t watch_face_index, 
     }
 }
 
-void blinky_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void blinky_face_activate(void *context) {
     blinky_face_state_t *state = (blinky_face_state_t *)context;
     state->active = false;
 }
@@ -49,8 +47,7 @@ static void _blinky_face_update_lcd(blinky_face_state_t *state) {
     watch_display_string(buf, 0);
 }
 
-bool blinky_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool blinky_face_loop(movement_event_t event, void *context) {
     blinky_face_state_t *state = (blinky_face_state_t *)context;
 
     switch (event.event_type) {
@@ -92,15 +89,14 @@ bool blinky_face_loop(movement_event_t event, movement_settings_t *settings, voi
             if (!state->active) movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void blinky_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void blinky_face_resign(void *context) {
     (void) context;
     watch_set_led_off();
 }

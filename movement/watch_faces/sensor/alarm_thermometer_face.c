@@ -48,8 +48,7 @@ static void _alarm_thermometer_face_clear(int last[]) {
     }
 }
 
-void alarm_thermometer_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void alarm_thermometer_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(alarm_thermometer_state_t));
@@ -57,15 +56,14 @@ void alarm_thermometer_face_setup(movement_settings_t *settings, uint8_t watch_f
     }
 }
 
-void alarm_thermometer_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void alarm_thermometer_face_activate(void *context) {
     alarm_thermometer_state_t *state = (alarm_thermometer_state_t *)context;
     state->mode = MODE_NORMAL;
     _alarm_thermometer_face_clear(state->last);
     watch_display_string("AT", 0);
 }
 
-bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool alarm_thermometer_face_loop(movement_event_t event, void *context) {
     alarm_thermometer_state_t *state = (alarm_thermometer_state_t *)context;
 
     switch (event.event_type) {
@@ -142,13 +140,12 @@ bool alarm_thermometer_face_loop(movement_event_t event, movement_settings_t *se
             }
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void alarm_thermometer_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void alarm_thermometer_face_resign(void *context) {
     (void) context;
 }

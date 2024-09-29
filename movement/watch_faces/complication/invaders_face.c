@@ -203,8 +203,7 @@ static bool _move_invaders() {
     return false;
 }
 
-void invaders_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void invaders_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(invaders_state_t));
@@ -220,14 +219,13 @@ void invaders_face_setup(movement_settings_t *settings, uint8_t watch_face_index
 #endif
 }
 
-void invaders_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void invaders_face_activate(void *context) {
     (void) context;
     _current_state = invaders_state_activated;
     _signals.suspend_buttons = false;
 }
 
-bool invaders_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool invaders_face_loop(movement_event_t event, void *context) {
     invaders_state_t *state = (invaders_state_t *)context;
 
     switch (event.event_type) {
@@ -414,7 +412,7 @@ bool invaders_face_loop(movement_event_t event, movement_settings_t *settings, v
             // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
             // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the secondary watch face, if configured)
             // You can override any of these behaviors by adding a case for these events to this switch statement.
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
@@ -426,8 +424,7 @@ bool invaders_face_loop(movement_event_t event, movement_settings_t *settings, v
     return true;
 }
 
-void invaders_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void invaders_face_resign(void *context) {
     (void) context;
     _current_state = invaders_state_game_over;
 }

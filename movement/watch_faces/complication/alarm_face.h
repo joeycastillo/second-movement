@@ -85,11 +85,11 @@ typedef struct {
 } alarm_state_t;
 
 
-void alarm_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void alarm_face_activate(movement_settings_t *settings, void *context);
-bool alarm_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void alarm_face_resign(movement_settings_t *settings, void *context);
-bool alarm_face_wants_background_task(movement_settings_t *settings, void *context);
+void alarm_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void alarm_face_activate(void *context);
+bool alarm_face_loop(movement_event_t event, void *context);
+void alarm_face_resign(void *context);
+bool alarm_face_wants_background_task(void *context);
 
 #define alarm_face ((const watch_face_t){ \
     alarm_face_setup, \

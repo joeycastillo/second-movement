@@ -97,7 +97,7 @@ static uint32_t _get_now_ts() {
     return watch_utility_date_time_to_unix_time(now, 0);
 }
 
-static inline void _button_beep(movement_settings_t *settings) {
+static inline void _button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
@@ -369,8 +369,7 @@ static void _resume_paused_timer(interval_face_state_t *state) {
     watch_set_indicator(WATCH_INDICATOR_BELL);
 }
 
-void interval_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void) settings;
+void interval_face_setup(uint8_t watch_face_index, void **context_ptr) {
 
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(interval_face_state_t));
@@ -394,8 +393,7 @@ void interval_face_setup(movement_settings_t *settings, uint8_t watch_face_index
     }
 }
 
-void interval_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void interval_face_activate(void *context) {
     interval_face_state_t *state = (interval_face_state_t *)context;
     _erase_timer_flag = false;
     state->is_active = true;
@@ -407,8 +405,7 @@ void interval_face_activate(movement_settings_t *settings, void *context) {
     } else watch_set_colon();
 }
 
-void interval_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void interval_face_resign(void *context) {
     interval_face_state_t *state = (interval_face_state_t *)context;
     if (state->face_state <= interval_state_setting) state->face_state = interval_state_waiting;
     watch_set_led_off();
@@ -416,7 +413,7 @@ void interval_face_resign(movement_settings_t *settings, void *context) {
     state->is_active = false;
 }
 
-bool interval_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool interval_face_loop(movement_event_t event, void *context) {
     interval_face_state_t *state = (interval_face_state_t *)context;
     interval_timer_setting_t *timer = &state->timer[state->timer_idx];
 
@@ -618,7 +615,7 @@ bool interval_face_loop(movement_event_t event, movement_settings_t *settings, v
         // don't light up every time light is hit
         break;
     default:
-        movement_default_loop_handler(event, settings);
+        movement_default_loop_handler(event);
         break;
     }
     return true;

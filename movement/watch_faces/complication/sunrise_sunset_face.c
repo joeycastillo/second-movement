@@ -44,7 +44,7 @@ static void _sunrise_sunset_set_expiration(sunrise_sunset_state_t *state, watch_
     state->rise_set_expires = watch_utility_date_time_from_unix_time(timestamp + 60, 0);
 }
 
-static void _sunrise_sunset_face_update(movement_settings_t *settings, sunrise_sunset_state_t *state) {
+static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     char buf[14];
     double rise, set, minutes, seconds;
     bool show_next_match = false;
@@ -291,8 +291,7 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     }
 }
 
-void sunrise_sunset_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(sunrise_sunset_state_t));
@@ -300,8 +299,7 @@ void sunrise_sunset_face_setup(movement_settings_t *settings, uint8_t watch_face
     }
 }
 
-void sunrise_sunset_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void sunrise_sunset_face_activate(void *context) {
     if (watch_tick_animation_is_running()) watch_stop_tick_animation();
 
 #if __EMSCRIPTEN__
@@ -326,12 +324,12 @@ void sunrise_sunset_face_activate(movement_settings_t *settings, void *context) 
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
 }
 
-bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            _sunrise_sunset_face_update(settings, state);
+            _sunrise_sunset_face_update(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
@@ -343,7 +341,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
                 if (date_time.reg >= state->rise_set_expires.reg) {
                     // and on the off chance that this happened before EVENT_TIMEOUT snapped us back to rise/set 0, go back now
                     state->rise_index = 0;
-                    _sunrise_sunset_face_update(settings, state);
+                    _sunrise_sunset_face_update(state);
                 }
             } else {
                 _sunrise_sunset_face_update_settings_display(event, state);
@@ -364,7 +362,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
             }
             if (state->page == 0) {
                 movement_request_tick_frequency(1);
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
@@ -374,7 +372,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
         case EVENT_LIGHT_BUTTON_UP:
             if (state->page == 0 && _location_count > 1) {
                 state->longLatToUse = (state->longLatToUse + 1) % _location_count;
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
@@ -383,14 +381,14 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
                 _sunrise_sunset_face_update_settings_display(event, context);
             } else {
                 state->rise_index = (state->rise_index + 1) % 2;
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->page == 0) {
             if (state->longLatToUse != 0) {
                 state->longLatToUse = 0;
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
                 break;
             }
                 state->page++;
@@ -403,7 +401,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
                 state->active_digit = 0;
                 state->page = 0;
                 _sunrise_sunset_face_update_location_register(state);
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_TIMEOUT:
@@ -415,18 +413,17 @@ bool sunrise_sunset_face_loop(movement_event_t event, movement_settings_t *setti
                 state->page = 0;
                 state->rise_index = 0;
                 movement_request_tick_frequency(1);
-                _sunrise_sunset_face_update(settings, state);
+                _sunrise_sunset_face_update(state);
             }
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return true;
 }
 
-void sunrise_sunset_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void sunrise_sunset_face_resign(void *context) {
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
     state->page = 0;
     state->active_digit = 0;

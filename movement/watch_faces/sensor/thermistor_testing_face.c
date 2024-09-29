@@ -41,7 +41,7 @@ static void _thermistor_testing_face_update_display(bool in_fahrenheit) {
     thermistor_driver_disable();
 }
 
-void thermistor_testing_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void thermistor_testing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
     // force one setting: never enter low energy mode.
@@ -49,14 +49,13 @@ void thermistor_testing_face_setup(movement_settings_t *settings, uint8_t watch_
     movement_set_low_energy_timeout(0);
 }
 
-void thermistor_testing_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_testing_face_activate(void *context) {
     (void) context;
     watch_display_string("TE", 0);
     movement_request_tick_frequency(8);
 }
 
-bool thermistor_testing_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool thermistor_testing_face_loop(movement_event_t event, void *context) {
     (void) context;
     switch (event.event_type) {
         case EVENT_ALARM_BUTTON_DOWN:
@@ -68,14 +67,13 @@ bool thermistor_testing_face_loop(movement_event_t event, movement_settings_t *s
             _thermistor_testing_face_update_display(movement_use_imperial_units());
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void thermistor_testing_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_testing_face_resign(void *context) {
     (void) context;
 }

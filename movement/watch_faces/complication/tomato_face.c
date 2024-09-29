@@ -30,10 +30,6 @@
 static uint8_t focus_min = 25;
 static uint8_t break_min = 5;
 
-static inline int32_t get_tz_offset(movement_settings_t *settings) {
-    return movement_get_current_timezone_offset();
-}
-
 static uint8_t get_length(tomato_state_t *state) {
     uint8_t length;
     if (state->kind == tomato_focus) {
@@ -45,14 +41,14 @@ static uint8_t get_length(tomato_state_t *state) {
     return length;
 }
 
-static void tomato_start(tomato_state_t *state, movement_settings_t *settings) {
+static void tomato_start(tomato_state_t *state) {
     watch_date_time now = watch_rtc_get_date_time();
     int8_t length = (int8_t) get_length(state);
 
     state->mode = tomato_run;
-    state->now_ts = watch_utility_date_time_to_unix_time(now, get_tz_offset(settings));
+    state->now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
     state->target_ts = watch_utility_offset_timestamp(state->now_ts, 0, length, 0);
-    watch_date_time target_dt = watch_utility_date_time_from_unix_time(state->target_ts, get_tz_offset(settings));
+    watch_date_time target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
     movement_schedule_background_task(target_dt);
     watch_set_indicator(WATCH_INDICATOR_BELL);
 }
@@ -107,8 +103,7 @@ static void tomato_ring(tomato_state_t *state) {
     }
 }
 
-void tomato_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void tomato_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -122,18 +117,18 @@ void tomato_face_setup(movement_settings_t *settings, uint8_t watch_face_index, 
     }
 }
 
-void tomato_face_activate(movement_settings_t *settings, void *context) {
+void tomato_face_activate(void *context) {
     tomato_state_t *state = (tomato_state_t *)context;
     if (state->mode == tomato_run) {
         watch_date_time now = watch_rtc_get_date_time();
-        state->now_ts = watch_utility_date_time_to_unix_time(now, get_tz_offset(settings));
+        state->now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
         watch_set_indicator(WATCH_INDICATOR_BELL);
     }
     watch_set_colon();
     state->visible = true;
 }
 
-bool tomato_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool tomato_face_loop(movement_event_t event, void *context) {
     tomato_state_t *state = (tomato_state_t *)context;
 
     switch (event.event_type) {
@@ -163,7 +158,7 @@ bool tomato_face_loop(movement_event_t event, movement_settings_t *settings, voi
                     tomato_reset(state);
                     break;
                 case tomato_ready:
-                    tomato_start(state, settings);
+                    tomato_start(state);
                     break;
             }
             tomato_draw(state);
@@ -180,17 +175,16 @@ bool tomato_face_loop(movement_event_t event, movement_settings_t *settings, voi
             movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void tomato_face_resign(movement_settings_t *settings, void *context) {
+void tomato_face_resign(void *context) {
     tomato_state_t *state = (tomato_state_t *)context;
     state->visible = false;
-    (void) settings;
     (void) context;
 }
 

@@ -327,8 +327,7 @@ static void alarm_button_handler(void) {
     do_game_loop(HL_GUESS_LOWER);
 }
 
-void higher_lower_game_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void **context_ptr) {
-    (void) settings;
+void higher_lower_game_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -340,15 +339,14 @@ void higher_lower_game_face_setup(movement_settings_t *settings, uint8_t watch_f
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-void higher_lower_game_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void higher_lower_game_face_activate(void *context) {
     higher_lower_game_face_state_t *state = (higher_lower_game_face_state_t *) context;
     (void) state;
     // Handle any tasks related to your watch face coming on screen.
     game_state = HL_GS_TITLE_SCREEN;
 }
 
-bool higher_lower_game_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool higher_lower_game_face_loop(movement_event_t event, void *context) {
     higher_lower_game_face_state_t *state = (higher_lower_game_face_state_t *) context;
     (void) state;
 
@@ -376,7 +374,7 @@ bool higher_lower_game_face_loop(movement_event_t event, movement_settings_t *se
             // movement_move_to_face(0);
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
@@ -388,8 +386,7 @@ bool higher_lower_game_face_loop(movement_event_t event, movement_settings_t *se
     return true;
 }
 
-void higher_lower_game_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void higher_lower_game_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

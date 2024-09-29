@@ -41,19 +41,17 @@ static void _thermistor_readout_face_update_display(bool in_fahrenheit) {
     thermistor_driver_disable();
 }
 
-void thermistor_readout_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void thermistor_readout_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
 }
 
-void thermistor_readout_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_readout_face_activate(void *context) {
     (void) context;
     watch_display_string("TE", 0);
 }
 
-bool thermistor_readout_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool thermistor_readout_face_loop(movement_event_t event, void *context) {
     (void) context;
     watch_date_time date_time = watch_rtc_get_date_time();
     switch (event.event_type) {
@@ -90,14 +88,13 @@ bool thermistor_readout_face_loop(movement_event_t event, movement_settings_t *s
             }
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void thermistor_readout_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void thermistor_readout_face_resign(void *context) {
     (void) context;
 }

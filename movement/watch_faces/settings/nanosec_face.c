@@ -146,9 +146,8 @@ void nanosec_save(void) {
     nanosec_changed = false;
 }
 
-void nanosec_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void nanosec_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    (void) settings;
 
     if (*context_ptr == NULL) {
         if (filesystem_get_file_size("nanosec.ini") != sizeof(nanosec_state)) {
@@ -167,8 +166,7 @@ void nanosec_face_setup(movement_settings_t *settings, uint8_t watch_face_index,
     }
 }
 
-void nanosec_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void nanosec_face_activate(void *context) {
     (void) context;
 
     // Handle any tasks related to your watch face coming on screen.
@@ -267,8 +265,7 @@ float nanosec_get_aging() // Returns aging correction in ppm
 }
 
 
-bool nanosec_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool nanosec_face_loop(movement_event_t event, void *context) {
     (void) context;
 
     switch (event.event_type) {
@@ -348,7 +345,7 @@ bool nanosec_face_loop(movement_event_t event, movement_settings_t *settings, vo
             // don't light up every time light is hit
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
@@ -357,16 +354,14 @@ bool nanosec_face_loop(movement_event_t event, movement_settings_t *settings, vo
     return true;
 }
 
-void nanosec_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void nanosec_face_resign(void *context) {
     (void) context;
 
     nanosec_ui_save();
 }
 
 // Background freq correction
-bool nanosec_face_wants_background_task(movement_settings_t *settings, void *context) {
-    (void) settings;
+bool nanosec_face_wants_background_task(void *context) {
     (void) context;
     if (nanosec_state.correction_profile == 0)
         return 0; // No need for background correction if we are on profile 0 - static hardware correction.

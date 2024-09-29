@@ -64,8 +64,7 @@ static void draw(tuning_tones_state_t *state)
     watch_display_string(notes[state->note_ind].name, 8);
 }
 
-void tuning_tones_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void tuning_tones_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         tuning_tones_state_t *state = malloc(sizeof *state);
@@ -75,8 +74,7 @@ void tuning_tones_face_setup(movement_settings_t *settings, uint8_t watch_face_i
     }
 }
 
-void tuning_tones_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tuning_tones_face_activate(void *context) {
     (void) context;
 }
 
@@ -89,7 +87,7 @@ static void update_buzzer(const tuning_tones_state_t *state)
     }
 }
 
-bool tuning_tones_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool tuning_tones_face_loop(movement_event_t event, void *context) {
     tuning_tones_state_t *state = (tuning_tones_state_t *)context;
 
     switch (event.event_type) {
@@ -123,14 +121,13 @@ bool tuning_tones_face_loop(movement_event_t event, movement_settings_t *setting
         case EVENT_LOW_ENERGY_UPDATE:
             break;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 
     return !state->playing;
 }
 
-void tuning_tones_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void tuning_tones_face_resign(void *context) {
     tuning_tones_state_t *state = (tuning_tones_state_t *)context;
 
     if (state->playing) {

@@ -416,8 +416,7 @@ static bool _splash_screen(movement_event_t event, butterfly_game_state_t *state
     return true;
 }
 
-void butterfly_game_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void butterfly_game_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -433,14 +432,13 @@ void butterfly_game_face_setup(movement_settings_t *settings, uint8_t watch_face
 #endif
 }
 
-void butterfly_game_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void butterfly_game_face_activate(void *context) {
     (void) context;
 
     movement_request_tick_frequency(TICK_FREQ);
 }
 
-bool butterfly_game_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool butterfly_game_face_loop(movement_event_t event, void *context) {
     butterfly_game_state_t *state = (butterfly_game_state_t *)context;
 
     switch (event.event_type) {
@@ -454,12 +452,11 @@ bool butterfly_game_face_loop(movement_event_t event, movement_settings_t *setti
             movement_move_to_face(0);
             return true;
         default:
-            return movement_default_loop_handler(event, settings);
+            return movement_default_loop_handler(event);
     }
 }
 
-void butterfly_game_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void butterfly_game_face_resign(void *context) {
     (void) context;
 
     // handle any cleanup before your watch face goes off-screen.

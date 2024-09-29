@@ -99,10 +99,10 @@ typedef struct {
     preferences_page_t current_page;
 } preferences_state_t;
 
-void preferences_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
-void preferences_face_activate(movement_settings_t *settings, void *context);
-bool preferences_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
-void preferences_face_resign(movement_settings_t *settings, void *context);
+void preferences_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void preferences_face_activate(void *context);
+bool preferences_face_loop(movement_event_t event, void *context);
+void preferences_face_resign(void *context);
 
 #define preferences_face ((const watch_face_t){ \
     preferences_face_setup, \

@@ -37,10 +37,9 @@ static void beep_in_hold (void);
 static void beep_out (void);
 static void beep_out_hold (void);
 
-void breathing_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
+void breathing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     // These next two lines just silence the compiler warnings associated with unused parameters.
     // We have no use for the settings or the watch_face_index, so we make that explicit here.
-    (void) settings;
     (void) watch_face_index;
     // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
     if (*context_ptr == NULL) {
@@ -49,9 +48,8 @@ void breathing_face_setup(movement_settings_t *settings, uint8_t watch_face_inde
     }
 }
 
-void breathing_face_activate(movement_settings_t *settings, void *context) {
+void breathing_face_activate(void *context) {
     // same as above: silence the warning, we don't need to check the settings.
-    (void) settings;
     // we do however need to set some things in our context. Here we cast it to the correct type...
     breathing_state_t *state = (breathing_state_t *)context;
     // ...and set the initial state of our watch face.
@@ -125,8 +123,7 @@ void beep_out_hold (void) {
         }
 }
 
-bool breathing_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
-    (void) settings;
+bool breathing_face_loop(movement_event_t event, void *context) {
     breathing_state_t *state = (breathing_state_t *)context;
 
     switch (event.event_type) {
@@ -193,16 +190,15 @@ bool breathing_face_loop(movement_event_t event, movement_settings_t *settings, 
             // movement_move_to_face(0);
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
 
     return true;
 }
 
-void breathing_face_resign(movement_settings_t *settings, void *context) {
+void breathing_face_resign(void *context) {
     // our watch face, like most watch faces, has nothing special to do when resigning.
     // watch faces that enable a peripheral or interact with a sensor may want to turn it off here.
-    (void) settings;
     (void) context;
 }

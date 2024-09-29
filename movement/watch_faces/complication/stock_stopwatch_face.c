@@ -123,7 +123,7 @@ void TC2_Handler(void) {
 
 #endif
 
-static inline void _button_beep(movement_settings_t *settings) {
+static inline void _button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
@@ -202,8 +202,7 @@ static inline void _set_colon() {
     _colon = true;
 }
 
-void stock_stopwatch_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr) {
-    (void) settings;
+void stock_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(stock_stopwatch_state_t));
@@ -219,8 +218,7 @@ void stock_stopwatch_face_setup(movement_settings_t *settings, uint8_t watch_fac
     }
 }
 
-void stock_stopwatch_face_activate(movement_settings_t *settings, void *context) {
-    (void) settings;
+void stock_stopwatch_face_activate(void *context) {
     (void) context;
     if (_is_running) {
         // The background task will keep the watch from entering low energy mode while the stopwatch is on screen.
@@ -228,7 +226,7 @@ void stock_stopwatch_face_activate(movement_settings_t *settings, void *context)
     }
 }
 
-bool stock_stopwatch_face_loop(movement_event_t event, movement_settings_t *settings, void *context) {
+bool stock_stopwatch_face_loop(movement_event_t event, void *context) {
     stock_stopwatch_state_t *state = (stock_stopwatch_state_t *)context;
 
     // handle overflow of fast ticks
@@ -310,14 +308,13 @@ bool stock_stopwatch_face_loop(movement_event_t event, movement_settings_t *sett
             _draw();
             break;
         default:
-            movement_default_loop_handler(event, settings);
+            movement_default_loop_handler(event);
             break;
     }
     return true;
 }
 
-void stock_stopwatch_face_resign(movement_settings_t *settings, void *context) {
-    (void) settings;
+void stock_stopwatch_face_resign(void *context) {
     (void) context;
     // cancel the keepalive task
     movement_cancel_background_task();
