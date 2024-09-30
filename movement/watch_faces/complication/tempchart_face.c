@@ -133,10 +133,13 @@ void tempchart_face_resign(void *context) {
 }
 
 //background freq correction
-bool tempchart_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t tempchart_face_advise(void *context) {
     (void) context;
-    watch_date_time date_time = watch_rtc_get_date_time();
+    movement_watch_face_advisory_t retval = { 0 };
 
-    //Updating data every 5 minutes
-    return date_time.unit.minute % 5 == 0;
+    watch_date_time date_time = watch_rtc_get_date_time();
+    // Updating data every 5 minutes
+    retval.wants_background_task = date_time.unit.minute % 5 == 0;
+
+    return retval;
 }

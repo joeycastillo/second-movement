@@ -44,7 +44,7 @@ void tempchart_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void tempchart_face_activate(void *context);
 bool tempchart_face_loop(movement_event_t event, void *context);
 void tempchart_face_resign(void *context);
-bool tempchart_face_wants_background_task(void *context);
+movement_watch_face_advisory_t tempchart_face_advise(void *context);
 
 
 #define tempchart_face ((const watch_face_t){ \
@@ -52,7 +52,7 @@ bool tempchart_face_wants_background_task(void *context);
     tempchart_face_activate, \
     tempchart_face_loop, \
     tempchart_face_resign, \
-    tempchart_face_wants_background_task, \
+    tempchart_face_advise, \
 })
 
 #endif // TEMPCHART_FACE_H_

@@ -48,14 +48,14 @@ void weeknumber_clock_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void weeknumber_clock_face_activate(void *context);
 bool weeknumber_clock_face_loop(movement_event_t event, void *context);
 void weeknumber_clock_face_resign(void *context);
-bool weeknumber_clock_face_wants_background_task(void *context);
+movement_watch_face_advisory_t weeknumber_clock_face_advise(void *context);
 
 #define weeknumber_clock_face ((const watch_face_t){ \
     weeknumber_clock_face_setup, \
     weeknumber_clock_face_activate, \
     weeknumber_clock_face_loop, \
     weeknumber_clock_face_resign, \
-    weeknumber_clock_face_wants_background_task, \
+    weeknumber_clock_face_advise, \
 })
 
 #endif // SIMPLE_CLOCK_FACE_H_

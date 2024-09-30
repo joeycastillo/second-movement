@@ -55,14 +55,14 @@ void minmax_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void minmax_face_activate(void *context);
 bool minmax_face_loop(movement_event_t event, void *context);
 void minmax_face_resign(void *context);
-bool minmax_face_wants_background_task(void *context);
+movement_watch_face_advisory_t minmax_face_advise(void *context);
 
 #define minmax_face ((const watch_face_t){ \
     minmax_face_setup, \
     minmax_face_activate, \
     minmax_face_loop, \
     minmax_face_resign, \
-    minmax_face_wants_background_task, \
+    minmax_face_advise, \
 })
 
 #endif // MINMAX_FACE_H_

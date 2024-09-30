@@ -68,14 +68,14 @@ void simple_clock_bin_led_face_setup(uint8_t watch_face_index, void ** context_p
 void simple_clock_bin_led_face_activate(void *context);
 bool simple_clock_bin_led_face_loop(movement_event_t event, void *context);
 void simple_clock_bin_led_face_resign(void *context);
-bool simple_clock_bin_led_face_wants_background_task(void *context);
+movement_watch_face_advisory_t simple_clock_bin_led_face_advise(void *context);
 
 #define simple_clock_bin_led_face ((const watch_face_t){ \
     simple_clock_bin_led_face_setup, \
     simple_clock_bin_led_face_activate, \
     simple_clock_bin_led_face_loop, \
     simple_clock_bin_led_face_resign, \
-    simple_clock_bin_led_face_wants_background_task, \
+    simple_clock_bin_led_face_advise, \
 })
 
 #endif // SIIMPLE_CLOCK_BIN_LED_FACE_H_

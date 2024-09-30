@@ -124,26 +124,36 @@ void ships_bell_face_resign(void *context) {
     (void) context;
 }
 
-bool ships_bell_face_wants_background_task(void *context) {
-
+movement_watch_face_advisory_t ships_bell_face_advise(void *context) {
     ships_bell_state_t *state = (ships_bell_state_t *) context;
-    if (!state->bell_enabled) return false;
+    movement_watch_face_advisory_t retval = { 0 };
+
+    if (!state->bell_enabled) return retval;
 
     watch_date_time date_time = watch_rtc_get_date_time();
-    if (!(date_time.unit.minute == 0 || date_time.unit.minute == 30)) return false;
+    if (!(date_time.unit.minute == 0 || date_time.unit.minute == 30)) return retval;
 
     date_time.unit.hour %= 12;
+    // #SecondMovement: This was migrated to the new advisory API but not tested. Needs more testing!
     switch (state->on_watch) {
         case 1:
-            return (date_time.unit.hour >= 4 && date_time.unit.hour < 8) ||
-                   (date_time.unit.hour == 8 && date_time.unit.minute == 0);
+            if ((date_time.unit.hour >= 4 && date_time.unit.hour < 8) ||
+                (date_time.unit.hour == 8 && date_time.unit.minute == 0))
+                retval.wants_background_task = true;
+                break;
         case 2:
-            return (date_time.unit.hour >= 8 && date_time.unit.hour < 12) ||
-                   (date_time.unit.hour == 0 && date_time.unit.minute == 0);
+            if ((date_time.unit.hour >= 8 && date_time.unit.hour < 12) ||
+                (date_time.unit.hour == 0 && date_time.unit.minute == 0))
+                retval.wants_background_task = true;
+                break;
         case 3:
-            return (date_time.unit.hour >= 0 && date_time.unit.hour < 4) ||
-                   (date_time.unit.hour == 4 && date_time.unit.minute == 0);
+            if ((date_time.unit.hour >= 0 && date_time.unit.hour < 4) ||
+                (date_time.unit.hour == 4 && date_time.unit.minute == 0))
+                retval.wants_background_task = true;
+                break;
         default:
-            return true;
+            retval.wants_background_task = true;
     }
+
+    return retval;
 }

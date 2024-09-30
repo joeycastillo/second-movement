@@ -143,8 +143,13 @@ void minmax_face_resign(void *context) {
 }
 
 
-bool minmax_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t minmax_face_advise(void *context) {
     (void) context;
+
     // this will get called at the top of each minute; always request bg task
-    return true;
+    movement_watch_face_advisory_t retval = {
+        .wants_background_task = 1,
+    };
+
+    return retval;
 }

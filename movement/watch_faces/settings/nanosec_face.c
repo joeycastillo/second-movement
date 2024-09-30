@@ -361,11 +361,15 @@ void nanosec_face_resign(void *context) {
 }
 
 // Background freq correction
-bool nanosec_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t nanosec_face_advise(void *context) {
     (void) context;
-    if (nanosec_state.correction_profile == 0)
-        return 0; // No need for background correction if we are on profile 0 - static hardware correction.
-    watch_date_time date_time = watch_rtc_get_date_time();
+    movement_watch_face_advisory_t retval = { 0 };
 
-    return date_time.unit.minute % nanosec_state.correction_cadence == 0;
+    // No need for background correction if we are on profile 0 - static hardware correction.
+    if (nanosec_state.correction_profile != 0) {
+        watch_date_time date_time = watch_rtc_get_date_time();
+        retval.wants_background_task = date_time.unit.minute % nanosec_state.correction_cadence == 0;
+    }
+
+    return retval;
 }

@@ -71,14 +71,14 @@ void minute_repeater_decimal_face_setup(uint8_t watch_face_index, void ** contex
 void minute_repeater_decimal_face_activate(void *context);
 bool minute_repeater_decimal_face_loop(movement_event_t event, void *context);
 void minute_repeater_decimal_face_resign(void *context);
-bool minute_repeater_decimal_face_wants_background_task(void *context);
+movement_watch_face_advisory_t minute_repeater_decimal_face_advise(void *context);
 
 #define minute_repeater_decimal_face ((const watch_face_t){ \
     minute_repeater_decimal_face_setup, \
     minute_repeater_decimal_face_activate, \
     minute_repeater_decimal_face_loop, \
     minute_repeater_decimal_face_resign, \
-    minute_repeater_decimal_face_wants_background_task, \
+    minute_repeater_decimal_face_advise, \
 })
 
 #endif // MINUTE_REPEATER_DECIMAL_FACE_H_

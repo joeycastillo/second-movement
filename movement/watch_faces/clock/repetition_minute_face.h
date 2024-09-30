@@ -70,14 +70,14 @@ void repetition_minute_face_setup(uint8_t watch_face_index, void ** context_ptr)
 void repetition_minute_face_activate(void *context);
 bool repetition_minute_face_loop(movement_event_t event, void *context);
 void repetition_minute_face_resign(void *context);
-bool repetition_minute_face_wants_background_task(void *context);
+movement_watch_face_advisory_t repetition_minute_face_advise(void *context);
 
 #define repetition_minute_face ((const watch_face_t){ \
     repetition_minute_face_setup, \
     repetition_minute_face_activate, \
     repetition_minute_face_loop, \
     repetition_minute_face_resign, \
-    repetition_minute_face_wants_background_task, \
+    repetition_minute_face_advise, \
 })
 
 #endif // REPETITION_MINUTE_FACE_H_

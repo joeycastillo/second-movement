@@ -229,7 +229,7 @@ static void _background_alarm_play(deadline_state_t *state)
 static void _background_alarm_schedule(deadline_state_t *state)
 {
     /* We simply re-use the scheduling in the background task */
-    deadline_face_wants_background_task(state);
+    deadline_face_advise(state);
 }
 
 /* Cancel background alarm */
@@ -606,7 +606,7 @@ void deadline_face_resign(void *context)
 }
 
 /* Want background task */
-bool deadline_face_wants_background_task(void *context)
+movement_watch_face_advisory_t deadline_face_advise(void *context)
 {
     deadline_state_t *state = (deadline_state_t *) context;
 

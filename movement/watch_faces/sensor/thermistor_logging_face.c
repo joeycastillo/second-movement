@@ -127,9 +127,13 @@ void thermistor_logging_face_resign(void *context) {
     (void) context;
 }
 
-bool thermistor_logging_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t thermistor_logging_face_advise(void *context) {
     (void) context;
+    movement_watch_face_advisory_t retval = { 0 };
+
     // this will get called at the top of each minute, so all we check is if we're at the top of the hour as well.
     // if we are, we ask for a background task.
-    return watch_rtc_get_date_time().unit.minute == 0;
+    retval.wants_background_task = watch_rtc_get_date_time().unit.minute == 0;
+
+    return retval;
 }

@@ -77,7 +77,7 @@ void wyoscan_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void wyoscan_face_activate(void *context);
 bool wyoscan_face_loop(movement_event_t event, void *context);
 void wyoscan_face_resign(void *context);
-bool wyoscan_face_wants_background_task(void *context);
+movement_watch_face_advisory_t wyoscan_face_advise(void *context);
 
 #define wyoscan_face ((const watch_face_t){ \
     wyoscan_face_setup, \

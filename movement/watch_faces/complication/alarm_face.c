@@ -232,11 +232,13 @@ void alarm_face_resign(void *context) {
     movement_request_tick_frequency(1);
 }
 
-bool alarm_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t alarm_face_advise(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
+    movement_watch_face_advisory_t retval = { 0 };
+
     watch_date_time now = watch_rtc_get_date_time();
     // just a failsafe: never fire more than one alarm within a minute
-    if (state->alarm_handled_minute == now.unit.minute) return false;
+    if (state->alarm_handled_minute == now.unit.minute) return retval;
     state->alarm_handled_minute = now.unit.minute;
     // check the rest
     for (uint8_t i = 0; i < ALARM_ALARMS; i++) {
@@ -246,17 +248,24 @@ bool alarm_face_wants_background_task(void *context) {
                     state->alarm_playing_idx = i;
                     if (state->alarm[i].day == ALARM_DAY_EACH_DAY || state->alarm[i].day == ALARM_DAY_ONE_TIME) return true;
                     uint8_t weekday_idx = _get_weekday_idx(now);
-                    if (state->alarm[i].day == weekday_idx) return true;
-                    if (state->alarm[i].day == ALARM_DAY_WORKDAY && weekday_idx < 5) return true;
-                    if (state->alarm[i].day == ALARM_DAY_WEEKEND && weekday_idx >= 5) return true;
+                    if (state->alarm[i].day == weekday_idx) retval.wants_background_task = true;
+                    if (state->alarm[i].day == ALARM_DAY_WORKDAY && weekday_idx < 5) retval.wants_background_task = true;
+                    if (state->alarm[i].day == ALARM_DAY_WEEKEND && weekday_idx >= 5) retval.wants_background_task = true;
                 }
             }
         }
     }
+
+    if (retval.wants_background_task) {
+        // FIXME for #SecondMovement: I think that this replicates the previous behavior of returning true in the conditionals above,
+        // but would like to do more testing
+        return retval;
+    }
+
     state->alarm_handled_minute = -1;
     // update the movement's alarm indicator five times an hour
     if (now.unit.minute % 12 == 0) _alarm_update_alarm_enabled(state);
-    return false;
+    return retval;
 }
 
 bool alarm_face_loop(movement_event_t event, void *context) {

@@ -55,14 +55,14 @@ void ships_bell_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void ships_bell_face_activate(void *context);
 bool ships_bell_face_loop(movement_event_t event, void *context);
 void ships_bell_face_resign(void *context);
-bool ships_bell_face_wants_background_task(void *context);
+movement_watch_face_advisory_t ships_bell_face_advise(void *context);
 
 #define ships_bell_face ((const watch_face_t){ \
     ships_bell_face_setup, \
     ships_bell_face_activate, \
     ships_bell_face_loop, \
     ships_bell_face_resign, \
-    ships_bell_face_wants_background_task, \
+    ships_bell_face_advise, \
 })
 
 #endif // SHIPS_BELL_FACE_H_

@@ -208,11 +208,14 @@ void repetition_minute_face_resign(void *context) {
     (void) context;
 }
 
-bool repetition_minute_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t repetition_minute_face_advise(void *context) {
     repetition_minute_state_t *state = (repetition_minute_state_t *)context;
-    if (!state->signal_enabled) return false;
+    movement_watch_face_advisory_t retval = { 0 };
 
-    watch_date_time date_time = watch_rtc_get_date_time();
+    if (state->signal_enabled) {
+        watch_date_time date_time = watch_rtc_get_date_time();
+        retval.wants_background_task = date_time.unit.minute == 0;
+    }
 
-    return date_time.unit.minute == 0;
+    return retval;
 }

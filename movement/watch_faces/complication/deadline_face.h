@@ -52,14 +52,14 @@ void deadline_face_setup(uint8_t watch_face_index, void **context_ptr);
 void deadline_face_activate(void *context);
 bool deadline_face_loop(movement_event_t event, void *context);
 void deadline_face_resign(void *context);
-bool deadline_face_wants_background_task(void *context);
+movement_watch_face_advisory_t deadline_face_advise(void *context);
 
 #define deadline_face ((const watch_face_t){ \
     deadline_face_setup, \
     deadline_face_activate, \
     deadline_face_loop, \
     deadline_face_resign, \
-    deadline_face_wants_background_task \
+    deadline_face_advise \
 })
 
 #endif                          // DEADLINE_FACE_H_

@@ -187,9 +187,10 @@ void lis2dw_logging_face_resign(void *context) {
     watch_disable_digital_input(A4);
 }
 
-bool lis2dw_logging_face_wants_background_task(void *context) {
+movement_watch_face_advisory_t lis2dw_logging_face_advise(void *context) {
     lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
     watch_date_time date_time = watch_rtc_get_date_time();
+    movement_watch_face_advisory_t retval = { 0 };
 
     // this is kind of an abuse of the API, but, let's use the 1 minute tick to shift all our data over.
     logger_state->interrupts[2] = logger_state->interrupts[1];
@@ -197,5 +198,7 @@ bool lis2dw_logging_face_wants_background_task(void *context) {
     logger_state->interrupts[0] = 0;
 
     // and do our logging task every 15 minutes
-    return (date_time.unit.minute % 15) == 0;
+    retval.wants_background_task = date_time.unit.minute % 15 == 0;
+
+    return retval;
 }

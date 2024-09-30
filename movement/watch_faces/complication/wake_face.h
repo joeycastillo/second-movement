@@ -52,14 +52,14 @@ void wake_face_setup(uint8_t watch_face_index, void **context_ptr);
 void wake_face_activate(void *context);
 bool wake_face_loop(movement_event_t event, void *context);
 void wake_face_resign(void *context);
-bool wake_face_wants_background_task(void *context);
+movement_watch_face_advisory_t wake_face_advise(void *context);
 
 #define wake_face ((const watch_face_t){ \
     wake_face_setup, \
     wake_face_activate, \
     wake_face_loop, \
     wake_face_resign, \
-    wake_face_wants_background_task \
+    wake_face_advise \
 })
 
 #endif // WAKE_FACE_H_

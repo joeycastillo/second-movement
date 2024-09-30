@@ -90,7 +90,7 @@ void nanosec_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void nanosec_face_activate(void *context);
 bool nanosec_face_loop(movement_event_t event, void *context);
 void nanosec_face_resign(void *context);
-bool nanosec_face_wants_background_task(void *context);
+movement_watch_face_advisory_t nanosec_face_advise(void *context);
 void nanosec_ui_save(void);
 void nanosec_save(void);
 float nanosec_get_aging(void);
@@ -101,7 +101,7 @@ float nanosec_get_aging(void);
     nanosec_face_activate, \
     nanosec_face_loop, \
     nanosec_face_resign, \
-    nanosec_face_wants_background_task, \
+    nanosec_face_advise, \
 })
 
 #endif // NANOSEC_FACE_H_

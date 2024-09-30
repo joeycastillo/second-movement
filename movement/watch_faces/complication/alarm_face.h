@@ -89,14 +89,14 @@ void alarm_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void alarm_face_activate(void *context);
 bool alarm_face_loop(movement_event_t event, void *context);
 void alarm_face_resign(void *context);
-bool alarm_face_wants_background_task(void *context);
+movement_watch_face_advisory_t alarm_face_advise(void *context);
 
 #define alarm_face ((const watch_face_t){ \
     alarm_face_setup, \
     alarm_face_activate, \
     alarm_face_loop, \
     alarm_face_resign, \
-    alarm_face_wants_background_task, \
+    alarm_face_advise, \
 })
 
 #endif // ALARM_FACE_H_

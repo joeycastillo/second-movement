@@ -61,14 +61,14 @@ void lis2dw_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void lis2dw_logging_face_activate(void *context);
 bool lis2dw_logging_face_loop(movement_event_t event, void *context);
 void lis2dw_logging_face_resign(void *context);
-bool lis2dw_logging_face_wants_background_task(void *context);
+movement_watch_face_advisory_t lis2dw_logging_face_advise(void *context);
 
 #define lis2dw_logging_face ((const watch_face_t){ \
     lis2dw_logging_face_setup, \
     lis2dw_logging_face_activate, \
     lis2dw_logging_face_loop, \
     lis2dw_logging_face_resign, \
-    lis2dw_logging_face_wants_background_task, \
+    lis2dw_logging_face_advise, \
 })
 
 #endif // LIS2DW_LOGGING_FACE_H_

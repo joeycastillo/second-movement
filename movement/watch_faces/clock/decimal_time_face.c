@@ -160,7 +160,7 @@ void decimal_time_face_resign(void *context) {
 }
 
 
-// void decimal_time_face_wants_background_task() {
+// void decimal_time_face_advise() {
 // 
 // }
 

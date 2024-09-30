@@ -57,7 +57,7 @@ void decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void decimal_time_face_activate(void *context);
 bool decimal_time_face_loop(movement_event_t event, void *context);
 void decimal_time_face_resign(void *context);
-// void decimal_time_face_wants_background_task();
+// void decimal_time_face_advise();
 
 
 #define decimal_time_face ((const watch_face_t){ \
