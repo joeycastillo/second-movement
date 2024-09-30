@@ -92,16 +92,24 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
     }
 }
 
-static void _movement_handle_background_tasks(void) {
+static void _movement_handle_advisories(void) {
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
-        // For each face, if the watch face wants a background task...
-        if (watch_faces[i].wants_background_task != NULL && watch_faces[i].wants_background_task(watch_face_contexts[i])) {
-            // ...we give it one. pretty straightforward!
-            movement_event_t background_event = { EVENT_BACKGROUND_TASK, 0 };
-            watch_faces[i].loop(background_event, watch_face_contexts[i]);
+        // For each face that offers an advisory...
+        if (watch_faces[i].advise != NULL) {
+            // ...we ask for one.
+            movement_watch_face_advisory_t advisory = watch_faces[i].advise(watch_face_contexts[i]);
+
+            // If it wants a background task...
+            if (advisory.wants_background_task) {
+                // we give it one. pretty straightforward!
+                movement_event_t background_event = { EVENT_BACKGROUND_TASK, 0 };
+                watch_faces[i].loop(background_event, watch_face_contexts[i]);
+            }
+
+            // TODO: handle other advisory types
         }
     }
-    movement_state.needs_background_tasks_handled = false;
+    movement_state.needs_advisories_handled = false;
 }
 
 static void _movement_handle_scheduled_tasks(void) {
@@ -539,7 +547,7 @@ static void _sleep_mode_app_loop(void) {
     // as long as le_mode_ticks is -1 (i.e. we are in low energy mode), we wake up here, update the screen, and go right back to sleep.
     while (movement_state.le_mode_ticks == -1) {
         // we also have to handle background tasks here in the mini-runloop
-        if (movement_state.needs_background_tasks_handled) _movement_handle_background_tasks();
+        if (movement_state.needs_advisories_handled) _movement_handle_advisories();
 
         event.event_type = EVENT_LOW_ENERGY_UPDATE;
         watch_faces[movement_state.current_face_idx].loop(event, watch_face_contexts[movement_state.current_face_idx]);
@@ -581,8 +589,8 @@ bool app_loop(void) {
         }
     }
 
-    // handle background tasks, if the alarm handler told us we need to
-    if (movement_state.needs_background_tasks_handled) _movement_handle_background_tasks();
+    // handle advisories, if the alarm handler told us we need to
+    if (movement_state.needs_advisories_handled) _movement_handle_advisories();
 
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
@@ -740,7 +748,7 @@ void cb_alarm_btn_extwake(void) {
 }
 
 void cb_alarm_fired(void) {
-    movement_state.needs_background_tasks_handled = true;
+    movement_state.needs_advisories_handled = true;
 }
 
 void cb_fast_tick(void) {

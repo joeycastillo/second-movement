@@ -29,6 +29,13 @@
 #include "watch.h"
 #include "utz.h"
 
+/// @brief A struct that allows a watch face to report its state back to Movement.
+typedef struct {
+    uint8_t wants_background_task: 1;
+    uint8_t has_active_alarm: 1;
+    uint8_t responds_to_dst_change: 1;
+} movement_watch_face_advisory_t;
+
 // Movement Preferences
 // These four 32-bit structs store information about the wearer and their preferences. Tentatively, the plan is
 // for Movement to use four 32-bit registers for these preferences and to store them in the RTC's backup registers
@@ -204,7 +211,7 @@ typedef void (*watch_face_activate)(void *context);
           **Your watch face MUST NOT wake up peripherals in response to a low power tick.** The purpose of this
           mode is to consume as little energy as possible during the (potentially long) intervals when it's
           unlikely the user is wearing or looking at the watch.
-          EVENT_BACKGROUND_TASK is also a special case. @see watch_face_wants_background_task for details.
+          EVENT_BACKGROUND_TASK is also a special case. @see watch_face_advise for details.
   */
 typedef bool (*watch_face_loop)(movement_event_t event, void *context);
 
@@ -237,14 +244,14 @@ typedef void (*watch_face_resign)(void *context);
   * @param context A pointer to your application's context. @see watch_face_setup.
   * @return true to request a background task; false otherwise.
   */
-typedef bool (*watch_face_wants_background_task)(void *context);
+typedef movement_watch_face_advisory_t (*watch_face_advise)(void *context);
 
 typedef struct {
     watch_face_setup setup;
     watch_face_activate activate;
     watch_face_loop loop;
     watch_face_resign resign;
-    watch_face_wants_background_task wants_background_task;
+    watch_face_advise advise;
 } watch_face_t;
 
 typedef struct {
@@ -272,7 +279,7 @@ typedef struct {
     uint16_t alarm_down_timestamp;
 
     // background task handling
-    bool needs_background_tasks_handled;
+    bool needs_advisories_handled;
     bool has_scheduled_background_task;
     bool needs_wake;
 
