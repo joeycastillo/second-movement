@@ -205,6 +205,9 @@ void watch_display_text(watch_position_t location, const char *string) {
             #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             watch_display_string(string, 0);
             #pragma GCC diagnostic pop
+            #ifdef USE_CUSTOM_LCD
+            watch_display_character(' ', 10);
+            #endif
     }
 }
 
@@ -254,14 +257,9 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
         case WATCH_POSITION_HOURS:
         case WATCH_POSITION_MINUTES:
         case WATCH_POSITION_SECONDS:
+        case WATCH_POSITION_FULL:
             watch_display_text(location, string);
             break;
-        case WATCH_POSITION_FULL:
-            // This is deprecated, but we use it for the legacy behavior.
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            watch_display_string(string, 0);
-            #pragma GCC diagnostic pop
     }
 #else
     (void)string;
