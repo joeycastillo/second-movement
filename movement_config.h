@@ -29,10 +29,11 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    fast_stopwatch_face,
-    beats_face,
     world_clock_face,
+    beats_face,
+    advanced_alarm_face,
     countdown_face,
+    fast_stopwatch_face,
     preferences_face,
     set_time_face,
 };

@@ -27,6 +27,7 @@
 #include "clock_face.h"
 #include "beats_face.h"
 #include "world_clock_face.h"
+#include "advanced_alarm_face.h"
 #include "countdown_face.h"
 #include "fast_stopwatch_face.h"
 #include "set_time_face.h"

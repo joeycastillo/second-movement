@@ -24,11 +24,11 @@
 
 //-----------------------------------------------------------------------------
 
-#ifndef ALARM_FACE_H_
-#define ALARM_FACE_H_
+#ifndef ADVANCED_ALARM_FACE_H_
+#define ADVANCED_ALARM_FACE_H_
 
 /*
- * ALARM face
+ * Advanced Alarm face
  *
  * Implements up to 16 alarm slots on the sensor watch
  *
@@ -85,18 +85,18 @@ typedef struct {
 } alarm_state_t;
 
 
-void alarm_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void alarm_face_activate(void *context);
-bool alarm_face_loop(movement_event_t event, void *context);
-void alarm_face_resign(void *context);
-movement_watch_face_advisory_t alarm_face_advise(void *context);
+void advanced_alarm_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void advanced_alarm_face_activate(void *context);
+bool advanced_alarm_face_loop(movement_event_t event, void *context);
+void advanced_alarm_face_resign(void *context);
+movement_watch_face_advisory_t advanced_alarm_face_advise(void *context);
 
-#define alarm_face ((const watch_face_t){ \
-    alarm_face_setup, \
-    alarm_face_activate, \
-    alarm_face_loop, \
-    alarm_face_resign, \
-    alarm_face_advise, \
+#define advanced_alarm_face ((const watch_face_t){ \
+    advanced_alarm_face_setup, \
+    advanced_alarm_face_activate, \
+    advanced_alarm_face_loop, \
+    advanced_alarm_face_resign, \
+    advanced_alarm_face_advise, \
 })
 
-#endif // ALARM_FACE_H_
+#endif // ADVANCED_ALARM_FACE_H_

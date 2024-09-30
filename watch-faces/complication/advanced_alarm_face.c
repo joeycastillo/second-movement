@@ -25,10 +25,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "alarm_face.h"
+#include "advanced_alarm_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
+#include "delay.h"
 
 typedef enum {
     alarm_setting_idx_alarm,
@@ -43,7 +44,13 @@ static const char _dow_strings[ALARM_DAY_STATES + 1][2] ={"AL", "MO", "TU", "WE"
 static const uint8_t _blink_idx[ALARM_SETTING_STATES] = {2, 0, 4, 6, 8, 9};
 static const uint8_t _blink_idx2[ALARM_SETTING_STATES] = {3, 1, 5, 7, 8, 9};
 static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE_C8, BUZZER_NOTE_A8};
+
+// Volume is indicated by the three segments 5D, 5G and 5A
+#ifdef USE_CUSTOM_LCD
+static const uint8_t _buzzer_segdata[3][2] = {{1, 5}, {2, 5}, {3, 10}};
+#else
 static const uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
+#endif
 
 static int8_t _wait_ticks;
 
@@ -63,8 +70,9 @@ static void _alarm_set_signal(alarm_state_t *state) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-static void _alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
+static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     char buf[12];
+    bool set_leading_zero = movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H;
 
     uint8_t i = 0;
     if (state->is_setting) {
@@ -94,14 +102,14 @@ static void _alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     if (state->is_setting && subsecond % 2 && state->setting_state < alarm_setting_idx_pitch && !state->alarm_quick_ticks) {
         buf[_blink_idx[state->setting_state]] = buf[_blink_idx2[state->setting_state]] = ' ';
     }
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_FULL, buf);
 
     if (state->is_setting) {
     // draw pitch level indicator
         if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_pitch)) {
         for (i = 0; i <= state->alarm[state->alarm_idx].pitch && i < 3; i++)
             watch_set_pixel(_buzzer_segdata[i][0], _buzzer_segdata[i][1]);
-    }
+        }
         // draw beep rounds indicator
         if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_beeps)) {
             if (state->alarm[state->alarm_idx].beeps == ALARM_MAX_BEEP_ROUNDS - 1)
@@ -123,13 +131,13 @@ static void _alarm_initiate_setting(alarm_state_t *state, uint8_t subsecond) {
     state->is_setting = true;
     state->setting_state = 0;
     movement_request_tick_frequency(4);
-    _alarm_face_draw(state, subsecond);
+    _advanced_alarm_face_draw(state, subsecond);
 }
 
 static void _alarm_resume_setting(alarm_state_t *state, uint8_t subsecond) {
     state->is_setting = false;
     movement_request_tick_frequency(1);
-    _alarm_face_draw(state, subsecond);
+    _advanced_alarm_face_draw(state, subsecond);
 }
 
 static void _alarm_update_alarm_enabled(alarm_state_t *state) {
@@ -199,7 +207,7 @@ static void _abort_quick_ticks(alarm_state_t *state) {
     }
 }
 
-void alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
+void advanced_alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
@@ -217,12 +225,12 @@ void alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
     }
 }
 
-void alarm_face_activate(void *context) {
+void advanced_alarm_face_activate(void *context) {
     (void) context;
     watch_set_colon();
 }
 
-void alarm_face_resign(void *context) {
+void advanced_alarm_face_resign(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     state->is_setting = false;
     _alarm_update_alarm_enabled(state);
@@ -232,7 +240,7 @@ void alarm_face_resign(void *context) {
     movement_request_tick_frequency(1);
 }
 
-movement_watch_face_advisory_t alarm_face_advise(void *context) {
+movement_watch_face_advisory_t advanced_alarm_face_advise(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
 
@@ -246,7 +254,7 @@ movement_watch_face_advisory_t alarm_face_advise(void *context) {
             if (state->alarm[i].minute == now.unit.minute) {
                 if (state->alarm[i].hour == now.unit.hour) {
                     state->alarm_playing_idx = i;
-                    if (state->alarm[i].day == ALARM_DAY_EACH_DAY || state->alarm[i].day == ALARM_DAY_ONE_TIME) return true;
+                    if (state->alarm[i].day == ALARM_DAY_EACH_DAY || state->alarm[i].day == ALARM_DAY_ONE_TIME) retval.wants_background_task = true;
                     uint8_t weekday_idx = _get_weekday_idx(now);
                     if (state->alarm[i].day == weekday_idx) retval.wants_background_task = true;
                     if (state->alarm[i].day == ALARM_DAY_WORKDAY && weekday_idx < 5) retval.wants_background_task = true;
@@ -268,7 +276,7 @@ movement_watch_face_advisory_t alarm_face_advise(void *context) {
     return retval;
 }
 
-bool alarm_face_loop(movement_event_t event, void *context) {
+bool advanced_alarm_face_loop(movement_event_t event, void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
 
     switch (event.event_type) {
@@ -296,7 +304,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
         }
         // fall through
     case EVENT_ACTIVATE:
-        _alarm_face_draw(state, event.subsecond);
+        _advanced_alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_LIGHT_BUTTON_UP:
         if (!state->is_setting) {
@@ -362,7 +370,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             // auto enable an alarm if user sets anything
             if (state->setting_state > alarm_setting_idx_alarm) state->alarm[state->alarm_idx].enabled = true;
         }
-        _alarm_face_draw(state, event.subsecond);
+        _advanced_alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_ALARM_LONG_PRESS:
         if (!state->is_setting) {
@@ -387,7 +395,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                 break;
             }
         }
-        _alarm_face_draw(state, event.subsecond);
+        _advanced_alarm_face_draw(state, event.subsecond);
         break;
     case EVENT_ALARM_LONG_UP:
         if (state->is_setting) {
