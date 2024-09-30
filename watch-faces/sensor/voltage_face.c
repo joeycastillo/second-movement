@@ -28,15 +28,12 @@
 #include "watch.h"
 
 static void _voltage_face_update_display(void) {
-    char buf[14];
-
     watch_enable_adc();
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
     watch_disable_adc();
 
-    sprintf(buf, "BA  %4.2f V", voltage);
-    // printf("%s\n", buf);
-    watch_display_string(buf, 0);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BAT", "BA");
+    watch_display_float_with_best_effort(voltage, " V");
 }
 
 void voltage_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -65,16 +62,16 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            // clear seconds area and start tick animation if necessary
+            // clear seconds area (on classic LCD) and start tick animation if necessary
             if (!watch_sleep_animation_is_running()) {
-                watch_display_string("  ", 8);
+                watch_display_text_with_fallback(WATCH_POSITION_SECONDS, " V", "  ");
                 watch_start_sleep_animation(1000);
             }
             // update once an hour
             if (date_time.unit.minute == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                 _voltage_face_update_display();
-                watch_display_string("  ", 8);
+                watch_display_text_with_fallback(WATCH_POSITION_SECONDS, " V", "  ");
             }
             break;
         default:

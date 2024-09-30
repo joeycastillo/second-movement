@@ -40,6 +40,8 @@ INCLUDES += \
   -I./watch-library/hardware/watch \
   -I./watch-faces/clock \
   -I./watch-faces/complication \
+  -I./watch-faces/demo \
+  -I./watch-faces/sensor \
   -I./watch-faces/settings \
 
 # Add your source files here.

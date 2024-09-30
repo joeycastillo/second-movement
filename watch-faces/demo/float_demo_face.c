@@ -22,17 +22,40 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
+#include <stdlib.h>
+#include <string.h>
 #include "float_demo_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "preferences_face.h"
-// New includes go above this line.
+#include "watch.h"
+
+void float_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+    (void) watch_face_index;
+    if (*context_ptr == NULL) *context_ptr = malloc(sizeof(float));
+}
+
+void float_demo_face_activate(void *context) {
+    float *c = (float *)context;
+    *c = 0;
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "FLOAT", "FL");
+    movement_request_tick_frequency(32);
+}
+
+bool float_demo_face_loop(movement_event_t event, void *context) {
+    float *c = (float *)context;
+    switch (event.event_type) {
+        case EVENT_TICK:
+            *c = (*c) + 0.11;
+            // fall through
+        case EVENT_ACTIVATE:
+            watch_display_float_with_best_effort(*c, "#F");
+            break;
+        default:
+            movement_default_loop_handler(event);
+            break;
+    }
+
+    return true;
+}
+
+void float_demo_face_resign(void *context) {
+    (void) context;
+}

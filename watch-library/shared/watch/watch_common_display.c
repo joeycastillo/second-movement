@@ -25,6 +25,7 @@
 #include "watch_slcd.h"
 #include "watch_common_display.h"
 #include <string.h>
+#include <stdio.h>
 
 #ifdef USE_CUSTOM_LCD
 static const uint32_t IndicatorSegments[] = {
@@ -265,6 +266,37 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
     (void)string;
     watch_display_text(location, fallback);
 #endif
+}
+
+void watch_display_float_with_best_effort(float value, const char *units) {
+    char buf[8];
+    char buf_fallback[8];
+    const char *blank_units = "  ";
+
+    if (value < 0.0) {
+        watch_clear_decimal_if_available();
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Undflo", " Unflo");
+        return;
+    } else if (value > 199.99) {
+        watch_clear_decimal_if_available();
+        watch_display_text(WATCH_POSITION_BOTTOM, "Ovrflo");
+        return;
+    }
+
+    uint16_t value_times_100 = (uint16_t)(value * 100.0);
+    if (value_times_100 > 9999) {
+        snprintf(buf, sizeof(buf), "%5u%s", value_times_100, units ? units : blank_units);
+        snprintf(buf_fallback, sizeof(buf_fallback), "%4.1f%s", value, units ? units : blank_units);
+    } else if (value_times_100 > 999) {
+        snprintf(buf, sizeof(buf), "%4u%s", value_times_100, units ? units : blank_units);
+        snprintf(buf_fallback, sizeof(buf_fallback), "%4.1f%s", value, units ? units : blank_units);
+    } else {
+        snprintf(buf, sizeof(buf), " %03u%s", value_times_100 % 1000u, units ? units : blank_units);
+        snprintf(buf_fallback, sizeof(buf_fallback), "%4.2f%s", value, units ? units : blank_units);
+    }
+
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf_fallback);
+    watch_set_decimal_if_available();
 }
 
 void watch_set_colon(void) {
