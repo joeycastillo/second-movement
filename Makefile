@@ -35,6 +35,7 @@ INCLUDES += \
   -I./utz \
   -I./filesystem \
   -I./shell \
+  -I./movement/lib/sunriset \
   -I./watch-library/shared/watch \
   -I./watch-library/hardware/watch \
   -I./watch-faces/clock \
@@ -50,6 +51,7 @@ SRCS += \
   ./utz/zones.c \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
+  ./movement/lib/sunriset/sunriset.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \

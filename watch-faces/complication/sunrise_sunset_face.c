@@ -57,7 +57,8 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     }
 
     if (movement_location.reg == 0) {
-        watch_display_string("RI  no Loc", 0);
+        watch_display_text_with_fallback(WATCH_POSITION_TOP, "Sunri", "rI");
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "No LOC", "No Loc");
         return;
     }
 
@@ -88,7 +89,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
             watch_clear_indicator(WATCH_INDICATOR_PM);
             watch_clear_indicator(WATCH_INDICATOR_24H);
             sprintf(buf, "%s%2d none ", (result == 1) ? "SE" : "rI", scratch_time.unit.day);
-            watch_display_string(buf, 0);
+            watch_display_text(WATCH_POSITION_FULL, buf);
             return;
         }
 
@@ -118,7 +119,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }
                 sprintf(buf, "rI%2d%2d%02d%s", scratch_time.unit.day, scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
-                watch_display_string(buf, 0);
+                watch_display_text(WATCH_POSITION_FULL, buf);
                 return;
             } else {
                 show_next_match = true;
@@ -145,7 +146,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }
                 sprintf(buf, "SE%2d%2d%02d%s", scratch_time.unit.day, scratch_time.unit.hour, scratch_time.unit.minute, longLatPresets[state->longLatToUse].name);
-                watch_display_string(buf, 0);
+                watch_display_text(WATCH_POSITION_FULL, buf);
                 return;
             } else {
                 show_next_match = true;
@@ -217,7 +218,7 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
     if (event.subsecond % 2) {
         buf[state->active_digit + 4] = ' ';
     }
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_FULL, buf);
 }
 
 static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {

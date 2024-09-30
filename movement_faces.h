@@ -30,6 +30,7 @@
 #include "advanced_alarm_face.h"
 #include "countdown_face.h"
 #include "fast_stopwatch_face.h"
+#include "sunrise_sunset_face.h"
 #include "set_time_face.h"
 #include "preferences_face.h"
 // New includes go above this line.

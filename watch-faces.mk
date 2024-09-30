@@ -5,5 +5,6 @@ SRCS += \
   ./watch-faces/complication/advanced_alarm_face.c \
   ./watch-faces/complication/countdown_face.c \
   ./watch-faces/complication/fast_stopwatch_face.c \
+  ./watch-faces/complication/sunrise_sunset_face.c \
   ./watch-faces/settings/set_time_face.c \
   ./watch-faces/settings/preferences_face.c \
