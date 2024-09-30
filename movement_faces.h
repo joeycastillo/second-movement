@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "simple_clock_face.h"
 #include "clock_face.h"
 #include "beats_face.h"
 #include "world_clock_face.h"

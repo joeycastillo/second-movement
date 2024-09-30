@@ -1,5 +1,4 @@
 SRCS += \
-  ./watch-faces/clock/simple_clock_face.c \
   ./watch-faces/clock/clock_face.c \
   ./watch-faces/clock/beats_face.c \
   ./watch-faces/clock/world_clock_face.c \
