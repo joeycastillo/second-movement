@@ -26,6 +26,7 @@
 #include <string.h>
 #include "character_set_face.h"
 #include "watch.h"
+#include "watch_common_display.h"
 
 void character_set_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -47,8 +48,10 @@ bool character_set_face_loop(movement_event_t event, void *context) {
             if (*c & 0x80) *c = ' ';
             // fall through
         case EVENT_ACTIVATE:
-            sprintf(buf, "%c%c%c%c%c%c%c%c%c%c", *c, *c, *c, *c, *c, *c, *c, *c, *c, *c);
-            watch_display_string(buf, 0);
+            sprintf(buf, "%c%c%c%c%c%c", *c, *c, *c, *c, *c, *c);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
