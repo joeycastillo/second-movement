@@ -109,7 +109,7 @@ static void _movement_handle_advisories(void) {
             // TODO: handle other advisory types
         }
     }
-    movement_state.needs_advisories_handled = false;
+    movement_state.woke_from_alarm_handler = false;
 }
 
 static void _movement_handle_scheduled_tasks(void) {
@@ -547,7 +547,7 @@ static void _sleep_mode_app_loop(void) {
     // as long as le_mode_ticks is -1 (i.e. we are in low energy mode), we wake up here, update the screen, and go right back to sleep.
     while (movement_state.le_mode_ticks == -1) {
         // we also have to handle background tasks here in the mini-runloop
-        if (movement_state.needs_advisories_handled) _movement_handle_advisories();
+        if (movement_state.woke_from_alarm_handler) _movement_handle_advisories();
 
         event.event_type = EVENT_LOW_ENERGY_UPDATE;
         watch_faces[movement_state.current_face_idx].loop(event, watch_face_contexts[movement_state.current_face_idx]);
@@ -590,7 +590,7 @@ bool app_loop(void) {
     }
 
     // handle advisories, if the alarm handler told us we need to
-    if (movement_state.needs_advisories_handled) _movement_handle_advisories();
+    if (movement_state.woke_from_alarm_handler) _movement_handle_advisories();
 
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
@@ -748,7 +748,7 @@ void cb_alarm_btn_extwake(void) {
 }
 
 void cb_alarm_fired(void) {
-    movement_state.needs_advisories_handled = true;
+    movement_state.woke_from_alarm_handler = true;
 }
 
 void cb_fast_tick(void) {
