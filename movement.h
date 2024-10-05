@@ -337,6 +337,12 @@ int32_t movement_get_current_timezone_offset(void);
 int32_t movement_get_timezone_index(void);
 void movement_set_timezone_index(uint8_t value);
 
+watch_date_time movement_get_utc_date_time(void);
+watch_date_time movement_get_local_date_time(void);
+watch_date_time movement_get_date_time_in_zone(uint8_t zone_index);
+
+void movement_set_local_date_time(watch_date_time date_time);
+
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);
 

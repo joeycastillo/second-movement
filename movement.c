@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include "app.h"
 #include "watch.h"
+#include "watch_utility.h"
 #include "usb.h"
 #include "watch_usb_cdc.h"
 #include "watch_private.h"
@@ -70,6 +71,19 @@ void yield(void) {
     tud_task();
     cdc_task();
 }
+
+static udatetime_t _movement_convert_date_time_to_udate(watch_date_time date_time) {
+    return (udatetime_t) {
+        .date.dayofmonth = date_time.unit.day,
+        .date.dayofweek = dayofweek(UYEAR_FROM_YEAR(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR), date_time.unit.month, date_time.unit.day),
+        .date.month = date_time.unit.month,
+        .date.year = UYEAR_FROM_YEAR(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR),
+        .time.hour = date_time.unit.hour,
+        .time.minute = date_time.unit.minute,
+        .time.second = date_time.unit.second
+    };
+}
+
 static inline void _movement_reset_inactivity_countdown(void) {
     movement_state.le_mode_ticks = movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval];
     movement_state.timeout_ticks = movement_timeout_inactivity_deadlines[movement_state.settings.bit.to_interval];
@@ -314,22 +328,24 @@ uint8_t movement_claim_backup_register(void) {
 
 int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index) {
     watch_date_time date_time = watch_rtc_get_date_time();
-    uzone_t time_zone;
-    uoffset_t offset;
-    udatetime_t udate_time = {
-        .date.dayofmonth = date_time.unit.day,
-        .date.dayofweek = dayofweek(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - UYEAR_OFFSET, date_time.unit.month, date_time.unit.day),
-        .date.month = date_time.unit.month,
-        .date.year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - UYEAR_OFFSET,
-        .time.hour = date_time.unit.hour,
-        .time.minute = date_time.unit.minute,
-        .time.second = date_time.unit.second
-    };
+    udatetime_t udate_time = _movement_convert_date_time_to_udate(watch_rtc_get_date_time());
+    uzone_t local_zone;
 
-    unpack_zone(&zone_defns[zone_index], "", &time_zone);
-    get_current_offset(&time_zone, &udate_time, &offset);
+    // first unpack the zone to get the baseline offset
+    unpack_zone(&zone_defns[zone_index], "", &local_zone);
 
-    return offset.hours * 3600 + offset.minutes * 60;
+    // offset the UTC time by that amount to get the local standard time
+    date_time = watch_utility_date_time_convert_zone(date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
+
+    // if local zone has DST rules, we need to see if DST applies.
+    if (local_zone.rules_len) {
+        udate_time = _movement_convert_date_time_to_udate(date_time);
+        uoffset_t offset;
+        get_current_offset(&local_zone, &udate_time, &offset);
+        return offset.hours * 3600 + offset.minutes * 60;
+    }
+
+    return local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60;
 }
 
 int32_t movement_get_current_timezone_offset(void) {
@@ -342,6 +358,26 @@ int32_t movement_get_timezone_index(void) {
 
 void movement_set_timezone_index(uint8_t value) {
     movement_state.settings.bit.time_zone = value;
+}
+
+watch_date_time movement_get_utc_date_time(void) {
+    return watch_rtc_get_date_time();
+}
+
+watch_date_time movement_get_date_time_in_zone(uint8_t zone_index) {
+    int32_t offset = movement_get_current_timezone_offset_for_zone(zone_index);
+    return watch_utility_date_time_convert_zone(watch_rtc_get_date_time(), 0, offset);
+}
+
+watch_date_time movement_get_local_date_time(void) {
+    watch_date_time date_time = watch_rtc_get_date_time();
+    return watch_utility_date_time_convert_zone(date_time, 0, movement_get_current_timezone_offset());
+}
+
+void movement_set_local_date_time(watch_date_time date_time) {
+    int32_t current_offset = movement_get_current_timezone_offset();
+    watch_date_time utc_date_time = watch_utility_date_time_convert_zone(date_time, current_offset, 0);
+    watch_rtc_set_date_time(utc_date_time);
 }
 
 bool movement_button_should_sound(void) {

@@ -57,7 +57,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
             if (centibeats == state->last_centibeat_displayed) {
                 // we missed this update, try again next subsecond
@@ -73,7 +73,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(432);
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
             sprintf(buf, "%4lu  ", centibeats / 100);
 

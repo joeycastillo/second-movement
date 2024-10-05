@@ -42,11 +42,6 @@ void world_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         memset(*context_ptr, 0, sizeof(world_clock_state_t));
         world_clock_state_t *state = (world_clock_state_t *)*context_ptr;
         state->settings.bit.timezone_index = 15;
-        uint8_t backup_register = movement_claim_backup_register();
-        if (backup_register) {
-            state->settings.reg = watch_get_backup_data(backup_register);
-            state->backup_register = backup_register;
-        }
     }
 }
 
@@ -72,8 +67,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
             // fall through
         case EVENT_TICK:
         case EVENT_LOW_ENERGY_UPDATE:
-            date_time = watch_rtc_get_date_time();
-            date_time = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), state->current_offset);
+            date_time = movement_get_date_time_in_zone(state->settings.bit.timezone_index);
             previous_date_time = state->previous_date_time;
             state->previous_date_time = date_time.reg;
             if ((date_time.reg >> 6) == (previous_date_time >> 6) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {

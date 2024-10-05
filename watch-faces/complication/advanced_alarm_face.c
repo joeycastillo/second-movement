@@ -156,7 +156,7 @@ static void _alarm_update_alarm_enabled(alarm_state_t *state) {
             break;
             } else {
                 if (!now_init) {
-                    now = watch_rtc_get_date_time();
+                    now = movement_get_local_date_time();
                     now_init = true;
                     weekday_idx = _get_weekday_idx(now);
                     now_minutes_of_day = now.unit.hour * 60 + now.unit.minute;
@@ -244,7 +244,7 @@ movement_watch_face_advisory_t advanced_alarm_face_advise(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
 
-    watch_date_time now = watch_rtc_get_date_time();
+    watch_date_time now = movement_get_local_date_time();
     // just a failsafe: never fire more than one alarm within a minute
     if (state->alarm_handled_minute == now.unit.minute) return retval;
     state->alarm_handled_minute = now.unit.minute;
