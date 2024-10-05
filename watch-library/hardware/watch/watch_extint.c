@@ -41,7 +41,7 @@ void watch_disable_external_interrupts(void) {
     eic_disable();
 }
 
-void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger trigger) {
+void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger_t trigger) {
     watch_enable_digital_input(pin);
 
     // check if this is a button pin

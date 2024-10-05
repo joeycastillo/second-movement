@@ -45,7 +45,7 @@ extern watch_cb_t a4_callback;
 
 #define WATCH_RTC_REFERENCE_YEAR (2020)
 
-#define watch_date_time rtc_date_time
+#define watch_date_time rtc_date_time_t
 
 /** @brief Called by main.c to check if the RTC is enabled.
   * You may call this function, but outside of app_init, it should always return true.
@@ -60,20 +60,20 @@ bool _watch_rtc_is_enabled(void);
   *       1 means 2021, 2 means 2022, etc. **You will be responsible for handling this offset in your code**,
   *       if the calendar year is needed for timestamp calculation logic or display purposes.
   */
-void watch_rtc_set_date_time(rtc_date_time date_time);
+void watch_rtc_set_date_time(rtc_date_time_t date_time);
 
 /** @brief Returns the date and time.
-  * @return A rtc_date_time with the current date and time, with a year value from 0-63 representing 2020-2083.
+  * @return A rtc_date_time_t with the current date and time, with a year value from 0-63 representing 2020-2083.
   * @see watch_rtc_set_date_time for notes about how the year is stored.
   */
-rtc_date_time watch_rtc_get_date_time(void);
+rtc_date_time_t watch_rtc_get_date_time(void);
 
 /** @brief Registers an alarm callback that will be called when the RTC time matches the target time, as masked
   *        by the provided mask.
   * @param callback The function you wish to have called when the alarm fires. If this value is NULL, the alarm
   *                 interrupt will still be enabled, but no callback function will be called.
   * @param alarm_time The time that you wish to match. The date is currently ignored.
-  * @param mask One of the values in rtc_alarm_match indicating which values to check.
+  * @param mask One of the values in rtc_alarm_match_t indicating which values to check.
   * @details The alarm interrupt is a versatile tool for scheduling events in the future, especially since it can
   *          wake the device from all sleep modes. The key to its versatility is the mask parameter.
   *          Suppose we set an alarm for midnight, 00:00:00.
@@ -83,7 +83,7 @@ rtc_date_time watch_rtc_get_date_time(void);
   *          In theory the SAM L22's alarm function can match on days, months and even years, but I have not had
   *          success with this yet; as such, I am omitting these options for now.
   */
-void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time alarm_time, rtc_alarm_match mask);
+void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time_t alarm_time, rtc_alarm_match_t mask);
 
 /** @brief Disables the alarm callback.
   */

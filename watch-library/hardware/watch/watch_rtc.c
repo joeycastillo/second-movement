@@ -48,11 +48,11 @@ void _watch_rtc_init(void) {
     rtc_configure_callback(watch_rtc_callback);
 }
 
-void watch_rtc_set_date_time(rtc_date_time date_time) {
+void watch_rtc_set_date_time(rtc_date_time_t date_time) {
     rtc_set_date_time(date_time);
 }
 
-rtc_date_time watch_rtc_get_date_time(void) {
+rtc_date_time_t watch_rtc_get_date_time(void) {
     return rtc_get_date_time();
 }
 
@@ -96,7 +96,7 @@ void watch_rtc_disable_all_periodic_callbacks(void) {
     watch_rtc_disable_matching_periodic_callbacks(0xFF);
 }
 
-void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time alarm_time, rtc_alarm_match mask) {
+void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time_t alarm_time, rtc_alarm_match_t mask) {
     RTC->MODE2.Mode2Alarm[0].ALARM.reg = alarm_time.reg;
     RTC->MODE2.Mode2Alarm[0].MASK.reg = mask;
     RTC->MODE2.INTENSET.reg = RTC_MODE2_INTENSET_ALARM0;

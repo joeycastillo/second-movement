@@ -65,6 +65,6 @@ void watch_disable_external_interrupts(void);
   *       will allow them to trigger even when the watch is in deep sleep mode.
   * @warning Pin A2 shares an interrupt channel with the Alarm button; use caution when configuring both.
   */
-void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger trigger);
+void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger_t trigger);
 
 /// @}
