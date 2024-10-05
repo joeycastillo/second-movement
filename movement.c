@@ -146,8 +146,8 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
 
-    // update the DST offset cache every 15 minutes, since someplace in the world could change.
-    if (date_time.unit.minute % 15 == 0) {
+    // update the DST offset cache every 30 minutes, since someplace in the world could change.
+    if (date_time.unit.minute % 30 == 0) {
         _movement_update_dst_offset_cache();
     }
 
