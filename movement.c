@@ -94,8 +94,6 @@ static bool _movement_update_dst_offset_cache(void) {
     bool dst_changed = false;
     watch_date_time_t system_date_time = watch_rtc_get_date_time();
 
-    printf("current zone: %d\n", movement_state.settings.bit.time_zone);
-
     for (uint8_t i = 0; i < NUM_ZONE_NAMES; i++) {
         unpack_zone(&zone_defns[i], "", &local_zone);
         watch_date_time_t date_time = watch_utility_date_time_convert_zone(system_date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
@@ -110,11 +108,9 @@ static bool _movement_update_dst_offset_cache(void) {
                 _movement_dst_offset_cache[i] = new_offset;
                 dst_changed = true;
             }
-            printf("zone %d: %d\n", i, new_offset);
         } else {
             // otherwise set the cache to a constant value that indicates no DST check needs to be performed.
             _movement_dst_offset_cache[i] = TIMEZONE_DOES_NOT_OBSERVE;
-            printf("zone %d: %d\n", i, TIMEZONE_DOES_NOT_OBSERVE);
         }
     }
 
