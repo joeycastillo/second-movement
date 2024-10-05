@@ -40,6 +40,7 @@
 #include "filesystem.h"
 #include "shell.h"
 #include "utz.h"
+#include "zones.h"
 
 #include "movement_config.h"
 
@@ -55,6 +56,9 @@ watch_date_time scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
 const int16_t movement_timeout_inactivity_deadlines[4] = {60, 120, 300, 1800};
 movement_event_t event;
+
+int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
+#define TIMEZONE_DOES_NOT_OBSERVE (-127)
 
 const char movement_valid_position_0_chars[] = " AaBbCcDdEeFGgHhIiJKLMNnOoPQrSTtUuWXYZ-='+\\/0123456789";
 const char movement_valid_position_1_chars[] = " ABCDEFHlJLNORTtUX-='01378";
@@ -84,6 +88,39 @@ static udatetime_t _movement_convert_date_time_to_udate(watch_date_time date_tim
     };
 }
 
+static bool _movement_update_dst_offset_cache(void) {
+    uzone_t local_zone;
+    udatetime_t udate_time;
+    bool dst_changed = false;
+    watch_date_time system_date_time = watch_rtc_get_date_time();
+
+    printf("current zone: %d\n", movement_state.settings.bit.time_zone);
+
+    for (uint8_t i = 0; i < NUM_ZONE_NAMES; i++) {
+        unpack_zone(&zone_defns[i], "", &local_zone);
+        watch_date_time date_time = watch_utility_date_time_convert_zone(system_date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
+
+        if (!!local_zone.rules_len) {
+            // if local zone has DST rules, we need to see if DST applies.
+            udate_time = _movement_convert_date_time_to_udate(date_time);
+            uoffset_t offset;
+            get_current_offset(&local_zone, &udate_time, &offset);
+            int8_t new_offset = (offset.hours * 60 + offset.minutes) / 15;
+            if (_movement_dst_offset_cache[i] != new_offset) {
+                _movement_dst_offset_cache[i] = new_offset;
+                dst_changed = true;
+            }
+            printf("zone %d: %d\n", i, new_offset);
+        } else {
+            // otherwise set the cache to a constant value that indicates no DST check needs to be performed.
+            _movement_dst_offset_cache[i] = TIMEZONE_DOES_NOT_OBSERVE;
+            printf("zone %d: %d\n", i, TIMEZONE_DOES_NOT_OBSERVE);
+        }
+    }
+
+    return dst_changed;
+}
+
 static inline void _movement_reset_inactivity_countdown(void) {
     movement_state.le_mode_ticks = movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval];
     movement_state.timeout_ticks = movement_timeout_inactivity_deadlines[movement_state.settings.bit.to_interval];
@@ -107,6 +144,13 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 }
 
 static void _movement_handle_top_of_minute(void) {
+    watch_date_time date_time = watch_rtc_get_date_time();
+
+    // update the DST offset cache every 15 minutes, since someplace in the world could change.
+    if (date_time.unit.minute % 15 == 0) {
+        _movement_update_dst_offset_cache();
+    }
+
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
         // For each face that offers an advisory...
         if (watch_faces[i].advise != NULL) {
@@ -327,25 +371,15 @@ uint8_t movement_claim_backup_register(void) {
 }
 
 int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index) {
-    watch_date_time date_time = watch_rtc_get_date_time();
-    udatetime_t udate_time = _movement_convert_date_time_to_udate(watch_rtc_get_date_time());
-    uzone_t local_zone;
+    int8_t cached_dst_offset = _movement_dst_offset_cache[zone_index];
 
-    // first unpack the zone to get the baseline offset
-    unpack_zone(&zone_defns[zone_index], "", &local_zone);
-
-    // offset the UTC time by that amount to get the local standard time
-    date_time = watch_utility_date_time_convert_zone(date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
-
-    // if local zone has DST rules, we need to see if DST applies.
-    if (local_zone.rules_len) {
-        udate_time = _movement_convert_date_time_to_udate(date_time);
-        uoffset_t offset;
-        get_current_offset(&local_zone, &udate_time, &offset);
-        return offset.hours * 3600 + offset.minutes * 60;
+    if (cached_dst_offset == TIMEZONE_DOES_NOT_OBSERVE) {
+        // if time zone doesn't observe DST, we can just return the standard time offset from the zone definition.
+        return (int32_t)zone_defns[zone_index].offset_inc_minutes * OFFSET_INCREMENT * 60;
+    } else {
+        // otherwise, we've precalculated the offset for this zone and can return it.
+        return (int32_t)cached_dst_offset * OFFSET_INCREMENT * 60;
     }
-
-    return local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60;
 }
 
 int32_t movement_get_current_timezone_offset(void) {
@@ -378,6 +412,11 @@ void movement_set_local_date_time(watch_date_time date_time) {
     int32_t current_offset = movement_get_current_timezone_offset();
     watch_date_time utc_date_time = watch_utility_date_time_convert_zone(date_time, current_offset, 0);
     watch_rtc_set_date_time(utc_date_time);
+
+    // this may seem wasteful, but if the user's local time is in a zone that observes DST,
+    // they may have just crossed a DST boundary, which means the next call to this function
+    // could require a different offset to force local time back to UTC. Quelle horreur!
+    _movement_update_dst_offset_cache();
 }
 
 bool movement_button_should_sound(void) {
@@ -549,6 +588,9 @@ void app_setup(void) {
             scheduled_tasks[i].reg = 0;
             is_first_launch = false;
         }
+
+        // populate the DST offset cache
+        _movement_update_dst_offset_cache();
 
         // set up the 1 minute alarm (for background tasks and low power updates)
         watch_date_time alarm_time;
