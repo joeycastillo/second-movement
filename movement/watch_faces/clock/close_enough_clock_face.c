@@ -92,7 +92,7 @@ bool close_enough_clock_face_loop(movement_event_t event, void *context) {
     close_enough_clock_state_t *state = (close_enough_clock_state_t *)context;
 
     char buf[11];
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     bool show_next_hour = false;
     int prev_five_minute_period;
     int prev_min_checked;

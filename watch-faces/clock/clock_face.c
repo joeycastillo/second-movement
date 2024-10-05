@@ -44,7 +44,7 @@
 
 typedef struct {
     struct {
-        watch_date_time previous;
+        watch_date_time_t previous;
     } date_time;
     uint8_t last_battery_check;
     uint8_t watch_face_index;
@@ -72,11 +72,11 @@ static void clock_indicate_24h() {
     clock_indicate(WATCH_INDICATOR_24H, !!movement_clock_mode_24h());
 }
 
-static bool clock_is_pm(watch_date_time date_time) {
+static bool clock_is_pm(watch_date_time_t date_time) {
     return date_time.unit.hour >= 12;
 }
 
-static void clock_indicate_pm(watch_date_time date_time) {
+static void clock_indicate_pm(watch_date_time_t date_time) {
     if (movement_clock_mode_24h()) { return; }
     clock_indicate(WATCH_INDICATOR_PM, clock_is_pm(date_time));
 }
@@ -86,7 +86,7 @@ static void clock_indicate_low_available_power(clock_state_t *clock) {
     clock_indicate(WATCH_INDICATOR_LAP, clock->battery_low);
 }
 
-static watch_date_time clock_24h_to_12h(watch_date_time date_time) {
+static watch_date_time_t clock_24h_to_12h(watch_date_time_t date_time) {
     date_time.unit.hour %= 12;
 
     if (date_time.unit.hour == 0) {
@@ -96,7 +96,7 @@ static watch_date_time clock_24h_to_12h(watch_date_time date_time) {
     return date_time;
 }
 
-static void clock_check_battery_periodically(clock_state_t *clock, watch_date_time date_time) {
+static void clock_check_battery_periodically(clock_state_t *clock, watch_date_time_t date_time) {
     // check the battery voltage once a day
     if (date_time.unit.day == clock->last_battery_check) { return; }
 
@@ -116,7 +116,7 @@ static void clock_toggle_time_signal(clock_state_t *clock) {
     clock_indicate_time_signal(clock);
 }
 
-static void clock_display_all(watch_date_time date_time) {
+static void clock_display_all(watch_date_time_t date_time) {
     char buf[8 + 1];
 
     snprintf(
@@ -134,7 +134,7 @@ static void clock_display_all(watch_date_time date_time) {
     watch_display_text(WATCH_POSITION_BOTTOM, buf + 2);
 }
 
-static bool clock_display_some(watch_date_time current, watch_date_time previous) {
+static bool clock_display_some(watch_date_time_t current, watch_date_time_t previous) {
     if ((current.reg >> 6) == (previous.reg >> 6)) {
         // everything before seconds is the same, don't waste cycles setting those segments.
 
@@ -167,7 +167,7 @@ static bool clock_display_some(watch_date_time current, watch_date_time previous
     }
 }
 
-static void clock_display_clock(clock_state_t *clock, watch_date_time current) {
+static void clock_display_clock(clock_state_t *clock, watch_date_time_t current) {
     if (!clock_display_some(current, clock->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm(current);
@@ -177,7 +177,7 @@ static void clock_display_clock(clock_state_t *clock, watch_date_time current) {
     }
 }
 
-static void clock_display_low_energy(watch_date_time date_time) {
+static void clock_display_low_energy(watch_date_time_t date_time) {
     if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
         clock_indicate_pm(date_time);
         date_time = clock_24h_to_12h(date_time);
@@ -240,7 +240,7 @@ void clock_face_activate(void *context) {
 
 bool clock_face_loop(movement_event_t event, void *context) {
     clock_state_t *state = (clock_state_t *) context;
-    watch_date_time current;
+    watch_date_time_t current;
 
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
@@ -282,7 +282,7 @@ movement_watch_face_advisory_t clock_face_advise(void *context) {
     clock_state_t *state = (clock_state_t *) context;
 
     if (state->time_signal_enabled) {
-        watch_date_time date_time = movement_get_local_date_time();
+        watch_date_time_t date_time = movement_get_local_date_time();
         retval.wants_background_task = date_time.unit.minute == 0;
     }
 

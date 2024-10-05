@@ -162,7 +162,7 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 
     uint32_t timestamp;
     uint32_t previous_date_time;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
 
     switch (event.event_type) {
 	case EVENT_ACTIVATE:

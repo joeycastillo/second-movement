@@ -36,11 +36,11 @@
 // Pressing the alarm button enters the log mode, where the main display shows the number of interrupts detected in each of the last
 // 24 hours (the hour is shown in the top right digit and AM/PM indicator, if the clock is set to 12 hour mode)
 
-static void _lis2dw_logging_face_update_display(lis2dw_logger_state_t *logger_state, lis2dw_wakeup_source wakeup_source) {
+static void _lis2dw_logging_face_update_display(lis2dw_logger_state_t *logger_state, lis2dw_wakeup_source_t wakeup_source) {
     char buf[14];
     char time_indication_character;
     int8_t pos;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
 
     if (logger_state->log_ticks) {
         pos = (logger_state->data_points - 1 - logger_state->display_index) % LIS2DW_LOGGING_NUM_DATA_POINTS;
@@ -92,7 +92,7 @@ static void _lis2dw_logging_face_update_display(lis2dw_logger_state_t *logger_st
 }
 
 static void _lis2dw_logging_face_log_data(lis2dw_logger_state_t *logger_state) {
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     // we get this call 15 minutes late; i.e. at 6:15 we're logging events for 6:00.
     // so: if we're at the top of the hour, roll the hour back too (7:00 task logs data for 6:45)
     if (date_time.unit.minute == 0) date_time.unit.hour = (date_time.unit.hour + 23) % 24;
@@ -136,8 +136,8 @@ void lis2dh_logging_face_activate(void *context) {
 
 bool lis2dw_logging_face_loop(movement_event_t event, void *context) {
     lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
-    lis2dw_wakeup_source wakeup_source = 0;
-    lis2dw_interrupt_source interrupt_source = 0;
+    lis2dw_wakeup_source_t wakeup_source = 0;
+    lis2dw_interrupt_source_t interrupt_source = 0;
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -189,7 +189,7 @@ void lis2dw_logging_face_resign(void *context) {
 
 movement_watch_face_advisory_t lis2dw_logging_face_advise(void *context) {
     lis2dw_logger_state_t *logger_state = (lis2dw_logger_state_t *)context;
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     movement_watch_face_advisory_t retval = { 0 };
 
     // this is kind of an abuse of the API, but, let's use the 1 minute tick to shift all our data over.

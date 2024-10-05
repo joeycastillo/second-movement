@@ -106,7 +106,7 @@ typedef enum {
   LIS2DW_INTERRUPT_SRC_SINGLE_TAP   = 0b00000100,
   LIS2DW_INTERRUPT_SRC_WU           = 0b00000010,
   LIS2DW_INTERRUPT_SRC_FF           = 0b00000001
-} lis2dw_interrupt_source;
+} lis2dw_interrupt_source_t;
 
 typedef enum {
   LIS2DW_WAKEUP_SRC_FREEFALL    = 0b00100000,
@@ -115,7 +115,7 @@ typedef enum {
   LIS2DW_WAKEUP_SRC_WAKEUP_X    = 0b00000100,
   LIS2DW_WAKEUP_SRC_WAKEUP_Y    = 0b00000010,
   LIS2DW_WAKEUP_SRC_WAKEUP_Z    = 0b00000001
-} lis2dw_wakeup_source;
+} lis2dw_wakeup_source_t;
 
 // Assumes SA0 is high; if low, its 0x18
 #define LIS2DW_ADDRESS (0x19)
@@ -337,8 +337,8 @@ void lis2dw_clear_fifo(void);
 
 void lis2dw_configure_wakeup_int1(uint8_t threshold, bool latch, bool active_state);
 
-lis2dw_interrupt_source lis2dw_get_interrupt_source(void);
+lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 
-lis2dw_wakeup_source lis2dw_get_wakeup_source(void);
+lis2dw_wakeup_source_t lis2dw_get_wakeup_source(void);
 
 #endif // LIS2DW_H

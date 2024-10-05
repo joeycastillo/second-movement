@@ -32,7 +32,7 @@
 char set_time_hackwatch_face_titles[][3] = {"HR", "M1", "SE", "YR", "MO", "DA", "ZO"};
 #define set_time_hackwatch_face_NUM_SETTINGS (sizeof(set_time_hackwatch_face_titles) / sizeof(*set_time_hackwatch_face_titles))
 
-watch_date_time date_time_settings;
+watch_date_time_t date_time_settings;
 
 void set_time_hackwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;

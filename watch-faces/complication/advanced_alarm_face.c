@@ -54,7 +54,7 @@ static const uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
 
 static int8_t _wait_ticks;
 
-static uint8_t _get_weekday_idx(watch_date_time date_time) {
+static uint8_t _get_weekday_idx(watch_date_time_t date_time) {
     date_time.unit.year += 20;
     if (date_time.unit.month <= 2) {
         date_time.unit.month += 12;
@@ -143,7 +143,7 @@ static void _alarm_resume_setting(alarm_state_t *state, uint8_t subsecond) {
 static void _alarm_update_alarm_enabled(alarm_state_t *state) {
     // save indication for active alarms to movement settings
     bool active_alarms = false;
-    watch_date_time now;
+    watch_date_time_t now;
     bool now_init = false;
     uint8_t weekday_idx;
     uint16_t now_minutes_of_day;
@@ -244,7 +244,7 @@ movement_watch_face_advisory_t advanced_alarm_face_advise(void *context) {
     alarm_state_t *state = (alarm_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
 
-    watch_date_time now = movement_get_local_date_time();
+    watch_date_time_t now = movement_get_local_date_time();
     // just a failsafe: never fire more than one alarm within a minute
     if (state->alarm_handled_minute == now.unit.minute) return retval;
     state->alarm_handled_minute = now.unit.minute;

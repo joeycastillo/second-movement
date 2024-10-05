@@ -109,7 +109,7 @@ void wyoscan_face_activate(void *context) {
 bool wyoscan_face_loop(movement_event_t event, void *context) {
     wyoscan_state_t *state = (wyoscan_state_t *)context;
 
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             break;

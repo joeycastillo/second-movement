@@ -72,7 +72,7 @@ bool decimal_time_face_loop(movement_event_t event, void *context) {
 
     char buf[16];
     uint8_t centihours, decimal_seconds;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     
     switch (event.event_type) {
         case EVENT_ACTIVATE:

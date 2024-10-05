@@ -75,7 +75,7 @@ static const uint8_t num_enabled_activities = sizeof(enabled_activities) / sizeo
 // One logged activity
 typedef struct __attribute__((__packed__)) {
     // Activity's start time
-    watch_date_time start_time;
+    watch_date_time_t start_time;
 
     // Total duration of activity, including time spend in paus
     uint16_t total_sec;
@@ -132,7 +132,7 @@ typedef struct {
     uint16_t counter;
 
     // Start of currently logged activity, if any
-    watch_date_time start_time;
+    watch_date_time_t start_time;
 
     // Total seconds elapsed since logging started
     uint16_t curr_total_sec;
@@ -197,7 +197,7 @@ static void _activity_activate(activity_state_t *state) {
     // Those are not up-to-date because ticks have not been coming
     if (state->le_state != 0 && state->mode == ACTM_LOGGING) {
         state->le_state = 2;
-        watch_date_time now = watch_rtc_get_date_time();
+        watch_date_time_t now = watch_rtc_get_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
         uint32_t total_seconds = now_timestamp - start_timestamp;
@@ -244,7 +244,7 @@ static void _activity_update_logging_screen(activity_state_t *state) {
 
     // If we're in LE state: per-minute update is special
     if (state->le_state == 1) {
-        watch_date_time now = watch_rtc_get_date_time();
+        watch_date_time_t now = watch_rtc_get_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
         uint32_t total_seconds = now_timestamp - start_timestamp;
@@ -292,7 +292,7 @@ static void _activity_update_logging_screen(activity_state_t *state) {
     // Briefly, show time without seconds
     else {
         watch_clear_indicator(WATCH_INDICATOR_LAP);
-        watch_date_time now = watch_rtc_get_date_time();
+        watch_date_time_t now = watch_rtc_get_date_time();
         uint8_t hour = now.unit.hour;
         if (!movement_clock_mode_24h()) {
             watch_clear_indicator(WATCH_INDICATOR_24H);
@@ -397,7 +397,7 @@ static uint8_t _activity_get_next_byte(uint8_t *next_byte) {
         // Do this the hard way, byte by byte, to avoid high/low endedness issues
         // Higher order bytes first, is our serialization format
         uint8_t val;
-        // watch_date_time start_time;
+        // watch_date_time_t start_time;
         // uint16_t total_sec;
         // uint16_t pause_sec;
         // uint8_t activity_type;

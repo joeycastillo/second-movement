@@ -27,7 +27,7 @@
 #include "minimal_clock_face.h"
 
 static void _minimal_clock_face_update_display() {
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     char buffer[11];
 
     if (!movement_clock_mode_24h()) {

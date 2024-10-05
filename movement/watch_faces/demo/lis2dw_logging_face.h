@@ -39,7 +39,7 @@
 #define LIS2DW_LOGGING_NUM_DATA_POINTS (96)
 
 typedef struct {
-    watch_date_time timestamp;
+    watch_date_time_t timestamp;
     uint32_t x_interrupts;
     uint32_t y_interrupts;
     uint32_t z_interrupts;

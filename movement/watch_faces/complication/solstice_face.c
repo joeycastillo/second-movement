@@ -77,7 +77,7 @@ static double calculate_solstice_equinox(uint16_t year, uint8_t k) {
 }
 
 // Convert JDE to Gergorian datetime as per Meeus Ch 7
-static watch_date_time jde_to_date_time(double JDE) {
+static watch_date_time_t jde_to_date_time(double JDE) {
     double tmp = JDE + 0.5;
     double Z = floor(tmp);
     double F = fmod(tmp, 1);
@@ -110,7 +110,7 @@ static watch_date_time jde_to_date_time(double JDE) {
     double minutes = fmod(hours, 1) * 60;
     double seconds = fmod(minutes, 1) * 60;
 
-    watch_date_time result = {.unit = {
+    watch_date_time_t result = {.unit = {
         floor(seconds),
         floor(minutes),
         floor(hours),
@@ -135,7 +135,7 @@ void solstice_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         *context_ptr = malloc(sizeof(solstice_state_t));
         solstice_state_t *state = (solstice_state_t *)*context_ptr;
 
-        watch_date_time now = watch_rtc_get_date_time();
+        watch_date_time_t now = watch_rtc_get_date_time();
         state->year = now.unit.year;
         state->index = 0;
         calculate_datetimes(state, settings);
@@ -155,14 +155,14 @@ void solstice_face_activate(void *context) {
 
 static void show_main_screen(solstice_state_t *state) {
     char buf[11];
-    watch_date_time date_time = state->datetimes[state->index];
+    watch_date_time_t date_time = state->datetimes[state->index];
     sprintf(buf, "  %2d  %2d%02d", date_time.unit.year + 20, date_time.unit.month, date_time.unit.day);
     watch_display_string(buf, 0);
 }
 
 static void show_date_time(solstice_state_t *state) {
     char buf[11];
-    watch_date_time date_time = state->datetimes[state->index];
+    watch_date_time_t date_time = state->datetimes[state->index];
     if (!movement_clock_mode_24h()) {
         if (date_time.unit.hour < 12) {
             watch_clear_indicator(WATCH_INDICATOR_PM);

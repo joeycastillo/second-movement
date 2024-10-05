@@ -25,12 +25,12 @@
 #include <math.h>
 #include "watch_utility.h"
 
-const char * watch_utility_get_weekday(watch_date_time date_time) {
+const char * watch_utility_get_weekday(watch_date_time_t date_time) {
     static const char weekdays[7][3] = {"MO", "TU", "WE", "TH", "FR", "SA", "SU"};
     return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
 }
 
-const char * watch_utility_get_long_weekday(watch_date_time date_time) {
+const char * watch_utility_get_long_weekday(watch_date_time_t date_time) {
     static const char weekdays[7][4] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
     return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
 }
@@ -190,7 +190,7 @@ uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_
     return timestamp;
 }
 
-uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t utc_offset) {
+uint32_t watch_utility_date_time_to_unix_time(watch_date_time_t date_time, int32_t utc_offset) {
     return watch_utility_convert_to_unix_time(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second, utc_offset);
 }
 
@@ -200,8 +200,8 @@ uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t
 #define DAYS_PER_100Y (365*100 + 24)
 #define DAYS_PER_4Y   (365*4   + 1)
 
-watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset) {
-    watch_date_time retval;
+watch_date_time_t watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset) {
+    watch_date_time_t retval;
     retval.reg = 0;
     int32_t days, secs;
     int32_t remdays, remsecs, remyears;
@@ -270,7 +270,7 @@ watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, int32
     return retval;
 }
 
-watch_date_time watch_utility_date_time_convert_zone(watch_date_time date_time, uint32_t origin_utc_offset, uint32_t destination_utc_offset) {
+watch_date_time_t watch_utility_date_time_convert_zone(watch_date_time_t date_time, uint32_t origin_utc_offset, uint32_t destination_utc_offset) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, origin_utc_offset);
     return watch_utility_date_time_from_unix_time(timestamp, destination_utc_offset);
 }
@@ -286,7 +286,7 @@ watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds) {
     return retval;
 }
 
-bool watch_utility_convert_to_12_hour(watch_date_time *date_time) {
+bool watch_utility_convert_to_12_hour(watch_date_time_t *date_time) {
     bool is_pm = date_time->unit.hour > 11;
     date_time->unit.hour %= 12;
     if (date_time->unit.hour == 0) date_time->unit.hour = 12;

@@ -68,8 +68,8 @@ void french_revolutionary_face_activate(void *context);
 bool french_revolutionary_face_loop(movement_event_t event, void *context);
 void french_revolutionary_face_resign(void *context);
 char fix_character_one(char digit);
-fr_decimal_time get_decimal_time(watch_date_time *date_time);
-void set_display_buffer(char *buf, french_revolutionary_state_t *state, fr_decimal_time *decimal_time, watch_date_time *date_time);
+fr_decimal_time get_decimal_time(watch_date_time_t *date_time);
+void set_display_buffer(char *buf, french_revolutionary_state_t *state, fr_decimal_time *decimal_time, watch_date_time_t *date_time);
 
 
 #define french_revolutionary_face ((const watch_face_t){ \

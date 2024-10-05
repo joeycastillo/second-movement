@@ -53,7 +53,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
     char buf[16];
     uint32_t centibeats;
 
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:

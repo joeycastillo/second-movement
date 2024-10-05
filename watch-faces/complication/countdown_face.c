@@ -72,7 +72,7 @@ static void schedule_countdown(countdown_state_t *state) {
     uint32_t new_now = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), movement_get_current_timezone_offset());
     state->target_ts = watch_utility_offset_timestamp(new_now, state->hours, state->minutes, state->seconds);
     state->now_ts = new_now;
-    watch_date_time target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
 }
 
@@ -196,7 +196,7 @@ void countdown_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void countdown_face_activate(void *context) {
     countdown_state_t *state = (countdown_state_t *)context;
     if(state->mode == cd_running) {
-        watch_date_time now = movement_get_utc_date_time();
+        watch_date_time_t now = movement_get_utc_date_time();
         state->now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     }

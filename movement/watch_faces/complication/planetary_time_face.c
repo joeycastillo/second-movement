@@ -128,10 +128,10 @@ static void _planetary_solar_phase(planetary_time_state_t *state) {
     // location detected
     state->no_location = false;
 
-    watch_date_time date_time = watch_rtc_get_date_time(); // the current local date / time
-    watch_date_time utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
-    watch_date_time scratch_time; // scratchpad, contains different values at different times
-    watch_date_time midnight;
+    watch_date_time_t date_time = watch_rtc_get_date_time(); // the current local date / time
+    watch_date_time_t utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
+    watch_date_time_t scratch_time; // scratchpad, contains different values at different times
+    watch_date_time_t midnight;
     scratch_time.reg = midnight.reg = utc_now.reg;
     midnight.unit.hour = midnight.unit.minute = midnight.unit.second = 0; // start of the day at midnight
 

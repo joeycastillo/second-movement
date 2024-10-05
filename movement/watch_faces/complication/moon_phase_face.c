@@ -56,7 +56,7 @@ void moon_phase_face_activate(void *context) {
 static void _update(moon_phase_state_t *state, uint32_t offset) {
     (void)state;
     char buf[11];
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset()) + offset;
     date_time = watch_utility_date_time_from_unix_time(now, movement_get_current_timezone_offset());
     double currentfrac = fmod(now - FIRST_MOON, LUNAR_SECONDS) / LUNAR_SECONDS;
@@ -132,7 +132,7 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
 
 bool moon_phase_face_loop(movement_event_t event, void *context) {
     moon_phase_state_t *state = (moon_phase_state_t *)context;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:

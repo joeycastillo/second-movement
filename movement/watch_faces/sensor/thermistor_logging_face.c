@@ -30,7 +30,7 @@
 
 static void _thermistor_logging_face_log_data(thermistor_logger_state_t *logger_state) {
     thermistor_driver_enable();
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     size_t pos = logger_state->data_points % THERMISTOR_LOGGING_NUM_DATA_POINTS;
 
     logger_state->data[pos].timestamp.reg = date_time.reg;
@@ -51,7 +51,7 @@ static void _thermistor_logging_face_update_display(thermistor_logger_state_t *l
     if (pos < 0) {
         sprintf(buf, "TL%2dno dat", logger_state->display_index);
     } else if (logger_state->ts_ticks) {
-        watch_date_time date_time = logger_state->data[pos].timestamp;
+        watch_date_time_t date_time = logger_state->data[pos].timestamp;
         watch_set_colon();
         if (clock_mode_24h) {
             watch_set_indicator(WATCH_INDICATOR_24H);

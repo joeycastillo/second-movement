@@ -93,7 +93,7 @@ static inline void _inc_uint8(uint8_t *value, uint8_t step, uint8_t max) {
 
 static uint32_t _get_now_ts() {
     // returns the current date time as unix timestamp
-    watch_date_time now = watch_rtc_get_date_time();
+    watch_date_time_t now = watch_rtc_get_date_time();
     return watch_utility_date_time_to_unix_time(now, 0);
 }
 
@@ -331,7 +331,7 @@ static void _set_next_timestamp(interval_face_state_t *state) {
     if (delta <= 0) delta = 1;
     _target_ts += delta;
     // schedule next background task
-    watch_date_time target_dt = watch_utility_date_time_from_unix_time(_target_ts, 0);
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(_target_ts, 0);
     movement_schedule_background_task_for_face(state->face_idx, target_dt);
     // play sound
     watch_buzzer_play_sequence(sound_seq, NULL);
@@ -363,7 +363,7 @@ static void _resume_paused_timer(interval_face_state_t *state) {
     // resume paused timer
     _now_ts = _get_now_ts();
     _target_ts += _now_ts - _paused_ts;
-    watch_date_time target_dt = watch_utility_date_time_from_unix_time(_target_ts, 0);
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(_target_ts, 0);
     movement_schedule_background_task_for_face(state->face_idx, target_dt);
     state->face_state = interval_state_running;
     watch_set_indicator(WATCH_INDICATOR_BELL);

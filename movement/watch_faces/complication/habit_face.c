@@ -31,7 +31,7 @@
 #include <string.h>
 
 static inline uint32_t today_unix(const uint32_t utc_offset) {
-  const watch_date_time dt = watch_rtc_get_date_time();
+  const watch_date_time_t dt = watch_rtc_get_date_time();
   return watch_utility_convert_to_unix_time(dt.unit.year + 2020, dt.unit.month,
                                             dt.unit.day, 0, 0, 0, utc_offset);
 }

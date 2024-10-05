@@ -47,7 +47,7 @@ void voltage_face_activate(void *context) {
 
 bool voltage_face_loop(movement_event_t event, void *context) {
     (void) context;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             _voltage_face_update_display();

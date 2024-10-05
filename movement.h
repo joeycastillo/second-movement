@@ -312,14 +312,14 @@ void movement_request_tick_frequency(uint8_t freq);
 
 // note: watch faces can only schedule a background task when in the foreground, since
 // movement will associate the scheduled task with the currently active face.
-void movement_schedule_background_task(watch_date_time date_time);
+void movement_schedule_background_task(watch_date_time_t date_time);
 
 // note: watch faces can only cancel their background task when in the foreground, since
 // movement will associate the scheduled task with the currently active face.
 void movement_cancel_background_task(void);
 
 // these functions should work around the limitation of the above functions, which will be deprecated.
-void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time date_time);
+void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time_t date_time);
 void movement_cancel_background_task_for_face(uint8_t watch_face_index);
 
 void movement_request_sleep(void);
@@ -337,11 +337,11 @@ int32_t movement_get_current_timezone_offset(void);
 int32_t movement_get_timezone_index(void);
 void movement_set_timezone_index(uint8_t value);
 
-watch_date_time movement_get_utc_date_time(void);
-watch_date_time movement_get_local_date_time(void);
-watch_date_time movement_get_date_time_in_zone(uint8_t zone_index);
+watch_date_time_t movement_get_utc_date_time(void);
+watch_date_time_t movement_get_local_date_time(void);
+watch_date_time_t movement_get_date_time_in_zone(uint8_t zone_index);
 
-void movement_set_local_date_time(watch_date_time date_time);
+void movement_set_local_date_time(watch_date_time_t date_time);
 
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);

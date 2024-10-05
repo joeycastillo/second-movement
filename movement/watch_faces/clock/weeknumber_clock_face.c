@@ -69,7 +69,7 @@ bool weeknumber_clock_face_loop(movement_event_t event, void *context) {
     char buf[11];
     uint8_t pos;
 
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     uint32_t previous_date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -148,7 +148,7 @@ movement_watch_face_advisory_t weeknumber_clock_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
 
     if (state->signal_enabled) {
-        watch_date_time date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = watch_rtc_get_date_time();
         retval.wants_background_task = date_time.unit.minute == 0;
     }
 

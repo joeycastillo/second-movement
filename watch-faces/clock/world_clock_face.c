@@ -58,7 +58,7 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
     char buf[11];
 
     uint32_t previous_date_time;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);

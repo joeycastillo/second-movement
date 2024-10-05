@@ -59,7 +59,7 @@
 #define THERMISTOR_LOGGING_NUM_DATA_POINTS (36)
 
 typedef struct {
-    watch_date_time timestamp;
+    watch_date_time_t timestamp;
     float temperature_c;
 } thermistor_logger_data_point_t;
 

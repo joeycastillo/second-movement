@@ -50,7 +50,7 @@
 #include "../../../watch-library/hardware/hri/hri_tc_l22.h"
 #endif
 
-static const watch_date_time distant_future = {.unit = {0, 0, 0, 1, 1, 63}};
+static const watch_date_time_t distant_future = {.unit = {0, 0, 0, 1, 1, 63}};
 static bool _is_running;
 static uint32_t _ticks;
 

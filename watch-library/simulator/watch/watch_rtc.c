@@ -46,7 +46,7 @@ bool _watch_rtc_is_enabled(void) {
 void _watch_rtc_init(void) {
 }
 
-void watch_rtc_set_date_time(watch_date_time date_time) {
+void watch_rtc_set_date_time(watch_date_time_t date_time) {
     time_offset = EM_ASM_DOUBLE({
         const year = 2020 + (($0 >> 26) & 0x3f);
         const month = ($0 >> 22) & 0xf;
@@ -59,8 +59,8 @@ void watch_rtc_set_date_time(watch_date_time date_time) {
     }, date_time.reg);
 }
 
-watch_date_time watch_rtc_get_date_time(void) {
-    watch_date_time retval;
+watch_date_time_t watch_rtc_get_date_time(void) {
+    watch_date_time_t retval;
     retval.reg = EM_ASM_INT({
         const date = new Date(Date.now() + $0);
         return date.getSeconds() |
@@ -134,7 +134,7 @@ static void watch_invoke_alarm_callback(void *userData) {
     alarm_interval_id = emscripten_set_interval(watch_invoke_alarm_interval_callback, alarm_interval, NULL);
 }
 
-void watch_rtc_register_alarm_callback(ext_irq_cb_t callback, watch_date_time alarm_time, watch_rtc_alarm_match mask) {
+void watch_rtc_register_alarm_callback(ext_irq_cb_t callback, watch_date_time_t alarm_time, watch_rtc_alarm_match mask) {
     watch_rtc_disable_alarm_callback();
 
     switch (mask) {

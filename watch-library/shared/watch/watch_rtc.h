@@ -45,7 +45,7 @@ extern watch_cb_t a4_callback;
 
 #define WATCH_RTC_REFERENCE_YEAR (2020)
 
-#define watch_date_time rtc_date_time_t
+#define watch_date_time_t rtc_date_time_t
 
 /** @brief Called by main.c to check if the RTC is enabled.
   * You may call this function, but outside of app_init, it should always return true.

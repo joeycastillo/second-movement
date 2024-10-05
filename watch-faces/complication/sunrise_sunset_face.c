@@ -39,7 +39,7 @@
 
 static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
 
-static void _sunrise_sunset_set_expiration(sunrise_sunset_state_t *state, watch_date_time next_rise_set) {
+static void _sunrise_sunset_set_expiration(sunrise_sunset_state_t *state, watch_date_time_t next_rise_set) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(next_rise_set, 0);
     state->rise_set_expires = watch_utility_date_time_from_unix_time(timestamp + 60, 0);
 }
@@ -62,9 +62,9 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
         return;
     }
 
-    watch_date_time date_time = movement_get_local_date_time(); // the current local date / time
-    watch_date_time utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
-    watch_date_time scratch_time; // scratchpad, contains different values at different times
+    watch_date_time_t date_time = movement_get_local_date_time(); // the current local date / time
+    watch_date_time_t utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
+    watch_date_time_t scratch_time; // scratchpad, contains different values at different times
     scratch_time.reg = utc_now.reg;
 
     // Weird quirky unsigned things were happening when I tried to cast these directly to doubles below.
@@ -76,8 +76,8 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     double lon = (double)lon_centi / 100.0;
 
     // sunriset returns the rise/set times as signed decimal hours in UTC.
-    // this can mean hours below 0 or above 31, which won't fit into a watch_date_time struct.
-    // to deal with this, we set aside the offset in hours, and add it back before converting it to a watch_date_time.
+    // this can mean hours below 0 or above 31, which won't fit into a watch_date_time_t struct.
+    // to deal with this, we set aside the offset in hours, and add it back before converting it to a watch_date_time_t.
     double hours_from_utc = ((double)movement_get_current_timezone_offset()) / 3600.0;
 
     // we loop twice because if it's after sunset today, we need to recalculate to display values for tomorrow.
@@ -338,7 +338,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                 // if entering low energy mode, start tick animation
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
                 // check if we need to update the display
-                watch_date_time date_time = movement_get_local_date_time();
+                watch_date_time_t date_time = movement_get_local_date_time();
                 if (date_time.reg >= state->rise_set_expires.reg) {
                     // and on the off chance that this happened before EVENT_TIMEOUT snapped us back to rise/set 0, go back now
                     state->rise_index = 0;

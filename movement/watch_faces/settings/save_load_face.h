@@ -54,7 +54,7 @@ typedef struct savefile {
     uint32_t b5;
     uint32_t b6;
     uint32_t b7;
-    watch_date_time rtc;
+    watch_date_time_t rtc;
 } savefile_t;
 
 #define SAVE_LOAD_SLOTS 4

@@ -69,7 +69,7 @@ static void _h_to_hms(mars_clock_hms_t *date_time, double h) {
 
 static void _update(mars_time_state_t *state) {
     char buf[11];
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
     // TODO: I'm skipping over some steps here.
     // https://www.giss.nasa.gov/tools/mars24/help/algorithm.html

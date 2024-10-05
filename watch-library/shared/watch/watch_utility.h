@@ -46,14 +46,14 @@ typedef struct {
 } watch_duration_t;
 
 /** @brief Returns a two-letter weekday for the given timestamp, suitable for display in positions 0-1 of the watch face
-  * @param date_time The watch_date_time whose weekday you want.
+  * @param date_time The watch_date_time_t whose weekday you want.
   */
-const char * watch_utility_get_weekday(watch_date_time date_time);
+const char * watch_utility_get_weekday(watch_date_time_t date_time);
 
 /** @brief Returns a three-letter weekday for the given timestamp, suitable for display on the custom LCD
-  * @param date_time The watch_date_time whose weekday you want.
+  * @param date_time The watch_date_time_t whose weekday you want.
   */
-const char * watch_utility_get_long_weekday(watch_date_time date_time);
+const char * watch_utility_get_long_weekday(watch_date_time_t date_time);
 
 /** @brief Returns a number between 1-7 representing the weekday according to ISO8601 : week starts on Monday and has index 1, Sunday has index 7
  * @param year The year of the date
@@ -83,7 +83,7 @@ uint16_t watch_utility_days_since_new_year(uint16_t year, uint8_t month, uint8_t
 uint8_t is_leap(uint16_t year);
 
 /** @brief Returns the UNIX time (seconds since 1970) for a given date/time in UTC.
-  * @param date_time The watch_date_time that you wish to convert.
+  * @param date_time The watch_date_time_t that you wish to convert.
   * @param year The year of the date you wish to convert.
   * @param month The month of the date you wish to convert.
   * @param day The day of the date you wish to convert.
@@ -97,12 +97,12 @@ uint8_t is_leap(uint16_t year);
   */
 uint32_t watch_utility_convert_to_unix_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, int32_t utc_offset);
 
-/** @brief Returns the UNIX time (seconds since 1970) for a given watch_date_time struct.
-  * @param date_time The watch_date_time that you wish to convert.
+/** @brief Returns the UNIX time (seconds since 1970) for a given watch_date_time_t struct.
+  * @param date_time The watch_date_time_t that you wish to convert.
   * @param utc_offset The number of seconds that date_time is offset from UTC, or 0 if the time is UTC.
-  * @return A UNIX timestamp for the given watch_date_time and UTC offset.
+  * @return A UNIX timestamp for the given watch_date_time_t and UTC offset.
   */
-uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t utc_offset);
+uint32_t watch_utility_date_time_to_unix_time(watch_date_time_t date_time, int32_t utc_offset);
 
 /** @brief Converts a duration in seconds to a watch_duration_t struct.
   * @param seconds A positive number of seconds that you wish to convert to a formatted duration.
@@ -110,39 +110,39 @@ uint32_t watch_utility_date_time_to_unix_time(watch_date_time date_time, int32_t
   */
 watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds);
 
-/** @brief Returns a watch_date_time struct for a given UNIX time and UTC offset.
+/** @brief Returns a watch_date_time_t struct for a given UNIX time and UTC offset.
   * @param timestamp The UNIX timestamp that you wish to convert.
   * @param utc_offset The number of seconds that you wish date_time to be offset from UTC.
-  * @return A watch_date_time for the given UNIX timestamp and UTC offset, or if outside the range that
-  *         watch_date_time can represent, a watch_date_time with all fields set to 0.
+  * @return A watch_date_time_t for the given UNIX timestamp and UTC offset, or if outside the range that
+  *         watch_date_time_t can represent, a watch_date_time_t with all fields set to 0.
   * @note Adapted from MIT-licensed code from musl, Copyright © 2005-2014 Rich Felker, et al.:
   *       https://github.com/esmil/musl/blob/1cc81f5cb0df2b66a795ff0c26d7bbc4d16e13c6/src/time/__secs_to_tm.c
   */
-watch_date_time watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset);
+watch_date_time_t watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset);
 
-/** @brief Converts a watch_date_time for 12-hour display.
-  * @param date_time A pointer to the watch_date_time that you wish to convert for display. Note that this
+/** @brief Converts a watch_date_time_t for 12-hour display.
+  * @param date_time A pointer to the watch_date_time_t that you wish to convert for display. Note that this
   *                  function will OVERWRITE the original date/time, rendering it invalid for date/time
   *                  calculations. Midnight (hour 0) will become 12, and hours in the afternoon will wrap
   *                  back around to values from 1-11.
   * @return True if the value is in the afternoon. You can use this value to determine whether to set the
   *         PM indicator on the LCD.
-  * @note This function sort of abuses the watch_date_time struct; the date/time that results from calling
+  * @note This function sort of abuses the watch_date_time_t struct; the date/time that results from calling
   *       this function is clamped to the hours of 1:00:00 AM through 12:59:59 PM. It no longer reflects a
-  *       valid watch_date_time for writing to an RTC register.
+  *       valid watch_date_time_t for writing to an RTC register.
   */
-bool watch_utility_convert_to_12_hour(watch_date_time *date_time);
+bool watch_utility_convert_to_12_hour(watch_date_time_t *date_time);
 
 /** @brief Converts a time from a given time zone to another time zone.
-  * @param date_time The watch_date_time that you wish to convert
+  * @param date_time The watch_date_time_t that you wish to convert
   * @param origin_utc_offset The number of seconds from UTC in the origin time zone
   * @param destination_utc_offset The number of seconds from UTC in the destination time zone
-  * @return A watch_date_time for the given UNIX timestamp and UTC offset, or if outside the range that
-  *         watch_date_time can represent, a watch_date_time with all fields set to 0.
+  * @return A watch_date_time_t for the given UNIX timestamp and UTC offset, or if outside the range that
+  *         watch_date_time_t can represent, a watch_date_time_t with all fields set to 0.
   * @note Adapted from MIT-licensed code from musl, Copyright © 2005-2014 Rich Felker, et al.:
   *       https://github.com/esmil/musl/blob/1cc81f5cb0df2b66a795ff0c26d7bbc4d16e13c6/src/time/__secs_to_tm.c
   */
-watch_date_time watch_utility_date_time_convert_zone(watch_date_time date_time, uint32_t origin_utc_offset, uint32_t destination_utc_offset);
+watch_date_time_t watch_utility_date_time_convert_zone(watch_date_time_t date_time, uint32_t origin_utc_offset, uint32_t destination_utc_offset);
 
 /** @brief Returns a temperature in degrees Celsius for a given thermistor voltage divider circuit.
   * @param value The raw analog reading from the thermistor pin (0-65535)

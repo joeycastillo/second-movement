@@ -63,7 +63,7 @@ static void finetune_update_display(void) {
 
     if (finetune_page == 0) {
         watch_display_string("FT", 0);
-        watch_date_time date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = watch_rtc_get_date_time();
         sprintf(buf, "%02d", date_time.unit.second);
         watch_display_string(buf, 8);
 
@@ -104,7 +104,7 @@ static void finetune_adjust_subseconds(int delta) {
     watch_rtc_enable(false);
     delay_ms(delta);
     if (delta > 500) {
-        watch_date_time date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = watch_rtc_get_date_time();
         date_time.unit.second = (date_time.unit.second + 1) % 60;
         if (date_time.unit.second == 0) { // Overflow
             date_time.unit.minute = (date_time.unit.minute + 1) % 60;
@@ -143,7 +143,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             // If needed, update your display here, at canonical 0.5sec position.
             // We flash green LED once per minute to measure clock error, when we are not on first screen
             if (finetune_page!=0) {
-                watch_date_time date_time;
+                watch_date_time_t date_time;
                 date_time = watch_rtc_get_date_time();
                 if (date_time.unit.second == 0) {
                     watch_set_led_green();

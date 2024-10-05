@@ -52,7 +52,7 @@
 
 movement_state_t movement_state;
 void * watch_face_contexts[MOVEMENT_NUM_FACES];
-watch_date_time scheduled_tasks[MOVEMENT_NUM_FACES];
+watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
 const int16_t movement_timeout_inactivity_deadlines[4] = {60, 120, 300, 1800};
 movement_event_t event;
@@ -76,7 +76,7 @@ void yield(void) {
     cdc_task();
 }
 
-static udatetime_t _movement_convert_date_time_to_udate(watch_date_time date_time) {
+static udatetime_t _movement_convert_date_time_to_udate(watch_date_time_t date_time) {
     return (udatetime_t) {
         .date.dayofmonth = date_time.unit.day,
         .date.dayofweek = dayofweek(UYEAR_FROM_YEAR(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR), date_time.unit.month, date_time.unit.day),
@@ -92,13 +92,13 @@ static bool _movement_update_dst_offset_cache(void) {
     uzone_t local_zone;
     udatetime_t udate_time;
     bool dst_changed = false;
-    watch_date_time system_date_time = watch_rtc_get_date_time();
+    watch_date_time_t system_date_time = watch_rtc_get_date_time();
 
     printf("current zone: %d\n", movement_state.settings.bit.time_zone);
 
     for (uint8_t i = 0; i < NUM_ZONE_NAMES; i++) {
         unpack_zone(&zone_defns[i], "", &local_zone);
-        watch_date_time date_time = watch_utility_date_time_convert_zone(system_date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
+        watch_date_time_t date_time = watch_utility_date_time_convert_zone(system_date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
 
         if (!!local_zone.rules_len) {
             // if local zone has DST rules, we need to see if DST applies.
@@ -144,7 +144,7 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 }
 
 static void _movement_handle_top_of_minute(void) {
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
 
     // update the DST offset cache every 15 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 15 == 0) {
@@ -171,7 +171,7 @@ static void _movement_handle_top_of_minute(void) {
 }
 
 static void _movement_handle_scheduled_tasks(void) {
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     uint8_t num_active_tasks = 0;
 
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
@@ -281,7 +281,7 @@ void movement_move_to_next_face(void) {
     movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
 }
 
-void movement_schedule_background_task(watch_date_time date_time) {
+void movement_schedule_background_task(watch_date_time_t date_time) {
     movement_schedule_background_task_for_face(movement_state.current_face_idx, date_time);
 }
 
@@ -289,8 +289,8 @@ void movement_cancel_background_task(void) {
     movement_cancel_background_task_for_face(movement_state.current_face_idx);
 }
 
-void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time date_time) {
-    watch_date_time now = watch_rtc_get_date_time();
+void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time_t date_time) {
+    watch_date_time_t now = watch_rtc_get_date_time();
     if (date_time.reg > now.reg) {
         movement_state.has_scheduled_background_task = true;
         scheduled_tasks[watch_face_index].reg = date_time.reg;
@@ -394,23 +394,23 @@ void movement_set_timezone_index(uint8_t value) {
     movement_state.settings.bit.time_zone = value;
 }
 
-watch_date_time movement_get_utc_date_time(void) {
+watch_date_time_t movement_get_utc_date_time(void) {
     return watch_rtc_get_date_time();
 }
 
-watch_date_time movement_get_date_time_in_zone(uint8_t zone_index) {
+watch_date_time_t movement_get_date_time_in_zone(uint8_t zone_index) {
     int32_t offset = movement_get_current_timezone_offset_for_zone(zone_index);
     return watch_utility_date_time_convert_zone(watch_rtc_get_date_time(), 0, offset);
 }
 
-watch_date_time movement_get_local_date_time(void) {
-    watch_date_time date_time = watch_rtc_get_date_time();
+watch_date_time_t movement_get_local_date_time(void) {
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     return watch_utility_date_time_convert_zone(date_time, 0, movement_get_current_timezone_offset());
 }
 
-void movement_set_local_date_time(watch_date_time date_time) {
+void movement_set_local_date_time(watch_date_time_t date_time) {
     int32_t current_offset = movement_get_current_timezone_offset();
-    watch_date_time utc_date_time = watch_utility_date_time_convert_zone(date_time, current_offset, 0);
+    watch_date_time_t utc_date_time = watch_utility_date_time_convert_zone(date_time, current_offset, 0);
     watch_rtc_set_date_time(utc_date_time);
 
     // this may seem wasteful, but if the user's local time is in a zone that observes DST,
@@ -496,7 +496,7 @@ void movement_set_alarm_enabled(bool value) {
 void app_init(void) {
     _watch_init();
 
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.reg == 0) {
         // at first boot, set year to 2024
         date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
@@ -593,7 +593,7 @@ void app_setup(void) {
         _movement_update_dst_offset_cache();
 
         // set up the 1 minute alarm (for background tasks and low power updates)
-        watch_date_time alarm_time;
+        watch_date_time_t alarm_time;
         alarm_time.reg = 0;
         alarm_time.unit.second = 59; // after a match, the alarm fires at the next rising edge of CLK_RTC_CNT, so 59 seconds lets us update at :00
         watch_rtc_register_alarm_callback(cb_alarm_fired, alarm_time, ALARM_MATCH_SS);
@@ -857,7 +857,7 @@ void cb_fast_tick(void) {
 
 void cb_tick(void) {
     event.event_type = EVENT_TICK;
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.unit.second != movement_state.last_second) {
         // TODO: can we consolidate these two ticks?
         if (movement_state.settings.bit.le_interval && movement_state.le_mode_ticks > 0) movement_state.le_mode_ticks--;

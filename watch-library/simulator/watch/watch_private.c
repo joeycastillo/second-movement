@@ -42,7 +42,7 @@ int getentropy(void *buf, size_t buflen) {
 int _gettimeofday(struct timeval *tv, void *tzvp);
 int _gettimeofday(struct timeval *tv, void *tzvp) {
     (void)tzvp;
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
 
     // FIXME: this assumes the system time is UTC! Will break for any other time zone.
     tv->tv_sec = watch_utility_date_time_to_unix_time(date_time, 0);

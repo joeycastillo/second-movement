@@ -42,7 +42,7 @@
  */
 
 typedef struct {
-    watch_date_time datetimes[4];
+    watch_date_time_t datetimes[4];
     uint8_t year;
     uint8_t index;
 } solstice_state_t;

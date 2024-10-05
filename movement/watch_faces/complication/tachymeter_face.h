@@ -84,7 +84,7 @@ typedef struct {
     bool editing;                  // editing distance
     uint8_t active_digit;          // active digit at editing distance
     uint8_t animation_state;       // running animation state
-    watch_date_time start_seconds; // start_seconds
+    watch_date_time_t start_seconds; // start_seconds
     int8_t start_subsecond;        // start_subsecond count (each count = 250 ms)
     distance_digits_t dist_digits; // distance digitwise
     uint32_t distance;             // distance

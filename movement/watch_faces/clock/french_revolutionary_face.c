@@ -52,7 +52,7 @@ bool french_revolutionary_face_loop(movement_event_t event, void *context) {
     french_revolutionary_state_t *state = (french_revolutionary_state_t *)context;
 
     char buf[11];
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     fr_decimal_time decimal_time;
 
     switch (event.event_type) {
@@ -139,7 +139,7 @@ void french_revolutionary_face_resign(void *context) {
 }
 
 // Calculate decimal time from normal (24hr) time
-fr_decimal_time get_decimal_time(watch_date_time *date_time) {
+fr_decimal_time get_decimal_time(watch_date_time_t *date_time) {
     uint32_t current_24hr_secs, current_decimal_seconds;
     fr_decimal_time decimal_time;
     // Current 24-hr time in seconds (There are 86400 of these in a day.)
@@ -167,7 +167,7 @@ fr_decimal_time get_decimal_time(watch_date_time *date_time) {
 // - Decimal-time with normal time in the top (minutes first, then hours, due to display limitations)
 // TODO: There is some power-saving stuff that simple clock does here around not redrawing characters that haven't changed, but we're not doing that here.
 //       I'll try to add that optimization could be added in a future commit.
-void set_display_buffer(char *buf, french_revolutionary_state_t *state, fr_decimal_time *decimal_time, watch_date_time *date_time) {
+void set_display_buffer(char *buf, french_revolutionary_state_t *state, fr_decimal_time *decimal_time, watch_date_time_t *date_time) {
     switch (state->display_type) {
                 // Decimal time only
                 case 0:

@@ -98,7 +98,7 @@ static inline uint32_t total_days_tracked(menstrual_cycle_state_t *state) {
         return 0;
 
     // Otherwise, set the start date to the first day of the first tracked cycle
-    watch_date_time date_time_start;
+    watch_date_time_t date_time_start;
     date_time_start.unit.second = 0;
     date_time_start.unit.minute = 0;
     date_time_start.unit.hour = 0;
@@ -107,7 +107,7 @@ static inline uint32_t total_days_tracked(menstrual_cycle_state_t *state) {
     date_time_start.unit.year = state->dates.bit.first_year;
 
     // Get the current date and time
-    watch_date_time date_time_now = watch_rtc_get_date_time();
+    watch_date_time_t date_time_now = watch_rtc_get_date_time();
 
     // Convert the start date and current date to Unix time
     uint32_t unix_start = watch_utility_date_time_to_unix_time(date_time_start, state->utc_offset);
@@ -176,7 +176,7 @@ typedef enum Fertile_Window {first_day, last_day} fertile_window;
 static inline uint32_t get_day_pk_fert(menstrual_cycle_state_t *state, fertile_window which_day) {
 
     // Get the date of the previous period
-    watch_date_time date_prev_period;
+    watch_date_time_t date_prev_period;
     date_prev_period.unit.second = 0;
     date_prev_period.unit.minute = 0;
     date_prev_period.unit.hour = 0;
@@ -210,7 +210,7 @@ static inline bool inside_fert_window(menstrual_cycle_state_t *state) {
         return false;
 
     // Get the current date/time
-    watch_date_time date_time_now = watch_rtc_get_date_time();
+    watch_date_time_t date_time_now = watch_rtc_get_date_time();
 
     // Check if the current day falls between the first and last predicted peak fertility days
     if (get_day_pk_fert(state, first_day) > get_day_pk_fert(state, last_day)) { // We are crossing over the end of the month
@@ -229,7 +229,7 @@ static inline bool inside_fert_window(menstrual_cycle_state_t *state) {
 static inline void update_shortest_longest_cycle(menstrual_cycle_state_t *state) {
 
     // Get the date of the previous menstrual cycle
-    watch_date_time date_prev_period;
+    watch_date_time_t date_prev_period;
     date_prev_period.unit.second = 0;
     date_prev_period.unit.minute = 0;
     date_prev_period.unit.hour = 0;
@@ -305,7 +305,7 @@ void menstrual_cycle_face_activate(void *context) {
 
 bool menstrual_cycle_face_loop(movement_event_t event, void *context) {
     menstrual_cycle_state_t *state = (menstrual_cycle_state_t *)context;
-    watch_date_time date_period;
+    watch_date_time_t date_period;
     uint8_t current_page = state->current_page;
     uint8_t first_day_fert;
     uint8_t last_day_fert;

@@ -202,7 +202,7 @@ bool tachymeter_face_loop(movement_event_t event, void *context) {
                 }
                 // Stop running
                 state->running = false;
-                watch_date_time now = watch_rtc_get_date_time();
+                watch_date_time_t now = watch_rtc_get_date_time();
                 uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
                 uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_seconds, 0);
                 // Total time in centiseconds

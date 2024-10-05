@@ -229,10 +229,10 @@ void lis2dw_configure_wakeup_int1(uint8_t threshold, bool latch, bool active_sta
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration | LIS2DW_CTRL7_VAL_INTERRUPTS_ENABLE);
 }
 
-lis2dw_wakeup_source lis2dw_get_wakeup_source() {
-    return (lis2dw_wakeup_source) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_SRC);
+lis2dw_wakeup_source_t lis2dw_get_wakeup_source() {
+    return (lis2dw_wakeup_source_t) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_SRC);
 }
 
-lis2dw_interrupt_source lis2dw_get_interrupt_source(void) {
-    return (lis2dw_interrupt_source) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_ALL_INT_SRC);
+lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void) {
+    return (lis2dw_interrupt_source_t) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_ALL_INT_SRC);
 }

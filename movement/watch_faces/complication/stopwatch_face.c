@@ -31,7 +31,7 @@
 
 // distant future for background task: January 1, 2083
 // see stopwatch_face_activate for details
-static const watch_date_time distant_future = {
+static const watch_date_time_t distant_future = {
     .unit = {0, 0, 0, 1, 1, 63}
 };
 
@@ -45,7 +45,7 @@ void stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, bool show_seconds) {
     if (stopwatch_state->running) {
-        watch_date_time now = watch_rtc_get_date_time();
+        watch_date_time_t now = watch_rtc_get_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(stopwatch_state->start_time, 0);
         stopwatch_state->seconds_counted = now_timestamp - start_timestamp;

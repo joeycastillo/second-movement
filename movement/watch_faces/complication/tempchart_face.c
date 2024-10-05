@@ -101,7 +101,7 @@ bool tempchart_face_loop(movement_event_t event, void *context) {
             thermistor_driver_enable();
             float temperature_c = thermistor_driver_get_temperature();
             thermistor_driver_disable();
-            watch_date_time date_time = watch_rtc_get_date_time();
+            watch_date_time_t date_time = watch_rtc_get_date_time();
 
             int temp = round(temperature_c * 2);
             if ((temp < 0) || (temp >= 70)) break;
@@ -137,7 +137,7 @@ movement_watch_face_advisory_t tempchart_face_advise(void *context) {
     (void) context;
     movement_watch_face_advisory_t retval = { 0 };
 
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     // Updating data every 5 minutes
     retval.wants_background_task = date_time.unit.minute % 5 == 0;
 

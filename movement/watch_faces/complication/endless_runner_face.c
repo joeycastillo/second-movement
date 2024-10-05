@@ -243,7 +243,7 @@ static void display_fuel(uint8_t subsecond, uint8_t difficulty) {
 
 static void check_and_reset_hi_score(endless_runner_state_t *state) {
     // Resets the hi score at the beginning of each month.
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     if ((state -> year_last_hi_score != date_time.unit.year) || 
         (state -> month_last_hi_score != date_time.unit.month))
     {
@@ -320,8 +320,8 @@ static void display_title(endless_runner_state_t *state) {
     display_difficulty(difficulty);
 }
 
-static void display_time(watch_date_time date_time, bool clock_mode_24h) {
-    static watch_date_time previous_date_time;
+static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
+    static watch_date_time_t previous_date_time;
     char buf[6 + 1];
 
     // If the hour needs updating or it's the first time displaying the time

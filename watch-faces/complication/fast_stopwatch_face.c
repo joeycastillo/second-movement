@@ -48,7 +48,7 @@
 #endif
 
 // distant future for background task: January 1, 2083
-static const watch_date_time distant_future = {
+static const watch_date_time_t distant_future = {
     .unit = {0, 0, 0, 1, 1, 63}
 };
 

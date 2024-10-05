@@ -41,7 +41,7 @@
 
 typedef struct {
     bool running;
-    watch_date_time start_time; // while running, show the difference between this time and now
+    watch_date_time_t start_time; // while running, show the difference between this time and now
     uint32_t seconds_counted;   // set this value when paused, and show that instead.
 } stopwatch_state_t;
 

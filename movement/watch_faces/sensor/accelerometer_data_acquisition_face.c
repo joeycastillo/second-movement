@@ -437,7 +437,7 @@ static void start_reading(accelerometer_data_acquisition_state_t *state) {
     lis2dw_enable_fifo();
 
     accelerometer_data_acquisition_record_t record;
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     state->starting_timestamp = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
     record.header.info.record_type = ACCELEROMETER_DATA_ACQUISITION_HEADER;
     record.header.info.range = ACCELEROMETER_RANGE;

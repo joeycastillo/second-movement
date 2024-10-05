@@ -112,13 +112,13 @@ static bool _running_loop(movement_event_t event, void *context);
 static void _running_display(movement_event_t event, deadline_state_t *state);
 static void _setting_init(deadline_state_t *state);
 static bool _setting_loop(movement_event_t event, void *context);
-static void _setting_display(movement_event_t event, deadline_state_t *state, watch_date_time date);
+static void _setting_display(movement_event_t event, deadline_state_t *state, watch_date_time_t date);
 
 /* Utility functions */
 static void _background_alarm_play(deadline_state_t *state);
 static void _background_alarm_schedule(deadline_state_t *state);
 static void _background_alarm_cancel(deadline_state_t *state);
-static void _increment_date(deadline_state_t *state, watch_date_time date_time);
+static void _increment_date(deadline_state_t *state, watch_date_time_t date_time);
 static inline void _change_tick_freq(uint8_t freq, deadline_state_t *state);
 static inline bool _is_leap(int16_t y);
 static inline int _days_in_month(int16_t mpnth, int16_t y);
@@ -199,7 +199,7 @@ static inline void _change_tick_freq(uint8_t freq, deadline_state_t *state)
 /* Determine index of closest deadline */
 static uint8_t _closest_deadline(deadline_state_t *state)
 {
-    watch_date_time now = watch_rtc_get_date_time();
+    watch_date_time_t now = watch_rtc_get_date_time();
     uint32_t now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
     uint32_t min_ts = UINT32_MAX;
     uint8_t min_index = 0;
@@ -243,7 +243,7 @@ static void _background_alarm_cancel(deadline_state_t *state)
 static inline void _reset_deadline(deadline_state_t *state)
 {
     /* Get current time and reset hours/minutes/seconds */
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     date_time.unit.second = 0;
     date_time.unit.minute = 0;
     date_time.unit.hour = 0;
@@ -256,7 +256,7 @@ static inline void _reset_deadline(deadline_state_t *state)
 }
 
 /* Increment date in settings mode. Function taken from `set_time_face.c` */
-static void _increment_date(deadline_state_t *state, watch_date_time date_time)
+static void _increment_date(deadline_state_t *state, watch_date_time_t date_time)
 {
     const uint8_t days_in_month[12] = { 31, 28, 31, 30, 31, 30, 30, 31, 30, 31, 30, 31 };
 
@@ -307,7 +307,7 @@ static void _running_display(movement_event_t event, deadline_state_t *state)
     else
         watch_clear_indicator(WATCH_INDICATOR_BELL);
 
-    watch_date_time now = watch_rtc_get_date_time();
+    watch_date_time_t now = watch_rtc_get_date_time();
     uint32_t now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
 
     /* Deadline expired */
@@ -323,7 +323,7 @@ static void _running_display(movement_event_t event, deadline_state_t *state)
     }
 
     /* Get date time structs */
-    watch_date_time deadline = watch_utility_date_time_from_unix_time(state->deadlines[state->current_index], movement_get_current_timezone_offset()
+    watch_date_time_t deadline = watch_utility_date_time_from_unix_time(state->deadlines[state->current_index], movement_get_current_timezone_offset()
         );
 
     /* Calculate naive difference of dates */
@@ -430,7 +430,7 @@ static bool _running_loop(movement_event_t event, void *context)
 }
 
 /* Update display in settings mode */
-static void _setting_display(movement_event_t event, deadline_state_t *state, watch_date_time date_time)
+static void _setting_display(movement_event_t event, deadline_state_t *state, watch_date_time_t date_time)
 {
     char buf[11];
 
@@ -493,7 +493,7 @@ static void _setting_init(deadline_state_t *state)
 static bool _setting_loop(movement_event_t event, void *context)
 {
     deadline_state_t *state = (deadline_state_t *) context;
-    watch_date_time date_time;
+    watch_date_time_t date_time;
     date_time = watch_utility_date_time_from_unix_time(state->deadlines[state->current_index], movement_get_current_timezone_offset());
 
     if (event.event_type != EVENT_BACKGROUND_TASK)
@@ -614,7 +614,7 @@ movement_watch_face_advisory_t deadline_face_advise(void *context)
         return false;
 
     /* Determine closest deadline */
-    watch_date_time now = watch_rtc_get_date_time();
+    watch_date_time_t now = watch_rtc_get_date_time();
     uint32_t now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
     uint32_t next_ts = state->deadlines[_closest_deadline(state)];
 
@@ -627,7 +627,7 @@ movement_watch_face_advisory_t deadline_face_advise(void *context)
         return false;
 
     /* Deadline within next minute. Let's set up an alarm */
-    watch_date_time next = watch_utility_date_time_from_unix_time(next_ts, movement_get_current_timezone_offset());
+    watch_date_time_t next = watch_utility_date_time_from_unix_time(next_ts, movement_get_current_timezone_offset());
     movement_request_wake();
     movement_schedule_background_task_for_face(state->face_idx, next);
     return false;
