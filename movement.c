@@ -106,7 +106,7 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
     }
 }
 
-static void _movement_handle_advisories(void) {
+static void _movement_handle_top_of_minute(void) {
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
         // For each face that offers an advisory...
         if (watch_faces[i].advise != NULL) {
@@ -582,8 +582,8 @@ static void _sleep_mode_app_loop(void) {
     movement_state.needs_wake = false;
     // as long as le_mode_ticks is -1 (i.e. we are in low energy mode), we wake up here, update the screen, and go right back to sleep.
     while (movement_state.le_mode_ticks == -1) {
-        // we also have to handle background tasks here in the mini-runloop
-        if (movement_state.woke_from_alarm_handler) _movement_handle_advisories();
+        // we also have to handle top-of-the-minute tasks here in the mini-runloop
+        if (movement_state.woke_from_alarm_handler) _movement_handle_top_of_minute();
 
         event.event_type = EVENT_LOW_ENERGY_UPDATE;
         watch_faces[movement_state.current_face_idx].loop(event, watch_face_contexts[movement_state.current_face_idx]);
@@ -625,8 +625,8 @@ bool app_loop(void) {
         }
     }
 
-    // handle advisories, if the alarm handler told us we need to
-    if (movement_state.woke_from_alarm_handler) _movement_handle_advisories();
+    // handle top-of-minute tasks, if the alarm handler told us we need to
+    if (movement_state.woke_from_alarm_handler) _movement_handle_top_of_minute();
 
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
