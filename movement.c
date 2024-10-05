@@ -461,6 +461,8 @@ void app_init(void) {
     if (date_time.reg == 0) {
         // at first boot, set year to 2024
         date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
+        date_time.unit.month = 1;
+        date_time.unit.day = 1;
         watch_rtc_set_date_time(date_time);
     }
 
