@@ -525,7 +525,7 @@ void app_init(void) {
     memset(&movement_state, 0, sizeof(movement_state));
 
     movement_state.settings.bit.clock_mode_24h = MOVEMENT_DEFAULT_24H_MODE;
-    movement_state.settings.bit.time_zone = 15;
+    movement_state.settings.bit.time_zone = UTZ_UTC;
     movement_state.settings.bit.led_red_color = MOVEMENT_DEFAULT_RED_COLOR;
     movement_state.settings.bit.led_green_color = MOVEMENT_DEFAULT_GREEN_COLOR;
 #if defined(WATCH_BLUE_TCC_CHANNEL) && !defined(WATCH_GREEN_TCC_CHANNEL)

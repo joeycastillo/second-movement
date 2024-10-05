@@ -41,7 +41,7 @@ void world_clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         *context_ptr = malloc(sizeof(world_clock_state_t));
         memset(*context_ptr, 0, sizeof(world_clock_state_t));
         world_clock_state_t *state = (world_clock_state_t *)*context_ptr;
-        state->settings.bit.timezone_index = 15;
+        state->settings.bit.timezone_index = UTZ_UTC;
     }
 }
 
