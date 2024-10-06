@@ -249,6 +249,7 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
                 i++;
             }
             while (string[i] != 0) {
+                if (4 + i - offset == 10) break;
                 watch_display_character(string[i], 4 + i - offset);
                 i++;
             }
