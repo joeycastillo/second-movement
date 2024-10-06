@@ -33,20 +33,28 @@ void float_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 }
 
 void float_demo_face_activate(void *context) {
-    float *c = (float *)context;
-    *c = 0;
+    float *value = (float *)context;
+    *value = -110;
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "FLOAT", "FL");
-    movement_request_tick_frequency(32);
+    movement_request_tick_frequency(16);
 }
 
 bool float_demo_face_loop(movement_event_t event, void *context) {
-    float *c = (float *)context;
+    float *value = (float *)context;
     switch (event.event_type) {
         case EVENT_TICK:
-            *c = (*c) + 0.11;
+            *value = (*value) + 0.31;
             // fall through
         case EVENT_ACTIVATE:
-            watch_display_float_with_best_effort(*c, "#F");
+            watch_display_float_with_best_effort(*value, "#F");
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            *value = -100;
+            movement_request_tick_frequency(16);
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            *value = -10.85;
+            movement_request_tick_frequency(1);
             break;
         default:
             movement_default_loop_handler(event);

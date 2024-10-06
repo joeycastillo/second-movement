@@ -163,12 +163,13 @@ void watch_display_text_with_fallback(watch_position_t location, const char *str
 /**
  * @brief Displays a floating point number as best we can on whatever LCD is available.
  * @details The custom LCD can energize a decimal point in the same position as the colon. With the leading 1,
- *          we can display numbers from 0.00 to 199.99 with two digits of precision. The original F-91W LCD has
- *          no decimal point, so we use a hyphen to indicate the decimal point. For floats from 0.00 to 9.99,
- *          we can display the number with two digits after the "decimal point" (hyphen). For floats from 10.0
- *          to 99.9, you'll only get one digit after the hyphen. For floats from 100 to 199.9, we'll still give
- *          you one digit after the hyphen, but you'll lose the second character of your units.
- * @param value A floating point number from 0.00 to 199.99 to display on the main clock digits.
+ *          we can display numbers from -99.99 to 199.99 with one or two digits of precision, depending on the
+ *          number and the LCD in use (classic LCD, usually 1 digit; custom LCD, usually 2). The original F-91W
+ *          LCD has no decimal point, so we use a hyphen or underscore instead. For numbers <9.99, the decimal
+ *          point will appear as an underscore on the custom LCD as well, since the position doesn't line up.
+ *          Also note that sometimes, to offer at least one digit of precision, the second character of your
+ *          units may be truncated (i.e. -12.4#F will become -12.4#).
+ * @param value A floating point number from -99.99 to 199.99 to display on the main line of the display.
  * @param units A 1-2 character string to display in the seconds position. Second character may be truncated.
  */
 void watch_display_float_with_best_effort(float value, const char *units);

@@ -26,6 +26,8 @@
 #include "watch_common_display.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 #ifdef USE_CUSTOM_LCD
 static const uint32_t IndicatorSegments[] = {
@@ -275,7 +277,7 @@ void watch_display_float_with_best_effort(float value, const char *units) {
     char buf_fallback[8];
     const char *blank_units = "  ";
 
-    if (value < 0.0) {
+    if (value < -99.9) {
         watch_clear_decimal_if_available();
         watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Undflo", " Unflo");
         return;
@@ -285,8 +287,20 @@ void watch_display_float_with_best_effort(float value, const char *units) {
         return;
     }
 
-    uint16_t value_times_100 = (uint16_t)(value * 100.0);
-    if (value_times_100 > 9999) {
+    uint16_t value_times_100 = abs((int)round(value * 100.0));
+    bool set_decimal = true;
+
+    if (value < 0 && value_times_100 != 0) {
+        if (value_times_100 > 999) {
+            // decimal point isn't in the right place for these numbers; use same format as classic.
+            set_decimal = false;
+            snprintf(buf, sizeof(buf), "-%4.1f%s", -value, units ? units : blank_units);
+            snprintf(buf_fallback, sizeof(buf_fallback), "%s", buf);
+        } else {
+            snprintf(buf, sizeof(buf), "-%03d%s", value_times_100 % 1000u, units ? units : blank_units);
+            snprintf(buf_fallback, sizeof(buf_fallback), "-%3.1f%s", -value, units ? units : blank_units);
+        }
+    } else if (value_times_100 > 9999) {
         snprintf(buf, sizeof(buf), "%5u%s", value_times_100, units ? units : blank_units);
         snprintf(buf_fallback, sizeof(buf_fallback), "%4.1f%s", value, units ? units : blank_units);
     } else if (value_times_100 > 999) {
@@ -298,7 +312,11 @@ void watch_display_float_with_best_effort(float value, const char *units) {
     }
 
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf_fallback);
-    watch_set_decimal_if_available();
+    if (set_decimal) {
+        watch_set_decimal_if_available();
+    } else {
+        watch_clear_decimal_if_available();
+    }
 }
 
 void watch_set_colon(void) {
