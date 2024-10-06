@@ -70,6 +70,7 @@ void watch_display_character(uint8_t character, uint8_t position) {
     } else {
         if (character == 'u') character = 'v'; // we can use the bottom segment; move to lower half
         else if (character == 'j') character = 'J'; // same but just display a normal J
+        else if (character == '.') character = '_'; // we can use the bottom segment; make dot an underscore
     }
     if (position > 1) {
         if (character == 'T') character = 't'; // uppercase T only works in positions 0 and 1
