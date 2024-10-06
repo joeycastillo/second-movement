@@ -164,6 +164,7 @@ void watch_start_sleep_animation(uint32_t duration) {
     watch_set_indicator(WATCH_INDICATOR_SLEEP);
 #else
     watch_display_character(' ', 8);
+    watch_display_character(' ', 9);
 
     slcd_disable();
     slcd_set_frame_counter_enabled(1, false);
