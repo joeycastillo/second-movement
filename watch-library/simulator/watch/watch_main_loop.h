@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-#include "driver_init.h"
-
 void suspend_main_loop(void);
 
 void resume_main_loop(void);

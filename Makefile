@@ -7,24 +7,21 @@ BOARD=sensorwatch_red
 # Which screen are we building for?
 DISPLAY=CLASSIC
 
+# Support USB features?
 TINYUSB_CDC=1
 
 # Leave this line here.
 include $(GOSSAMER_PATH)/make.mk
 
-# this is a hack and does not currently work; we need to integrate a bit of
-# emscripten support into gossamer to actually build for the simulator
 ifdef EMSCRIPTEN
-BUILD = ./build-sim
-CC = emcc
-all: $(BUILD)/$(BIN).html
+all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).html
 $(BUILD)/$(BIN).html: $(OBJS)
 	@echo HTML $@
 	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@ \
 		-s ASYNCIFY=1 \
 		-s EXPORTED_RUNTIME_METHODS=lengthBytesUTF8,printErr \
 		-s EXPORTED_FUNCTIONS=_main \
-		--shell-file=$(TOP)/watch-library/simulator/shell.html
+		--shell-file=./watch-library/simulator/shell.html
 endif
 
 # Add your include directories here.
@@ -37,7 +34,6 @@ INCLUDES += \
   -I./shell \
   -I./movement/lib/sunriset \
   -I./watch-library/shared/watch \
-  -I./watch-library/hardware/watch \
   -I./watch-faces/clock \
   -I./watch-faces/complication \
   -I./watch-faces/demo \
@@ -57,6 +53,30 @@ SRCS += \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \
+
+ifdef EMSCRIPTEN
+
+INCLUDES += \
+  -I./watch-library/simulator/watch \
+
+SRCS += \
+  ./watch-library/simulator/watch/watch.c \
+  ./watch-library/simulator/watch/watch_adc.c \
+  ./watch-library/simulator/watch/watch_deepsleep.c \
+  ./watch-library/simulator/watch/watch_extint.c \
+  ./watch-library/simulator/watch/watch_gpio.c \
+  ./watch-library/simulator/watch/watch_private.c \
+  ./watch-library/simulator/watch/watch_rtc.c \
+  ./watch-library/simulator/watch/watch_slcd.c \
+  ./watch-library/simulator/watch/watch_storage.c \
+  ./watch-library/simulator/watch/watch_tcc.c \
+
+else
+
+INCLUDES += \
+  -I./watch-library/hardware/watch \
+
+SRCS += \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_deepsleep.c \
@@ -69,6 +89,8 @@ SRCS += \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./watch-library/hardware/watch/watch_usb_descriptors.c \
   ./watch-library/hardware/watch/watch_usb_cdc.c \
+
+endif
 
 include watch-faces.mk
 

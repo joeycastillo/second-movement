@@ -33,18 +33,18 @@
 static bool debug_console_focused = false;
 static bool external_interrupt_enabled = false;
 static bool button_callbacks_installed = false;
-static ext_irq_cb_t external_interrupt_mode_callback = NULL;
-static watch_interrupt_trigger external_interrupt_mode_trigger = INTERRUPT_TRIGGER_NONE;
-static ext_irq_cb_t external_interrupt_light_callback = NULL;
-static watch_interrupt_trigger external_interrupt_light_trigger = INTERRUPT_TRIGGER_NONE;
-static ext_irq_cb_t external_interrupt_alarm_callback = NULL;
-static watch_interrupt_trigger external_interrupt_alarm_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_mode_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_mode_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_light_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_light_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_alarm_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_alarm_trigger = INTERRUPT_TRIGGER_NONE;
 
 #define BTN_ID_ALARM 3
 #define BTN_ID_LIGHT 1
 #define BTN_ID_MODE 2
 static const uint8_t BTN_IDS[] = { BTN_ID_ALARM, BTN_ID_LIGHT, BTN_ID_MODE };
-static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, watch_interrupt_trigger trigger);
+static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t trigger);
 
 static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData) {
     if (debug_console_focused || keyEvent->repeat) return EM_FALSE;
@@ -90,20 +90,20 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
         return EM_FALSE;
     }
 
-    watch_interrupt_trigger trigger = eventType == EMSCRIPTEN_EVENT_KEYDOWN ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
+    eic_interrupt_trigger_t trigger = eventType == EMSCRIPTEN_EVENT_KEYDOWN ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
     return watch_invoke_interrupt_callback(button_id, trigger);
 }
 
 static EM_BOOL watch_invoke_mouse_callback(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
     if (eventType == EMSCRIPTEN_EVENT_MOUSEOUT && mouseEvent->buttons == 0) return EM_FALSE;
     uint8_t button_id = *(const char *)userData;
-    watch_interrupt_trigger trigger = eventType == EMSCRIPTEN_EVENT_MOUSEDOWN ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
+    eic_interrupt_trigger_t trigger = eventType == EMSCRIPTEN_EVENT_MOUSEDOWN ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
     return watch_invoke_interrupt_callback(button_id, trigger);
 }
 
 static EM_BOOL watch_invoke_touch_callback(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     uint8_t button_id = *(const char *)userData;
-    watch_interrupt_trigger trigger = eventType == EMSCRIPTEN_EVENT_TOUCHSTART ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
+    eic_interrupt_trigger_t trigger = eventType == EMSCRIPTEN_EVENT_TOUCHSTART ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING;
     return watch_invoke_interrupt_callback(button_id, trigger);
 }
 
@@ -150,23 +150,23 @@ void watch_disable_external_interrupts(void) {
     external_interrupt_enabled = false;
 }
 
-static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, watch_interrupt_trigger event) {
-    ext_irq_cb_t callback;
-    watch_interrupt_trigger trigger;
+static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t event) {
+    watch_cb_t callback;
+    eic_interrupt_trigger_t trigger;
     uint8_t pin;
     switch (button_id) {
         case BTN_ID_MODE:
-            pin = BTN_MODE;
+            pin = HAL_GPIO_BTN_MODE_pin();
             callback = external_interrupt_mode_callback;
             trigger = external_interrupt_mode_trigger;
             break;
         case BTN_ID_LIGHT:
-            pin = BTN_LIGHT;
+            pin = HAL_GPIO_BTN_LIGHT_pin();
             callback = external_interrupt_light_callback;
             trigger = external_interrupt_light_trigger;
             break;
         case BTN_ID_ALARM:
-            pin = BTN_ALARM;
+            pin = HAL_GPIO_BTN_ALARM_pin();
             callback = external_interrupt_alarm_callback;
             trigger = external_interrupt_alarm_trigger;
             break;
@@ -195,14 +195,14 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, watch_in
     return EM_TRUE;
 }
 
-void watch_register_interrupt_callback(const uint8_t pin, ext_irq_cb_t callback, watch_interrupt_trigger trigger) {
-    if (pin == BTN_MODE) {
+void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger_t trigger) {
+    if (pin == HAL_GPIO_BTN_MODE_pin()) {
         external_interrupt_mode_callback = callback;
         external_interrupt_mode_trigger = trigger;
-    } else if (pin == BTN_LIGHT) {
+    } else if (pin == HAL_GPIO_BTN_LIGHT_pin()) {
         external_interrupt_light_callback = callback;
         external_interrupt_light_trigger = trigger;
-    } else if (pin == BTN_ALARM) {
+    } else if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         external_interrupt_alarm_callback = callback;
         external_interrupt_alarm_trigger = trigger;
     }

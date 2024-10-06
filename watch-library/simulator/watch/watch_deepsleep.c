@@ -22,26 +22,20 @@
  * SOFTWARE.
  */
 
+#include <stddef.h>
 #include "watch_extint.h"
-
-// this warning only appears when you `make BOARD=OSO-SWAT-A1-02`. it's annoying,
-// but i'd rather have it warn us at build-time than fail silently at run-time.
-// besides, no one but me really has any of these boards anyway.
-#if BTN_ALARM != GPIO(GPIO_PORTA, 2)
-#warning This board revision does not support external wake on BTN_ALARM, so watch_register_extwake_callback will not work with it. Use watch_register_interrupt_callback instead.
-#endif
-
+#include "app.h"
 static uint32_t watch_backup_data[8];
 
-void watch_register_extwake_callback(uint8_t pin, ext_irq_cb_t callback, bool level) {
-    if (pin == BTN_ALARM) {
+void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
+    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         watch_enable_external_interrupts();
         watch_register_interrupt_callback(pin, callback, level ? INTERRUPT_TRIGGER_RISING : INTERRUPT_TRIGGER_FALLING);
     }
 }
 
 void watch_disable_extwake_interrupt(uint8_t pin) {
-    if (pin == BTN_ALARM) {
+    if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         watch_register_interrupt_callback(pin, NULL, INTERRUPT_TRIGGER_NONE);
     }
 }
@@ -68,9 +62,6 @@ void watch_enter_sleep_mode(void) {
 
     // call app_setup so the app can re-enable everything we disabled.
     app_setup();
-
-    // and call app_wake_from_standby (since main won't have a chance to do it)
-    app_wake_from_standby();
 }
 
 void watch_enter_deep_sleep_mode(void) {

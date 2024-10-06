@@ -34,10 +34,10 @@ static long tick_callbacks[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 static long alarm_interval_id = -1;
 static long alarm_timeout_id = -1;
 static double alarm_interval;
-ext_irq_cb_t alarm_callback;
-ext_irq_cb_t btn_alarm_callback;
-ext_irq_cb_t a2_callback;
-ext_irq_cb_t a4_callback;
+watch_cb_t alarm_callback;
+watch_cb_t btn_alarm_callback;
+watch_cb_t a2_callback;
+watch_cb_t a4_callback;
 
 bool _watch_rtc_is_enabled(void) {
     return true;
@@ -73,7 +73,7 @@ watch_date_time_t watch_rtc_get_date_time(void) {
     return retval;
 }
 
-void watch_rtc_register_tick_callback(ext_irq_cb_t callback) {
+void watch_rtc_register_tick_callback(watch_cb_t callback) {
     watch_rtc_register_periodic_callback(callback, 1);
 }
 
@@ -82,12 +82,12 @@ void watch_rtc_disable_tick_callback(void) {
 }
 
 static void watch_invoke_periodic_callback(void *userData) {
-    ext_irq_cb_t callback = userData;
+    watch_cb_t callback = userData;
     callback();
     resume_main_loop();
 }
 
-void watch_rtc_register_periodic_callback(ext_irq_cb_t callback, uint8_t frequency) {
+void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency) {
     // we told them, it has to be a power of 2.
     if (__builtin_popcount(frequency) != 1) return;
 
@@ -134,7 +134,7 @@ static void watch_invoke_alarm_callback(void *userData) {
     alarm_interval_id = emscripten_set_interval(watch_invoke_alarm_interval_callback, alarm_interval, NULL);
 }
 
-void watch_rtc_register_alarm_callback(ext_irq_cb_t callback, watch_date_time_t alarm_time, watch_rtc_alarm_match mask) {
+void watch_rtc_register_alarm_callback(watch_cb_t callback, watch_date_time_t alarm_time, rtc_alarm_match_t mask) {
     watch_rtc_disable_alarm_callback();
 
     switch (mask) {

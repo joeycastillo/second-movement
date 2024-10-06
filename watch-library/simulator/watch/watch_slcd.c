@@ -23,8 +23,7 @@
  */
 
 #include "watch_slcd.h"
-#include "watch_private_display.h"
-#include "hpl_slcd_config.h"
+#include "watch_common_display.h"
 
 #include <emscripten.h>
 #include <emscripten/html5.h>

@@ -26,9 +26,9 @@
 
 void watch_enable_adc(void) {}
 
-void watch_enable_analog_input(const uint8_t pin) {}
+void watch_enable_analog_input(const uint16_t pin) {}
 
-uint16_t watch_get_analog_pin_level(const uint8_t pin) {
+uint16_t watch_get_analog_pin_level(const uint16_t pin) {
     return 32767; // pretend it's half of VCC
 }
 
@@ -36,13 +36,13 @@ void watch_set_analog_num_samples(uint16_t samples) {}
 
 void watch_set_analog_sampling_length(uint8_t cycles) {}
 
-void watch_set_analog_reference_voltage(watch_adc_reference_voltage reference) {}
+void watch_set_analog_reference_voltage(uint8_t reference) {}
 
 uint16_t watch_get_vcc_voltage(void) {
     // TODO: (a2) hook to UI
     return 3000;
 }
 
-inline void watch_disable_analog_input(const uint8_t pin) {}
+inline void watch_disable_analog_input(const uint16_t pin) {}
 
 inline void watch_disable_adc(void) {}

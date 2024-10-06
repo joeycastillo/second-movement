@@ -34,7 +34,6 @@
 #include "watch.h"
 #include "watch_utility.h"
 #include "usb.h"
-#include "watch_usb_cdc.h"
 #include "watch_private.h"
 #include "movement.h"
 #include "filesystem.h"
@@ -48,6 +47,8 @@
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
+#else
+#include "watch_usb_cdc.h"
 #endif
 
 movement_state_t movement_state;
@@ -71,10 +72,15 @@ void cb_alarm_fired(void);
 void cb_fast_tick(void);
 void cb_tick(void);
 
+#if __EMSCRIPTEN__
+void yield(void) {
+}
+#else
 void yield(void) {
     tud_task();
     cdc_task();
 }
+#endif
 
 static udatetime_t _movement_convert_date_time_to_udate(watch_date_time_t date_time) {
     return (udatetime_t) {
@@ -553,15 +559,16 @@ void app_init(void) {
     filesystem_init();
 
 #if __EMSCRIPTEN__
-    int32_t time_zone_offset = EM_ASM_INT({
-        return -new Date().getTimezoneOffset();
-    });
-    for (int i = 0, count = sizeof(movement_timezone_offsets) / sizeof(movement_timezone_offsets[0]); i < count; i++) {
-        if (movement_timezone_offsets[i] == time_zone_offset) {
-            movement_state.settings.bit.time_zone = i;
-            break;
-        }
-    }
+    /// FIXME: for #SecondMovement: Figure out how to set the time zone automatically! This method no longer works.
+    // int32_t time_zone_offset = EM_ASM_INT({
+    //     return -new Date().getTimezoneOffset();
+    // });
+    // for (int i = 0, count = sizeof(movement_timezone_offsets) / sizeof(movement_timezone_offsets[0]); i < count; i++) {
+    //     if (movement_timezone_offsets[i] == time_zone_offset) {
+    //         movement_state.settings.bit.time_zone = i;
+    //         break;
+    //     }
+    // }
 #endif
 }
 
