@@ -24,8 +24,6 @@
 
 #include "watch_gpio.h"
 
-static bool pin_levels[UINT8_MAX];
-
 void watch_enable_digital_input(const uint8_t pin) {}
 
 void watch_disable_digital_input(const uint8_t pin) {}
@@ -35,7 +33,8 @@ void watch_enable_pull_up(const uint8_t pin) {}
 void watch_enable_pull_down(const uint8_t pin) {}
 
 bool watch_get_pin_level(const uint8_t pin) {
-    return pin_levels[pin];
+    /// WARNING: Pin levels are now tracked in gossamer. This function has been deprecated and will be removed in a future release.
+    return 0;
 }
 
 void watch_enable_digital_output(const uint8_t pin) {}
@@ -43,5 +42,4 @@ void watch_enable_digital_output(const uint8_t pin) {}
 void watch_disable_digital_output(const uint8_t pin) {}
 
 void watch_set_pin_level(const uint8_t pin, const bool level) {
-    pin_levels[pin] = level;
 }

@@ -153,20 +153,21 @@ void watch_disable_external_interrupts(void) {
 static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t event) {
     watch_cb_t callback;
     eic_interrupt_trigger_t trigger;
-    uint8_t pin;
+    const bool level = (event & INTERRUPT_TRIGGER_RISING) != 0;
+
     switch (button_id) {
         case BTN_ID_MODE:
-            pin = HAL_GPIO_BTN_MODE_pin();
+            HAL_GPIO_BTN_MODE_write(level);
             callback = external_interrupt_mode_callback;
             trigger = external_interrupt_mode_trigger;
             break;
         case BTN_ID_LIGHT:
-            pin = HAL_GPIO_BTN_LIGHT_pin();
+            HAL_GPIO_BTN_LIGHT_write(level);
             callback = external_interrupt_light_callback;
             trigger = external_interrupt_light_trigger;
             break;
         case BTN_ID_ALARM:
-            pin = HAL_GPIO_BTN_ALARM_pin();
+            HAL_GPIO_BTN_ALARM_write(level);
             callback = external_interrupt_alarm_callback;
             trigger = external_interrupt_alarm_trigger;
             break;
@@ -174,7 +175,6 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
             return EM_FALSE;
     }
 
-    const bool level = (event & INTERRUPT_TRIGGER_RISING) != 0;
     EM_ASM({
         const classList = document.querySelector('#btn' + $0).classList;
         const highlight = 'highlight';
@@ -184,8 +184,6 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
     if (!external_interrupt_enabled || main_loop_is_sleeping()) {
         return EM_FALSE;
     }
-
-    watch_set_pin_level(pin, level);
 
     if (callback && (event & trigger) != 0) {
         callback();
