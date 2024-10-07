@@ -31,11 +31,11 @@
 #define SPI_FLASH_FAST_READ false
 
 static void flash_enable(void) {
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
 }
 
 static void flash_disable(void) {
-    watch_set_pin_level(A3, true);
+    HAL_GPIO_A3_set();
 }
 
 static bool transfer(uint8_t *command, uint32_t command_length, uint8_t *data_in, uint8_t *data_out, uint32_t data_length) {

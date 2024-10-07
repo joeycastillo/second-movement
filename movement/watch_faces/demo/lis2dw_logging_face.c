@@ -131,7 +131,7 @@ void lis2dh_logging_face_activate(void *context) {
     lis2dh_logger_state_t *logger_state = (lis2dh_logger_state_t *)context;
     logger_state->display_index = 0;
     logger_state->log_ticks = 0;
-    watch_enable_digital_input(A4);
+    HAL_GPIO_A4_in();
 }
 
 bool lis2dw_logging_face_loop(movement_event_t event, void *context) {
@@ -184,7 +184,7 @@ bool lis2dw_logging_face_loop(movement_event_t event, void *context) {
 
 void lis2dw_logging_face_resign(void *context) {
     (void) context;
-    watch_disable_digital_input(A4);
+    HAL_GPIO_A4_off();
 }
 
 movement_watch_face_advisory_t lis2dw_logging_face_advise(void *context) {

@@ -556,7 +556,7 @@ bool wordle_face_loop(movement_event_t event, void *context) {
             display_letter(state, true);
             if (state->word_elements[state->position] == WORDLE_NUM_VALID_LETTERS) break;
 #if (WORDLE_USE_RANDOM_GUESS != 0)
-            if (watch_get_pin_level(BTN_LIGHT) &&
+            if (HAL_GPIO_BTN_LIGHT_read() &&
             (state->using_random_guess || (state->attempt == 0 && state->position == 0))) {
                 insert_random_guess(state);
                 break;

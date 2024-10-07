@@ -364,7 +364,7 @@ static void _handle_backward(periodic_state_t *state, bool should_sound){
 
 static void _handle_mode_still_pressed(periodic_state_t *state, bool should_sound) {
     if (_ts_ticks != 0){
-        if (!watch_get_pin_level(BTN_MODE)) {
+        if (!HAL_GPIO_BTN_MODE_read()) {
             _ts_ticks = 0;
             return;
         }
@@ -401,8 +401,8 @@ bool periodic_face_loop(movement_event_t event, void *context)
         if (state->mode == SCREEN_TITLE) _text_pos = _loop_text(_text_looping, _text_pos, 5);
         else if (state->mode == SCREEN_FULL_NAME) _text_pos = _loop_text(_text_looping, _text_pos, 6);
         if (_quick_ticks_running) {
-            if (watch_get_pin_level(BTN_LIGHT)) _handle_backward(state, false);
-            else if (watch_get_pin_level(BTN_ALARM)) _handle_forward(state, false);
+            if (HAL_GPIO_BTN_LIGHT_read()) _handle_backward(state, false);
+            else if (HAL_GPIO_BTN_ALARM_read()) _handle_forward(state, false);
             else stop_quick_cyc();
         }
 

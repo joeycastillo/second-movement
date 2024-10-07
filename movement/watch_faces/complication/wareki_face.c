@@ -123,7 +123,7 @@ bool wareki_loop(movement_event_t event, void *context) {
 
             //printf("tick %d\n",state->disp_year );
 
-            if (_alarm_button_press && watch_get_pin_level(BTN_ALARM)){
+            if (_alarm_button_press && HAL_GPIO_BTN_ALARM_read()){
                 //printf("ALARM ON\n");
             }
             else{
@@ -131,7 +131,7 @@ bool wareki_loop(movement_event_t event, void *context) {
                 _alarm_button_press = false;
             }
 
-            if (_light_button_press && watch_get_pin_level(BTN_LIGHT)){
+            if (_light_button_press && HAL_GPIO_BTN_LIGHT_read()){
                 //printf("LIGHT ON\n");
             }
             else{

@@ -117,7 +117,7 @@ bool day_one_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
             if (state->quick_cycle) {
-                if (watch_get_pin_level(BTN_ALARM)) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
                     _day_one_face_increment(state);
                 } else {
                     _day_one_face_abort_quick_cycle(state);

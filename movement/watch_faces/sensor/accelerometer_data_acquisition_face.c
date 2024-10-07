@@ -83,7 +83,7 @@ void accelerometer_data_acquisition_face_setup(uint8_t watch_face_index, void **
         // mark first four pages as used
         buf[0] = 0x0F;
         wait_for_flash_ready();
-        watch_set_pin_level(A3, false);
+        HAL_GPIO_A3_clr();
         spi_flash_command(CMD_ENABLE_WRITE);
         wait_for_flash_ready();
         spi_flash_write_data(0, buf, 256);
@@ -351,15 +351,15 @@ static void write_buffer_to_page(uint8_t *buf, uint16_t page) {
     uint32_t address = 256 * page;
 
     wait_for_flash_ready();
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_command(CMD_ENABLE_WRITE);
     wait_for_flash_ready();
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_write_data(address, buf, 256);
     wait_for_flash_ready();
 
     uint8_t buf2[256];
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_read_data(address, buf2, 256);
     wait_for_flash_ready();
 
@@ -376,26 +376,26 @@ static void write_buffer_to_page(uint8_t *buf, uint16_t page) {
         }
     }
 
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_read_data(header_page * 256, used_pages, 256);
     used_pages[offset_in_buf] = used_byte;
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_command(CMD_ENABLE_WRITE);
     wait_for_flash_ready();
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     spi_flash_write_data(header_page * 256, used_pages, 256);
     wait_for_flash_ready();
 }
 
 static bool wait_for_flash_ready(void) {
-    watch_set_pin_level(A3, false);
+    HAL_GPIO_A3_clr();
     bool ok = true;
     uint8_t read_status_response[1] = {0x00};
     do {
         ok = spi_flash_read_command(CMD_READ_STATUS, read_status_response, 1);
     } while ((read_status_response[0] & 0x3) != 0);
     delay_ms(1); // why do i need this?
-    watch_set_pin_level(A3, true);
+    HAL_GPIO_A3_set();
     return ok;
 }
 

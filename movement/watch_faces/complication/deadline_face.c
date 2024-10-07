@@ -502,7 +502,7 @@ static bool _setting_loop(movement_event_t event, void *context)
     switch (event.event_type) {
         case EVENT_TICK:
             if (state->tick_freq == 8) {
-                if (watch_get_pin_level(BTN_ALARM)) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
                     _increment_date(state, date_time);
                     _setting_display(event, state, date_time);
                 } else {

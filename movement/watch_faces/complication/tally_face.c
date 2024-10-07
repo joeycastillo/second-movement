@@ -113,7 +113,7 @@ bool tally_face_loop(movement_event_t event, void *context) {
     static bool using_led = false;
 
     if (using_led) {
-        if(!watch_get_pin_level(BTN_MODE) && !watch_get_pin_level(BTN_LIGHT) && !watch_get_pin_level(BTN_ALARM))
+        if(!HAL_GPIO_BTN_MODE_read() && !HAL_GPIO_BTN_LIGHT_read() && !HAL_GPIO_BTN_ALARM_read())
             using_led = false;
         else {
             if (event.event_type == EVENT_LIGHT_BUTTON_DOWN || event.event_type == EVENT_ALARM_BUTTON_DOWN)
@@ -125,8 +125,8 @@ bool tally_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_TICK:
             if (_quick_ticks_running) {
-                bool light_pressed = watch_get_pin_level(BTN_LIGHT);
-                bool alarm_pressed = watch_get_pin_level(BTN_ALARM);
+                bool light_pressed = HAL_GPIO_BTN_LIGHT_read();
+                bool alarm_pressed = HAL_GPIO_BTN_ALARM_read();
                 if (light_pressed && alarm_pressed) stop_quick_cyc();
                 else if (light_pressed) tally_face_increment(state, movement_button_should_sound());
                 else if (alarm_pressed) tally_face_decrement(state, movement_button_should_sound());
@@ -160,7 +160,7 @@ bool tally_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
         case EVENT_ALARM_BUTTON_DOWN:
-            if (watch_get_pin_level(BTN_MODE)) {
+            if (HAL_GPIO_BTN_MODE_read()) {
                 movement_illuminate_led();
                 using_led = true;
             }

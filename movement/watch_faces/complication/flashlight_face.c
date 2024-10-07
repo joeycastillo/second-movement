@@ -39,8 +39,8 @@ void flashlight_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void flashlight_face_activate(void *context) {
     (void) context;
 
-    watch_enable_digital_output(A2);
-    watch_set_pin_level(A2, false);
+    HAL_GPIO_A2_out();
+    HAL_GPIO_A2_clr();
 }
 
 bool flashlight_face_loop(movement_event_t event, void *context) {
@@ -53,11 +53,7 @@ bool flashlight_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if (watch_get_pin_level(A2)) {
-                watch_set_pin_level(A2, false);
-            } else {
-                watch_set_pin_level(A2, true);
-            }
+            HAL_GPIO_A2_toggle();
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
@@ -72,7 +68,6 @@ bool flashlight_face_loop(movement_event_t event, void *context) {
 void flashlight_face_resign(void *context) {
     (void) context;
 
-    watch_set_pin_level(A2, false);
-    watch_disable_digital_output(A2);
+    HAL_GPIO_A2_clr();
+    HAL_GPIO_A2_off();
 }
-

@@ -224,7 +224,7 @@ bool timer_face_loop(movement_event_t event, void *context) {
             if (state->mode == running) state->now_ts++;
             else if (state->mode == pausing) state->pausing_seconds++;
             else if (state->quick_cycle) {
-                if (watch_get_pin_level(BTN_ALARM)) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
                     _settings_increment(state);
                     subsecond = 0;
                 } else _abort_quick_cycle(state);

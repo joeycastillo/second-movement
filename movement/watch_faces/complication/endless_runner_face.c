@@ -520,7 +520,7 @@ static void update_game(endless_runner_state_t *state, uint8_t subsecond) {
                 game_state.jump_state = JUMPING_FINAL_FRAME;
             else
                 game_state.fuel--;
-            if (!watch_get_pin_level(BTN_ALARM) && !watch_get_pin_level(BTN_LIGHT)) stop_jumping(state);
+            if (!HAL_GPIO_BTN_ALARM_read() && !HAL_GPIO_BTN_LIGHT_read()) stop_jumping(state);
         }
         else {
             curr_jump_frame = game_state.jump_state - NOT_JUMPING;

@@ -253,7 +253,7 @@ bool time_left_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK: {
             uint8_t subsecond = event.subsecond;
             if (_quick_ticks_running) {
-                if (watch_get_pin_level(BTN_ALARM)) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
                     _handle_alarm_button(state);
                     subsecond = 0;
                 } else _abort_quick_ticks();
