@@ -40,7 +40,7 @@ void watch_enable_digital_input(const uint8_t pin);
 /** @brief Disables any digital input, along with any pull-up or pull-down configuration.
   * @param pin The pin that you wish to disable.
   */
-void watch_disable_digital_input(const uint8_t pin);
+void watch_disable_digital_input(const uint8_t pin) __attribute__ ((deprecated("Use HAL_GPIO_PIN_off() macro.")));
 
 /** @brief Enables a pull-up resistor on the selected pin.
   * @param pin The pin that you wish to configure.
@@ -56,21 +56,21 @@ void watch_enable_pull_down(const uint8_t pin);
   * @param pin The pin whose value you wish to read.
   * @return true if the pin was logic high; otherwise, false.
   */
-bool watch_get_pin_level(const uint8_t pin);
+bool watch_get_pin_level(const uint8_t pin) __attribute__ ((deprecated("Use HAL_GPIO_PIN_read() macro.")));
 
 /** @brief Configures the selected pin for digital output.
   * @param pin The pin that you wish to act as an output.
   */
-void watch_enable_digital_output(const uint8_t pin);
+void watch_enable_digital_output(const uint8_t pin) __attribute__ ((deprecated("Use HAL_GPIO_PIN_out() macro.")));
 
 /** @brief Disables digital output on the selected pin.
   * @param pin The pin that you wish disable.
   */
-void watch_disable_digital_output(const uint8_t pin);
+void watch_disable_digital_output(const uint8_t pin) __attribute__ ((deprecated("Use HAL_GPIO_PIN_off() macro.")));
 
 /** @brief Sets the level of the selected pin.
   * @param pin The pin whose value you wish to set.
   * @param level The level you wish to set: true for high, false for low.
   */
-void watch_set_pin_level(const uint8_t pin, const bool level);
+void watch_set_pin_level(const uint8_t pin, const bool level) __attribute__ ((deprecated("Use HAL_GPIO_PIN_write() macro.")));
 /// @}
