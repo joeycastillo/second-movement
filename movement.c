@@ -557,19 +557,6 @@ void app_init(void) {
     _movement_reset_inactivity_countdown();
 
     filesystem_init();
-
-#if __EMSCRIPTEN__
-    /// FIXME: for #SecondMovement: Figure out how to set the time zone automatically! This method no longer works.
-    // int32_t time_zone_offset = EM_ASM_INT({
-    //     return -new Date().getTimezoneOffset();
-    // });
-    // for (int i = 0, count = sizeof(movement_timezone_offsets) / sizeof(movement_timezone_offsets[0]); i < count; i++) {
-    //     if (movement_timezone_offsets[i] == time_zone_offset) {
-    //         movement_state.settings.bit.time_zone = i;
-    //         break;
-    //     }
-    // }
-#endif
 }
 
 void app_wake_from_backup(void) {
@@ -594,6 +581,18 @@ void app_setup(void) {
 
         // populate the DST offset cache
         _movement_update_dst_offset_cache();
+
+#if __EMSCRIPTEN__
+        int32_t time_zone_offset = EM_ASM_INT({
+            return -new Date().getTimezoneOffset();
+        });
+        for (int i = 0; i < NUM_ZONE_NAMES; i++) {
+            if (movement_get_current_timezone_offset_for_zone(i) == time_zone_offset * 60) {
+                movement_state.settings.bit.time_zone = i;
+                break;
+            }
+        }
+#endif
 
         // set up the 1 minute alarm (for background tasks and low power updates)
         watch_date_time_t alarm_time;

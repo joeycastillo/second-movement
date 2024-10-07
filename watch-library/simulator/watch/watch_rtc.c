@@ -24,6 +24,7 @@
 
 #include "watch_rtc.h"
 #include "watch_main_loop.h"
+#include "watch_utility.h"
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -61,6 +62,9 @@ void watch_rtc_set_date_time(watch_date_time_t date_time) {
 
 watch_date_time_t watch_rtc_get_date_time(void) {
     watch_date_time_t retval;
+    int32_t time_zone_offset = EM_ASM_INT({
+        return -new Date().getTimezoneOffset() * 60;
+    });
     retval.reg = EM_ASM_INT({
         const date = new Date(Date.now() + $0);
         return date.getSeconds() |
@@ -70,6 +74,7 @@ watch_date_time_t watch_rtc_get_date_time(void) {
             ((date.getMonth() + 1) << 22) |
             ((date.getFullYear() - 2020) << 26);
     }, time_offset);
+    retval = watch_utility_date_time_convert_zone(retval, time_zone_offset, 0);
     return retval;
 }
 
