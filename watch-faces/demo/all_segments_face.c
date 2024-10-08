@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +22,40 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
-#include "character_set_face.h"
+#include <stdlib.h>
+#include <string.h>
 #include "all_segments_face.h"
-#include "float_demo_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "preferences_face.h"
-// New includes go above this line.
+#include "watch.h"
+
+void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+    (void) watch_face_index;
+    (void) context_ptr;
+}
+
+void all_segments_face_activate(void *context) {
+#ifdef USE_CUSTOM_LCD
+    uint8_t num_com = 4;
+#else
+    uint8_t num_com = 3;
+#endif
+    uint8_t num_seg = 27 - num_com;
+
+    (void) context;
+    for (int com = 0; com < num_com; com++) {
+        for (int seg = 0; seg < num_seg; seg++) {
+            watch_set_pixel(com, seg);
+        }
+    }
+}
+
+bool all_segments_face_loop(movement_event_t event, void *context) {
+    (void) context;
+
+    movement_default_loop_handler(event);
+
+    return true;
+}
+
+void all_segments_face_resign(void *context) {
+    (void) context;
+}
