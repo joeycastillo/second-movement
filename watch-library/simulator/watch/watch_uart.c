@@ -23,23 +23,22 @@
  */
 
 #include "watch_uart.h"
-#include "peripheral_clk_config.h"
 
 static bool tx_enable = false;
 static bool rx_enable = false;
 
-void watch_enable_uart(const uint8_t tx_pin, const uint8_t rx_pin, uint32_t baud) {
+void watch_enable_uart(const uint16_t tx_pin, const uint16_t rx_pin, uint32_t baud) {
     tx_enable = !!tx_pin;
     rx_enable = !!rx_pin;
 }
 
-void watch_uart_puts(char *s) {
+void watch_uart_puts(uint8_t *s) {
 	if (tx_enable) {
         // TODO: hook up to UI
     }
 }
 
-char watch_uart_getc(void) {
+size_t watch_uart_gets(uint8_t *data, size_t max_length) {
 	if (rx_enable) {
         // TODO: hook up to UI
     }

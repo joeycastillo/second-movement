@@ -25,6 +25,7 @@
 #define _WATCH_UART_H_INCLUDED
 ////< @file watch_uart.h
 
+#include <stddef.h>
 #include "watch.h"
 
 /** @addtogroup uart UART
@@ -32,25 +33,26 @@
   **/
 /// @{
 
-/** @brief Initializes the debug UART.
+/** @brief Initializes the UART.
   * @param tx_pin The pin the watch will use to transmit, or 0 for a receive-only UART.
-  *               If specified, must be either A2 or A4.
+  *               If specified, must be either HAL_GPIO_A2_pin() or HAL_GPIO_A4_pin().
   * @param rx_pin The pin the watch will use to receive, or 0 for a transmit-only UART.
   *               If specified, must be A1, A2, A3 or A4 (pin A0 cannot receive UART data).
   * @param baud The baud rate for the UART. A typical value is 19200.
   */
-void watch_enable_uart(const uint8_t tx_pin, const uint8_t rx_pin, uint32_t baud);
+void watch_enable_uart(const uint16_t tx_pin, const uint16_t rx_pin, uint32_t baud);
 
 /** @brief Transmits a string of bytes on the UART's TX pin.
   * @param s A null-terminated string containing the bytes you wish to transmit.
   */
-void watch_uart_puts(char *s);
+void watch_uart_puts(uint8_t *s);
 
-/** @brief Receives a single byte from the UART's RX pin.
-  * @return the received byte.
-  * @note This method will block until a byte is received!
+/** @brief Returns a string of bytes received on the UART's RX pin.
+  * @param data A pointer to a buffer where the received bytes will be stored.
+  * @param max_length The maximum number of bytes to receive.
+  * @return The number of bytes actually received into the buffer.
   */
-char watch_uart_getc(void);
+size_t watch_uart_gets(uint8_t *data, size_t max_length);
 
 /// @}
 #endif
