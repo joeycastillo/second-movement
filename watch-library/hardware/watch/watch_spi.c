@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2022-2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,32 +23,37 @@
  */
 
 #include "watch_spi.h"
-
-struct io_descriptor *spi_io;
+#include "spi.h"
 
 void watch_enable_spi(void) {
-    SPI_0_init();
-    spi_m_sync_get_io_descriptor(&SPI_0, &spi_io);
-    spi_m_sync_enable(&SPI_0);
+    spi_init(SPI_MODE_3, 1000000);
+    spi_enable();
 }
 
 void watch_disable_spi(void) {
-    spi_m_sync_disable(&SPI_0);
-    spi_io = NULL;
+    spi_disable();
 }
 
 bool watch_spi_write(const uint8_t *buf, uint16_t length) {
-	return !!io_write(spi_io, buf, length);
+    for (uint16_t i = 0; i < length; i++) {
+        spi_transfer(buf[i]);
+    }
+
+    return true;
 }
 
 bool watch_spi_read(uint8_t *buf, uint16_t length) {
-	return !!io_read(spi_io, buf, length);
+    for (uint16_t i = 0; i < length; i++) {
+        buf[i] = spi_transfer(0);
+    }
+
+    return true;
 }
 
 bool watch_spi_transfer(const uint8_t *data_out, uint8_t *data_in, uint16_t length) {
-    struct spi_xfer xfer;
-    xfer.txbuf = (uint8_t *)data_out;
-    xfer.rxbuf = data_in;
-    xfer.size = length;
-    return !!spi_m_sync_transfer(&SPI_0, &xfer);
+    for (uint16_t i = 0; i < length; i++) {
+        data_in[i] = spi_transfer(data_out[i]);
+    }
+
+    return true;
 }

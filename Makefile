@@ -68,6 +68,7 @@ SRCS += \
   ./watch-library/simulator/watch/watch_private.c \
   ./watch-library/simulator/watch/watch_rtc.c \
   ./watch-library/simulator/watch/watch_slcd.c \
+  ./watch-library/simulator/watch/watch_spi.c \
   ./watch-library/simulator/watch/watch_storage.c \
   ./watch-library/simulator/watch/watch_tcc.c \
   ./watch-library/simulator/watch/watch_uart.c \
@@ -86,6 +87,7 @@ SRCS += \
   ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \
+  ./watch-library/hardware/watch/watch_spi.c \
   ./watch-library/hardware/watch/watch_storage.c \
   ./watch-library/hardware/watch/watch_tcc.c \
   ./watch-library/hardware/watch/watch_uart.c \
