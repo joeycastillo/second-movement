@@ -34,6 +34,7 @@ INCLUDES += \
   -I./shell \
   -I./movement/lib/sunriset \
   -I./watch-library/shared/watch \
+  -I./watch-library/shared/driver \
   -I./watch-faces/clock \
   -I./watch-faces/complication \
   -I./watch-faces/demo \
@@ -50,6 +51,7 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./movement/lib/sunriset/sunriset.c \
+  ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \

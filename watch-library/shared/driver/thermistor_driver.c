@@ -23,6 +23,7 @@
  */
 
 #include "thermistor_driver.h"
+#include "sam.h"
 #include "watch.h"
 #include "watch_utility.h"
 

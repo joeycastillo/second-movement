@@ -31,13 +31,11 @@
 static void _temperature_display_face_update_display(bool in_fahrenheit) {
     thermistor_driver_enable();
     float temperature_c = thermistor_driver_get_temperature();
-    char buf[14];
     if (in_fahrenheit) {
-        sprintf(buf, "%4.1f#F", temperature_c * 1.8 + 32.0);
+        watch_display_float_with_best_effort(temperature_c * 1.8 + 32.0, "#F");
     } else {
-        sprintf(buf, "%4.1f#C", temperature_c);
+        watch_display_float_with_best_effort(temperature_c, "#C");
     }
-    watch_display_string(buf, 4);
     thermistor_driver_disable();
 }
 
@@ -48,7 +46,7 @@ void temperature_display_face_setup(uint8_t watch_face_index, void ** context_pt
 
 void temperature_display_face_activate(void *context) {
     (void) context;
-    watch_display_string("TE", 0);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP", "TE");
 }
 
 bool temperature_display_face_loop(movement_event_t event, void *context) {
@@ -77,14 +75,12 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
             // clear seconds area and start tick animation if necessary
             if (!watch_sleep_animation_is_running()) {
-                watch_display_string("  ", 8);
                 watch_start_sleep_animation(1000);
             }
             // update every 5 minutes
             if (date_time.unit.minute % 5 == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                 _temperature_display_face_update_display(movement_use_imperial_units());
-                watch_display_string("  ", 8);
             }
             break;
         default:

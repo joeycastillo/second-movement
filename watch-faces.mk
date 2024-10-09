@@ -9,6 +9,7 @@ SRCS += \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/float_demo_face.c \
+  ./watch-faces/sensor/temperature_display_face.c \
   ./watch-faces/sensor/voltage_face.c \
   ./watch-faces/settings/set_time_face.c \
   ./watch-faces/settings/preferences_face.c \
