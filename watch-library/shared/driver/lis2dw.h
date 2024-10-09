@@ -335,7 +335,21 @@ bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
 
 void lis2dw_clear_fifo(void);
 
-void lis2dw_configure_wakeup_int1(uint8_t threshold, bool latch, bool active_state);
+void lis2dw_enable_sleep(void);
+
+void lis2dw_disable_sleep(void);
+
+void lis2dw_enable_tap_detection(void);
+
+void lis2dw_disable_tap_detection(void);
+
+void lis2dw_configure_wakeup_threshold(uint8_t threshold);
+
+void lis2dw_configure_int1(uint8_t sources);
+
+void lis2dw_enable_interrupts(void);
+
+void lis2dw_disable_interrupts(void);
 
 lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 

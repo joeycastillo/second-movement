@@ -54,7 +54,10 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
 }
 
 static void _accel_interrupt_count_face_configure_threshold(uint8_t threshold) {
-    lis2dw_configure_wakeup_int1(threshold, false, true);
+    lis2dw_enable_sleep();
+    lis2dw_configure_wakeup_threshold(threshold);
+    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_WU);
+    lis2dw_enable_interrupts();
 }
 
 void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -104,7 +107,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
                 }
                 break;
             case EVENT_ALARM_BUTTON_UP:
-                lis2dw_configure_wakeup_int1(state->threshold, false, true);
+                lis2dw_configure_wakeup_threshold(state->new_threshold);
                 state->threshold = state->new_threshold;
                 state->is_setting = false;
                 break;

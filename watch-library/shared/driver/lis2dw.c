@@ -208,25 +208,43 @@ void lis2dw_clear_fifo(void) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_FIFO_CTRL, LIS2DW_FIFO_CTRL_MODE_COLLECT_AND_STOP | LIS2DW_FIFO_CTRL_FTH);
 }
 
-void lis2dw_configure_wakeup_int1(uint8_t threshold, bool latch, bool active_state) {
-    uint8_t configuration;
+void lis2dw_enable_sleep(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON);
+}
 
-    // enable wakeup interrupt on INT1 pin
-    configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1);
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1, configuration | LIS2DW_CTRL4_INT1_WU);
+void lis2dw_disable_sleep(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration & ~LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON);
+}
 
-    // set threshold
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, threshold | LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON);
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_INT1_DUR, 0b01111111);
+void lis2dw_enable_tap_detection(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | LIS2DW_WAKE_UP_THS_VAL_TAP_EVENT_ENABLED);
+}
 
-    configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL3) & ~(LIS2DW_CTRL3_VAL_LIR);
-    if (!active_state) configuration |= LIS2DW_CTRL3_VAL_H_L_ACTIVE;
-    if (latch) configuration |= LIS2DW_CTRL3_VAL_LIR;
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL3, configuration);
+void lis2dw_disable_tap_detection(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration & ~LIS2DW_WAKE_UP_THS_VAL_TAP_EVENT_ENABLED);
+}
 
-    // enable interrupts
-    configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
+void lis2dw_configure_wakeup_threshold(uint8_t threshold) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS) & 0b11000000;
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | threshold);
+}
+
+void lis2dw_configure_int1(uint8_t sources) {
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1, sources);
+}
+
+void lis2dw_enable_interrupts(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration | LIS2DW_CTRL7_VAL_INTERRUPTS_ENABLE);
+}
+
+void lis2dw_disable_interrupts(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration & ~LIS2DW_CTRL7_VAL_INTERRUPTS_ENABLE);
 }
 
 lis2dw_wakeup_source_t lis2dw_get_wakeup_source() {
