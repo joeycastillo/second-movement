@@ -51,6 +51,7 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./movement/lib/sunriset/sunriset.c \
+  ./watch-library/shared/driver/lis2dw.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \

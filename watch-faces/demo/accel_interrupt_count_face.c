@@ -37,7 +37,7 @@ void accel_interrupt_handler(void) {
 }
 
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
-    char buf[11];
+    char buf[7];
 
     if (state->running) {
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
@@ -46,8 +46,10 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
     }
 
     // "AC"celerometer "IN"terrupts
-    snprintf(buf, 11, "AC1N%6ld", state->count);
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_TOP_LEFT, "AC");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "1N");
+    snprintf(buf, 7, "%6ld", state->count);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
     printf("%s\n", buf);
 }
 
@@ -95,8 +97,9 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
             case EVENT_TICK:
                 {
                     char buf[11];
-                    snprintf(buf, 11, "TH  %4d  ", state->new_threshold);
-                    watch_display_string(buf, 0);
+                    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
+                    watch_display_float_with_best_effort(state->new_threshold * 0.125, " G");
                     printf("%s\n", buf);
                 }
                 break;
@@ -123,10 +126,10 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
             case EVENT_ALARM_BUTTON_UP:
                 if (state->running) {
                     state->running = false;
-                    watch_register_interrupt_callback(A4, NULL, INTERRUPT_TRIGGER_RISING);
+                    watch_register_interrupt_callback(HAL_GPIO_A4_pin(), NULL, INTERRUPT_TRIGGER_RISING);
                 } else {
                     state->running = true;
-                    watch_register_interrupt_callback(A4, accel_interrupt_handler, INTERRUPT_TRIGGER_RISING);
+                    watch_register_interrupt_callback(HAL_GPIO_A4_pin(), accel_interrupt_handler, INTERRUPT_TRIGGER_RISING);
                 }
                 _accel_interrupt_count_face_update_display(state);
                 break;
