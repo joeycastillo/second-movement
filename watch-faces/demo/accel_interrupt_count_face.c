@@ -68,13 +68,15 @@ void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_
         ptr_to_count = &((accel_interrupt_count_state_t *)*context_ptr)->count;
         watch_enable_i2c();
         lis2dw_begin();
-        lis2dw_set_low_power_mode(LIS2DW_LP_MODE_2); // lowest power 14-bit mode, 25 Hz is 3.5 µA @ 1.8V w/ low noise, 3µA without
-        lis2dw_set_low_noise_mode(true); // consumes a little more power
-        lis2dw_set_range(LIS2DW_CTRL6_VAL_RANGE_4G);
-        lis2dw_set_data_rate(LIS2DW_DATA_RATE_25_HZ); // is this enough?
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode
+        lis2dw_set_low_noise_mode(true);                // only marginally raises power consumption
+        lis2dw_enable_sleep();                          // sleep at 1.6Hz, wake to 12.5Hz?
+        lis2dw_set_range(LIS2DW_CTRL6_VAL_RANGE_2G);    // data sheet recommends 2G range
+        lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // 1.6Hz in low power mode
 
-        // threshold is 1/64th of full scale, so for a FS of ±4G this is 1.25G
-        ((accel_interrupt_count_state_t *)*context_ptr)->threshold = 10;
+        // threshold is 1/64th of full scale, so for a FS of ±2G this is 1.5G
+        ((accel_interrupt_count_state_t *)*context_ptr)->threshold = 24;
         _accel_interrupt_count_face_configure_threshold(((accel_interrupt_count_state_t *)*context_ptr)->threshold);
     }
 }
@@ -87,6 +89,9 @@ void accel_interrupt_count_face_activate(void *context) {
 
     // force LE interval to never sleep
     movement_set_low_energy_timeout(0);
+
+    state->running = true;
+    watch_register_interrupt_callback(HAL_GPIO_A4_pin(), accel_interrupt_handler, INTERRUPT_TRIGGER_RISING);
 }
 
 bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
@@ -102,7 +107,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
                     char buf[11];
                     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
                     watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
-                    watch_display_float_with_best_effort(state->new_threshold * 0.125, " G");
+                    watch_display_float_with_best_effort(state->new_threshold * 0.0625, " G");
                     printf("%s\n", buf);
                 }
                 break;
