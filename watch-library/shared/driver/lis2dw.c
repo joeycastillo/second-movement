@@ -237,6 +237,10 @@ void lis2dw_configure_int1(uint8_t sources) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1, sources);
 }
 
+void lis2dw_configure_int2(uint8_t sources) {
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL5_INT2, sources);
+}
+
 void lis2dw_enable_interrupts(void) {
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration | LIS2DW_CTRL7_VAL_INTERRUPTS_ENABLE);

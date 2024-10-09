@@ -36,6 +36,15 @@ void accel_interrupt_handler(void) {
     (*ptr_to_count)++;
 }
 
+void sleep_interrupt_handler(void);
+void sleep_interrupt_handler(void) {
+    if (HAL_GPIO_A3_read()) {
+        movement_force_led_on(255, 0, 0);
+    } else {
+        movement_force_led_on(0, 255, 0);
+    }
+}
+
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
     char buf[7];
 
@@ -56,7 +65,8 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
 static void _accel_interrupt_count_face_configure_threshold(uint8_t threshold) {
     lis2dw_enable_sleep();
     lis2dw_configure_wakeup_threshold(threshold);
-    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_WU);
+    // lis2dw_configure_int1(LIS2DW_CTRL4_INT1_WU);
+    lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_CHG);
     lis2dw_enable_interrupts();
 }
 
@@ -92,6 +102,7 @@ void accel_interrupt_count_face_activate(void *context) {
 
     state->running = true;
     watch_register_interrupt_callback(HAL_GPIO_A4_pin(), accel_interrupt_handler, INTERRUPT_TRIGGER_RISING);
+    watch_register_interrupt_callback(HAL_GPIO_A3_pin(), sleep_interrupt_handler, INTERRUPT_TRIGGER_BOTH);
 }
 
 bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {

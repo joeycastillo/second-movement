@@ -347,6 +347,8 @@ void lis2dw_configure_wakeup_threshold(uint8_t threshold);
 
 void lis2dw_configure_int1(uint8_t sources);
 
+void lis2dw_configure_int2(uint8_t sources);
+
 void lis2dw_enable_interrupts(void);
 
 void lis2dw_disable_interrupts(void);
