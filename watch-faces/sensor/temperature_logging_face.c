@@ -42,15 +42,20 @@ static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger
 
 static void _temperature_logging_face_update_display(thermistor_logger_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
     int8_t pos = (logger_state->data_points - 1 - logger_state->display_index) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
-    char buf[14];
+    char buf[7];
 
     watch_clear_indicator(WATCH_INDICATOR_24H);
     watch_clear_indicator(WATCH_INDICATOR_PM);
     watch_clear_colon();
 
     if (pos < 0) {
-        sprintf(buf, "TL%2dno dat", logger_state->display_index);
+        // no data at this index
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "TL");
+        watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
+        sprintf(buf, "%2d", logger_state->display_index);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     } else if (logger_state->ts_ticks) {
+        // we are displaying the timestamp in response to a button press
         watch_date_time_t date_time = logger_state->data[pos].timestamp;
         watch_set_colon();
         if (clock_mode_24h) {
@@ -60,16 +65,22 @@ static void _temperature_logging_face_update_display(thermistor_logger_state_t *
             date_time.unit.hour %= 12;
             if (date_time.unit.hour == 0) date_time.unit.hour = 12;
         }
-        sprintf(buf, "AT%2d%2d%02d%02d", date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+        watch_display_text(WATCH_POSITION_TOP_LEFT, "AT");
+        sprintf(buf, "%2d", date_time.unit.day);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else {
+        // we are displaying the temperature
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "TL");
+        sprintf(buf, "%2d", logger_state->display_index);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         if (in_fahrenheit) {
-            sprintf(buf, "TL%2d%4.1f#F", logger_state->display_index, logger_state->data[pos].temperature_c * 1.8 + 32.0);
+            watch_display_float_with_best_effort(logger_state->data[pos].temperature_c * 1.8 + 32.0, "#F");
         } else {
-            sprintf(buf, "TL%2d%4.1f#C", logger_state->display_index, logger_state->data[pos].temperature_c);
+            watch_display_float_with_best_effort(logger_state->data[pos].temperature_c, "#C");
         }
     }
-
-    watch_display_string(buf, 0);
 }
 
 void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
