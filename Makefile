@@ -67,6 +67,7 @@ SRCS += \
   ./watch-library/simulator/watch/watch_deepsleep.c \
   ./watch-library/simulator/watch/watch_extint.c \
   ./watch-library/simulator/watch/watch_gpio.c \
+  ./watch-library/simulator/watch/watch_i2c.c \
   ./watch-library/simulator/watch/watch_private.c \
   ./watch-library/simulator/watch/watch_rtc.c \
   ./watch-library/simulator/watch/watch_slcd.c \
@@ -86,6 +87,7 @@ SRCS += \
   ./watch-library/hardware/watch/watch_deepsleep.c \
   ./watch-library/hardware/watch/watch_extint.c \
   ./watch-library/hardware/watch/watch_gpio.c \
+  ./watch-library/hardware/watch/watch_i2c.c \
   ./watch-library/hardware/watch/watch_private.c \
   ./watch-library/hardware/watch/watch_rtc.c \
   ./watch-library/hardware/watch/watch_slcd.c \

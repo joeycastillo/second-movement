@@ -23,28 +23,29 @@
  */
 
 #include "watch_i2c.h"
-
-struct io_descriptor *I2C_0_io;
+#include "i2c.h"
 
 void watch_enable_i2c(void) {
-    I2C_0_init();
-    i2c_m_sync_get_io_descriptor(&I2C_0, &I2C_0_io);
-    i2c_m_sync_enable(&I2C_0);
+    // NOTE: I2C sensors are not supported on Sensor Watch Lite, so there are no SDA/SCL pin definitions.
+    // This ifdef is here to prevent the build from failing.
+#ifdef I2C_SERCOM
+    HAL_GPIO_SDA_pmuxen(HAL_GPIO_PMUX_SERCOM);
+    HAL_GPIO_SCL_pmuxen(HAL_GPIO_PMUX_SERCOM);
+#endif
+    i2c_init();
+    i2c_enable();
 }
 
 void watch_disable_i2c(void) {
-    i2c_m_sync_disable(&I2C_0);
-	hri_mclk_clear_APBCMASK_SERCOM1_bit(MCLK);
+    i2c_disable();
 }
 
 void watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
-    i2c_m_sync_set_periphaddr(&I2C_0, addr, I2C_M_SEVEN);
-    io_write(I2C_0_io, buf, length);
+    i2c_write(addr, buf, length);
 }
 
 void watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
-    i2c_m_sync_set_periphaddr(&I2C_0, addr, I2C_M_SEVEN);
-    io_read(I2C_0_io, buf, length);
+    i2c_read(addr, buf, length);
 }
 
 void watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
