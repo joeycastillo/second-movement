@@ -33,7 +33,7 @@
 #include "set_time_face.h"
 #include "set_time_hackwatch_face.h"
 #include "pulsometer_face.h"
-#include "thermistor_readout_face.h"
+#include "temperature_display_face.h"
 #include "thermistor_logging_face.h"
 #include "thermistor_testing_face.h"
 #include "character_set_face.h"

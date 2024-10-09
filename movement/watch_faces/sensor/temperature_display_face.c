@@ -24,11 +24,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "thermistor_readout_face.h"
+#include "temperature_display_face.h"
 #include "thermistor_driver.h"
 #include "watch.h"
 
-static void _thermistor_readout_face_update_display(bool in_fahrenheit) {
+static void _temperature_display_face_update_display(bool in_fahrenheit) {
     thermistor_driver_enable();
     float temperature_c = thermistor_driver_get_temperature();
     char buf[14];
@@ -41,23 +41,23 @@ static void _thermistor_readout_face_update_display(bool in_fahrenheit) {
     thermistor_driver_disable();
 }
 
-void thermistor_readout_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void temperature_display_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
 }
 
-void thermistor_readout_face_activate(void *context) {
+void temperature_display_face_activate(void *context) {
     (void) context;
     watch_display_string("TE", 0);
 }
 
-bool thermistor_readout_face_loop(movement_event_t event, void *context) {
+bool temperature_display_face_loop(movement_event_t event, void *context) {
     (void) context;
     watch_date_time_t date_time = watch_rtc_get_date_time();
     switch (event.event_type) {
         case EVENT_ALARM_BUTTON_DOWN:
             movement_set_use_imperial_units(!movement_use_imperial_units());
-            _thermistor_readout_face_update_display(movement_use_imperial_units());
+            _temperature_display_face_update_display(movement_use_imperial_units());
             break;
         case EVENT_ACTIVATE:
             // force a measurement to be taken immediately.
@@ -70,7 +70,7 @@ bool thermistor_readout_face_loop(movement_event_t event, void *context) {
                 // In reality the measurement takes a fraction of a second, but this is just to show something is happening.
                 watch_set_indicator(WATCH_INDICATOR_SIGNAL);
             } else if (date_time.unit.second % 5 == 0) {
-                _thermistor_readout_face_update_display(movement_use_imperial_units());
+                _temperature_display_face_update_display(movement_use_imperial_units());
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
             }
             break;
@@ -83,7 +83,7 @@ bool thermistor_readout_face_loop(movement_event_t event, void *context) {
             // update every 5 minutes
             if (date_time.unit.minute % 5 == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-                _thermistor_readout_face_update_display(movement_use_imperial_units());
+                _temperature_display_face_update_display(movement_use_imperial_units());
                 watch_display_string("  ", 8);
             }
             break;
@@ -95,6 +95,6 @@ bool thermistor_readout_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-void thermistor_readout_face_resign(void *context) {
+void temperature_display_face_resign(void *context) {
     (void) context;
 }

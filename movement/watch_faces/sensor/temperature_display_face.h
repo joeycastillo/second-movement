@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef THERMISTOR_READOUT_FACE_H_
-#define THERMISTOR_READOUT_FACE_H_
+#ifndef TEMPERATURE_DISPLAY_FACE_H_
+#define TEMPERATURE_DISPLAY_FACE_H_
 
 /*
  * THERMISTOR READOUT (aka Temperature Display)
@@ -50,17 +50,17 @@
 
 #include "movement.h"
 
-void thermistor_readout_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void thermistor_readout_face_activate(void *context);
-bool thermistor_readout_face_loop(movement_event_t event, void *context);
-void thermistor_readout_face_resign(void *context);
+void temperature_display_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void temperature_display_face_activate(void *context);
+bool temperature_display_face_loop(movement_event_t event, void *context);
+void temperature_display_face_resign(void *context);
 
-#define thermistor_readout_face ((const watch_face_t){ \
-    thermistor_readout_face_setup, \
-    thermistor_readout_face_activate, \
-    thermistor_readout_face_loop, \
-    thermistor_readout_face_resign, \
+#define temperature_display_face ((const watch_face_t){ \
+    temperature_display_face_setup, \
+    temperature_display_face_activate, \
+    temperature_display_face_loop, \
+    temperature_display_face_resign, \
     NULL, \
 })
 
-#endif // THERMISTOR_READOUT_FACE_H_
+#endif // TEMPERATURE_DISPLAY_FACE_H_
