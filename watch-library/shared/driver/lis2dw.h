@@ -299,21 +299,9 @@ lis2dw_acceleration_measurement_t lis2dw_get_acceleration_measurement(lis2dw_rea
 
 uint16_t lis2dw_get_temperature(void);
 
-void lis2dw_set_range(lis2dw_range_t range);
-
-lis2dw_range_t lis2dw_get_range(void);
-
 void lis2dw_set_data_rate(lis2dw_data_rate_t dataRate);
 
 lis2dw_data_rate_t lis2dw_get_data_rate(void);
-
-void lis2dw_set_filter_type(lis2dw_filter_t filter);
-
-lis2dw_filter_t lis2dw_get_filter_type(void);
-
-void lis2dw_set_bandwidth_filtering(lis2dw_bandwidth_filtering_mode_t bwfilter);
-
-lis2dw_bandwidth_filtering_mode_t lis2dw_get_bandwidth_filtering(void);
 
 void lis2dw_set_mode(lis2dw_mode_t mode);
 
@@ -323,13 +311,25 @@ void lis2dw_set_low_power_mode(lis2dw_low_power_mode_t mode);
 
 lis2dw_low_power_mode_t lis2dw_get_low_power_mode(void);
 
+void lis2dw_set_bandwidth_filtering(lis2dw_bandwidth_filtering_mode_t bwfilter);
+
+lis2dw_bandwidth_filtering_mode_t lis2dw_get_bandwidth_filtering(void);
+
+void lis2dw_set_range(lis2dw_range_t range);
+
+lis2dw_range_t lis2dw_get_range(void);
+
+void lis2dw_set_filter_type(lis2dw_filter_t filter);
+
+lis2dw_filter_t lis2dw_get_filter_type(void);
+
 void lis2dw_set_low_noise_mode(bool on);
 
 bool lis2dw_get_low_noise_mode(void);
 
-void lis2dw_disable_fifo(void);
-
 void lis2dw_enable_fifo(void);
+
+void lis2dw_disable_fifo(void);
 
 bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
 

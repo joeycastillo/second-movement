@@ -101,19 +101,6 @@ uint16_t lis2dw_get_temperature(void) {
     return watch_i2c_read16(LIS2DW_ADDRESS, LIS2DW_REG_OUT_TEMP_L);
 }
 
-void lis2dw_set_range(lis2dw_range_t range) {
-    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_RANGE_16_G << 4);
-    uint8_t bits = range << 4;
-
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
-}
-
-lis2dw_range_t lis2dw_get_range(void) {
-    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_RANGE_16_G << 4);
-    retval >>= 4;
-    return (lis2dw_range_t)retval;
-}
-
 void lis2dw_set_data_rate(lis2dw_data_rate_t dataRate) {
     uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & ~(0b1111 << 4);
     uint8_t bits = dataRate << 4;
@@ -123,30 +110,6 @@ void lis2dw_set_data_rate(lis2dw_data_rate_t dataRate) {
 
 lis2dw_data_rate_t lis2dw_get_data_rate(void) {
     return watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) >> 4;
-}
-
-void lis2dw_set_filter_type(lis2dw_filter_t bwfilter) {
-    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_FDS_HIGH);
-    uint8_t bits = bwfilter << 3;
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
-}
-
-lis2dw_filter_t lis2dw_get_filter_type(void) {
-    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_CTRL6_VAL_FDS_HIGH);
-    retval >>= 3;
-    return (lis2dw_filter_t)retval;
-}
-
-void lis2dw_set_bandwidth_filtering(lis2dw_bandwidth_filtering_mode_t bwfilter) {
-    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_BANDWIDTH_DIV20);
-    uint8_t bits = bwfilter << 6;
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
-}
-
-lis2dw_bandwidth_filtering_mode_t lis2dw_get_bandwidth_filtering(void) {
-    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_CTRL6_VAL_BANDWIDTH_DIV20);
-    retval >>= 6;
-    return (lis2dw_bandwidth_filtering_mode_t)retval;
 }
 
 void lis2dw_set_mode(lis2dw_mode_t mode) {
@@ -171,6 +134,43 @@ lis2dw_low_power_mode_t lis2dw_get_low_power_mode(void) {
     return watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & 0b11;
 }
 
+void lis2dw_set_bandwidth_filtering(lis2dw_bandwidth_filtering_mode_t bwfilter) {
+    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_BANDWIDTH_DIV20);
+    uint8_t bits = bwfilter << 6;
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
+}
+
+lis2dw_bandwidth_filtering_mode_t lis2dw_get_bandwidth_filtering(void) {
+    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_CTRL6_VAL_BANDWIDTH_DIV20);
+    retval >>= 6;
+    return (lis2dw_bandwidth_filtering_mode_t)retval;
+}
+
+void lis2dw_set_range(lis2dw_range_t range) {
+    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_RANGE_16_G << 4);
+    uint8_t bits = range << 4;
+
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
+}
+
+lis2dw_range_t lis2dw_get_range(void) {
+    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_RANGE_16_G << 4);
+    retval >>= 4;
+    return (lis2dw_range_t)retval;
+}
+
+void lis2dw_set_filter_type(lis2dw_filter_t bwfilter) {
+    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_FDS_HIGH);
+    uint8_t bits = bwfilter << 3;
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
+}
+
+lis2dw_filter_t lis2dw_get_filter_type(void) {
+    uint8_t retval = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & (LIS2DW_CTRL6_VAL_FDS_HIGH);
+    retval >>= 3;
+    return (lis2dw_filter_t)retval;
+}
+
 void lis2dw_set_low_noise_mode(bool on) {
     uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & ~(LIS2DW_CTRL6_VAL_LOW_NOISE);
     uint8_t bits = on ? LIS2DW_CTRL6_VAL_LOW_NOISE : 0;
@@ -182,12 +182,12 @@ bool lis2dw_get_low_noise_mode(void) {
     return (watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & LIS2DW_CTRL6_VAL_LOW_NOISE) != 0;
 }
 
-inline void lis2dw_disable_fifo(void) {
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_FIFO_CTRL, LIS2DW_FIFO_CTRL_MODE_OFF);
-}
-
 inline void lis2dw_enable_fifo(void) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_FIFO_CTRL, LIS2DW_FIFO_CTRL_MODE_COLLECT_AND_STOP | LIS2DW_FIFO_CTRL_FTH);
+}
+
+inline void lis2dw_disable_fifo(void) {
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_FIFO_CTRL, LIS2DW_FIFO_CTRL_MODE_OFF);
 }
 
 bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data) {
