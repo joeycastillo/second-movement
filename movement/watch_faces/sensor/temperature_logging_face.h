@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef THERMISTOR_LOGGING_FACE_H_
-#define THERMISTOR_LOGGING_FACE_H_
+#ifndef TEMPERATURE_LOGGING_FACE_H_
+#define TEMPERATURE_LOGGING_FACE_H_
 
 /*
  * THERMISTOR LOGGING (aka Temperature Log)
@@ -70,18 +70,18 @@ typedef struct {
     thermistor_logger_data_point_t data[THERMISTOR_LOGGING_NUM_DATA_POINTS];
 } thermistor_logger_state_t;
 
-void thermistor_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void thermistor_logging_face_activate(void *context);
-bool thermistor_logging_face_loop(movement_event_t event, void *context);
-void thermistor_logging_face_resign(void *context);
-movement_watch_face_advisory_t thermistor_logging_face_advise(void *context);
+void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void temperature_logging_face_activate(void *context);
+bool temperature_logging_face_loop(movement_event_t event, void *context);
+void temperature_logging_face_resign(void *context);
+movement_watch_face_advisory_t temperature_logging_face_advise(void *context);
 
-#define thermistor_logging_face ((const watch_face_t){ \
-    thermistor_logging_face_setup, \
-    thermistor_logging_face_activate, \
-    thermistor_logging_face_loop, \
-    thermistor_logging_face_resign, \
-    thermistor_logging_face_advise, \
+#define temperature_logging_face ((const watch_face_t){ \
+    temperature_logging_face_setup, \
+    temperature_logging_face_activate, \
+    temperature_logging_face_loop, \
+    temperature_logging_face_resign, \
+    temperature_logging_face_advise, \
 })
 
-#endif // THERMISTOR_LOGGING_FACE_H_
+#endif // TEMPERATURE_LOGGING_FACE_H_

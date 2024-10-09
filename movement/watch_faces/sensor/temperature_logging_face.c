@@ -24,11 +24,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "thermistor_logging_face.h"
+#include "temperature_logging_face.h"
 #include "thermistor_driver.h"
 #include "watch.h"
 
-static void _thermistor_logging_face_log_data(thermistor_logger_state_t *logger_state) {
+static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger_state) {
     thermistor_driver_enable();
     watch_date_time_t date_time = watch_rtc_get_date_time();
     size_t pos = logger_state->data_points % THERMISTOR_LOGGING_NUM_DATA_POINTS;
@@ -40,7 +40,7 @@ static void _thermistor_logging_face_log_data(thermistor_logger_state_t *logger_
     thermistor_driver_disable();
 }
 
-static void _thermistor_logging_face_update_display(thermistor_logger_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
+static void _temperature_logging_face_update_display(thermistor_logger_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
     int8_t pos = (logger_state->data_points - 1 - logger_state->display_index) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
     char buf[14];
 
@@ -72,7 +72,7 @@ static void _thermistor_logging_face_update_display(thermistor_logger_state_t *l
     watch_display_string(buf, 0);
 }
 
-void thermistor_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(thermistor_logger_state_t));
@@ -80,13 +80,13 @@ void thermistor_logging_face_setup(uint8_t watch_face_index, void ** context_ptr
     }
 }
 
-void thermistor_logging_face_activate(void *context) {
+void temperature_logging_face_activate(void *context) {
     thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
     logger_state->display_index = 0;
     logger_state->ts_ticks = 0;
 }
 
-bool thermistor_logging_face_loop(movement_event_t event, void *context) {
+bool temperature_logging_face_loop(movement_event_t event, void *context) {
     thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
     switch (event.event_type) {
         case EVENT_TIMEOUT:
@@ -98,22 +98,22 @@ bool thermistor_logging_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             logger_state->ts_ticks = 2;
-            _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
+            _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             logger_state->display_index = (logger_state->display_index + 1) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
             logger_state->ts_ticks = 0;
             // fall through
         case EVENT_ACTIVATE:
-            _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
+            _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_TICK:
             if (logger_state->ts_ticks && --logger_state->ts_ticks == 0) {
-                _thermistor_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
+                _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             }
             break;
         case EVENT_BACKGROUND_TASK:
-            _thermistor_logging_face_log_data(logger_state);
+            _temperature_logging_face_log_data(logger_state);
             break;
         default:
             movement_default_loop_handler(event);
@@ -123,11 +123,11 @@ bool thermistor_logging_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-void thermistor_logging_face_resign(void *context) {
+void temperature_logging_face_resign(void *context) {
     (void) context;
 }
 
-movement_watch_face_advisory_t thermistor_logging_face_advise(void *context) {
+movement_watch_face_advisory_t temperature_logging_face_advise(void *context) {
     (void) context;
     movement_watch_face_advisory_t retval = { 0 };
 

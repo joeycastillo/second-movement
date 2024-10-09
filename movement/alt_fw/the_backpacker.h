@@ -32,7 +32,7 @@ const watch_face_t watch_faces[] = {
     sunrise_sunset_face,
     moon_phase_face,
     temperature_display_face,
-    thermistor_logging_face,
+    temperature_logging_face,
     blinky_face,
 
     preferences_face,
