@@ -2,16 +2,23 @@
 GOSSAMER_PATH=gossamer
 
 # Which board are we building for?
-BOARD=sensorwatch_red
+BOARD=sensorwatch_pro
 
 # Which screen are we building for?
 DISPLAY=CLASSIC
+
+# Which sensor board?
+SENSOR=MOTION
 
 # Support USB features?
 TINYUSB_CDC=1
 
 # Leave this line here.
 include $(GOSSAMER_PATH)/make.mk
+
+ifeq ($(SENSOR), MOTION)
+  DEFINES += -DMOTION_BOARD_INSTALLED
+endif
 
 ifdef EMSCRIPTEN
 all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).html

@@ -40,6 +40,8 @@
 #include "shell.h"
 #include "utz.h"
 #include "zones.h"
+#include "lis2dw.h"
+#include "tc.h"
 
 #include "movement_config.h"
 
@@ -71,6 +73,10 @@ void cb_alarm_btn_extwake(void);
 void cb_alarm_fired(void);
 void cb_fast_tick(void);
 void cb_tick(void);
+
+#ifdef MOTION_BOARD_INSTALLED
+void cb_motion_interrupt_1(void);
+#endif
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -600,6 +606,7 @@ void app_setup(void) {
         alarm_time.unit.second = 59; // after a match, the alarm fires at the next rising edge of CLK_RTC_CNT, so 59 seconds lets us update at :00
         watch_rtc_register_alarm_callback(cb_alarm_fired, alarm_time, ALARM_MATCH_SS);
     }
+
     if (movement_state.le_mode_ticks != -1) {
         watch_disable_extwake_interrupt(HAL_GPIO_BTN_ALARM_pin());
 
@@ -607,6 +614,44 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), cb_mode_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), cb_light_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
+
+#ifdef MOTION_BOARD_INSTALLED
+        watch_enable_i2c();
+        if (lis2dw_begin()) {
+            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance)
+            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit, up this if needed
+            lis2dw_set_low_noise_mode(true);                // only marginally raises power consumption
+            lis2dw_enable_sleep();                          // sleep at 1.6Hz, wake to 12.5Hz?
+            lis2dw_set_range(LIS2DW_CTRL6_VAL_RANGE_2G);    // data sheet recommends 2G range
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // 1.6Hz in low power mode
+            lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
+            lis2dw_configure_wakeup_threshold(24);          // threshold is 1/64th of full scale, so for a FS of ±2G this is 1.5G
+            lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
+
+            // set up interrupts:
+            // INT1 is on A4 which can wake from deep sleep. Wake on 6D orientation change.
+            lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
+            watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, INTERRUPT_TRIGGER_RISING);
+
+            // INT2 is on A3 which can increment TC2.
+            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            HAL_GPIO_A3_in();
+            HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
+            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_FALLING);
+            eic_enable_event(HAL_GPIO_A3_pin());
+            EVSYS->USER[EVSYS_ID_USER_TC2_EVU].reg = EVSYS_USER_CHANNEL(0 + 1);
+            // Set up channel 0:
+            EVSYS->CHANNEL[0].reg = EVSYS_CHANNEL_EVGEN(EVSYS_ID_GEN_EIC_EXTINT_3) | // External interrupt 3 generates events on channel 0
+                                    EVSYS_CHANNEL_RUNSTDBY |                         // The channel should run in standby sleep mode...
+                                    EVSYS_CHANNEL_PATH_ASYNCHRONOUS;                 // on the asynchronous path (event drives action directly)
+            tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
+            TC2->COUNT16.EVCTRL.reg = TC_EVCTRL_TCEI | TC_EVCTRL_EVACT_COUNT;   // Event 0 should increment the count
+            tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
+            tc_enable(2);
+
+            lis2dw_enable_interrupts();
+        }
+#endif
 
         watch_enable_buzzer();
         watch_enable_leds();
@@ -871,3 +916,10 @@ void cb_tick(void) {
         movement_state.subsecond++;
     }
 }
+
+#ifdef MOTION_BOARD_INSTALLED
+void cb_motion_interrupt_1(void) {
+    // TODO: Find out what motion event woke us up.
+    printf("INT1\n");
+}
+#endif

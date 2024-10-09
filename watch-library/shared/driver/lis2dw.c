@@ -233,6 +233,11 @@ void lis2dw_configure_wakeup_threshold(uint8_t threshold) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | threshold);
 }
 
+void lis2dw_configure_6d_threshold(uint8_t threshold) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_TAP_THS_X) & 0b01100000;
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_TAP_THS_X, configuration | ((threshold & 0b11) << 5));
+}
+
 void lis2dw_configure_int1(uint8_t sources) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1, sources);
 }
