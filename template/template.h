@@ -22,8 +22,7 @@
  * SOFTWARE.
  */
 
-#ifndef <#WATCH_FACE_NAME#>_FACE_H_
-#define <#WATCH_FACE_NAME#>_FACE_H_
+#pragma once
 
 #include "movement.h"
 
@@ -51,6 +50,3 @@ void <#watch_face_name#>_face_resign(void *context);
     <#watch_face_name#>_face_resign, \
     NULL, \
 })
-
-#endif // <#WATCH_FACE_NAME#>_FACE_H_
-

@@ -88,10 +88,10 @@ def main():
     line_to_insert = f"#include \"{args.watch_face_name}_face.h\"\n"
     update_include_file(f"..{os.sep}movement_faces.h", INCLUDE_INDICATOR, line_to_insert)
 
-    line_to_insert = f"  ..{os.sep}watch_faces{os.sep}{args.watch_face_type}{os.sep}{args.watch_face_name}_face.c \\\n"
-    update_include_file(f"..{os.sep}make{os.sep}Makefile", MAKEFILE_INDICATOR, line_to_insert)
+    line_to_insert = f"  .{os.sep}watch-faces{os.sep}{args.watch_face_type}{os.sep}{args.watch_face_name}_face.c \\\n"
+    update_include_file(f"..{os.sep}watch-faces.mk", MAKEFILE_INDICATOR, line_to_insert)
 
-    output_dir = f"..{os.sep}watch_faces{os.sep}{args.watch_face_type}{os.sep}"
+    output_dir = f"..{os.sep}watch-faces{os.sep}{args.watch_face_type}{os.sep}"
     write_modified_template(args, "h", output_dir)
     write_modified_template(args, "c", output_dir)
 
