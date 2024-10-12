@@ -69,18 +69,21 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
     light_sensor_state_t *state = (light_sensor_state_t *)context;
     (void) state;
 
-    bool light_level = HAL_GPIO_IRSENSE_read();
-    uint16_t pulsewidth = TC1->COUNT16.CC[0].reg;
-    uint16_t period = TC1->COUNT16.CC[1].reg;
-    if (period > 10000) printf("Light %d, %d, %d\n", light_level, pulsewidth >> 3, period >> 3);
-
     switch (event.event_type) {
         case EVENT_NONE:
         case EVENT_ACTIVATE:
-            // Show your initial UI here.
-            break;
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IRPul", "IR");
+            // fall through
         case EVENT_TICK:
-            // If needed, update your display here.
+        {
+            uint16_t period = TC1->COUNT16.CC[1].reg;
+            if (period > 10000) {
+                char buf[11];
+                snprintf(buf, 7, "%d", period);
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
+                printf("%s\n", buf);
+            }
+        }
             break;
         case EVENT_LIGHT_BUTTON_UP:
             // You can use the Light button for your own purposes. Note that by default, Movement will also
