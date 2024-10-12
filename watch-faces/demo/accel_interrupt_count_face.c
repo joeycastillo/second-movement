@@ -29,6 +29,8 @@
 #include "tc.h"
 #include "watch.h"
 
+#ifdef HAS_ACCELEROMETER
+
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
     (void) state;
     char buf[7];
@@ -119,3 +121,5 @@ movement_watch_face_advisory_t accel_interrupt_count_face_advise(void *context) 
 
     return retval;
 }
+
+#endif // HAS_ACCELEROMETER

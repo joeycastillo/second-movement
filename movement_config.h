@@ -33,9 +33,7 @@ const watch_face_t watch_faces[] = {
     sunrise_sunset_face,
     countdown_face,
     beats_face,
-    accel_interrupt_count_face,
     voltage_face,
-    temperature_display_face,
     preferences_face,
     set_time_face,
 };

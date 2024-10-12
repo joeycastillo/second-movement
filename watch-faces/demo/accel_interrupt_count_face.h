@@ -35,6 +35,8 @@
 #include "movement.h"
 #include "watch.h"
 
+#ifdef HAS_ACCELEROMETER
+
 typedef struct {
     uint8_t new_threshold;
     uint8_t threshold;
@@ -54,3 +56,5 @@ movement_watch_face_advisory_t accel_interrupt_count_face_advise(void *context);
     accel_interrupt_count_face_resign, \
     accel_interrupt_count_face_advise, \
 })
+
+#endif // HAS_ACCELEROMETER

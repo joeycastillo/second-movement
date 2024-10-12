@@ -24,6 +24,8 @@
 
 #pragma once
 
+#ifdef HAS_IR_SENSOR
+
 #include "movement.h"
 
 /*
@@ -50,3 +52,5 @@ void light_sensor_face_resign(void *context);
     light_sensor_face_resign, \
     NULL, \
 })
+
+#endif // HAS_IR_SENSOR

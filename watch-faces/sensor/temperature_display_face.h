@@ -22,8 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef TEMPERATURE_DISPLAY_FACE_H_
-#define TEMPERATURE_DISPLAY_FACE_H_
+#pragma once
+
+#include "pins.h"
+
+#ifdef HAS_TEMPERATURE_SENSOR
 
 /*
  * THERMISTOR READOUT (aka Temperature Display)
@@ -63,4 +66,4 @@ void temperature_display_face_resign(void *context);
     NULL, \
 })
 
-#endif // TEMPERATURE_DISPLAY_FACE_H_
+#endif // HAS_TEMPERATURE_SENSOR

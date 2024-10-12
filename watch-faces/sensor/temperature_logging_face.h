@@ -22,8 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef TEMPERATURE_LOGGING_FACE_H_
-#define TEMPERATURE_LOGGING_FACE_H_
+#pragma once
+
+#include "pins.h"
+
+#ifdef HAS_TEMPERATURE_SENSOR
 
 /*
  * THERMISTOR LOGGING (aka Temperature Log)
@@ -84,4 +87,4 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context);
     temperature_logging_face_advise, \
 })
 
-#endif // TEMPERATURE_LOGGING_FACE_H_
+#endif // HAS_TEMPERATURE_SENSOR

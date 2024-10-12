@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+#ifdef HAS_IR_SENSOR
+
 #include <stdlib.h>
 #include <string.h>
 #include "light_sensor_face.h"
@@ -116,3 +118,5 @@ void light_sensor_face_resign(void *context) {
 
     // handle any cleanup before your watch face goes off-screen.
 }
+
+#endif // HAS_IR_SENSOR

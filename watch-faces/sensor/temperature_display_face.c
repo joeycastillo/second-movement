@@ -28,6 +28,8 @@
 #include "thermistor_driver.h"
 #include "watch.h"
 
+#ifdef HAS_TEMPERATURE_SENSOR
+
 static void _temperature_display_face_update_display(bool in_fahrenheit) {
     thermistor_driver_enable();
     float temperature_c = thermistor_driver_get_temperature();
@@ -94,3 +96,5 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
 void temperature_display_face_resign(void *context) {
     (void) context;
 }
+
+#endif

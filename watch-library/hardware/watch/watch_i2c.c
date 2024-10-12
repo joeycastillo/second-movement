@@ -25,13 +25,11 @@
 #include "watch_i2c.h"
 #include "i2c.h"
 
-void watch_enable_i2c(void) {
-    // NOTE: I2C sensors are not supported on Sensor Watch Lite, so there are no SDA/SCL pin definitions.
-    // This ifdef is here to prevent the build from failing.
 #ifdef I2C_SERCOM
+
+void watch_enable_i2c(void) {
     HAL_GPIO_SDA_pmuxen(HAL_GPIO_PMUX_SERCOM);
     HAL_GPIO_SCL_pmuxen(HAL_GPIO_PMUX_SERCOM);
-#endif
     i2c_init();
     i2c_enable();
 }
@@ -92,3 +90,5 @@ uint32_t watch_i2c_read32(int16_t addr, uint8_t reg) {
 
     return data;
 }
+
+#endif // I2C_SERCOM

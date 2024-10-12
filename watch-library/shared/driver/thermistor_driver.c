@@ -27,6 +27,8 @@
 #include "watch.h"
 #include "watch_utility.h"
 
+#ifdef HAS_TEMPERATURE_SENSOR
+
 void thermistor_driver_enable(void) {
     // Enable the ADC peripheral, which we'll use to read the thermistor value.
     watch_enable_adc();
@@ -48,15 +50,7 @@ void thermistor_driver_disable(void) {
     // Disable the enable pin's output circuitry.
     HAL_GPIO_TS_ENABLE_off();
 }
-#if __EMSCRIPTEN__
-#include <emscripten.h>
-float thermistor_driver_get_temperature(void)
-{
-    return EM_ASM_DOUBLE({
-        return temp_c || 25.0;
-    });
-}
-#else
+
 float thermistor_driver_get_temperature(void) {
     // set the enable pin to the level that powers the thermistor circuit.
     HAL_GPIO_TS_ENABLE_write(THERMISTOR_ENABLE_VALUE);
@@ -67,4 +61,5 @@ float thermistor_driver_get_temperature(void) {
 
     return watch_utility_thermistor_temperature(value, THERMISTOR_HIGH_SIDE, THERMISTOR_B_COEFFICIENT, THERMISTOR_NOMINAL_TEMPERATURE, THERMISTOR_NOMINAL_RESISTANCE, THERMISTOR_SERIES_RESISTANCE);
 }
-#endif
+
+#endif // HAS_TEMPERATURE_SENSOR

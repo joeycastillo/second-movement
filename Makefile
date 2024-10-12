@@ -17,7 +17,11 @@ TINYUSB_CDC=1
 include $(GOSSAMER_PATH)/make.mk
 
 ifeq ($(SENSOR), MOTION)
-  DEFINES += -DMOTION_BOARD_INSTALLED
+  DEFINES += -DHAS_ACCELEROMETER
+endif
+
+ifeq ($(SENSOR), TEMPERATURE)
+  DEFINES += -DTEMPERATURE_BOARD_INSTALLED
 endif
 
 ifdef EMSCRIPTEN
@@ -58,11 +62,15 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./movement/lib/sunriset/sunriset.c \
-  ./watch-library/shared/driver/lis2dw.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \
+
+
+ifeq ($(SENSOR), MOTION)
+SRCS += ./watch-library/shared/driver/lis2dw.c
+endif
 
 ifdef EMSCRIPTEN
 
