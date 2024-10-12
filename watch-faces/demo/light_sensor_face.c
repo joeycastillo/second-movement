@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-#ifdef HAS_IR_SENSOR
-
 #include <stdlib.h>
 #include <string.h>
 #include "light_sensor_face.h"
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
+
+#ifdef HAS_IR_SENSOR
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;

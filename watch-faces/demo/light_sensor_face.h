@@ -24,9 +24,9 @@
 
 #pragma once
 
-#ifdef HAS_IR_SENSOR
-
 #include "movement.h"
+
+#ifdef HAS_IR_SENSOR
 
 /*
  * LIGHT SENSOR PLAYGROUND
