@@ -28,6 +28,7 @@
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
+#include "uart.h"
 
 #ifdef HAS_IR_SENSOR
 
@@ -46,23 +47,10 @@ void light_sensor_face_activate(void *context) {
     HAL_GPIO_IR_ENABLE_out();
     HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_in();
-    eic_configure_pin(HAL_GPIO_IRSENSE_pin(), INTERRUPT_TRIGGER_FALLING);
-    eic_enable_event(HAL_GPIO_IRSENSE_pin());
-    EVSYS->USER[EVSYS_ID_USER_TC1_EVU].reg = EVSYS_USER_CHANNEL(1 + 1);
-    // Set up channel 1:
-    EVSYS->CHANNEL[1].reg = EVSYS_CHANNEL_EVGEN(EVSYS_ID_GEN_EIC_EXTINT_4) | // External interrupt 4 generates events on channel 1...
-                            EVSYS_CHANNEL_RUNSTDBY |                         // even in standby mode...
-                            EVSYS_CHANNEL_PATH_ASYNCHRONOUS;                 // on the asynchronous path (event drives action directly)
-    tc_init(1, GENERIC_CLOCK_0, usb_is_enabled() ? TC_PRESCALER_DIV16 : TC_PRESCALER_DIV8);
-    tc_set_counter_mode(1, TC_COUNTER_MODE_16BIT);
-    TC1->COUNT16.CTRLA.bit.CAPTEN0 = 1;
-    TC1->COUNT16.CTRLA.bit.CAPTEN1 = 1;
-    TC1->COUNT16.EVCTRL.reg = TC_EVCTRL_TCEI | TC_EVCTRL_EVACT_PWP;   // Event should capture pulse width and period
-
-    tc_set_counter_mode(1, TC_COUNTER_MODE_16BIT);
-    tc_enable(1);
-
-    movement_request_tick_frequency(64);
+    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_SERCOM_ALT);
+    uart_init_instance(0, UART_TXPO_NONE, UART_RXPO_0, 300);
+    uart_set_irda_mode_instance(0, true);
+    uart_enable_instance(0);
 }
 
 bool light_sensor_face_loop(movement_event_t event, void *context) {
@@ -72,16 +60,25 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_NONE:
         case EVENT_ACTIVATE:
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IRPul", "IR");
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
             // fall through
         case EVENT_TICK:
         {
-            uint16_t period = TC1->COUNT16.CC[1].reg;
-            if (period > 10000) {
-                char buf[11];
-                snprintf(buf, 7, "%d", period);
+            uint8_t data[32];
+            size_t bytes_read = uart_read_instance(0, data, 32);
+            if (bytes_read) {
+                char buf[7];
+                snprintf(buf, 7, "%3db r", bytes_read);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
-                printf("%s\n", buf);
+                data[31] = 0;
+                printf("%s: ", buf);
+                // dump as hex
+                for(size_t i = 0; i < bytes_read; i++) {
+                    printf("%02X ", data[i]);
+                }
+                printf("\n");
+            } else {
+                watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
             }
         }
             break;
@@ -122,4 +119,8 @@ void light_sensor_face_resign(void *context) {
     // handle any cleanup before your watch face goes off-screen.
 }
 
+void irq_handler_sercom0(void);
+void irq_handler_sercom0(void) {
+    uart_irq_handler(0);
+}
 #endif // HAS_IR_SENSOR
