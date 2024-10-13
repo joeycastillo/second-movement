@@ -85,10 +85,8 @@
  *    watch.
  */
 
-/* Number of zones. See movement_timezone_offsets. */
-#define NUM_TIME_ZONES  41
-
 #include "movement.h"
+#include "zones.h"
 
 typedef enum {
     WORLD_CLOCK2_MODE_DISPLAY,
@@ -100,7 +98,7 @@ typedef struct {
 } world_clock2_zone_t;
 
 typedef struct {
-    world_clock2_zone_t zones[NUM_TIME_ZONES];
+    world_clock2_zone_t zones[NUM_ZONE_NAMES];
     world_clock2_mode_t current_mode;
     uint8_t current_zone;
     uint32_t previous_date_time;
