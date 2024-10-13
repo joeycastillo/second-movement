@@ -147,6 +147,7 @@ void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr)
         /* Start in settings mode */
         world_clock2_state_t *state = (world_clock2_state_t *) * context_ptr;
         state->current_mode = WORLD_CLOCK2_MODE_SETTINGS;
+        snprintf(state->zone_abrev, sizeof(state->zone_abrev), "%.2s", get_zone_abrev(state->current_zone));
     }
 }
 
@@ -195,7 +196,6 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 
             /* Determine current time at time zone and store date/time */
 	    date_time = movement_get_date_time_in_zone(state->current_zone);
-        printf("hr: %d loc: %d\r\n", date_time.unit.hour, state->current_zone);
 	    previous_date_time = state->previous_date_time;
 	    state->previous_date_time = date_time.reg;
 
@@ -227,13 +227,13 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 			watch_start_sleep_animation(500);
 
 		    sprintf(buf, "%.2s%2d%2d%02d  ",
-                            get_zone_abrev(state->current_zone),
+                            state->zone_abrev,
                             date_time.unit.day,
                             date_time.unit.hour,
                             date_time.unit.minute);
 		} else {
 		    sprintf(buf, "%.2s%2d%2d%02d%02d",
-			                get_zone_abrev(state->current_zone),
+			                state->zone_abrev,
                             date_time.unit.day,
                             date_time.unit.hour,
                             date_time.unit.minute,
@@ -244,14 +244,16 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 	    break;
 	case EVENT_ALARM_BUTTON_UP:
 	    state->current_zone = find_selected_zone(state, FORWARD);
-            state->previous_date_time = REFRESH_TIME;
+        state->previous_date_time = REFRESH_TIME;
+        snprintf(state->zone_abrev, sizeof(state->zone_abrev), "%.2s", get_zone_abrev(state->current_zone));
 	    break;
 	case EVENT_LIGHT_BUTTON_DOWN:
 	    /* Do nothing. */
 	    break;
 	case EVENT_LIGHT_BUTTON_UP:
 	    state->current_zone = find_selected_zone(state, BACKWARD);
-            state->previous_date_time = REFRESH_TIME;
+        state->previous_date_time = REFRESH_TIME;
+        snprintf(state->zone_abrev, sizeof(state->zone_abrev), "%.2s", get_zone_abrev(state->current_zone));
 	    break;
 	case EVENT_LIGHT_LONG_PRESS:
 	    movement_illuminate_led();
@@ -305,13 +307,11 @@ static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 	     * corresponding compiler warnings.
 	     */
 	    sprintf(buf, "%.2s%2d %c%02d%02d",
-                    get_zone_abrev(state->current_zone),
+                    state->zone_abrev,
                     state->current_zone % 100,
                     hours < 0 ? '-' : '+',
                     abs(hours) % 24,
 		    abs(minutes) % 60);
-        
-        printf("buf %s\r\n", buf);
 
             /* Let the zone number blink */
             if (event.subsecond % 2)
@@ -326,9 +326,11 @@ static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 	    break;
 	case EVENT_ALARM_BUTTON_UP:
 	    state->current_zone = mod(state->current_zone + FORWARD, NUM_ZONE_NAMES);
+        snprintf(state->zone_abrev, sizeof(state->zone_abrev), "%.2s", get_zone_abrev(state->current_zone));
 	    break;
 	case EVENT_LIGHT_BUTTON_UP:
 	    state->current_zone = mod(state->current_zone + BACKWARD, NUM_ZONE_NAMES);
+        snprintf(state->zone_abrev, sizeof(state->zone_abrev), "%.2s", get_zone_abrev(state->current_zone));
 	    break;
 	case EVENT_LIGHT_BUTTON_DOWN:
 	    /* Do nothing */
