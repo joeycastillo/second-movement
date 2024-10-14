@@ -29,7 +29,6 @@ jobs:
           path: build/firmware.uf2
 
   build-simulator:
-    if: ${{ false }} # simulator is not yet supported
     container:
       image: emscripten/emsdk
     runs-on: ubuntu-latest
