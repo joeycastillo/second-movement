@@ -634,13 +634,18 @@ void app_setup(void) {
             lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
             watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, INTERRUPT_TRIGGER_RISING);
 
-            // INT2 is on A3 which can increment TC2.
+            // configure the accelerometer to fire INT2 when its sleep state changes.
             lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            // INT2 is wired to pin A3. set it up on the external interrupt controller.
             HAL_GPIO_A3_in();
             HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
             eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_FALLING);
+            // but rather than firing an interrupt, we'll have it generate an event instead.
             eic_enable_event(HAL_GPIO_A3_pin());
+            // we can route the EXTINT3 event generator to the TC2 event user...
             evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
+            // and use the TC2 event to count the number of times the sleep state changes.
+            // note that this doesn't actually wake the watch — we can maintain this count even in standby.
             tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
             tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
             tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
