@@ -171,10 +171,14 @@ void watch_set_buzzer_off(void) {
 }
 
 void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
+    watch_buzzer_play_note_with_volume(note, duration_ms, WATCH_BUZZER_VOLUME_LOUD);
+}
+
+void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
     } else {
-        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25);
         watch_set_buzzer_on();
     }
 

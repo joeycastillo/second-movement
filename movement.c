@@ -617,6 +617,13 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
 #ifdef HAS_ACCELEROMETER
+// gossamer doesn't include all the chip-specific constants, so we have to fake them here.
+#ifndef EVSYS_ID_GEN_EIC_EXTINT_3
+#define EVSYS_ID_GEN_EIC_EXTINT_3 18
+#endif
+#ifndef EVSYS_ID_USER_TC2_EVU
+#define EVSYS_ID_USER_TC2_EVU 17
+#endif
         watch_enable_i2c();
         if (lis2dw_begin()) {
             lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance)
