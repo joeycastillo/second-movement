@@ -30,9 +30,10 @@
 #include "zones.h"
 
 #define SET_TIME_FACE_NUM_SETTINGS (7)
-const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"  ", "YR", "MO", "DA", "HR", "M1", "SE"};
+const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"ZO", "YR", "MO", "DA", "HR", "M1", "SE"};
 
 static bool _quick_ticks_running;
+static bool _display_tz_offset;
 static int32_t current_offset;
 
 static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_page) {
@@ -113,8 +114,14 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             movement_move_to_next_face();
             return false;
         case EVENT_LIGHT_BUTTON_DOWN:
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
             *((uint8_t *)context) = current_page;
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (current_page != 0) break; // If not TZ page
+            _display_tz_offset = !_display_tz_offset;
             break;
         case EVENT_ALARM_BUTTON_UP:
             _abort_quick_ticks();
@@ -132,18 +139,20 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     watch_display_text(WATCH_POSITION_TOP_LEFT, (char *) set_time_face_titles[current_page]);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     if (current_page < 1) {
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, " Z");
-        if (current_offset < 0) watch_display_text(WATCH_POSITION_TOP_LEFT, "- ");
-        else watch_display_text(WATCH_POSITION_TOP_LEFT, "* ");
-        if (event.subsecond % 2) {
+        uint8_t curr_idx = movement_get_timezone_index();
+        sprintf(buf, "%2d", curr_idx % 100);
+        if (buf[0] == '4') buf[0] = 'W'; // W looks the closest like 4
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        if (_display_tz_offset) {
             uint8_t hours = abs(current_offset) / 3600;
             uint8_t minutes = (abs(current_offset) % 3600) / 60;
 
-            sprintf(buf, "%2d%02d  ", hours % 100, minutes % 100);
-            watch_set_colon();
+            sprintf(buf, " %c%02d%02d", 
+                    current_offset < 0 ? '-' : '+',
+                    hours % 100, 
+                    minutes % 100);
         } else {
-            sprintf(buf, "%s", (char *) (3 + zone_names + 11 * movement_get_timezone_index()));
-            watch_clear_colon();
+            sprintf(buf, "%s", (char *) (3 + zone_names + 11 * curr_idx));
         }
     } else if (current_page < 4) {
         watch_clear_colon();
@@ -167,6 +176,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     // blink up the parameter we're setting
     if (event.subsecond % 2 && !_quick_ticks_running) {
         switch (current_page) {
+            case 0:
+                watch_display_text(WATCH_POSITION_BOTTOM, "      ");
             case 1:
             case 4:
                 watch_display_text(WATCH_POSITION_HOURS, "  ");
