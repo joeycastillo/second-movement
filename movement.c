@@ -42,6 +42,7 @@
 #include "zones.h"
 #include "lis2dw.h"
 #include "tc.h"
+#include "evsys.h"
 
 #include "movement_config.h"
 
@@ -639,13 +640,9 @@ void app_setup(void) {
             HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
             eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_FALLING);
             eic_enable_event(HAL_GPIO_A3_pin());
-            EVSYS->USER[EVSYS_ID_USER_TC2_EVU].reg = EVSYS_USER_CHANNEL(0 + 1);
-            // Set up channel 0:
-            EVSYS->CHANNEL[0].reg = EVSYS_CHANNEL_EVGEN(EVSYS_ID_GEN_EIC_EXTINT_3) | // External interrupt 3 generates events on channel 0
-                                    EVSYS_CHANNEL_RUNSTDBY |                         // The channel should run in standby sleep mode...
-                                    EVSYS_CHANNEL_PATH_ASYNCHRONOUS;                 // on the asynchronous path (event drives action directly)
+            evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
             tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
-            TC2->COUNT16.EVCTRL.reg = TC_EVCTRL_TCEI | TC_EVCTRL_EVACT_COUNT;   // Event 0 should increment the count
+            tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
             tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
             tc_enable(2);
 
