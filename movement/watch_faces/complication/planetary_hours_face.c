@@ -133,8 +133,7 @@ static void _planetary_solar_phases(planetary_hours_state_t *state) {
     // location detected
     state->no_location = false;
 
-    watch_date_time_t date_time = watch_rtc_get_date_time(); // the current local date / time
-    watch_date_time_t utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
+    watch_date_time_t utc_now = movement_get_utc_date_time();
     watch_date_time_t scratch_time; // scratchpad, contains different values at different times
     watch_date_time_t midnight;
     scratch_time.reg = midnight.reg = utc_now.reg;
@@ -236,8 +235,7 @@ static void _planetary_hours(planetary_hours_state_t *state) {
     }
 
     // get current time
-    watch_date_time_t date_time = watch_rtc_get_date_time(); // the current local date / time
-    watch_date_time_t utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
+    watch_date_time_t utc_now = watch_rtc_get_date_time(); // the UTC time
     current_hour_epoch = watch_utility_date_time_to_unix_time(utc_now, 0);
     
     // set the current planetary hour as default screen

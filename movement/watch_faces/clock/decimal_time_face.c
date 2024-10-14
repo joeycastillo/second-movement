@@ -79,7 +79,7 @@ bool decimal_time_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             // on activate and tick
             
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             
             centihours = (( date_time.unit.minute * 60 + date_time.unit.second ) * 100 ) / 3600;  // Integer division, fractions get dropped, no need for abs() (bonus)
 

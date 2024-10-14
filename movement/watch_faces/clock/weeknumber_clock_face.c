@@ -75,7 +75,7 @@ bool weeknumber_clock_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         case EVENT_LOW_ENERGY_UPDATE:
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             previous_date_time = state->previous_date_time;
             state->previous_date_time = date_time.reg;
 

@@ -85,7 +85,7 @@ bool simple_clock_bin_led_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         case EVENT_LOW_ENERGY_UPDATE:
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             if (state->flashing_state > 0) {
                 if (state->ticks) {
                     state->ticks--;
@@ -183,7 +183,7 @@ bool simple_clock_bin_led_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (state->flashing_state == 0) {
-                date_time = watch_rtc_get_date_time();
+                date_time = movement_get_local_date_time();
                 state->flashing_state = 1 + 128;
                 state->ticks = 4;
                 if (!movement_clock_mode_24h()) {

@@ -93,7 +93,7 @@ bool repetition_minute_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         case EVENT_LOW_ENERGY_UPDATE:
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             previous_date_time = state->previous_date_time;
             state->previous_date_time = date_time.reg;
 
@@ -161,7 +161,7 @@ bool repetition_minute_face_loop(movement_event_t event, void *context) {
              * boring at 00:00 or 1:00 and very quite musical at 23:59 or 12:59.
              */
 
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             
             
             int hours = date_time.unit.hour;

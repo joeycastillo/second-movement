@@ -35,7 +35,7 @@ static uint32_t _day_one_face_juliandaynum(uint16_t year, uint16_t month, uint16
 
 static void _day_one_face_update(day_one_state_t *state) {
     char buf[15];
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     uint32_t julian_date = _day_one_face_juliandaynum(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
     uint32_t julian_birthdate = _day_one_face_juliandaynum(state->birth_year, state->birth_month, state->birth_day);
     if (julian_date < julian_birthdate) {
@@ -148,7 +148,7 @@ bool day_one_face_loop(movement_event_t event, void *context) {
                     break;
                 // otherwise, check if we have to update. the display only needs to change at midnight!
                 case PAGE_DISPLAY: {
-                    watch_date_time_t date_time = watch_rtc_get_date_time();
+                    watch_date_time_t date_time = movement_get_local_date_time();
                     if (date_time.unit.hour == 0 &&  date_time.unit.minute == 0 && date_time.unit.second == 0) {
                         _day_one_face_update(state);
                     }
