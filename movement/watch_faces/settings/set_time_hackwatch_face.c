@@ -42,14 +42,14 @@ void set_time_hackwatch_face_setup(uint8_t watch_face_index, void ** context_ptr
 void set_time_hackwatch_face_activate(void *context) {
     *((uint8_t *)context) = 3;
     movement_request_tick_frequency(32);
-    date_time_settings = watch_rtc_get_date_time();
+    date_time_settings = movement_get_local_date_time();
 }
 
 bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
     uint8_t current_page = *((uint8_t *)context);
 
     if (event.subsecond == 15) // Delay displayed time update by ~0.5 seconds, to align phase exactly to main clock at 1Hz
-        date_time_settings = watch_rtc_get_date_time();
+        date_time_settings = movement_get_local_date_time();
 
     static int8_t seconds_reset_sequence;
 

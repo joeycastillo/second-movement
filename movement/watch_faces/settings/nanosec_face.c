@@ -45,7 +45,7 @@ const float voltage_coefficient = 0.241666667 * dithering; // 10 * ppm/V. Nomina
 static void nanosec_init_profile(void) {
     nanosec_changed = true;
     nanosec_state.correction_cadence = 10;
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
     nanosec_state.last_correction_time = watch_utility_date_time_to_unix_time(date_time, 0);
 
     // init data after changing profile - do that once per profile selection
@@ -259,7 +259,7 @@ static void nanosec_next_edit_screen(void) {
 
 float nanosec_get_aging() // Returns aging correction in ppm
 {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
     float years = (watch_utility_date_time_to_unix_time(date_time, 0) - nanosec_state.last_correction_time) / 31536000.0f; // Years passed since finetune
     return years*nanosec_state.aging_ppm_pa/100.0f;
 }

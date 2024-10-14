@@ -45,7 +45,7 @@ void stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, bool show_seconds) {
     if (stopwatch_state->running) {
-        watch_date_time_t now = watch_rtc_get_date_time();
+        watch_date_time_t now = movement_get_utc_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(stopwatch_state->start_time, 0);
         stopwatch_state->seconds_counted = now_timestamp - start_timestamp;
@@ -122,11 +122,11 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                 // we're running now, so we need to set the start_time.
                 if (stopwatch_state->start_time.reg == 0) {
                     // if starting from the reset state, easy: we start now.
-                    stopwatch_state->start_time = watch_rtc_get_date_time();
+                    stopwatch_state->start_time = movement_get_utc_date_time();
                 } else {
                     // if resuming with time already on the clock, the original start time isn't valid anymore!
                     // so let's fetch the current time...
-                    uint32_t timestamp = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+                    uint32_t timestamp = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
                     // ...subtract the seconds we've already counted...
                     timestamp -= stopwatch_state->seconds_counted;
                     // and resume from the "virtual" start time that's that many seconds ago.

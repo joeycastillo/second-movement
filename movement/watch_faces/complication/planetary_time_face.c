@@ -209,7 +209,7 @@ static void _planetary_time(movement_event_t event, planetary_time_state_t *stat
         watch_set_colon();
 
     // get UTC time
-    state->scratch = watch_rtc_get_date_time(); 
+    state->scratch = movement_get_utc_date_time(); 
 
     // when current phase ends calculate the next phase
     if ( watch_utility_date_time_to_unix_time(state->scratch, 0) >= state->phase_end ) {

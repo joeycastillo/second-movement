@@ -91,7 +91,7 @@ static void _draw(time_left_state_t *state, uint8_t subsecond) {
     watch_display_character(_state_titles[state->current_page][2], 3);
     if (state->current_page < TIME_LEFT_FACE_SETTINGS_STATE) {
         // we are displaying days left or days from birth
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_local_date_time();
         uint32_t julian_current_day = _juliandaynum(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
         uint32_t julian_target_day = _juliandaynum(state->target_date.bit.year, state->target_date.bit.month, state->target_date.bit.day);
         int32_t days_left = julian_target_day - julian_current_day;
@@ -221,7 +221,7 @@ void time_left_face_setup(uint8_t watch_face_index, void ** context_ptr) {
             state->birth_date.bit.day = 1;
             watch_store_backup_data(state->birth_date.reg, 2);
             // set target date to today + 10 years (just to have any value)
-            watch_date_time_t date_time = watch_rtc_get_date_time();
+            watch_date_time_t date_time = movement_get_local_date_time();
             state->target_date.bit.year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR + 10;
             state->target_date.bit.month = date_time.unit.month;
             state->target_date.bit.day = date_time.unit.day;
@@ -233,7 +233,7 @@ void time_left_face_activate(void *context) {
     time_left_state_t *state = (time_left_state_t *)context;
 
     // stash the current year, useful in birthday setting mode
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     state->current_year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR;
     _quick_ticks_running = false;
     // fetch the user's birth date from the birthday register
@@ -263,7 +263,7 @@ bool time_left_face_loop(movement_event_t event, void *context) {
                 _draw(state, subsecond);
             } else {
                 // otherwise, check if we have to update. the display only needs to change at midnight
-                watch_date_time_t date_time = watch_rtc_get_date_time();
+                watch_date_time_t date_time = movement_get_local_date_time();
                 if (date_time.unit.hour == 0 &&  date_time.unit.minute == 0 && date_time.unit.second == 0) {
                     _draw(state, subsecond);
                 }

@@ -235,7 +235,7 @@ static void _planetary_hours(planetary_hours_state_t *state) {
     }
 
     // get current time
-    watch_date_time_t utc_now = watch_rtc_get_date_time(); // the UTC time
+    watch_date_time_t utc_now = movement_get_utc_date_time();
     current_hour_epoch = watch_utility_date_time_to_unix_time(utc_now, 0);
     
     // set the current planetary hour as default screen

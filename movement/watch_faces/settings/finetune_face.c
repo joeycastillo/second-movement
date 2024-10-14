@@ -50,7 +50,7 @@ void finetune_face_activate(void *context) {
 }
 
 static float finetune_get_hours_passed(void) {
-    uint32_t current_time = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+    uint32_t current_time = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
     return (current_time - nanosec_state.last_correction_time) / 3600.0f;
 }
 
@@ -63,7 +63,7 @@ static void finetune_update_display(void) {
 
     if (finetune_page == 0) {
         watch_display_string("FT", 0);
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_utc_date_time();
         sprintf(buf, "%02d", date_time.unit.second);
         watch_display_string(buf, 8);
 
@@ -104,7 +104,7 @@ static void finetune_adjust_subseconds(int delta) {
     watch_rtc_enable(false);
     delay_ms(delta);
     if (delta > 500) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_local_date_time();
         date_time.unit.second = (date_time.unit.second + 1) % 60;
         if (date_time.unit.second == 0) { // Overflow
             date_time.unit.minute = (date_time.unit.minute + 1) % 60;
@@ -124,7 +124,7 @@ static void finetune_update_correction_time(void) {
     nanosec_state.freq_correction += roundf(nanosec_get_aging() * 100);
 
     // Remember when we last corrected time
-    nanosec_state.last_correction_time = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+    nanosec_state.last_correction_time = watch_utility_date_time_to_unix_time(movement_get_local_date_time(), 0);
     nanosec_save();
     movement_move_to_face(0); // Go to main face after saving settings
 }
@@ -144,7 +144,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             // We flash green LED once per minute to measure clock error, when we are not on first screen
             if (finetune_page!=0) {
                 watch_date_time_t date_time;
-                date_time = watch_rtc_get_date_time();
+                date_time = movement_get_utc_date_time();
                 if (date_time.unit.second == 0) {
                     watch_set_led_green();
                     #ifndef __EMSCRIPTEN__

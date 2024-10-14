@@ -252,7 +252,7 @@ void totp_face_lfs_activate(void *context) {
     }
 #endif
 
-    totp_state->timestamp = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), movement_get_current_timezone_offset());
+    totp_state->timestamp = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
     totp_face_set_record(totp_state, 0);
 }
 

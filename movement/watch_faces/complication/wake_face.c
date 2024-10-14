@@ -85,9 +85,9 @@ movement_watch_face_advisory_t wake_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
 
     if ( state->mode ) {
-        watch_date_time_t now = watch_rtc_get_date_time();
-        retval.wants_background_task = state->hour==now.unit.hour && state->minute==now.unit.minute;
-        // We’re at the mercy of the advise handler
+        watch_date_time_t now = movement_get_local_date_time();
+        rc = state->hour==now.unit.hour && state->minute==now.unit.minute;
+        // We’re at the mercy of the wants_background_task handler
         // In Safari, the emulator triggers at the ›end‹ of the minute
         // Converting to Unix timestamps and taking a difference between now and wake
         // is not an easy win — because the timestamp for wake has to rely on now

@@ -32,7 +32,7 @@
 
 static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger_state) {
     thermistor_driver_enable();
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     size_t pos = logger_state->data_points % THERMISTOR_LOGGING_NUM_DATA_POINTS;
 
     logger_state->data[pos].timestamp.reg = date_time.reg;

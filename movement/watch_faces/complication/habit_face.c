@@ -30,10 +30,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static inline uint32_t today_unix(const uint32_t utc_offset) {
-  const watch_date_time_t dt = watch_rtc_get_date_time();
+static inline uint32_t today_unix(void) {
+  const watch_date_time_t dt = movement_get_utc_date_time();
   return watch_utility_convert_to_unix_time(dt.unit.year + 2020, dt.unit.month,
-                                            dt.unit.day, 0, 0, 0, utc_offset);
+                                            dt.unit.day, 0, 0, 0, 0);
 }
 
 static inline uint32_t days_since_unix(const uint32_t since,
@@ -57,7 +57,7 @@ void habit_face_setup(uint8_t watch_face_index,
     habit_state_t *state = (habit_state_t *)*context_ptr;
     state->lookback = 0;
     state->last_update = watch_utility_offset_timestamp(
-        today_unix(movement_get_current_timezone_offset()), -24, 0, 0);
+        today_unix(), -24, 0, 0);
   }
 }
 
@@ -109,7 +109,7 @@ bool habit_face_loop(movement_event_t event,
                      void *context) {
   habit_state_t *state = (habit_state_t *)context;
 
-  const uint32_t today_now_unix = today_unix(movement_get_current_timezone_offset());
+  const uint32_t today_now_unix = today_unix();
   const bool can_do = (state->lookback & 1) == 0;
 
   switch (event.event_type) {

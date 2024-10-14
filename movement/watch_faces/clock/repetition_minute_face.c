@@ -213,7 +213,7 @@ movement_watch_face_advisory_t repetition_minute_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
 
     if (state->signal_enabled) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_utc_date_time();
         retval.wants_background_task = date_time.unit.minute == 0;
     }
 
