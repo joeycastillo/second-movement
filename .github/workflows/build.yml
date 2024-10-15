@@ -43,8 +43,7 @@ jobs:
       - name: Archive simulator build
         working-directory: 'movement/make/build-sim'
         run: |
-          cp firmware.html index.html
-          tar -czf movement.tar.gz index.html watch.wasm watch.js
+          tar -czf movement.tar.gz index.html firmware.wasm firmware.js
       - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
