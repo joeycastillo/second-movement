@@ -26,7 +26,7 @@
 #include "spi.h"
 
 void watch_enable_spi(void) {
-    spi_init(SPI_MODE_3, 1000000);
+    spi_init(1000000);
     spi_enable();
 }
 
