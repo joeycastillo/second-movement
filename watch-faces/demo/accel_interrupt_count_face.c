@@ -75,7 +75,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
                     char buf[11];
                     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
                     watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
-                    watch_display_float_with_best_effort(state->new_threshold * 0.0625, " G");
+                    watch_display_float_with_best_effort(state->new_threshold * 0.03125, " G");
                     printf("%s\n", buf);
                 }
                 break;

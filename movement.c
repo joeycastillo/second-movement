@@ -509,8 +509,8 @@ void app_init(void) {
     if (date_time.reg == 0) {
         // at first boot, set year to 2024
         date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
-        date_time.unit.month = 1;
-        date_time.unit.day = 1;
+        date_time.unit.month = 10;
+        date_time.unit.day = 16;
         watch_rtc_set_date_time(date_time);
     }
 
@@ -629,20 +629,20 @@ void app_setup(void) {
             lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance)
             lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit, up this if needed
             lis2dw_set_low_noise_mode(true);                // only marginally raises power consumption
-            lis2dw_enable_sleep();                          // sleep at 1.6Hz, wake to 12.5Hz?
-            lis2dw_set_range(LIS2DW_CTRL6_VAL_RANGE_2G);    // data sheet recommends 2G range
+            lis2dw_enable_sleep();                          // enable sleep mode
+            lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // 1.6Hz in low power mode
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(24);          // threshold is 1/64th of full scale, so for a FS of ±2G this is 1.5G
+            lis2dw_configure_wakeup_threshold(24);          // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
             // INT1 is on A4 which can wake from deep sleep. Wake on 6D orientation change.
             lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, INTERRUPT_TRIGGER_RISING);
+            watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, INTERRUPT_TRIGGER_FALLING);
 
             // configure the accelerometer to fire INT2 when its sleep state changes.
-            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
             // INT2 is wired to pin A3. set it up on the external interrupt controller.
             HAL_GPIO_A3_in();
             HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
