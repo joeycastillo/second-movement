@@ -114,7 +114,7 @@ static void finetune_adjust_subseconds(int delta) {
                     date_time.unit.day++;
             }
         }
-        watch_rtc_set_date_time(date_time);
+        movement_set_local_date_time(date_time);
     }
     watch_rtc_enable(true);
 }
@@ -239,4 +239,5 @@ void finetune_face_resign(void *context) {
     if (total_adjustment != 0) {
         finetune_update_correction_time();
     }
+    movement_update_dst_offset_cache();
 }

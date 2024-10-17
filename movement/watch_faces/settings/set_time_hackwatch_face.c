@@ -92,7 +92,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
                     }
                 }
                 date_time_settings.unit.second = 0;
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -132,7 +132,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
                     break;
             }
             if (current_page != 2) // Do not set time when we are at seconds, it was already set previously
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             break;
 
         case EVENT_ALARM_LONG_UP://Setting seconds on long release
@@ -173,7 +173,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
             if (date_time_settings.unit.day > days_in_month(date_time_settings.unit.month, date_time_settings.unit.year + WATCH_RTC_REFERENCE_YEAR))
                 date_time_settings.unit.day = 1;
             if (current_page != 2) // Do not set time when we are at seconds, it was already set previously
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             //TODO: Do not update whole RTC, just what we are changing
             break;
         case EVENT_TIMEOUT:
