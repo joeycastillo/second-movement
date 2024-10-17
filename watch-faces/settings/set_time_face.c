@@ -55,7 +55,7 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             date_time.unit.month = (date_time.unit.month % 12) + 1;
             break;
         case 5: { // day
-            date_time.unit.day = date_time.unit.day + 1;
+            date_time.unit.day = (date_time.unit.day % watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) + 1;
             break;
         }
         case 6: // time zone
@@ -64,8 +64,6 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             current_offset = movement_get_current_timezone_offset_for_zone(movement_get_timezone_index());
             break;
     }
-    if (date_time.unit.day > days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR))
-        date_time.unit.day = 1;
     movement_set_local_date_time(date_time);
 }
 

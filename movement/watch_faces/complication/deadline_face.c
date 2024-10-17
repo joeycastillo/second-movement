@@ -269,15 +269,7 @@ static void _increment_date(deadline_state_t *state, watch_date_time_t date_time
             date_time.unit.month = (date_time.unit.month % 12) + 1;
             break;
         case 2:
-            date_time.unit.day = date_time.unit.day + 1;
-
-            /* Check for leap years */
-            int8_t days = days_in_month[date_time.unit.month - 1];
-            if (date_time.unit.month == 2 && _is_leap(date_time.unit.year))
-                days++;
-
-            if (date_time.unit.day > days)
-                date_time.unit.day = 1;
+            date_time.unit.day = (date_time.unit.day % watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) + 1;
             break;
         case 3:
             date_time.unit.hour = (date_time.unit.hour + 1) % 24;
