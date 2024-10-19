@@ -172,10 +172,10 @@ lis2dw_filter_t lis2dw_get_filter_type(void) {
 }
 
 void lis2dw_set_low_noise_mode(bool on) {
-    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & ~(LIS2DW_CTRL6_VAL_LOW_NOISE);
+    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_LOW_NOISE);
     uint8_t bits = on ? LIS2DW_CTRL6_VAL_LOW_NOISE : 0;
 
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1, val | bits);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
 }
 
 bool lis2dw_get_low_noise_mode(void) {
