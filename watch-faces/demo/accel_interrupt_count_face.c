@@ -31,6 +31,10 @@
 
 #ifdef HAS_ACCELEROMETER
 
+// hacky: we're just tapping into Movement's orientation changes.
+// we should make better API for this.
+extern uint32_t orientation_changes;
+
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
     (void) state;
     char buf[7];
@@ -38,8 +42,7 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
     // "AC"celerometer "IN"terrupts
     watch_display_text(WATCH_POSITION_TOP_LEFT, "AC");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "1N");
-    uint16_t count = tc_count16_get_count(2);
-    snprintf(buf, 7, "%6d", count);
+    snprintf(buf, 7, "%6lu", orientation_changes);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     printf("%s\n", buf);
 }
@@ -90,10 +93,6 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
         }
     } else {
         switch (event.event_type) {
-            case EVENT_ALARM_BUTTON_UP:
-                // reset the counter
-                tc_count16_set_count(2, 0);
-                // fall through
             case EVENT_ACTIVATE:
             case EVENT_TICK:
                 _accel_interrupt_count_face_update_display(state);

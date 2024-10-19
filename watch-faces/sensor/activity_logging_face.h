@@ -44,6 +44,7 @@
 typedef struct {
     watch_date_time_t timestamp;
     uint8_t active_minutes;
+    uint32_t orientation_changes;
 } activity_logging_data_point_t;
 
 typedef struct {
