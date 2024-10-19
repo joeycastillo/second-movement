@@ -24,35 +24,38 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "light_sensor_face.h"
+#include "irda_demo_face.h"
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
-#include "adc.h"
+#include "uart.h"
 
 #ifdef HAS_IR_SENSOR
 
-void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void irda_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(light_sensor_state_t));
-        memset(*context_ptr, 0, sizeof(light_sensor_state_t));
+        *context_ptr = malloc(sizeof(irda_demo_state_t));
+        memset(*context_ptr, 0, sizeof(irda_demo_state_t));
         // Do any one-time tasks in here; the inside of this conditional happens only at boot.
     }    
 }
 
-void light_sensor_face_activate(void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
+void irda_demo_face_activate(void *context) {
+    irda_demo_state_t *state = (irda_demo_state_t *)context;
     (void) state;
+    // Rev 05 had the polarity reversed, so we had to bodge a different circuit and bypass the enable pin.
+    // HAL_GPIO_IR_ENABLE_out();
+    // HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_in();
-    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
-    adc_init();
-    adc_enable();
-    movement_request_tick_frequency(8);
+    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_SERCOM_ALT);
+    uart_init_instance(0, UART_TXPO_NONE, UART_RXPO_0, 300);
+    uart_set_irda_mode_instance(0, true);
+    uart_enable_instance(0);
 }
 
-bool light_sensor_face_loop(movement_event_t event, void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
+bool irda_demo_face_loop(movement_event_t event, void *context) {
+    irda_demo_state_t *state = (irda_demo_state_t *)context;
     (void) state;
 
     switch (event.event_type) {
@@ -60,11 +63,18 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            char buf[14];
-            uint16_t light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
-            snprintf(buf, 14, "LL  %-6d", light_level);
-            watch_display_text(WATCH_POSITION_FULL, buf);
-            printf("%s\n", buf);
+            uint8_t data[32];
+            size_t bytes_read = uart_read_instance(0, data, 32);
+            if (bytes_read) {
+                char buf[14];
+                snprintf(buf, 11, "IR%2d%s", bytes_read, data);
+                watch_display_text(WATCH_POSITION_FULL, buf);
+                data[31] = 0;
+                printf("%s\n", data);
+                printf("%s\n", buf);
+            } else {
+                watch_display_text(WATCH_POSITION_FULL, "    no dat");
+            }
         }
             break;
         case EVENT_LIGHT_BUTTON_UP:
@@ -72,6 +82,7 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
             break;
         case EVENT_TIMEOUT:
+            // movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
@@ -83,12 +94,15 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
     return false;
 }
 
-void light_sensor_face_resign(void *context) {
+void irda_demo_face_resign(void *context) {
     (void) context;
-
-    adc_disable();
+    uart_disable_instance(0);
     HAL_GPIO_IRSENSE_pmuxdis();
     HAL_GPIO_IRSENSE_off();
 }
 
+void irq_handler_sercom0(void);
+void irq_handler_sercom0(void) {
+    uart_irq_handler(0);
+}
 #endif // HAS_IR_SENSOR

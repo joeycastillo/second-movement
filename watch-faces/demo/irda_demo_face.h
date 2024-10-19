@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2024 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,24 +24,33 @@
 
 #pragma once
 
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
-#include "character_set_face.h"
-#include "accel_interrupt_count_face.h"
-#include "all_segments_face.h"
-#include "float_demo_face.h"
-#include "temperature_display_face.h"
-#include "temperature_logging_face.h"
-#include "activity_logging_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "preferences_face.h"
-#include "light_sensor_face.h"
-#include "accelerometer_sleep_state_face.h"
-#include "irda_demo_face.h"
-// New includes go above this line.
+#include "movement.h"
+
+#ifdef HAS_IR_SENSOR
+
+/*
+ * LIGHT SENSOR PLAYGROUND
+ *
+ * Temporary watch face for playing with the light sensor.
+ *
+ */
+
+typedef struct {
+    // Anything you need to keep track of, put it here!
+    uint8_t unused;
+} irda_demo_state_t;
+
+void irda_demo_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void irda_demo_face_activate(void *context);
+bool irda_demo_face_loop(movement_event_t event, void *context);
+void irda_demo_face_resign(void *context);
+
+#define irda_demo_face ((const watch_face_t){ \
+    irda_demo_face_setup, \
+    irda_demo_face_activate, \
+    irda_demo_face_loop, \
+    irda_demo_face_resign, \
+    NULL, \
+})
+
+#endif // HAS_IR_SENSOR
