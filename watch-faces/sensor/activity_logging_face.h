@@ -50,7 +50,6 @@ typedef struct {
 typedef struct {
     uint8_t display_index;  // the index we are displaying on screen
     uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
-    uint8_t active_minutes; // Active minutes this hour
     int32_t data_points;    // the absolute number of data points logged
     activity_logging_data_point_t data[ACTIVITY_LOGGING_NUM_DATA_POINTS];
 } activity_logging_state_t;

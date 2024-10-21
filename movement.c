@@ -79,6 +79,7 @@ void cb_tick(void);
 void cb_motion_interrupt_1(void);
 void cb_motion_interrupt_2(void);
 uint32_t orientation_changes = 0;
+uint8_t active_minutes = 0;
 #endif
 
 #if __EMSCRIPTEN__
@@ -156,6 +157,11 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
+
+#ifdef HAS_ACCELEROMETER
+    // every minute, we want to log whether the accelerometer is asleep or awake.
+    if (!HAL_GPIO_A3_read()) active_minutes++;
+#endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
@@ -511,8 +517,8 @@ void app_init(void) {
     if (date_time.reg == 0) {
         // at first boot, set year to 2024
         date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
-        date_time.unit.month = 10;
-        date_time.unit.day = 16;
+        date_time.unit.month = 1;
+        date_time.unit.day = 1;
         watch_rtc_set_date_time(date_time);
     }
 
@@ -628,12 +634,12 @@ void app_setup(void) {
 #endif
         watch_enable_i2c();
         if (lis2dw_begin()) {
-            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance)
-            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit, up this if needed
-            lis2dw_set_low_noise_mode(true);                // only marginally raises power consumption
-            lis2dw_enable_sleep();                          // enable sleep mode
+            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
+            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
+            lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // sample at 1.6 Hz, lowest rate available
+            lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // 1.6Hz in low power mode
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
             lis2dw_configure_wakeup_threshold(24);          // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
@@ -936,6 +942,7 @@ void cb_motion_interrupt_1(void) {
     if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA) {
         event.event_type = EVENT_ORIENTATION_CHANGE;
         orientation_changes++;
+        printf("Orientation change\n");
     }
     if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) event.event_type = EVENT_DOUBLE_TAP;
     if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) event.event_type = EVENT_SINGLE_TAP;

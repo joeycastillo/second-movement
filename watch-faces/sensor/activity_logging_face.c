@@ -29,18 +29,19 @@
 
 #ifdef HAS_ACCELEROMETER
 
-// hacky: we're just tapping into Movement's orientation changes.
+// hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
 extern uint32_t orientation_changes;
+extern uint8_t active_minutes;
 
 static void _activity_logging_face_log_data(activity_logging_state_t *state) {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     size_t pos = state->data_points % ACTIVITY_LOGGING_NUM_DATA_POINTS;
 
     state->data[pos].timestamp.reg = date_time.reg;
-    state->data[pos].active_minutes = state->active_minutes;
+    state->data[pos].active_minutes = active_minutes;
     state->data[pos].orientation_changes = orientation_changes;
-    state->active_minutes = 0;    
+    active_minutes = 0;
     orientation_changes = 0;
 
     state->data_points++;
@@ -48,7 +49,7 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
 
 static void _activity_logging_face_update_display(activity_logging_state_t *state, bool clock_mode_24h) {
     int8_t pos = (state->data_points - 1 - state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
-    char buf[16];
+    char buf[8];
 
     watch_clear_indicator(WATCH_INDICATOR_24H);
     watch_clear_indicator(WATCH_INDICATOR_PM);
@@ -78,10 +79,10 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else {
         // we are displaying the number of accelerometer wakeups and orientation changes
-        watch_display_text(WATCH_POSITION_TOP, "WO");
+        watch_display_text(WATCH_POSITION_TOP, "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%2d=%lu", state->data[pos].active_minutes, state->data[pos].orientation_changes);
+        sprintf(buf, "%-3lu/%2d", state->data[pos].orientation_changes > 999 ? 999 : state->data[pos].orientation_changes, state->data[pos].active_minutes);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
 }
@@ -142,13 +143,8 @@ void activity_logging_face_resign(void *context) {
 }
 
 movement_watch_face_advisory_t activity_logging_face_advise(void *context) {
-    activity_logging_state_t *state = (activity_logging_state_t *)context;
+    (void) context;
     movement_watch_face_advisory_t retval = { 0 };
-
-    // every minute, we want to log whether the accelerometer is asleep or awake.
-    if (!HAL_GPIO_A3_read()) {
-        state->active_minutes++;
-    }
 
     // this will get called at the top of each minute, so all we check is if we're at the top of the hour as well.
     // if we are, we ask for a background task.

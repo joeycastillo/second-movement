@@ -31,20 +31,25 @@
 
 #ifdef HAS_ACCELEROMETER
 
-// hacky: we're just tapping into Movement's orientation changes.
+// hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
 extern uint32_t orientation_changes;
+extern uint8_t active_minutes;
 
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
     (void) state;
-    char buf[7];
+    char buf[8];
 
-    // "AC"celerometer "IN"terrupts
+    // Accelerometer title
     watch_display_text(WATCH_POSITION_TOP_LEFT, "AC");
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "1N");
-    snprintf(buf, 7, "%6lu", orientation_changes);
+
+    // Sleep/active state
+    if (HAL_GPIO_A3_read()) watch_display_text(WATCH_POSITION_TOP_RIGHT, " S");
+    else watch_display_text(WATCH_POSITION_TOP_RIGHT, " A");
+
+    // Orientation changes / active minutes
+    sprintf(buf, "%-3lu/%2d", orientation_changes > 999 ? 999 : orientation_changes, active_minutes);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
-    printf("%s\n", buf);
 }
 
 void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -63,6 +68,9 @@ void accel_interrupt_count_face_activate(void *context) {
 
     // never in settings mode at the start
     state->is_setting = false;
+
+    // update more quickly to catch changes, also to blink setting
+    movement_request_tick_frequency(4);
 }
 
 bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
@@ -76,10 +84,14 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
             case EVENT_TICK:
                 {
                     char buf[11];
-                    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
-                    watch_display_float_with_best_effort(state->new_threshold * 0.03125, " G");
-                    printf("%s\n", buf);
+                    if (event.subsecond % 2) {
+                        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+                    } else {
+                        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+                        watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
+                        watch_display_float_with_best_effort(state->new_threshold * 0.03125, " G");
+                        printf("%s\n", buf);
+                    }
                 }
                 break;
             case EVENT_ALARM_BUTTON_UP:
