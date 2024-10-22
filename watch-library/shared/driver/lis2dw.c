@@ -76,6 +76,11 @@ lis2dw_reading_t lis2dw_get_raw_reading(void) {
 
  lis2dw_acceleration_measurement_t lis2dw_get_acceleration_measurement(lis2dw_reading_t *out_reading) {
     lis2dw_reading_t reading = lis2dw_get_raw_reading();
+    /// FIXME: We should stash the range in a static variable to avoid reading this every time, but
+    /// I'm not sure the values cribbed from Adafruit's LID3DH driver are right for the LIS2DW.
+    /// In particular, we have a 12 and a 14 bit mode, and I'm not sure why the value for 16g is 48.
+    /// Just making a note of this before moving on; we don't currently need to read acceleration
+    /// values over the bus, but once we do, this will need to be fixed.
     uint8_t range = lis2dw_get_range();
     if (out_reading != NULL) *out_reading = reading;
 
