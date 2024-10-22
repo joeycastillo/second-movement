@@ -67,7 +67,7 @@ bool irda_demo_face_loop(movement_event_t event, void *context) {
             size_t bytes_read = uart_read_instance(0, data, 32);
             if (bytes_read) {
                 char buf[14];
-                snprintf(buf, 11, "IR%2d%s", bytes_read, data);
+                snprintf(buf, 11, "IR%2d%c%c%c%c%c%c", bytes_read, data[0], data[1], data[2], data[3], data[4], data[5]);
                 watch_display_text(WATCH_POSITION_FULL, buf);
                 data[31] = 0;
                 printf("%s\n", data);
