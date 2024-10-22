@@ -44,6 +44,7 @@ INCLUDES += \
   -I./filesystem \
   -I./shell \
   -I./movement/lib/sunriset \
+  -I./movement/lib/chirpy_tx \
   -I./watch-library/shared/watch \
   -I./watch-library/shared/driver \
   -I./watch-faces/clock \
@@ -51,6 +52,7 @@ INCLUDES += \
   -I./watch-faces/demo \
   -I./watch-faces/sensor \
   -I./watch-faces/settings \
+  -I./watch-faces/io \
 
 # Add your source files here.
 SRCS += \
@@ -62,6 +64,7 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./movement/lib/sunriset/sunriset.c \
+  ./movement/lib/chirpy_tx/chirpy_tx.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
