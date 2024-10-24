@@ -340,6 +340,7 @@ void movement_set_timezone_index(uint8_t value);
 watch_date_time_t movement_get_utc_date_time(void);
 watch_date_time_t movement_get_local_date_time(void);
 watch_date_time_t movement_get_date_time_in_zone(uint8_t zone_index);
+bool movement_update_dst_offset_cache(void);
 
 void movement_set_local_date_time(watch_date_time_t date_time);
 
