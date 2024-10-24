@@ -343,6 +343,8 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
             if (state->page == 0) {
+                // if entering low energy mode, start tick animation
+                if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
                 // check if we need to update the display
                 watch_date_time_t date_time = movement_get_local_date_time();
                 if (date_time.reg >= state->rise_set_expires.reg) {
