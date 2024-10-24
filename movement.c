@@ -77,6 +77,9 @@ void cb_tick(void);
 
 #ifdef HAS_ACCELEROMETER
 void cb_motion_interrupt_1(void);
+void cb_motion_interrupt_2(void);
+uint32_t orientation_changes = 0;
+uint8_t active_minutes = 0;
 #endif
 
 #if __EMSCRIPTEN__
@@ -154,6 +157,11 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
+
+#ifdef HAS_ACCELEROMETER
+    // every minute, we want to log whether the accelerometer is asleep or awake.
+    if (!HAL_GPIO_A3_read()) active_minutes++;
+#endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
@@ -626,37 +634,28 @@ void app_setup(void) {
 #endif
         watch_enable_i2c();
         if (lis2dw_begin()) {
-            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance)
-            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit, up this if needed
-            lis2dw_set_low_noise_mode(true);                // only marginally raises power consumption
-            lis2dw_enable_sleep();                          // sleep at 1.6Hz, wake to 12.5Hz?
-            lis2dw_set_range(LIS2DW_CTRL6_VAL_RANGE_2G);    // data sheet recommends 2G range
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // 1.6Hz in low power mode
+            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
+            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
+            lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // sample at 1.6 Hz, lowest rate available
+            lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
+            lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(24);          // threshold is 1/64th of full scale, so for a FS of ±2G this is 1.5G
+            lis2dw_configure_wakeup_threshold(24);          // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
             // INT1 is on A4 which can wake from deep sleep. Wake on 6D orientation change.
-            lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, INTERRUPT_TRIGGER_RISING);
+            lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D | LIS2DW_CTRL4_INT1_WU | LIS2DW_CTRL4_INT1_TAP | LIS2DW_CTRL4_INT1_SINGLE_TAP);
+            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, true);
 
-            // configure the accelerometer to fire INT2 when its sleep state changes.
-            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            // configure the accelerometer to output the sleep state on INT2.
+            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
             // INT2 is wired to pin A3. set it up on the external interrupt controller.
             HAL_GPIO_A3_in();
             HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
-            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_FALLING);
-            // but rather than firing an interrupt, we'll have it generate an event instead.
-            eic_enable_event(HAL_GPIO_A3_pin());
-            // we can route the EXTINT3 event generator to the TC2 event user...
-            evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
-            // and use the TC2 event to count the number of times the sleep state changes.
-            // note that this doesn't actually wake the watch — we can maintain this count even in standby.
-            tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
-            tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
-            tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
-            tc_enable(2);
+            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_BOTH);
+            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_motion_interrupt_2, INTERRUPT_TRIGGER_BOTH);
 
             lis2dw_enable_interrupts();
         }
@@ -698,6 +697,17 @@ static void _sleep_mode_app_loop(void) {
 bool app_loop(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
     bool woke_up_for_buzzer = false;
+
+    // REMOVE THIS before shipping the accelerometer board: test beeps.
+    if (movement_state.settings.bit.button_should_sound && event.event_type == EVENT_ACCELEROMETER_WAKE) {
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C6, 20, WATCH_BUZZER_VOLUME_SOFT);
+    }
+    if (movement_state.settings.bit.button_should_sound && event.event_type == EVENT_ACCELEROMETER_SLEEP) {
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C5, 15, WATCH_BUZZER_VOLUME_SOFT);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_REST, 10, WATCH_BUZZER_VOLUME_SOFT);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C5, 15, WATCH_BUZZER_VOLUME_SOFT);
+    }
+
     if (movement_state.watch_face_changed) {
         if (movement_state.settings.bit.button_should_sound) {
             // low note for nonzero case, high note for return to watch_face 0
@@ -928,7 +938,36 @@ void cb_tick(void) {
 
 #ifdef HAS_ACCELEROMETER
 void cb_motion_interrupt_1(void) {
-    // TODO: Find out what motion event woke us up.
-    printf("INT1\n");
+    uint8_t int_src = lis2dw_get_interrupt_source();
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA) {
+        event.event_type = EVENT_ORIENTATION_CHANGE;
+        orientation_changes++;
+        printf("Orientation change\n");
+    }
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) event.event_type = EVENT_DOUBLE_TAP;
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) event.event_type = EVENT_SINGLE_TAP;
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_FF_IA) event.event_type = EVENT_FREE_FALL;
+
+    // These are handled on INT2, which is not available in low energy mode.
+    // If we want wakeup events on INT1, we could ask for LIS2DW_CTRL4_INT1_WU and get wake events here.
+    // If we want sleep change events on INT1, we'd have to set LIS2DW_CTRL5_INT2_SLEEP_CHG and LIS2DW_CTRL7_VAL_INT2_ON_INT1
+    // That would give us these two cases:
+    // if (int_src & LIS2DW_REG_ALL_INT_SRC_WU_IA) printf(" Wake up");
+    // if (int_src & LIS2DW_REG_ALL_INT_SRC_SLEEP_CHANGE_IA) printf(" Sleep change");
+}
+
+void cb_motion_interrupt_2(void) {
+    if (HAL_GPIO_A3_read()) {
+        event.event_type = EVENT_ACCELEROMETER_SLEEP;
+        printf("Sleep on INT2\n");
+    } else {
+        event.event_type = EVENT_ACCELEROMETER_WAKE;
+        printf("Wake on INT2\n");
+        // Not sure if it's useful to know what axis exceeded the threshold, but here's that:
+        // uint8_t int_src = lis2dw_get_wakeup_source();
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_X_WU) printf("Wake on X");
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Y_WU) printf("Wake on Y");
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Z_WU) printf("Wake on Z");
+    }
 }
 #endif
