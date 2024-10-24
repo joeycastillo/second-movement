@@ -49,6 +49,7 @@ void world_clock_face_activate(void *context) {
     world_clock_state_t *state = (world_clock_state_t *)context;
 
     state->current_screen = 0;
+    movement_update_dst_offset_cache();
     _update_timezone_offset(state);
 
     if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();

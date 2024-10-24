@@ -63,7 +63,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
             current_page = (current_page + set_time_hackwatch_face_NUM_SETTINGS - 1) % set_time_hackwatch_face_NUM_SETTINGS;
             if (current_page == 2)
                 seconds_reset_sequence = 0;
-
+            if (current_page == 6) movement_update_dst_offset_cache();
             *((uint8_t *)context) = current_page;
             break;
         case EVENT_LIGHT_BUTTON_UP:
@@ -265,4 +265,5 @@ void set_time_hackwatch_face_resign(void *context) {
     (void) context;
     watch_set_led_off();
     movement_store_settings();
+    movement_update_dst_offset_cache();
 }
