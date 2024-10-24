@@ -77,7 +77,11 @@ void watch_enable_display(void) {
     _slcd_fc_min_ms_bypass = 32 * (1000 / _slcd_framerate);
 
     slcd_clear();
+#ifdef USE_CUSTOM_LCD
     slcd_set_contrast(6);
+#else
+    slcd_set_contrast(9);
+#endif
     slcd_enable();
 }
 

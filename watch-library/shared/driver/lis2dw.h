@@ -236,6 +236,8 @@ typedef enum {
 #define LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON          0b01000000
 
 #define LIS2DW_REG_WAKE_UP_DUR 0x35
+#define LIS2DW_WAKE_UP_DUR_STATIONARY 0b00010000
+
 #define LIS2DW_REG_FREE_FALL 0x36
 #define LIS2DW_REG_STATUS_DUP 0x37
 
@@ -338,6 +340,10 @@ void lis2dw_clear_fifo(void);
 void lis2dw_enable_sleep(void);
 
 void lis2dw_disable_sleep(void);
+
+void lis2dw_enable_stationary_motion_detection(void);
+
+void lis2dw_disable_stationary_motion_detection(void);
 
 void lis2dw_enable_tap_detection(void);
 

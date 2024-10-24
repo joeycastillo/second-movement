@@ -91,10 +91,10 @@ static uint8_t short_data[] = {
     0x00,
 };
 
-#define NANOSEC_INI_FILE_NAME "nanosec.ini"
+#define ACTIVITY_DATA_FILE_NAME "activity.dat"
 
-static uint8_t *nanosec_buffer = 0;
-static uint16_t nanosec_buffer_size = 0;
+static uint8_t *activity_buffer = 0;
+static uint16_t activity_buffer_size = 0;
 
 void chirpy_demo_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void)watch_face_index;
@@ -113,39 +113,39 @@ void chirpy_demo_face_activate(void *context) {
     state->mode = CDM_CHOOSE;
     state->program = CDP_SCALE;
 
-    // Do we have nanosec data? Load it.
-    int32_t sz = filesystem_get_file_size(NANOSEC_INI_FILE_NAME);
+    // Do we have activity data? Load it.
+    int32_t sz = filesystem_get_file_size(ACTIVITY_DATA_FILE_NAME);
     if (sz > 0) {
         // We will free this in resign.
         // I don't like any kind of dynamic allocation in long-running embedded software...
         // But there's no way around it here; I don't want to hard-wire (and squat) any fixed size structure
         // Nanosec data may change in the future too
-        nanosec_buffer_size = sz + 2;
-        nanosec_buffer = malloc(nanosec_buffer_size);
+        activity_buffer_size = sz + 2;
+        activity_buffer = malloc(activity_buffer_size);
         // First two bytes of prefix, so Chirpy RX can recognize this data type
-        nanosec_buffer[0] = 0xc0;
-        nanosec_buffer[1] = 0x00;
+        activity_buffer[0] = 0xc0;
+        activity_buffer[1] = 0x00;
         // Read file
-        filesystem_read_file(NANOSEC_INI_FILE_NAME, (char*)&nanosec_buffer[2], sz);
+        filesystem_read_file(ACTIVITY_DATA_FILE_NAME, (char*)&activity_buffer[2], sz);
     }
 }
 
 // To create / check test file in emulator:
-// echo TestData > nanosec.ini
-// cat nanosec.ini
+// echo TestData > activity.ini
+// cat activity.ini
 
 static void _cdf_update_lcd(chirpy_demo_state_t *state) {
-    watch_display_string("CH", 0);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "CH", "Chirp");
     if (state->program == CDP_SCALE)
-        watch_display_string(" SCALE", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, " SCALE");
     else if (state->program == CDP_INFO_SHORT)
-        watch_display_string("SHORT ", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, "SHORT ");
     else if (state->program == CDP_INFO_LONG)
-        watch_display_string(" LOng ", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, " LOng ");
     else if (state->program == CDP_INFO_NANOSEC)
-        watch_display_string("nAnO  ", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, " ACtIV");
     else
-        watch_display_string("----  ", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
 }
 
 static void _cdf_quit_chirping(chirpy_demo_state_t *state) {
@@ -224,8 +224,8 @@ static void _cdf_countdown_tick(void *context) {
                 curr_data_ptr = long_data_str;
                 curr_data_len = strlen((const char *)long_data_str);
             } else if (state->program == CDP_INFO_NANOSEC) {
-                curr_data_ptr = nanosec_buffer;
-                curr_data_len = nanosec_buffer_size;
+                curr_data_ptr = activity_buffer;
+                curr_data_len = activity_buffer_size;
             }
         }
         return;
@@ -276,7 +276,7 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
                 else if (state->program == CDP_INFO_SHORT)
                     state->program = CDP_INFO_LONG;
                 else if (state->program == CDP_INFO_LONG) {
-                    if (nanosec_buffer_size > 0)
+                    if (activity_buffer_size > 0)
                         state->program = CDP_INFO_NANOSEC;
                     else
                         state->program = CDP_SCALE;
@@ -323,9 +323,9 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
 void chirpy_demo_face_resign(void *context) {
     (void)context;
 
-    if (nanosec_buffer != 0) {
-        free(nanosec_buffer);
-        nanosec_buffer = 0;
-        nanosec_buffer_size = 0;
+    if (activity_buffer != 0) {
+        free(activity_buffer);
+        activity_buffer = 0;
+        activity_buffer_size = 0;
     }
 }

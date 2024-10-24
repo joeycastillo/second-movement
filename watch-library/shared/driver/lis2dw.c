@@ -76,6 +76,11 @@ lis2dw_reading_t lis2dw_get_raw_reading(void) {
 
  lis2dw_acceleration_measurement_t lis2dw_get_acceleration_measurement(lis2dw_reading_t *out_reading) {
     lis2dw_reading_t reading = lis2dw_get_raw_reading();
+    /// FIXME: We should stash the range in a static variable to avoid reading this every time, but
+    /// I'm not sure the values cribbed from Adafruit's LID3DH driver are right for the LIS2DW.
+    /// In particular, we have a 12 and a 14 bit mode, and I'm not sure why the value for 16g is 48.
+    /// Just making a note of this before moving on; we don't currently need to read acceleration
+    /// values over the bus, but once we do, this will need to be fixed.
     uint8_t range = lis2dw_get_range();
     if (out_reading != NULL) *out_reading = reading;
 
@@ -172,10 +177,10 @@ lis2dw_filter_t lis2dw_get_filter_type(void) {
 }
 
 void lis2dw_set_low_noise_mode(bool on) {
-    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1) & ~(LIS2DW_CTRL6_VAL_LOW_NOISE);
+    uint8_t val = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6) & ~(LIS2DW_CTRL6_VAL_LOW_NOISE);
     uint8_t bits = on ? LIS2DW_CTRL6_VAL_LOW_NOISE : 0;
 
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL1, val | bits);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL6, val | bits);
 }
 
 bool lis2dw_get_low_noise_mode(void) {
@@ -216,6 +221,16 @@ void lis2dw_enable_sleep(void) {
 void lis2dw_disable_sleep(void) {
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration & ~LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON);
+}
+
+void lis2dw_enable_stationary_motion_detection(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_DUR);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_DUR, configuration | LIS2DW_WAKE_UP_DUR_STATIONARY);
+}
+
+void lis2dw_disable_stationary_motion_detection(void) {
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_DUR);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_DUR, configuration & ~LIS2DW_WAKE_UP_DUR_STATIONARY);
 }
 
 void lis2dw_enable_tap_detection(void) {
