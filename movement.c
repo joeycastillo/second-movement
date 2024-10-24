@@ -101,6 +101,17 @@ static udatetime_t _movement_convert_date_time_to_udate(watch_date_time_t date_t
     };
 }
 
+static watch_date_time_t _movement_convert_udate_to_date_time(udatetime_t date_time) {
+    return (watch_date_time_t) {
+        .unit.day = date_time.date.dayofmonth,
+        .unit.month = date_time.date.month,
+        .unit.year = date_time.date.year - (WATCH_RTC_REFERENCE_YEAR - UYEAR_OFFSET),
+        .unit.hour = date_time.time.hour,
+        .unit.minute = date_time.time.minute,
+        .unit.second = date_time.time.second
+    };
+}
+
 static bool _movement_update_dst_offset_cache(void) {
     uzone_t local_zone;
     udatetime_t udate_time;
@@ -116,7 +127,7 @@ static bool _movement_update_dst_offset_cache(void) {
             udate_time = _movement_convert_date_time_to_udate(date_time);
             uoffset_t offset;
             get_current_offset(&local_zone, &udate_time, &offset);
-            int8_t new_offset = (offset.hours * 60 + offset.minutes) / 15;
+            int8_t new_offset = (offset.hours * 60 + offset.minutes) / OFFSET_INCREMENT;
             if (_movement_dst_offset_cache[i] != new_offset) {
                 _movement_dst_offset_cache[i] = new_offset;
                 dst_changed = true;
@@ -128,6 +139,45 @@ static bool _movement_update_dst_offset_cache(void) {
     }
 
     return dst_changed;
+}
+
+static bool _movement_check_dst_changeover_occurring_now(watch_date_time_t date_time) {
+    static watch_date_time_t dst_occur_date[2];  // Same length as the maximum of zone_defns[].rules_len
+    static uint8_t year_prev = 0;
+    static uint8_t tz_idx_prev = 0;
+    uint8_t tz_idx_curr = movement_get_timezone_index();
+    uint8_t rules_idx = zone_defns[tz_idx_curr].rules_idx;
+    uint8_t rules_len = zone_defns[tz_idx_curr].rules_len;
+    if (rules_len == 0) return false;
+    // Get the DST dates if we don't already have them or they're outdated
+    if (dst_occur_date[0].reg == 0 || tz_idx_curr != tz_idx_prev || date_time.unit.year != year_prev) {
+        uzone_t local_zone;
+        year_prev = date_time.unit.year;
+        tz_idx_prev = tz_idx_curr;
+        unpack_zone(&zone_defns[tz_idx_curr], "", &local_zone);
+        for(uint8_t i = 0; i < rules_len; i++) {
+            urule_t unpacked_rule;
+            uoffset_t offset;
+            unpack_rule(&zone_rules[rules_idx + i], date_time.unit.year + (WATCH_RTC_REFERENCE_YEAR - 2000), &unpacked_rule);
+            dst_occur_date[i] = _movement_convert_udate_to_date_time(unpacked_rule.datetime);
+            get_current_offset(&local_zone, &unpacked_rule.datetime, &offset);
+            int32_t sec_offset = (offset.hours * 60 + offset.minutes) * 60;
+            if (unpacked_rule.is_local_time == 0) {
+                int32_t offset_non_dst = zone_defns[tz_idx_curr].offset_inc_minutes * OFFSET_INCREMENT * 60;
+                dst_occur_date[i] = watch_utility_date_time_convert_zone(dst_occur_date[i], 0, offset_non_dst);
+            }
+            dst_occur_date[i] = watch_utility_date_time_convert_zone(dst_occur_date[i], sec_offset, movement_get_current_timezone_offset());
+        }
+    }
+    // See if the current time is during DST
+    for(uint8_t i = 0; i < rules_len; i++) {
+        if (date_time.unit.month != dst_occur_date[i].unit.month) continue;
+        if (date_time.unit.day != dst_occur_date[i].unit.day) continue;
+        if (date_time.unit.hour != dst_occur_date[i].unit.hour) continue;
+        if (date_time.unit.minute != dst_occur_date[i].unit.minute) continue;
+        return true;
+    }
+    return false;
 }
 
 static inline void _movement_reset_inactivity_countdown(void) {
@@ -155,8 +205,8 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
 
-    // update the DST offset cache every 30 minutes, since someplace in the world could change.
-    if (date_time.unit.minute % 30 == 0) {
+    // update the DST offset cache if the current time matches the DST minute, hour, and month
+    if (_movement_check_dst_changeover_occurring_now(date_time)) {
         _movement_update_dst_offset_cache();
     }
 
@@ -421,11 +471,6 @@ void movement_set_local_date_time(watch_date_time_t date_time) {
     int32_t current_offset = movement_get_current_timezone_offset();
     watch_date_time_t utc_date_time = watch_utility_date_time_convert_zone(date_time, current_offset, 0);
     watch_rtc_set_date_time(utc_date_time);
-
-    // this may seem wasteful, but if the user's local time is in a zone that observes DST,
-    // they may have just crossed a DST boundary, which means the next call to this function
-    // could require a different offset to force local time back to UTC. Quelle horreur!
-    _movement_update_dst_offset_cache();
 }
 
 bool movement_button_should_sound(void) {
