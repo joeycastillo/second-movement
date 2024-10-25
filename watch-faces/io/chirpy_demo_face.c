@@ -34,7 +34,7 @@ typedef enum {
 } chirpy_demo_mode_t;
 
 typedef enum {
-    CDP_SCALE = 0,
+    CDP_CLEAR = 0,
     CDP_INFO_SHORT,
     CDP_INFO_LONG,
     CDP_INFO_NANOSEC,
@@ -111,7 +111,7 @@ void chirpy_demo_face_activate(void *context) {
 
     memset(context, 0, sizeof(chirpy_demo_state_t));
     state->mode = CDM_CHOOSE;
-    state->program = CDP_SCALE;
+    state->program = CDP_INFO_NANOSEC;
 
     // Do we have activity data? Load it.
     int32_t sz = filesystem_get_file_size(ACTIVITY_DATA_FILE_NAME);
@@ -123,7 +123,7 @@ void chirpy_demo_face_activate(void *context) {
         activity_buffer_size = sz + 2;
         activity_buffer = malloc(activity_buffer_size);
         // First two bytes of prefix, so Chirpy RX can recognize this data type
-        activity_buffer[0] = 0xc0;
+        activity_buffer[0] = 0x41;
         activity_buffer[1] = 0x00;
         // Read file
         filesystem_read_file(ACTIVITY_DATA_FILE_NAME, (char*)&activity_buffer[2], sz);
@@ -136,16 +136,18 @@ void chirpy_demo_face_activate(void *context) {
 
 static void _cdf_update_lcd(chirpy_demo_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "CH", "Chirp");
-    if (state->program == CDP_SCALE)
-        watch_display_text(WATCH_POSITION_BOTTOM, " SCALE");
-    else if (state->program == CDP_INFO_SHORT)
+    if (state->program == CDP_CLEAR) {
+        movement_force_led_on(255, 0, 0);
+        watch_display_text(WATCH_POSITION_BOTTOM, "CLEAR?");
+    } else if (state->program == CDP_INFO_SHORT) {
         watch_display_text(WATCH_POSITION_BOTTOM, "SHORT ");
-    else if (state->program == CDP_INFO_LONG)
+    } else if (state->program == CDP_INFO_LONG) {
         watch_display_text(WATCH_POSITION_BOTTOM, " LOng ");
-    else if (state->program == CDP_INFO_NANOSEC)
+    } else if (state->program == CDP_INFO_NANOSEC) {
         watch_display_text(WATCH_POSITION_BOTTOM, " ACtIV");
-    else
+    } else {
         watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
+    }
 }
 
 static void _cdf_quit_chirping(chirpy_demo_state_t *state) {
@@ -207,7 +209,7 @@ static void _cdf_countdown_tick(void *context) {
         tick_state->tick_count = -1;
         tick_state->seq_pos = 0;
         // We'll be chirping out a scale
-        if (state->program == CDP_SCALE) {
+        if (false) { // state->program == CDP_CLEAR) {
             tick_state->tick_fun = _cdf_scale_tick;
         }
         // We'll be chirping out data
@@ -271,7 +273,7 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
             // If in choose mode: select next program
             if (state->mode == CDM_CHOOSE) {
-                if (state->program == CDP_SCALE)
+                if (state->program == CDP_CLEAR)
                     state->program = CDP_INFO_SHORT;
                 else if (state->program == CDP_INFO_SHORT)
                     state->program = CDP_INFO_LONG;
@@ -279,9 +281,9 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
                     if (activity_buffer_size > 0)
                         state->program = CDP_INFO_NANOSEC;
                     else
-                        state->program = CDP_SCALE;
+                        state->program = CDP_CLEAR;
                 } else if (state->program == CDP_INFO_NANOSEC)
-                    state->program = CDP_SCALE;
+                    state->program = CDP_CLEAR;
                 _cdf_update_lcd(state);
             }
             // If chirping: stoppit
@@ -292,7 +294,13 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_LONG_PRESS:
             // If in choose mode: start chirping
             if (state->mode == CDM_CHOOSE) {
-                _cdm_setup_chirp(state);
+                if (state->program == CDP_CLEAR) {
+                    filesystem_write_file("activity.dat", "", 0);
+                    movement_force_led_off();
+                    movement_move_to_next_face();
+                } else {
+                    _cdm_setup_chirp(state);
+                }
             }
             break;
         case EVENT_TICK:

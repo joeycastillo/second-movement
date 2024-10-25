@@ -41,10 +41,16 @@
 
 #define ACTIVITY_LOGGING_NUM_DATA_POINTS (36)
 
-typedef struct {
-    watch_date_time_t timestamp;
-    uint8_t active_minutes;
-    uint32_t orientation_changes;
+typedef union {
+    struct {
+        uint32_t day: 5;
+        uint32_t month: 4;
+        uint32_t hour: 5;
+        uint32_t minute: 6;
+        uint32_t active_minutes: 3;
+        uint32_t orientation_changes: 9;
+    } bit;
+    uint32_t reg;
 } activity_logging_data_point_t;
 
 typedef struct {
