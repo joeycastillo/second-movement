@@ -293,7 +293,7 @@ static void display_wait(wordle_state_t *state) {
 #endif
 
 static uint32_t get_day_unix_time(void) {
-    watch_date_time_t now = watch_rtc_get_date_time();
+    watch_date_time_t now = movement_get_local_date_time();
 #if WORDLE_USE_DAILY_STREAK == 2
     now.unit.hour = now.unit.minute = now.unit.second = 0;
 #endif

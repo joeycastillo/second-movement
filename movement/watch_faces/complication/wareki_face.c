@@ -65,7 +65,7 @@ void wareki_activate(void *context) {
     _alarm_button_press = false;
     _light_button_press = false;
 
-    state->real_year = watch_rtc_get_date_time().unit.year + WATCH_RTC_REFERENCE_YEAR;
+    state->real_year = movement_get_local_date_time().unit.year + WATCH_RTC_REFERENCE_YEAR;
     state->start_year = state->real_year;
     state->disp_year = state->real_year;
 
@@ -102,7 +102,7 @@ void subYear(wareki_state_t* state,int count){
 bool wareki_loop(movement_event_t event, void *context) {
     wareki_state_t *state = (wareki_state_t *)context;
 
-    state->real_year = watch_rtc_get_date_time().unit.year + WATCH_RTC_REFERENCE_YEAR;
+    state->real_year = movement_get_local_date_time().unit.year + WATCH_RTC_REFERENCE_YEAR;
 
     if( state->real_year != state->start_year ){
         state->start_year = state->real_year;

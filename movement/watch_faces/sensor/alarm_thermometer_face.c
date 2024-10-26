@@ -71,7 +71,7 @@ bool alarm_thermometer_face_loop(movement_event_t event, void *context) {
             _alarm_thermometer_face_update(movement_use_imperial_units());
             break;
         case EVENT_TICK:
-            if (watch_rtc_get_date_time().unit.second % 5 == 0) {
+            if (movement_get_local_date_time().unit.second % 5 == 0) {
                 switch (state->mode) {
                     case MODE_NORMAL:
                         _alarm_thermometer_face_update(movement_use_imperial_units());
@@ -134,7 +134,7 @@ bool alarm_thermometer_face_loop(movement_event_t event, void *context) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                 watch_start_sleep_animation(1000);
             }
-            if (watch_rtc_get_date_time().unit.minute % 5 == 0) {
+            if (movement_get_local_date_time().unit.minute % 5 == 0) {
                 _alarm_thermometer_face_update(movement_use_imperial_units());
                 watch_display_string("  ", 8);
             }

@@ -64,7 +64,7 @@ bool french_revolutionary_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
         case EVENT_LOW_ENERGY_UPDATE:
 
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
 
             decimal_time = get_decimal_time(&date_time);
 
@@ -106,7 +106,7 @@ bool french_revolutionary_face_loop(movement_event_t event, void *context) {
             state->use_am_pm = !state->use_am_pm;
             if (state->use_am_pm) {
                 watch_clear_indicator(WATCH_INDICATOR_24H);
-                date_time = watch_rtc_get_date_time();
+                date_time = movement_get_local_date_time();
                 if (date_time.unit.hour < 12) { watch_clear_indicator(WATCH_INDICATOR_PM); }
                 else { watch_set_indicator(WATCH_INDICATOR_PM); }
             } else {

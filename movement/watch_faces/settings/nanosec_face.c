@@ -367,7 +367,7 @@ movement_watch_face_advisory_t nanosec_face_advise(void *context) {
 
     // No need for background correction if we are on profile 0 - static hardware correction.
     if (nanosec_state.correction_profile != 0) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_local_date_time();
         retval.wants_background_task = date_time.unit.minute % nanosec_state.correction_cadence == 0;
     }
 
