@@ -263,9 +263,7 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 {
     char buf[11];
-    int8_t hours, minutes;
     uint8_t zone;
-    div_t result;
 
     switch (event.event_type) {
 	case EVENT_ACTIVATE:
@@ -278,21 +276,17 @@ static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
                 watch_clear_indicator(WATCH_INDICATOR_PM);
                 refresh_face = false;
             }
-	    result = div(movement_get_current_timezone_offset_for_zone(state->current_zone), 3600);
-	    hours = result.quot;
-	    minutes = result.rem;
 
 	    /*
 	     * Display time zone. The range of the parameters is reduced
 	     * to avoid accidentally overflowing the buffer and to suppress
 	     * corresponding compiler warnings.
 	     */
-	    sprintf(buf, "%.2s%2d %c%02d%02d",
+	    sprintf(buf, "%.2s%2d%s",
                     (char *)(zone_abrevs + zone_defns[state->current_zone].abrev_formatter),
                     state->current_zone % 100,
-                    hours < 0 ? '-' : '+',
-                    abs(hours) % 24,
-		    abs(minutes) % 60);
+                    (char *)(3 + zone_names + 11 * state->current_zone));
+            if (buf[2]=='4') buf[2] = 'W'; // W looks the closest like 4
 
             /* Let the zone number blink */
             if (event.subsecond % 2)
