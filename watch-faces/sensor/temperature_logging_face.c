@@ -146,7 +146,7 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context) {
 
     // this will get called at the top of each minute, so all we check is if we're at the top of the hour as well.
     // if we are, we ask for a background task.
-    retval.wants_background_task = movement_get_utc_date_time().unit.minute == 0;
+    retval.wants_background_task = movement_get_local_date_time().unit.minute == 0;
 
     return retval;
 }

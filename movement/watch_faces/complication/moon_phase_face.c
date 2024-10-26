@@ -140,13 +140,13 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_TICK:
             // only update once an hour
-            date_time = movement_get_utc_date_time();
+            date_time = movement_get_local_date_time();
             if ((date_time.unit.minute == 0) && (date_time.unit.second == 0)) _update(state, state->offset);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // update at the top of the hour OR if we're entering sleep mode with an offset.
             // also, in sleep mode, always show the current moon phase (offset = 0).
-            if (state->offset || (movement_get_utc_date_time().unit.minute == 0)) _update(state, 0);
+            if (state->offset || (movement_get_local_date_time().unit.minute == 0)) _update(state, 0);
             // and kill the offset so when the wearer wakes up, it matches what's on screen.
             state->offset = 0;
             // finally: clear out the last two digits and replace them with the sleep mode indicator
