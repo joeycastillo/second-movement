@@ -32,6 +32,16 @@
 #define SET_TIME_FACE_NUM_SETTINGS (7)
 const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"  ", "YR", "MO", "DA", "HR", "M1", "SE"};
 
+typedef enum {
+    SET_TIME_TZ = 0,
+    SET_TIME_YEAR,
+    SET_TIME_MONTH,
+    SET_TIME_DAY,
+    SET_TIME_HOUR,
+    SET_TIME_MIN,
+    SET_TIME_SEC
+} set_time_pages;
+
 static bool _quick_ticks_running;
 static int32_t current_offset;
 
@@ -39,30 +49,29 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
     // handles short or long pressing of the alarm button
 
     switch (current_page) {
-        case 0: // time zone
+        case SET_TIME_TZ:
             movement_set_timezone_index(movement_get_timezone_index() + 1);
             if (movement_get_timezone_index() >= NUM_ZONE_NAMES) movement_set_timezone_index(0);
             current_offset = movement_get_current_timezone_offset_for_zone(movement_get_timezone_index());
             break;
-        case 1: // year
+        case SET_TIME_YEAR:
             date_time.unit.year = ((date_time.unit.year % 60) + 1);
             break;
-        case 2: // month
+        case SET_TIME_MONTH:
             date_time.unit.month = (date_time.unit.month % 12) + 1;
             break;
-        case 3: { // day
+        case SET_TIME_DAY:
             date_time.unit.day = date_time.unit.day + 1;
             break;
-        case 4: // hour
+        case SET_TIME_HOUR:
             date_time.unit.hour = (date_time.unit.hour + 1) % 24;
             break;
-        case 5: // minute
+        case SET_TIME_MIN:
             date_time.unit.minute = (date_time.unit.minute + 1) % 60;
             break;
-        case 6: // second
+        case SET_TIME_SEC:
             date_time.unit.second = 0;
             break;
-        }
     }
     if (date_time.unit.day > days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR))
         date_time.unit.day = 1;
@@ -85,6 +94,7 @@ void set_time_face_activate(void *context) {
     *((uint8_t *)context) = 0;
     movement_request_tick_frequency(4);
     _quick_ticks_running = false;
+    movement_update_dst_offset_cache();
     current_offset = movement_get_current_timezone_offset();
 }
 
@@ -100,7 +110,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (current_page != 2) {
+            if (current_page != SET_TIME_SEC) {
                 _quick_ticks_running = true;
                 movement_request_tick_frequency(8);
             }
@@ -114,6 +124,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             return false;
         case EVENT_LIGHT_BUTTON_DOWN:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
+            if (current_page == SET_TIME_TZ && movement_update_dst_offset_cache())
+                current_offset = movement_get_current_timezone_offset();
             *((uint8_t *)context) = current_page;
             break;
         case EVENT_ALARM_BUTTON_UP:
@@ -131,7 +143,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     char buf[11];
     watch_display_text(WATCH_POSITION_TOP_LEFT, (char *) set_time_face_titles[current_page]);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    if (current_page < 1) {
+    if (current_page == SET_TIME_TZ) {
         watch_display_text(WATCH_POSITION_TOP_RIGHT, " Z");
         if (current_offset < 0) watch_display_text(WATCH_POSITION_TOP_LEFT, "- ");
         else watch_display_text(WATCH_POSITION_TOP_LEFT, "* ");
@@ -145,7 +157,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             sprintf(buf, "%s", (char *) (3 + zone_names + 11 * movement_get_timezone_index()));
             watch_clear_colon();
         }
-    } else if (current_page < 4) {
+    } else if (current_page < SET_TIME_HOUR) {
         watch_clear_colon();
         watch_clear_indicator(WATCH_INDICATOR_24H);
         watch_clear_indicator(WATCH_INDICATOR_PM);
@@ -167,16 +179,16 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     // blink up the parameter we're setting
     if (event.subsecond % 2 && !_quick_ticks_running) {
         switch (current_page) {
-            case 1:
-            case 4:
+            case SET_TIME_YEAR:
+            case SET_TIME_HOUR:
                 watch_display_text(WATCH_POSITION_HOURS, "  ");
                 break;
-            case 2:
-            case 5:
+            case SET_TIME_MONTH:
+            case SET_TIME_MIN:
                 watch_display_text(WATCH_POSITION_MINUTES, "  ");
                 break;
-            case 3:
-            case 6:
+            case SET_TIME_DAY:
+            case SET_TIME_SEC:
                 watch_display_text(WATCH_POSITION_SECONDS, "  ");
                 break;
         }
@@ -186,7 +198,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
 }
 
 void set_time_face_resign(void *context) {
-    (void) context;
+    uint8_t current_page = *((uint8_t *)context);
     watch_set_led_off();
     movement_store_settings();
+    if (current_page == SET_TIME_TZ) movement_update_dst_offset_cache();
 }
