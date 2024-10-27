@@ -73,6 +73,13 @@ shell_command_t g_shell_commands[] = {
         .cb = filesystem_cmd_cat,
     },
     {
+        .name = "b64encode",
+        .help = "usage: b64encode <PATH>",
+        .min_args = 1,
+        .max_args = 1,
+        .cb = filesystem_cmd_b64encode,
+    },
+    {
         .name = "df",
         .help = "print filesystem free space",
         .min_args = 0,

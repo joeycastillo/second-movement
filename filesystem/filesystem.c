@@ -28,6 +28,8 @@
 #include "filesystem.h"
 #include "watch.h"
 #include "lfs.h"
+#include "base64.h"
+#include "delay.h"
 
 #ifndef min
 #define min(x, y) ((x) > (y) ? (y) : (x))
@@ -277,6 +279,32 @@ int filesystem_cmd_ls(int argc, char *argv[]) {
 int filesystem_cmd_cat(int argc, char *argv[]) {
     (void) argc;
     filesystem_cat(argv[1]);
+    return 0;
+}
+
+int filesystem_cmd_b64encode(int argc, char *argv[]) {
+    (void) argc;
+    info.type = 0;
+    lfs_stat(&eeprom_filesystem, argv[1], &info);
+    if (filesystem_file_exists(argv[1])) {
+        if (info.size > 0) {
+            char *buf = malloc(info.size + 1);
+            filesystem_read_file(argv[1], buf, info.size);
+            // print a base 64 encoding of the file, 12 bytes at a time
+            for (lfs_size_t i = 0; i < info.size; i += 12) {
+                lfs_size_t len = min(12, info.size - i);
+                char base64_line[17];
+                b64_encode((unsigned char *)buf + i, len, (unsigned char *)base64_line);
+                printf("%s\n", base64_line);
+                delay_ms(10);
+            }
+            free(buf);
+        } else {
+            printf("\r\n");
+        }
+    } else {
+        printf("b64encode: %s: No such file\r\n", argv[1]);
+    }
     return 0;
 }
 
