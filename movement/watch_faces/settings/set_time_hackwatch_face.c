@@ -262,8 +262,8 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
 }
 
 void set_time_hackwatch_face_resign(void *context) {
-    (void) context;
+    uint8_t current_page = *((uint8_t *)context);
     watch_set_led_off();
     movement_store_settings();
-    movement_update_dst_offset_cache();
+    if (current_page == 6) movement_update_dst_offset_cache();
 }

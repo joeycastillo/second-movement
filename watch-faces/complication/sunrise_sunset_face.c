@@ -323,7 +323,7 @@ void sunrise_sunset_face_activate(void *context) {
     movement_location_t movement_location = (movement_location_t) watch_get_backup_data(1);
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
-    movement_update_dst_offset_cache();
+    movement_update_dst_offset_cache_if_needed(movement_get_utc_date_time());
 }
 
 bool sunrise_sunset_face_loop(movement_event_t event, void *context) {

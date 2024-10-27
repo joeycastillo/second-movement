@@ -239,5 +239,4 @@ void finetune_face_resign(void *context) {
     if (total_adjustment != 0) {
         finetune_update_correction_time();
     }
-    movement_update_dst_offset_cache();
 }

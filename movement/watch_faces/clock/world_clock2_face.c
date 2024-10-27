@@ -152,7 +152,7 @@ void world_clock2_face_activate(void *context)
             movement_request_tick_frequency(4);
             break;
     }
-    movement_update_dst_offset_cache();
+    movement_update_dst_offset_cache_if_needed(movement_get_utc_date_time());
     refresh_face = true;
 }
 
