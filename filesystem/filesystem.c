@@ -142,7 +142,7 @@ bool filesystem_init(void) {
 
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
-    if (1) {
+    if (err < 0) {
         printf("Ignore that error! Formatting filesystem...\r\n");
         err = lfs_format(&eeprom_filesystem, &watch_lfs_cfg);
         if (err < 0) return false;
