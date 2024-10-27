@@ -41,7 +41,7 @@ jobs:
         run: emmake make
         working-directory: '.'
       - name: Archive simulator build
-        working-directory: 'movement/make/build-sim'
+        working-directory: './build-sim'
         run: |
           tar -czf movement.tar.gz firmware.html firmware.wasm firmware.js
       - name: Upload simulator build
