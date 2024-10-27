@@ -42,14 +42,14 @@ void set_time_hackwatch_face_setup(uint8_t watch_face_index, void ** context_ptr
 void set_time_hackwatch_face_activate(void *context) {
     *((uint8_t *)context) = 3;
     movement_request_tick_frequency(32);
-    date_time_settings = watch_rtc_get_date_time();
+    date_time_settings = movement_get_local_date_time();
 }
 
 bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
     uint8_t current_page = *((uint8_t *)context);
 
     if (event.subsecond == 15) // Delay displayed time update by ~0.5 seconds, to align phase exactly to main clock at 1Hz
-        date_time_settings = watch_rtc_get_date_time();
+        date_time_settings = movement_get_local_date_time();
 
     static int8_t seconds_reset_sequence;
 
@@ -92,7 +92,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
                     }
                 }
                 date_time_settings.unit.second = 0;
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -132,7 +132,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
                     break;
             }
             if (current_page != 2) // Do not set time when we are at seconds, it was already set previously
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             break;
 
         case EVENT_ALARM_LONG_UP://Setting seconds on long release
@@ -171,7 +171,7 @@ bool set_time_hackwatch_face_loop(movement_event_t event, void *context) {
                     break;
             }
             if (current_page != 2) // Do not set time when we are at seconds, it was already set previously
-                watch_rtc_set_date_time(date_time_settings);
+                movement_set_local_date_time(date_time_settings);
             //TODO: Do not update whole RTC, just what we are changing
             break;
         case EVENT_TIMEOUT:

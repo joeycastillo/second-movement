@@ -28,7 +28,7 @@
 #include "ships_bell_face.h"
 
 static void ships_bell_ring() {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
 
     date_time.unit.hour %= 4;
     date_time.unit.hour = date_time.unit.hour == 0 && date_time.unit.minute < 30 ? 4 : date_time.unit.hour;
@@ -54,7 +54,7 @@ static void ships_bell_draw(ships_bell_state_t *state) {
         sprintf(buf, " ");
     }
 
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     date_time.unit.hour %= 4;
 
     sprintf(buf + 1, " %d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
@@ -130,8 +130,8 @@ movement_watch_face_advisory_t ships_bell_face_advise(void *context) {
 
     if (!state->bell_enabled) return retval;
 
-    watch_date_time_t date_time = watch_rtc_get_date_time();
-    if (!(date_time.unit.minute == 0 || date_time.unit.minute == 30)) return retval;
+    watch_date_time_t date_time = movement_get_local_date_time();
+    if (!(date_time.unit.minute == 0 || date_time.unit.minute == 30)) return false;
 
     date_time.unit.hour %= 12;
     // #SecondMovement: This was migrated to the new advisory API but not tested. Needs more testing!

@@ -79,9 +79,7 @@ static void _astronomy_face_recalculate(astronomy_state_t *state) {
     }
 #endif
 
-    watch_date_time_t date_time = watch_rtc_get_date_time();
-    uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
-    date_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+    watch_date_time_t date_time = movement_get_utc_date_time();
     double jd = astro_convert_date_to_julian_date(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day, date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
 
     astro_equatorial_coordinates_t radec_precession = astro_get_ra_dec(jd, astronomy_available_celestial_bodies[state->active_body_index], state->latitude_radians, state->longitude_radians, true);

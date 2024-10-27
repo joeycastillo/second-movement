@@ -197,7 +197,7 @@ static void _activity_activate(activity_state_t *state) {
     // Those are not up-to-date because ticks have not been coming
     if (state->le_state != 0 && state->mode == ACTM_LOGGING) {
         state->le_state = 2;
-        watch_date_time_t now = watch_rtc_get_date_time();
+        watch_date_time_t now = movement_get_local_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
         uint32_t total_seconds = now_timestamp - start_timestamp;
@@ -244,7 +244,7 @@ static void _activity_update_logging_screen(activity_state_t *state) {
 
     // If we're in LE state: per-minute update is special
     if (state->le_state == 1) {
-        watch_date_time_t now = watch_rtc_get_date_time();
+        watch_date_time_t now = movement_get_local_date_time();
         uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
         uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
         uint32_t total_seconds = now_timestamp - start_timestamp;
@@ -292,7 +292,7 @@ static void _activity_update_logging_screen(activity_state_t *state) {
     // Briefly, show time without seconds
     else {
         watch_clear_indicator(WATCH_INDICATOR_LAP);
-        watch_date_time_t now = watch_rtc_get_date_time();
+        watch_date_time_t now = movement_get_local_date_time();
         uint8_t hour = now.unit.hour;
         if (!movement_clock_mode_24h()) {
             watch_clear_indicator(WATCH_INDICATOR_24H);
@@ -541,7 +541,7 @@ static void _activity_alarm_long(activity_state_t *state) {
         if (activity_log_count >= ACTIVITY_LOG_SZ)
             return;
         // OK, we go ahead and start logging
-        state->start_time = watch_rtc_get_date_time();
+        state->start_time = movement_get_local_date_time();
         state->curr_total_sec = 0;
         state->curr_pause_sec = 0;
         state->counter = -1;

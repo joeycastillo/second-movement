@@ -28,7 +28,6 @@
 #include "world_clock2_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-#include "watch_utility.h"
 
 static bool refresh_face;
 
@@ -97,7 +96,7 @@ static inline uint8_t find_selected_zone(world_clock2_state_t *state, int direct
     uint8_t i = state->current_zone;
 
     do {
-	i = mod(i + direction, NUM_TIME_ZONES);
+	i = mod(i + direction, NUM_ZONE_NAMES);
 	/* Could not find a selected zone. Return UTC */
 	if (i == state->current_zone) {
 	    return 0;
@@ -160,7 +159,6 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
     char buf[11];
     uint8_t pos;
 
-    uint32_t timestamp;
     uint32_t previous_date_time;
     watch_date_time_t date_time;
 
@@ -180,9 +178,7 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
             }
 
             /* Determine current time at time zone and store date/time */
-	    date_time = watch_rtc_get_date_time();
-	    timestamp = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
-	    date_time = watch_utility_date_time_from_unix_time(timestamp, movement_timezone_offsets[state->current_zone] * 60);
+	    date_time = movement_get_date_time_in_zone(state->current_zone);
 	    previous_date_time = state->previous_date_time;
 	    state->previous_date_time = date_time.reg;
 
@@ -214,13 +210,13 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 			watch_start_sleep_animation(500);
 
 		    sprintf(buf, "%.2s%2d%2d%02d  ",
-                            zone_names[state->current_zone],
+                            (char *)(zone_abrevs + zone_defns[state->current_zone].abrev_formatter),
                             date_time.unit.day,
                             date_time.unit.hour,
                             date_time.unit.minute);
 		} else {
 		    sprintf(buf, "%.2s%2d%2d%02d%02d",
-			    zone_names[state->current_zone],
+			                (char *)(zone_abrevs + zone_defns[state->current_zone].abrev_formatter),
                             date_time.unit.day,
                             date_time.unit.hour,
                             date_time.unit.minute,
@@ -231,14 +227,14 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 	    break;
 	case EVENT_ALARM_BUTTON_UP:
 	    state->current_zone = find_selected_zone(state, FORWARD);
-            state->previous_date_time = REFRESH_TIME;
+        state->previous_date_time = REFRESH_TIME;
 	    break;
 	case EVENT_LIGHT_BUTTON_DOWN:
 	    /* Do nothing. */
 	    break;
 	case EVENT_LIGHT_BUTTON_UP:
 	    state->current_zone = find_selected_zone(state, BACKWARD);
-            state->previous_date_time = REFRESH_TIME;
+        state->previous_date_time = REFRESH_TIME;
 	    break;
 	case EVENT_LIGHT_LONG_PRESS:
 	    movement_illuminate_led();
@@ -267,9 +263,7 @@ static bool mode_display(movement_event_t event, world_clock2_state_t *state)
 static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 {
     char buf[11];
-    int8_t hours, minutes;
     uint8_t zone;
-    div_t result;
 
     switch (event.event_type) {
 	case EVENT_ACTIVATE:
@@ -282,21 +276,17 @@ static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
                 watch_clear_indicator(WATCH_INDICATOR_PM);
                 refresh_face = false;
             }
-	    result = div(movement_timezone_offsets[state->current_zone], 60);
-	    hours = result.quot;
-	    minutes = result.rem;
 
 	    /*
 	     * Display time zone. The range of the parameters is reduced
 	     * to avoid accidentally overflowing the buffer and to suppress
 	     * corresponding compiler warnings.
 	     */
-	    sprintf(buf, "%.2s%2d %c%02d%02d",
-                    zone_names[state->current_zone],
+	    sprintf(buf, "%.2s%2d%s",
+                    (char *)(zone_abrevs + zone_defns[state->current_zone].abrev_formatter),
                     state->current_zone % 100,
-                    hours < 0 ? '-' : '+',
-                    abs(hours) % 24,
-		    abs(minutes) % 60);
+                    (char *)(3 + zone_names + 11 * state->current_zone));
+            if (buf[2]=='4') buf[2] = 'W'; // W looks the closest like 4
 
             /* Let the zone number blink */
             if (event.subsecond % 2)
@@ -310,10 +300,10 @@ static bool mode_settings(movement_event_t event, world_clock2_state_t *state)
 	    watch_display_string(buf, 0);
 	    break;
 	case EVENT_ALARM_BUTTON_UP:
-	    state->current_zone = mod(state->current_zone + FORWARD, NUM_TIME_ZONES);
+	    state->current_zone = mod(state->current_zone + FORWARD, NUM_ZONE_NAMES);
 	    break;
 	case EVENT_LIGHT_BUTTON_UP:
-	    state->current_zone = mod(state->current_zone + BACKWARD, NUM_TIME_ZONES);
+	    state->current_zone = mod(state->current_zone + BACKWARD, NUM_ZONE_NAMES);
 	    break;
 	case EVENT_LIGHT_BUTTON_DOWN:
 	    /* Do nothing */

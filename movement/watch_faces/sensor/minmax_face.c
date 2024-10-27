@@ -47,7 +47,7 @@ static float _get_displayed_temperature_c(minmax_state_t *state){
 
 static void _minmax_face_log_data(minmax_state_t *logger_state) {
     thermistor_driver_enable();
-    size_t pos = (size_t) watch_rtc_get_date_time().unit.hour;
+    size_t pos = (size_t) movement_get_local_date_time().unit.hour;
     float temp_c = thermistor_driver_get_temperature();
     // If no data yet, initialise with current temperature
     if(!logger_state->have_logged){
@@ -58,7 +58,7 @@ static void _minmax_face_log_data(minmax_state_t *logger_state) {
       }
     }
     // On new hour, update lists to current temperature
-    else if(watch_rtc_get_date_time().unit.minute < 2){
+    else if(movement_get_local_date_time().unit.minute < 2){
       logger_state->hourly_mins[pos] = temp_c;
       logger_state->hourly_maxs[pos] = temp_c;
     }

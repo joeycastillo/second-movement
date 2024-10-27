@@ -107,7 +107,7 @@ static inline uint32_t total_days_tracked(menstrual_cycle_state_t *state) {
     date_time_start.unit.year = state->dates.bit.first_year;
 
     // Get the current date and time
-    watch_date_time_t date_time_now = watch_rtc_get_date_time();
+    watch_date_time_t date_time_now = movement_get_local_date_time();
 
     // Convert the start date and current date to Unix time
     uint32_t unix_start = watch_utility_date_time_to_unix_time(date_time_start, state->utc_offset);
@@ -210,7 +210,7 @@ static inline bool inside_fert_window(menstrual_cycle_state_t *state) {
         return false;
 
     // Get the current date/time
-    watch_date_time_t date_time_now = watch_rtc_get_date_time();
+    watch_date_time_t date_time_now = movement_get_local_date_time();
 
     // Check if the current day falls between the first and last predicted peak fertility days
     if (get_day_pk_fert(state, first_day) > get_day_pk_fert(state, last_day)) { // We are crossing over the end of the month
@@ -340,7 +340,7 @@ bool menstrual_cycle_face_loop(movement_event_t event, void *context) {
                         // Calculate before updating date of last period
                         update_shortest_longest_cycle(state);
                         // Update the date of last period after calulating the, now previous, cycle length
-                        date_period = watch_rtc_get_date_time();
+                        date_period = movement_get_local_date_time();
                         state->dates.bit.prev_day = date_period.unit.day;
                         state->dates.bit.prev_month = date_period.unit.month;
                         state->dates.bit.prev_year = date_period.unit.year;

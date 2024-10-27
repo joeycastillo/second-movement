@@ -45,8 +45,8 @@ static void _signal_callback() {
 
 static void _start(timer_state_t *state, bool with_beep) {
     if (state->timers[state->current_timer].value == 0) return;
-    watch_date_time_t now = watch_rtc_get_date_time();
-    state->now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
+    watch_date_time_t now = movement_get_utc_date_time();
+    state->now_ts = watch_utility_date_time_to_unix_time(now, 0);
     if (state->mode == pausing)
         state->target_ts = state->now_ts + state->paused_left;
     else
@@ -54,7 +54,7 @@ static void _start(timer_state_t *state, bool with_beep) {
                                                           state->timers[state->current_timer].unit.hours, 
                                                           state->timers[state->current_timer].unit.minutes, 
                                                           state->timers[state->current_timer].unit.seconds);
-    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, 0);
     state->mode = running;
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
     watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -203,8 +203,8 @@ void timer_face_activate(void *context) {
     watch_display_string("TR", 0);
     watch_set_colon();
     if(state->mode == running) {
-        watch_date_time_t now = watch_rtc_get_date_time();
-        state->now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
+        watch_date_time_t now = movement_get_utc_date_time();
+        state->now_ts = watch_utility_date_time_to_unix_time(now, 0);
         watch_set_indicator(WATCH_INDICATOR_BELL);
     } else {
         state->pausing_seconds = 1;
