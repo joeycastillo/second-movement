@@ -45,14 +45,14 @@ void watch_enable_uart(const uint16_t tx_pin, const uint16_t rx_pin, uint32_t ba
 /** @brief Transmits a string of bytes on the UART's TX pin.
   * @param s A null-terminated string containing the bytes you wish to transmit.
   */
-void watch_uart_puts(uint8_t *s);
+void watch_uart_puts(char *s);
 
 /** @brief Returns a string of bytes received on the UART's RX pin.
   * @param data A pointer to a buffer where the received bytes will be stored.
   * @param max_length The maximum number of bytes to receive.
   * @return The number of bytes actually received into the buffer.
   */
-size_t watch_uart_gets(uint8_t *data, size_t max_length);
+size_t watch_uart_gets(char *data, size_t max_length);
 
 /// @}
 #endif

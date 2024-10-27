@@ -61,11 +61,11 @@ void watch_enable_uart(const uint16_t tx_pin, const uint16_t rx_pin, uint32_t ba
     uart_enable_instance(3);
 }
 
-void watch_uart_puts(uint8_t *s) {
+void watch_uart_puts(char *s) {
     uart_write_instance(3, s, strlen((const char *)s));
 }
 
-size_t watch_uart_gets(uint8_t *data, size_t max_length) {
+size_t watch_uart_gets(char *data, size_t max_length) {
     return uart_read_instance(3, data, max_length);
 }
 

@@ -63,7 +63,7 @@ bool irda_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            uint8_t data[32];
+            char data[32];
             size_t bytes_read = uart_read_instance(0, data, 32);
             if (bytes_read) {
                 char buf[14];

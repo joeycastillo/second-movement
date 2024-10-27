@@ -32,13 +32,13 @@ void watch_enable_uart(const uint16_t tx_pin, const uint16_t rx_pin, uint32_t ba
     rx_enable = !!rx_pin;
 }
 
-void watch_uart_puts(uint8_t *s) {
+void watch_uart_puts(char *s) {
 	if (tx_enable) {
         // TODO: hook up to UI
     }
 }
 
-size_t watch_uart_gets(uint8_t *data, size_t max_length) {
+size_t watch_uart_gets(char *data, size_t max_length) {
 	if (rx_enable) {
         // TODO: hook up to UI
     }
