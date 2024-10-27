@@ -49,7 +49,7 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     // print size of thing
     printf("Size of data point: %d\n", sizeof(activity_logging_data_point_t));
     if (filesystem_append_file("activity.dat", (char *)&data_point, sizeof(activity_logging_data_point_t))) {
-        printf("Data point written\n", state->data_points);
+        printf("Data point written\n");
     } else {
         printf("Failed to write data point\n");
     }
@@ -95,7 +95,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
         watch_display_text(WATCH_POSITION_TOP, "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%-3lu/%2d", state->data[pos].bit.orientation_changes > 999 ? 999 : state->data[pos].bit.orientation_changes, state->data[pos].bit.active_minutes);
+        sprintf(buf, "%-3u/%2d", state->data[pos].bit.orientation_changes > 999 ? 999 : state->data[pos].bit.orientation_changes, state->data[pos].bit.active_minutes);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
 }
@@ -106,7 +106,9 @@ void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) 
         *context_ptr = malloc(sizeof(activity_logging_state_t));
         memset(*context_ptr, 0, sizeof(activity_logging_state_t));
         // create file if it doesn't exist
-        if (!filesystem_file_exists("activity.dat")) filesystem_write_file("activity.dat", "", 0);
+        if (!filesystem_file_exists("activity.dat")) {
+            filesystem_write_file("activity.dat", "", 0);
+        }
     }
 }
 
