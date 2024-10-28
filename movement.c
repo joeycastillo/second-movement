@@ -471,10 +471,8 @@ bool movement_update_dst_offset_cache(void) {
 }
 
 static bool dst_cache_may_be_stale(watch_date_time_t utc_now) {
-    if (utc_now.unit.hour != _dst_last_cache.unit.hour) return true;
-    if (utc_now.unit.day != _dst_last_cache.unit.day) return true;
-    if (utc_now.unit.month != _dst_last_cache.unit.month) return true;
-    if (utc_now.unit.year != _dst_last_cache.unit.year) return true;
+    // Checks if the yr, mo, day, and hr are all the same
+    if(((utc_now.reg ^ _dst_last_cache.reg) >> 12) != 0) return true;
     const uint8_t min_to_trigger = 30;  // We want to check every half-hour, but no need to cache more than once in a hour-hour.
     int8_t delta_actual = utc_now.unit.minute - _dst_last_cache.unit.minute;
     if (delta_actual == 0) return false;
