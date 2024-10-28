@@ -470,16 +470,23 @@ bool movement_update_dst_offset_cache(void) {
     return _movement_update_dst_offset_cache(movement_get_utc_date_time());
 }
 
-bool movement_update_dst_offset_cache_if_needed(watch_date_time_t utc_now) {
+static bool dst_cache_may_be_stale(watch_date_time_t utc_now) {
+    if (utc_now.unit.hour != _dst_last_cache.unit.hour) return true;
+    if (utc_now.unit.day != _dst_last_cache.unit.day) return true;
+    if (utc_now.unit.month != _dst_last_cache.unit.month) return true;
+    if (utc_now.unit.year != _dst_last_cache.unit.year) return true;
     const uint8_t min_to_trigger = 30;  // We want to check every half-hour, but no need to cache more than once in a hour-hour.
-    // Checks if the last 20 bits don't match (hours, days, months, years)
-    uint32_t ydmh_compare = (utc_now.reg ^ _dst_last_cache.reg) & 0xFFFFF;
-    if(ydmh_compare != 0) return _movement_update_dst_offset_cache(utc_now);
     int8_t delta_actual = utc_now.unit.minute - _dst_last_cache.unit.minute;
     if (delta_actual == 0) return false;
     int8_t delta_min = min_to_trigger - (_dst_last_cache.unit.minute % min_to_trigger);
-    if (delta_actual >= delta_min || delta_actual < 0) return _movement_update_dst_offset_cache(utc_now);
+    if (delta_actual >= delta_min || delta_actual < 0) return true;
     return false;  
+}
+
+bool movement_update_dst_offset_cache_if_needed(watch_date_time_t utc_now) {
+    if (dst_cache_may_be_stale(utc_now))
+        return _movement_update_dst_offset_cache(utc_now);
+    return false;
 }
 
 watch_date_time_t movement_get_date_time_in_zone(uint8_t zone_index) {
