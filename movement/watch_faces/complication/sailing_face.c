@@ -164,7 +164,7 @@ static void ring(sailing_state_t *state) {
         return;
     }
     state->nextbeep_ts = state->target_ts - beepseconds[beepflag+1];
-    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->nextbeep_ts, get_tz_offset(settings));
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->nextbeep_ts, 0);
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
 //background task is set, now we have time to play the tune. If this is cancelled accidentally, the next alarm will still ring. Sound is implemented non-blocking, so that neither buttons nor display output are compromised.
     for (int i = 0; i < 5; i++) {

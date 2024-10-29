@@ -108,7 +108,7 @@ static bool _movement_update_dst_offset_cache(void) {
     uzone_t local_zone;
     udatetime_t udate_time;
     bool dst_changed = false;
-    watch_date_time_t system_date_time = watch_rtc_get_date_time();
+    watch_date_time_t system_date_time = movement_get_utc_date_time();
 
     for (uint8_t i = 0; i < NUM_ZONE_NAMES; i++) {
         unpack_zone(&zone_defns[i], "", &local_zone);
@@ -156,7 +156,7 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 }
 
 static void _movement_handle_top_of_minute(void) {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
 
 #ifdef HAS_ACCELEROMETER
     // every minute, we want to log whether the accelerometer is asleep or awake.
@@ -188,7 +188,7 @@ static void _movement_handle_top_of_minute(void) {
 }
 
 static void _movement_handle_scheduled_tasks(void) {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
     uint8_t num_active_tasks = 0;
 
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
@@ -307,7 +307,7 @@ void movement_cancel_background_task(void) {
 }
 
 void movement_schedule_background_task_for_face(uint8_t watch_face_index, watch_date_time_t date_time) {
-    watch_date_time_t now = watch_rtc_get_date_time();
+    watch_date_time_t now = movement_get_utc_date_time();
     if (date_time.reg > now.reg) {
         movement_state.has_scheduled_background_task = true;
         scheduled_tasks[watch_face_index].reg = date_time.reg;
@@ -417,11 +417,11 @@ watch_date_time_t movement_get_utc_date_time(void) {
 
 watch_date_time_t movement_get_date_time_in_zone(uint8_t zone_index) {
     int32_t offset = movement_get_current_timezone_offset_for_zone(zone_index);
-    return watch_utility_date_time_convert_zone(watch_rtc_get_date_time(), 0, offset);
+    return watch_utility_date_time_convert_zone(movement_get_utc_date_time(), 0, offset);
 }
 
 watch_date_time_t movement_get_local_date_time(void) {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
     return watch_utility_date_time_convert_zone(date_time, 0, movement_get_current_timezone_offset());
 }
 
@@ -923,7 +923,7 @@ void cb_fast_tick(void) {
 
 void cb_tick(void) {
     event.event_type = EVENT_TICK;
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_utc_date_time();
     if (date_time.unit.second != movement_state.last_second) {
         // TODO: can we consolidate these two ticks?
         if (movement_state.settings.bit.le_interval && movement_state.le_mode_ticks > 0) movement_state.le_mode_ticks--;
