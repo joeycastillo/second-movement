@@ -159,8 +159,18 @@ static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
 
 #ifdef HAS_ACCELEROMETER
-    // every minute, we want to log whether the accelerometer is asleep or awake.
-    if (HAL_GPIO_A4_read()) stationary_minutes++;
+    if (stationary_minutes < 5) {
+        // if the watch has been stationary for fewer than 5 minutes, find out if it's still stationary.
+        if (HAL_GPIO_A4_read()) stationary_minutes++;
+        printf("Stationary minutes: %d\n", stationary_minutes);
+
+        // does this mark five stationary minutes? and are we not already asleep?
+        if (stationary_minutes == 5 && movement_state.le_mode_ticks != -1) {
+            // if so, enter low energy mode.
+            printf("Entering low energy mode due to inactivity.\n");
+            movement_request_sleep();
+        }
+    }
 #endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
@@ -958,6 +968,8 @@ void cb_accelerometer_sleep_change(void) {
         event.event_type = EVENT_ACCELEROMETER_WAKE;
         // reset the stationary minutes counter; we're counting consecutive stationary minutes.
         stationary_minutes = 0;
+        // also: wake up!
+        _movement_reset_inactivity_countdown();
         printf("Wake on INT2\n");
     }
 }

@@ -57,7 +57,6 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     state->data[pos].reg = data_point.reg;
     state->data_points++;
 
-    stationary_minutes = 0;
     orientation_changes = 0;
 }
 
