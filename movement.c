@@ -79,7 +79,7 @@ void cb_tick(void);
 void cb_accelerometer_event(void);
 void cb_accelerometer_sleep_change(void);
 uint32_t orientation_changes = 0;
-uint8_t active_minutes = 0;
+uint8_t stationary_minutes = 0;
 #endif
 
 #if __EMSCRIPTEN__
@@ -160,7 +160,7 @@ static void _movement_handle_top_of_minute(void) {
 
 #ifdef HAS_ACCELEROMETER
     // every minute, we want to log whether the accelerometer is asleep or awake.
-    if (!HAL_GPIO_A4_read()) active_minutes++;
+    if (HAL_GPIO_A4_read()) stationary_minutes++;
 #endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
@@ -925,7 +925,7 @@ void cb_tick(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.unit.second != movement_state.last_second) {
         // TODO: can we consolidate these two ticks?
-        if (movement_state.settings.bit.le_interval && movement_state.le_mode_ticks > 0) movement_state.le_mode_ticks--;
+        if (movement_state.le_mode_ticks > 0) movement_state.le_mode_ticks--;
         if (movement_state.timeout_ticks > 0) movement_state.timeout_ticks--;
 
         movement_state.last_second = date_time.unit.second;
@@ -956,12 +956,9 @@ void cb_accelerometer_sleep_change(void) {
         printf("Sleep on INT2\n");
     } else {
         event.event_type = EVENT_ACCELEROMETER_WAKE;
+        // reset the stationary minutes counter; we're counting consecutive stationary minutes.
+        stationary_minutes = 0;
         printf("Wake on INT2\n");
-        // Not sure if it's useful to know what axis exceeded the threshold, but here's that:
-        // uint8_t int_src = lis2dw_get_wakeup_source();
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_X_WU) printf("Wake on X\n");
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Y_WU) printf("Wake on Y\n");
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Z_WU) printf("Wake on Z\n");
     }
 }
 

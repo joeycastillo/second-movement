@@ -47,7 +47,7 @@ typedef union {
         uint32_t month: 4;
         uint32_t hour: 5;
         uint32_t minute: 6;
-        uint32_t active_minutes: 3;
+        uint32_t stationary_minutes: 3;
         uint32_t orientation_changes: 9;
     } bit;
     uint32_t reg;

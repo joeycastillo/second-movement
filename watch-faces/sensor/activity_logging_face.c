@@ -33,7 +33,7 @@
 // hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
 extern uint32_t orientation_changes;
-extern uint8_t active_minutes;
+extern uint8_t stationary_minutes;
 
 static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     watch_date_time_t date_time = movement_get_local_date_time();
@@ -44,7 +44,7 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     data_point.bit.month = date_time.unit.month;
     data_point.bit.hour = date_time.unit.hour;
     data_point.bit.minute = date_time.unit.minute;
-    data_point.bit.active_minutes = active_minutes;
+    data_point.bit.stationary_minutes = stationary_minutes;
     data_point.bit.orientation_changes = orientation_changes;
     // print size of thing
     printf("Size of data point: %d\n", sizeof(activity_logging_data_point_t));
@@ -57,7 +57,7 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     state->data[pos].reg = data_point.reg;
     state->data_points++;
 
-    active_minutes = 0;
+    stationary_minutes = 0;
     orientation_changes = 0;
 }
 
@@ -95,7 +95,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
         watch_display_text(WATCH_POSITION_TOP, "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%-3u/%2d", state->data[pos].bit.orientation_changes > 999 ? 999 : state->data[pos].bit.orientation_changes, state->data[pos].bit.active_minutes);
+        sprintf(buf, "%-3u/%2d", state->data[pos].bit.orientation_changes > 999 ? 999 : state->data[pos].bit.orientation_changes, state->data[pos].bit.stationary_minutes);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
 }
