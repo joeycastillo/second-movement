@@ -44,7 +44,7 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
     watch_display_text(WATCH_POSITION_TOP_LEFT, "AC");
 
     // Sleep/active state
-    if (HAL_GPIO_A3_read()) watch_display_text(WATCH_POSITION_TOP_RIGHT, " S");
+    if (HAL_GPIO_A4_read()) watch_display_text(WATCH_POSITION_TOP_RIGHT, " S");
     else watch_display_text(WATCH_POSITION_TOP_RIGHT, " A");
 
     // Orientation changes / active minutes

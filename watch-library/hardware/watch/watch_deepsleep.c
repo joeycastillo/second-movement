@@ -133,10 +133,6 @@ static void _watch_disable_all_pins_except_rtc(void) {
     if (config & RTC_TAMPCTRL_IN0ACT_Msk) portb_pins_to_disable &= 0xFFFFFFFE;
     // same with RTC/IN[1] and PB02
     if (config & RTC_TAMPCTRL_IN1ACT_Msk) portb_pins_to_disable &= 0xFFFFFFFB;
-#ifdef HAS_ACCELEROMETER
-    // if we're using the Motion board, keep A3 configured (it tracks the accelerometer sleep state)
-    portb_pins_to_disable &= 0xFFFFFFF7;
-#endif
 
     // port A: that last B is to always keep PA02 configured as-is; that's our ALARM button.
     PORT->Group[0].DIRCLR.reg = 0xFFFFFFFB;

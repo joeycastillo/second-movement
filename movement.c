@@ -76,8 +76,8 @@ void cb_fast_tick(void);
 void cb_tick(void);
 
 #ifdef HAS_ACCELEROMETER
-void cb_motion_interrupt_1(void);
-void cb_motion_interrupt_2(void);
+void cb_accelerometer_event(void);
+void cb_accelerometer_sleep_change(void);
 uint32_t orientation_changes = 0;
 uint8_t active_minutes = 0;
 #endif
@@ -160,7 +160,7 @@ static void _movement_handle_top_of_minute(void) {
 
 #ifdef HAS_ACCELEROMETER
     // every minute, we want to log whether the accelerometer is asleep or awake.
-    if (!HAL_GPIO_A3_read()) active_minutes++;
+    if (!HAL_GPIO_A4_read()) active_minutes++;
 #endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
@@ -645,17 +645,16 @@ void app_setup(void) {
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
-            // INT1 is on A4 which can wake from deep sleep. Wake on 6D orientation change.
+            // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
             lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_motion_interrupt_1, true);
+            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
-            // configure the accelerometer to output the sleep state on INT2.
+            // INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
             lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
-            // INT2 is wired to pin A3. set it up on the external interrupt controller.
-            HAL_GPIO_A3_in();
-            HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
-            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_BOTH);
-            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_motion_interrupt_2, INTERRUPT_TRIGGER_BOTH);
+            // a falling edge on INT2 indicates the accelerometer has woken up.
+            // when configured via the extwake callback, we can only detect rising or falling edges, not both (as we could using the EIC).
+            // this line configures an extwake calling `cb_accelerometer_sleep_change` when the accelerometer wakes up.
+            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_sleep_change, false);
 
             lis2dw_enable_interrupts();
         }
@@ -937,27 +936,22 @@ void cb_tick(void) {
 }
 
 #ifdef HAS_ACCELEROMETER
-void cb_motion_interrupt_1(void) {
+void cb_accelerometer_event(void) {
     uint8_t int_src = lis2dw_get_interrupt_source();
     if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA) {
         event.event_type = EVENT_ORIENTATION_CHANGE;
         orientation_changes++;
         printf("Orientation change\n");
     }
+
+    // not currently listening for these:
     if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) event.event_type = EVENT_DOUBLE_TAP;
     if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) event.event_type = EVENT_SINGLE_TAP;
     if (int_src & LIS2DW_REG_ALL_INT_SRC_FF_IA) event.event_type = EVENT_FREE_FALL;
-
-    // These are handled on INT2, which is not available in low energy mode.
-    // If we want wakeup events on INT1, we could ask for LIS2DW_CTRL4_INT1_WU and get wake events here.
-    // If we want sleep change events on INT1, we'd have to set LIS2DW_CTRL5_INT2_SLEEP_CHG and LIS2DW_CTRL7_VAL_INT2_ON_INT1
-    // That would give us these two cases:
-    // if (int_src & LIS2DW_REG_ALL_INT_SRC_WU_IA) printf(" Wake up");
-    // if (int_src & LIS2DW_REG_ALL_INT_SRC_SLEEP_CHANGE_IA) printf(" Sleep change");
 }
 
-void cb_motion_interrupt_2(void) {
-    if (HAL_GPIO_A3_read()) {
+void cb_accelerometer_sleep_change(void) {
+    if (HAL_GPIO_A4_read()) {
         event.event_type = EVENT_ACCELEROMETER_SLEEP;
         printf("Sleep on INT2\n");
     } else {
@@ -965,9 +959,10 @@ void cb_motion_interrupt_2(void) {
         printf("Wake on INT2\n");
         // Not sure if it's useful to know what axis exceeded the threshold, but here's that:
         // uint8_t int_src = lis2dw_get_wakeup_source();
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_X_WU) printf("Wake on X");
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Y_WU) printf("Wake on Y");
-        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Z_WU) printf("Wake on Z");
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_X_WU) printf("Wake on X\n");
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Y_WU) printf("Wake on Y\n");
+        // if (int_src & LIS2DW_WAKE_UP_SRC_VAL_Z_WU) printf("Wake on Z\n");
     }
 }
+
 #endif
