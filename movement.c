@@ -707,16 +707,6 @@ bool app_loop(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
     bool woke_up_for_buzzer = false;
 
-    // REMOVE THIS before shipping the accelerometer board: test beeps.
-    if (movement_state.settings.bit.button_should_sound && event.event_type == EVENT_ACCELEROMETER_WAKE) {
-        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C6, 20, WATCH_BUZZER_VOLUME_SOFT);
-    }
-    if (movement_state.settings.bit.button_should_sound && event.event_type == EVENT_ACCELEROMETER_SLEEP) {
-        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C5, 15, WATCH_BUZZER_VOLUME_SOFT);
-        watch_buzzer_play_note_with_volume(BUZZER_NOTE_REST, 10, WATCH_BUZZER_VOLUME_SOFT);
-        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C5, 15, WATCH_BUZZER_VOLUME_SOFT);
-    }
-
     if (movement_state.watch_face_changed) {
         if (movement_state.settings.bit.button_should_sound) {
             // low note for nonzero case, high note for return to watch_face 0
