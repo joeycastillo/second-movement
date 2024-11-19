@@ -27,12 +27,12 @@
 #include "activity_logging_face.h"
 #include "filesystem.h"
 #include "watch.h"
+#include "tc.h"
 
 #ifdef HAS_ACCELEROMETER
 
 // hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
-extern uint32_t orientation_changes;
 extern uint8_t stationary_minutes;
 
 static void _activity_logging_face_log_data(activity_logging_state_t *state) {
@@ -45,7 +45,7 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     data_point.bit.hour = date_time.unit.hour;
     data_point.bit.minute = date_time.unit.minute;
     data_point.bit.stationary_minutes = stationary_minutes;
-    data_point.bit.orientation_changes = orientation_changes;
+    data_point.bit.orientation_changes = tc_count16_get_count(2); // orientation changes are counted in TC2
     // print size of thing
     printf("Size of data point: %d\n", sizeof(activity_logging_data_point_t));
     if (filesystem_append_file("activity.dat", (char *)&data_point, sizeof(activity_logging_data_point_t))) {
@@ -57,7 +57,8 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     state->data[pos].reg = data_point.reg;
     state->data_points++;
 
-    orientation_changes = 0;
+    // reset the number of orientation changes.
+    tc_count16_set_count(2, 0);
 }
 
 static void _activity_logging_face_update_display(activity_logging_state_t *state, bool clock_mode_24h) {

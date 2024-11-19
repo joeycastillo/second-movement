@@ -77,8 +77,7 @@ void cb_tick(void);
 
 #ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void);
-void cb_accelerometer_sleep_change(void);
-uint32_t orientation_changes = 0;
+void cb_accelerometer_wake(void);
 uint8_t stationary_minutes = 0;
 #endif
 
@@ -657,14 +656,36 @@ void app_setup(void) {
             // set up interrupts:
             // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
             lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
+            HAL_GPIO_A3_in();
+            HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
+            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_RISING);
+            // but rather than hooking it up to an interrupt callback, we'll have it trigger an event.
+            eic_enable_event(HAL_GPIO_A3_pin());
 
-            // INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
-            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            // that event will increment a counter on TC2. So let's set that up:
+            if (!tc_is_enabled(2)) {
+                // TC2 clocked from GCLK3, the 1024 Hz clock. No further division.
+                tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
+            }
+            // COUNT16 mode, count up to 65535 orientation changes (we will reset before it overflows)
+            tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
+            // run in standby (we spend most of our time in standby)
+            tc_set_run_in_standby(2, true);
+            // finally set the event action to count up when an event is received.
+            tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
+            // enable TC2!
+            tc_enable(2);
+
+            // now configure the event system:
+            // on channel 0, route the INT3 event generator to the TC2 event user. Run in standby, on the asynchronous path.
+            evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
+            // this concludes the setup for orientation tracking.
+
+            // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
             // a falling edge on INT2 indicates the accelerometer has woken up.
-            // when configured via the extwake callback, we can only detect rising or falling edges, not both (as we could using the EIC).
-            // this line configures an extwake calling `cb_accelerometer_sleep_change` when the accelerometer wakes up.
-            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_sleep_change, false);
+            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            HAL_GPIO_A4_in();
+            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
 
             lis2dw_enable_interrupts();
         }
@@ -937,31 +958,23 @@ void cb_tick(void) {
 
 #ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void) {
+    // This callback is not currently in use! Tap tracking will require using an interrupt on A3 instead of an event.
+    // I imagine watch faces will request tap tracking in a specific context, and we'll expose a Movement function
+    // that swaps out the mode for as long as the watch face needs taps. (the sampling rate required for tap tracking
+    // will to consume a lot more power, so we can't leave it on all the time.)
     uint8_t int_src = lis2dw_get_interrupt_source();
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA) {
-        event.event_type = EVENT_ORIENTATION_CHANGE;
-        orientation_changes++;
-        printf("Orientation change\n");
-    }
 
-    // not currently listening for these:
     if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) event.event_type = EVENT_DOUBLE_TAP;
     if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) event.event_type = EVENT_SINGLE_TAP;
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_FF_IA) event.event_type = EVENT_FREE_FALL;
 }
 
-void cb_accelerometer_sleep_change(void) {
-    if (HAL_GPIO_A4_read()) {
-        event.event_type = EVENT_ACCELEROMETER_SLEEP;
-        printf("Sleep on INT2\n");
-    } else {
-        event.event_type = EVENT_ACCELEROMETER_WAKE;
-        // reset the stationary minutes counter; we're counting consecutive stationary minutes.
-        stationary_minutes = 0;
-        // also: wake up!
-        _movement_reset_inactivity_countdown();
-        printf("Wake on INT2\n");
-    }
+void cb_accelerometer_wake(void) {
+    printf("Woke up from accelerometer!\n");
+    event.event_type = EVENT_ACCELEROMETER_WAKE;
+    // reset the stationary minutes counter; we're counting consecutive stationary minutes.
+    stationary_minutes = 0;
+    // also: wake up!
+    _movement_reset_inactivity_countdown();
 }
 
 #endif

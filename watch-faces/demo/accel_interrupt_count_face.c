@@ -33,7 +33,6 @@
 
 // hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
-extern uint32_t orientation_changes;
 extern uint8_t stationary_minutes;
 
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
@@ -48,7 +47,8 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
     else watch_display_text(WATCH_POSITION_TOP_RIGHT, " A");
 
     // Orientation changes / active minutes
-    sprintf(buf, "%-3lu/%2d", orientation_changes > 999 ? 999 : orientation_changes, stationary_minutes);
+    uint16_t orientation_changes = tc_count16_get_count(2);
+    sprintf(buf, "%-3u/%2d", orientation_changes > 999 ? 999 : orientation_changes, stationary_minutes);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
