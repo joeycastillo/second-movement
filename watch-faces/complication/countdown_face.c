@@ -69,7 +69,7 @@ static void schedule_countdown(countdown_state_t *state) {
 
     // Calculate the new state->now_ts but don't update it until we've updated the target - 
     // avoid possible race where the old target is compared to the new time and immediately triggers
-    uint32_t new_now = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), movement_get_current_timezone_offset());
+    uint32_t new_now = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
     state->target_ts = watch_utility_offset_timestamp(new_now, state->hours, state->minutes, state->seconds);
     state->now_ts = new_now;
     watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, 0);
