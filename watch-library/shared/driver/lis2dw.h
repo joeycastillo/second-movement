@@ -232,7 +232,7 @@ typedef enum {
 #define LIS2DW_REG_INT1_DUR 0x33
 
 #define LIS2DW_REG_WAKE_UP_THS 0x34
-#define LIS2DW_WAKE_UP_THS_VAL_TAP_EVENT_ENABLED 0b10000000
+#define LIS2DW_WAKE_UP_THS_ENABLE_DOUBLE_TAP     0b10000000 // by default, only single tap is enabled
 #define LIS2DW_WAKE_UP_THS_VAL_SLEEP_ON          0b01000000
 
 #define LIS2DW_REG_WAKE_UP_DUR 0x35
