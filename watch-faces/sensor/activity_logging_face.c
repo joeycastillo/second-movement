@@ -28,6 +28,7 @@
 #include "filesystem.h"
 #include "watch.h"
 #include "tc.h"
+#include "thermistor_driver.h"
 
 #ifdef HAS_ACCELEROMETER
 
@@ -46,12 +47,24 @@ static void _activity_logging_face_log_data(activity_logging_state_t *state) {
     data_point.bit.minute = date_time.unit.minute;
     data_point.bit.stationary_minutes = stationary_minutes;
     data_point.bit.orientation_changes = tc_count16_get_count(2); // orientation changes are counted in TC2
-    // print size of thing
-    printf("Size of data point: %d\n", sizeof(activity_logging_data_point_t));
+
+    // write data point. WARNING: Crashes the system if out of space, freezing the time at the moment of the crash.
+    // In this exploratory phase, I'm treating this as a "feature" that tells me to dump the data and begin again.
     if (filesystem_append_file("activity.dat", (char *)&data_point, sizeof(activity_logging_data_point_t))) {
         printf("Data point written\n");
     } else {
         printf("Failed to write data point\n");
+    }
+
+    // test for off-wrist temperature stuff
+    thermistor_driver_enable();
+    float temperature_c = thermistor_driver_get_temperature();
+    thermistor_driver_disable();
+    uint16_t temperature = temperature_c * 1000;
+    if (filesystem_append_file("activity.dat", (char *)&temperature, sizeof(uint16_t))) {
+        printf("Temperature written: %d\n", temperature);
+    } else {
+        printf("Failed to write temperature\n");
     }
 
     state->data[pos].reg = data_point.reg;
