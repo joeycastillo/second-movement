@@ -43,9 +43,9 @@ INCLUDES += \
   -I./utz \
   -I./filesystem \
   -I./shell \
-  -I./movement/lib/sunriset \
-  -I./movement/lib/chirpy_tx \
-  -I./movement/lib/base64 \
+  -I./lib/sunriset \
+  -I./lib/chirpy_tx \
+  -I./lib/base64 \
   -I./watch-library/shared/watch \
   -I./watch-library/shared/driver \
   -I./watch-faces/clock \
@@ -64,9 +64,9 @@ SRCS += \
   ./utz/zones.c \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
-  ./movement/lib/sunriset/sunriset.c \
-  ./movement/lib/chirpy_tx/chirpy_tx.c \
-  ./movement/lib/base64/base64.c \
+  ./lib/sunriset/sunriset.c \
+  ./lib/chirpy_tx/chirpy_tx.c \
+  ./lib/base64/base64.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
