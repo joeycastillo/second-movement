@@ -253,6 +253,24 @@ void lis2dw_configure_6d_threshold(uint8_t threshold) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_TAP_THS_X, configuration | ((threshold & 0b11) << 5));
 }
 
+void lis2dw_configure_tap_threshold(uint8_t threshold_x, uint8_t threshold_y, uint8_t threshold_z, uint8_t axes_to_enable) {
+    uint8_t configuration;
+    // if (axes_to_enable & LIS2DW_REG_TAP_THS_Z_X_AXIS_ENABLE);   // X axis tap not implemented
+    // if (axes_to_enable & LIS2DW_REG_TAP_THS_Z_Y_AXIS_ENABLE);   // Y axis tap not implemented
+    // tap enable bitmask is the high bits of LIS2DW_REG_TAP_THS_Z
+    configuration = axes_to_enable & 0b00100000; // NOTE: should be 0b11100000 to allow use of all three axes, but we're not using X or Y.
+    if (axes_to_enable & LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE) {
+        // mask out high bits if set
+        configuration |= (threshold_z & 0b00011111);
+    }
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_TAP_THS_Z, configuration);
+}
+
+void lis2dw_configure_tap_duration(uint8_t latency, uint8_t quiet, uint8_t shock) {
+    uint8_t configuration = (latency << 4) | ((quiet & 0b11) << 2) | (shock & 0b11);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_INT1_DUR, configuration);
+}
+
 void lis2dw_configure_int1(uint8_t sources) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL4_INT1, sources);
 }

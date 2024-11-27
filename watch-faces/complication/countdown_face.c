@@ -32,6 +32,7 @@
 
 #define CD_SELECTIONS 3
 #define DEFAULT_MINUTES 3
+#define TAP_DETECTION_SECONDS 5
 
 static bool quick_ticks_running;
 
@@ -43,6 +44,11 @@ static void abort_quick_ticks(countdown_state_t *state) {
         else
             movement_request_tick_frequency(1);
     }
+}
+
+static void abort_tap_detection(countdown_state_t *state) {
+    state->tap_detection_ticks = 0;
+    movement_disable_tap_detection_if_available();
 }
 
 static inline void store_countdown(countdown_state_t *state) {
@@ -132,7 +138,14 @@ static void draw(countdown_state_t *state, uint8_t subsecond) {
             }
             break;
     }
+
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
+
+    if (state->tap_detection_ticks) {
+        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    }
 }
 
 static void pause(countdown_state_t *state) {
@@ -206,6 +219,13 @@ void countdown_face_activate(void *context) {
 
     movement_request_tick_frequency(1);
     quick_ticks_running = false;
+#if HAS_ACCELEROMETER
+    if (state->mode != cd_running) {
+        state->tap_detection_ticks = TAP_DETECTION_SECONDS;
+        state->has_tapped_once = false;
+        movement_enable_tap_detection_if_available();
+    }
+#endif
 }
 
 bool countdown_face_loop(movement_event_t event, void *context) {
@@ -227,6 +247,12 @@ bool countdown_face_loop(movement_event_t event, void *context) {
             if (state->mode == cd_running) {
                 state->now_ts++;
             }
+
+            if (state->tap_detection_ticks > 0) {
+                state->tap_detection_ticks--;
+                if (state->tap_detection_ticks == 0) movement_disable_tap_detection_if_available();
+            }
+
             draw(state, event.subsecond);
             break;
         case EVENT_MODE_BUTTON_UP:
@@ -264,8 +290,9 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                     break;
                 case cd_reset:
                 case cd_paused:
+                    // Only start the timer if we have a valid time.
                     if (!(state->hours == 0 && state->minutes == 0 && state->seconds == 0)) {
-                        // Only start the timer if we have a valid time.
+                        abort_tap_detection(state);
                         start(state);
                         button_beep();
                         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
@@ -281,6 +308,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
             switch(state->mode) {
                 case cd_reset:
                     // long press in reset mode enters settings
+                    abort_tap_detection(state);
                     state->mode = cd_setting;
                     movement_request_tick_frequency(4);
                     button_beep();
@@ -338,6 +366,21 @@ bool countdown_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             // intentionally squelch the light default event; we only show the light when cd is running or reset
             break;
+        case EVENT_SINGLE_TAP:
+            if (state->has_tapped_once == false) {
+                // on first tap, set the countdown to 1 minute
+                state->has_tapped_once = true;
+                state->hours = 0;
+                state->minutes = 1;
+                state->seconds = 0;
+            } else {
+                // on subsequent taps, increment the countdown by 1 minute, up to 59 taps
+                state->minutes = state->minutes < 59 ? state->minutes + 1 : state->minutes;
+            }
+            // reset the tap detection timer
+            state->tap_detection_ticks = TAP_DETECTION_SECONDS;
+            draw(state, event.subsecond);
+            break;
         default:
             movement_default_loop_handler(event);
             break;
@@ -353,4 +396,7 @@ void countdown_face_resign(void *context) {
         state->mode = cd_reset;
         store_countdown(state);
     }
+
+    // return accelerometer to the state it was in before
+    abort_tap_detection(state);
 }

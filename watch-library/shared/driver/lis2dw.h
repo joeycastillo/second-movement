@@ -227,8 +227,14 @@ typedef enum {
 #define LIS2DW_FIFO_SAMPLE_COUNT (0b00111111)
 
 #define LIS2DW_REG_TAP_THS_X 0x30
+
 #define LIS2DW_REG_TAP_THS_Y 0x31
+
 #define LIS2DW_REG_TAP_THS_Z 0x32
+#define LIS2DW_REG_TAP_THS_Z_X_AXIS_ENABLE 0b10000000
+#define LIS2DW_REG_TAP_THS_Z_Y_AXIS_ENABLE 0b01000000
+#define LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE 0b00100000
+
 #define LIS2DW_REG_INT1_DUR 0x33
 
 #define LIS2DW_REG_WAKE_UP_THS 0x34
@@ -352,6 +358,10 @@ void lis2dw_disable_tap_detection(void);
 void lis2dw_configure_wakeup_threshold(uint8_t threshold);
 
 void lis2dw_configure_6d_threshold(uint8_t threshold);
+
+void lis2dw_configure_tap_threshold(uint8_t threshold_x, uint8_t threshold_y, uint8_t threshold_z, uint8_t axes_to_enable);
+
+void lis2dw_configure_tap_duration(uint8_t latency, uint8_t quiet, uint8_t shock);
 
 void lis2dw_configure_int1(uint8_t sources);
 

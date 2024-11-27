@@ -519,6 +519,47 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.settings.bit.alarm_enabled = value;
 }
 
+void movement_enable_tap_detection_if_available(void) {
+#ifdef HAS_ACCELEROMETER
+    // disable event on INT1/A3 (normally tracks orientation changes)
+    eic_disable_event(HAL_GPIO_A3_pin());
+
+    // configure tap duration threshold and enable Z axis
+    lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
+    lis2dw_configure_tap_duration(10, 2, 2);
+
+    // ramp data rate up to 400 Hz and high performance mode
+    lis2dw_set_low_noise_mode(true);
+    lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
+    lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+
+    // Settling time (1 sample duration, i.e. 1/400Hz)
+    delay_ms(3);
+
+    // enable tap detection on INT1/A3.
+    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
+    // and enable the cb_accelerometer_event interrupt callback, so we can catch tap events.
+    watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
+#endif
+}
+
+void movement_disable_tap_detection_if_available(void) {
+#ifdef HAS_ACCELEROMETER
+    // Ramp data rate back down to the usual lowest rate to save power.
+    lis2dw_set_low_noise_mode(false);
+    lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
+    lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+    // disable the interrupt on INT1/A3...
+    eic_disable_interrupt(HAL_GPIO_A3_pin());
+    // ...disable Z axis (not sure if this is needed, does this save power?)...
+    lis2dw_configure_tap_threshold(0, 0, 0, 0);
+    // ...re-enable tracking of orientation changes...
+    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
+    // ...and re-enable the event.
+    eic_enable_event(HAL_GPIO_A3_pin());
+#endif
+}
+
 void app_init(void) {
     _watch_init();
 
@@ -958,18 +999,19 @@ void cb_tick(void) {
 
 #ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void) {
-    // This callback is not currently in use! Tap tracking will require using an interrupt on A3 instead of an event.
-    // I imagine watch faces will request tap tracking in a specific context, and we'll expose a Movement function
-    // that swaps out the mode for as long as the watch face needs taps. (the sampling rate required for tap tracking
-    // will to consume a lot more power, so we can't leave it on all the time.)
     uint8_t int_src = lis2dw_get_interrupt_source();
 
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) event.event_type = EVENT_DOUBLE_TAP;
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) event.event_type = EVENT_SINGLE_TAP;
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) {
+        event.event_type = EVENT_DOUBLE_TAP;
+        printf("Double tap!\n");
+    }
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) {
+        event.event_type = EVENT_SINGLE_TAP;
+        printf("Single tap!\n");
+    }
 }
 
 void cb_accelerometer_wake(void) {
-    printf("Woke up from accelerometer!\n");
     event.event_type = EVENT_ACCELEROMETER_WAKE;
     // reset the stationary minutes counter; we're counting consecutive stationary minutes.
     stationary_minutes = 0;

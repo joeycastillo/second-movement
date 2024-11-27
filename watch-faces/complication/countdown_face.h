@@ -61,6 +61,8 @@ typedef struct {
     uint8_t set_minutes;
     uint8_t set_seconds;
     uint8_t selection;
+    uint8_t tap_detection_ticks;
+    bool has_tapped_once;
     countdown_mode_t mode;
     bool repeat;
     uint8_t watch_face_index;
