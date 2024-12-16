@@ -18,5 +18,6 @@ SRCS += \
   ./watch-faces/settings/preferences_face.c \
   ./watch-faces/demo/light_sensor_face.c \
   ./watch-faces/demo/irda_demo_face.c \
+  ./watch-faces/demo/file_demo_face.c \
   ./watch-faces/io/chirpy_demo_face.c \
 # New watch faces go above this line.
