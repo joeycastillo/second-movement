@@ -8,7 +8,7 @@ BOARD=sensorwatch_pro
 DISPLAY=CLASSIC
 
 # Which sensor board?
-SENSOR=MOTION
+SENSOR=NONE
 
 # Support USB features?
 TINYUSB_CDC=1
