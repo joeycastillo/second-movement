@@ -59,7 +59,7 @@ void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_
         memset(*context_ptr, 0, sizeof(accel_interrupt_count_state_t));
         accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)*context_ptr;
         /// TODO: hook up to movement methods for tracking threshold
-        state->threshold = 1;
+        state->threshold = 8;
     }
 }
 

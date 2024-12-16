@@ -691,7 +691,7 @@ void app_setup(void) {
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(1);           // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
+            lis2dw_configure_wakeup_threshold(8);           // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
