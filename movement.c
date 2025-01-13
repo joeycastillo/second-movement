@@ -285,6 +285,10 @@ bool movement_default_loop_handler(movement_event_t event) {
                 movement_move_to_face(0);
             }
             break;
+        case EVENT_TIMEOUT:
+            movement_move_to_face(0);
+            break;
+
         default:
             break;
     }
