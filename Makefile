@@ -2,6 +2,10 @@
 GOSSAMER_PATH=gossamer
 
 # Which board are we building for?
+# Options are:
+# - sensorwatch_pro
+# - sensorwatch_green
+# - sensorwatch_red (also known as Sensor Watch Lite)
 BOARD=sensorwatch_pro
 
 # Which screen are we building for?
