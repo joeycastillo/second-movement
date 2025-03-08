@@ -174,4 +174,9 @@ uint32_t watch_utility_offset_timestamp(uint32_t now, int8_t hours, int8_t minut
  */
 uint8_t watch_utility_days_in_month(uint8_t month, uint16_t year);
 
+/** @brief Returns a null-terminated six-character string representing the time zone name at a given index.
+ * @param tzindex The index of the time zone
+ */
+char * watch_utility_time_zone_name_at_index(int32_t tzindex);
+
 #endif
