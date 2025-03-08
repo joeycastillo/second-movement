@@ -23,6 +23,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "watch_utility.h"
 #include "zones.h"
 
