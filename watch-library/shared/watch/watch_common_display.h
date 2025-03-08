@@ -53,7 +53,7 @@ static const uint8_t Custom_LCD_Character_Set[] =
     0b01100011, // # (degree symbol, hash mark doesn't fit)
     0b11101101, // $ (S with a downstroke)
     0b00000000, // % (unused)
-    0b00000000, // & (unused)
+    0b01000100, // & ("lowercase 7" for positions 4 and 6)
     0b00100000, // '
     0b00111001, // (
     0b00001111, // )
