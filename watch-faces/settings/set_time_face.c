@@ -140,7 +140,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             sprintf(buf, "%2d%02d  ", hours % 100, minutes % 100);
             watch_set_colon();
         } else {
-            sprintf(buf, "%s", (char *) (3 + zone_names + 11 * movement_get_timezone_index()));
+            sprintf(buf, "%s", (char *) (zone_names + 8 * movement_get_timezone_index()));
             watch_clear_colon();
         }
     } else if (current_page < 4) {

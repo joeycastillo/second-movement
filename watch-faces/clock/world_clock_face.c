@@ -169,7 +169,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
     sprintf(buf, "%c%c  %s",
         movement_valid_position_0_chars[state->settings.bit.char_0],
         movement_valid_position_1_chars[state->settings.bit.char_1],
-        (char *) (3 + zone_names + 11 * state->settings.bit.timezone_index));
+        (char *) (zone_names + 8 * state->settings.bit.timezone_index));
     watch_clear_indicator(WATCH_INDICATOR_PM);
 
     // blink up the parameter we're setting
