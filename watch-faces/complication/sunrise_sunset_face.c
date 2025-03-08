@@ -88,8 +88,11 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
             watch_clear_colon();
             watch_clear_indicator(WATCH_INDICATOR_PM);
             watch_clear_indicator(WATCH_INDICATOR_24H);
-            sprintf(buf, "%s%2d none ", (result == 1) ? "SE" : "rI", scratch_time.unit.day);
-            watch_display_text(WATCH_POSITION_FULL, buf);
+            if (result == 1) watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SET", "SE");
+            else watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIS", "rI");
+            sprintf(buf, "%2d", scratch_time.unit.day);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+            watch_display_text(WATCH_POSITION_BOTTOM, "None  ");
             return;
         }
 
@@ -118,8 +121,11 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                     if (watch_utility_convert_to_12_hour(&scratch_time)) watch_set_indicator(WATCH_INDICATOR_PM);
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }
-                sprintf(buf, "rI%2d%2d%02d%s", scratch_time.unit.day, scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
-                watch_display_text(WATCH_POSITION_FULL, buf);
+                watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIS", "rI");
+                sprintf(buf, "%2d", scratch_time.unit.day);
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                sprintf(buf, "%2d%02d%s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
                 show_next_match = true;
@@ -145,8 +151,11 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                     if (watch_utility_convert_to_12_hour(&scratch_time)) watch_set_indicator(WATCH_INDICATOR_PM);
                     else watch_clear_indicator(WATCH_INDICATOR_PM);
                 }
-                sprintf(buf, "SE%2d%2d%02d%s", scratch_time.unit.day, scratch_time.unit.hour, scratch_time.unit.minute, longLatPresets[state->longLatToUse].name);
-                watch_display_text(WATCH_POSITION_FULL, buf);
+                watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SET", "SE");
+                sprintf(buf, "%2d", scratch_time.unit.day);
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+                sprintf(buf, "%2d%02d%s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
                 show_next_match = true;
@@ -205,20 +214,24 @@ static void _sunrise_sunset_face_update_location_register(sunrise_sunset_state_t
 static void _sunrise_sunset_face_update_settings_display(movement_event_t event, sunrise_sunset_state_t *state) {
     char buf[12];
 
+    watch_clear_display();
+
     switch (state->page) {
         case 0:
             return;
         case 1:
-            sprintf(buf, "LA  %c %04d", state->working_latitude.sign ? '-' : '+', abs(_sunrise_sunset_face_latlon_from_struct(state->working_latitude)));
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LAT", "LA");
+            sprintf(buf, "%c %04d", state->working_latitude.sign ? '-' : '+', abs(_sunrise_sunset_face_latlon_from_struct(state->working_latitude)));
+            if (event.subsecond % 2) buf[state->active_digit] = ' ';
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
-        case 2:
-            sprintf(buf, "LO  %c%05d", state->working_longitude.sign ? '-' : '+', abs(_sunrise_sunset_face_latlon_from_struct(state->working_longitude)));
+            case 2:
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LON", "LO");
+            sprintf(buf, "%c%05d", state->working_longitude.sign ? '-' : '+', abs(_sunrise_sunset_face_latlon_from_struct(state->working_longitude)));
+            if (event.subsecond % 2) buf[state->active_digit] = ' ';
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
     }
-    if (event.subsecond % 2) {
-        buf[state->active_digit + 4] = ' ';
-    }
-    watch_display_text(WATCH_POSITION_FULL, buf);
 }
 
 static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {

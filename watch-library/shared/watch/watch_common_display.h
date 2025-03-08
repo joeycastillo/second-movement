@@ -97,7 +97,7 @@ static const uint8_t Custom_LCD_Character_Set[] =
     0b00111111, // O
     0b01110011, // P
     0b01100111, // Q
-    0b01010000, // R (lowercase, this is the only capital we can't do)
+    0b11000111, // R
     0b01101101, // S
     0b10000001, // T (only works in position 0; set (1, 12) to make it work in position 1)
     0b00111110, // U

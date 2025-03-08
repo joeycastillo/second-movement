@@ -33,7 +33,7 @@ uint32_t IndicatorSegments[7] = {0};
 
 void watch_display_character(uint8_t character, uint8_t position) {
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-        if (character == 'R') character = 'r'; // We can't display uppercase R on this display.
+        if (character == 'R' && position > 1 && position < 8) character = 'r'; // We can't display uppercase R in these positions
         else if (character == 'T' && position > 1 && position < 8) character = 't'; // lowercase t is the only option for these positions
     } else {
         // special cases for positions 4 and 6
