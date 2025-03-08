@@ -53,6 +53,8 @@ void watch_discover_lcd_type(void) {
     int difference;
     uint8_t valid_frames_classic = 0;
     uint8_t valid_frames_custom = 0;
+
+    /// TODO: Test this at lower battery levels. Do the thresholds hold up?
     const uint16_t lo_threshold = 12000;
     const uint16_t hi_threshold = 32000;
 
