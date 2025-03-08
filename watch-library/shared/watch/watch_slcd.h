@@ -74,6 +74,25 @@ typedef enum {
     WATCH_POSITION_SECONDS,     ///< Display 2 characters in the seconds portion of the main line.
 } watch_position_t;
 
+/// an enum describing the possible LCD types
+typedef enum {
+    WATCH_LCD_TYPE_UNKNOWN  = 0, ///< Value at boot: unknown LCD
+    WATCH_LCD_TYPE_CLASSIC  = 0b10101001, ///< The original famous F-91W LCD
+    WATCH_LCD_TYPE_CUSTOM   = 0b01010110, ///< The custom Oddly Specific LCD
+} watch_lcd_type_t;
+
+/** @brief Determines the type of LCD being used by the watch.
+  * @return 0 for the original F-91W LCD, or 1 for the new custom LCD.
+  */
+ void watch_discover_lcd_type(void);
+
+/**
+  * @brief Gets the type of LCD being used by the watch.
+  * @return The type of LCD in use, or WATCH_LCD_TYPE_UNKNOWN if the display is unknown.
+  *         The display type will be unknown if the watch is plugged into USB.
+  */
+ watch_lcd_type_t watch_get_lcd_type(void);
+
 /** @brief Enables the Segment LCD display.
   * Call this before attempting to set pixels or display strings.
   */

@@ -33,14 +33,15 @@ void all_segments_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 }
 
 void all_segments_face_activate(void *context) {
-#ifdef USE_CUSTOM_LCD
-    uint8_t num_com = 4;
-#else
+    (void) context;
+    watch_lcd_type_t lcd_type = watch_get_lcd_type();
     uint8_t num_com = 3;
-#endif
     uint8_t num_seg = 27 - num_com;
 
-    (void) context;
+    if (lcd_type == WATCH_LCD_TYPE_CUSTOM) {
+        num_com = 4;
+    }
+
     for (int com = 0; com < num_com; com++) {
         for (int seg = 0; seg < num_seg; seg++) {
             watch_set_pixel(com, seg);

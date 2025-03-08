@@ -46,11 +46,8 @@ static const uint8_t _blink_idx2[ALARM_SETTING_STATES] = {3, 1, 5, 7, 8, 9};
 static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE_C8, BUZZER_NOTE_A8};
 
 // Volume is indicated by the three segments 5D, 5G and 5A
-#ifdef USE_CUSTOM_LCD
-static const uint8_t _buzzer_segdata[3][2] = {{1, 5}, {2, 5}, {3, 10}};
-#else
-static const uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
-#endif
+// This mapping is for classic LCD; if custom LCD is in use, we change it in the setup function.
+static uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
 
 static int8_t _wait_ticks;
 
@@ -222,6 +219,15 @@ void advanced_alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
         }
         state->alarm_handled_minute = -1;
         _wait_ticks = -1;
+
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+            _buzzer_segdata[0][0] = 1;
+            _buzzer_segdata[0][1] = 5;
+            _buzzer_segdata[1][0] = 2;
+            _buzzer_segdata[1][1] = 5;
+            _buzzer_segdata[2][0] = 3;
+            _buzzer_segdata[2][1] = 10;
+        }
     }
 }
 

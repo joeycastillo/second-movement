@@ -4,8 +4,9 @@ GOSSAMER_PATH=gossamer
 # Which board are we building for?
 BOARD=sensorwatch_pro
 
-# Which screen are we building for?
-DISPLAY=CLASSIC
+# Sensor Watch will detect the display, unless you are debugging over USB.
+# If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
+# FORCE_DISPLAY_TYPE=CUSTOM
 
 # Which sensor board?
 SENSOR=NONE

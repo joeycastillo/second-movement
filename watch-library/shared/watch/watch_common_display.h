@@ -42,11 +42,10 @@ typedef union digit_mapping_t {
     uint64_t value;
 } digit_mapping_t;
 
-#ifdef USE_CUSTOM_LCD
 // Custom extended LCD
 
 // Character set is slightly different since we don't have to work around as much stuff.
-static const uint8_t Watch_Character_Set[] =
+static const uint8_t Custom_LCD_Character_Set[] =
 {
     0b00000000, // [space]
     0b00000000, // ! (unused)
@@ -145,7 +144,7 @@ static const uint8_t Watch_Character_Set[] =
     0b00000001, // ~
 };
 
-static const digit_mapping_t Watch_Display_Mapping[] = {
+static const digit_mapping_t Custom_LCD_Display_Mapping[] = {
     {
         .segment = {
             { .address = { .com = 0, .seg = 19 } }, // 0A
@@ -281,10 +280,8 @@ static const digit_mapping_t Watch_Display_Mapping[] = {
     },
 };
 
-#else
-
 // Original famous Casio LCD
-static const uint8_t Watch_Character_Set[] =
+static const uint8_t Classic_LCD_Character_Set[] =
 {
     0b00000000, // [space]
     0b01100000, // ! (L in the top half for positions 4 and 6)
@@ -383,7 +380,7 @@ static const uint8_t Watch_Character_Set[] =
     0b00000001, // ~
 };
 
-static const digit_mapping_t Watch_Display_Mapping[] = {
+static const digit_mapping_t Classic_LCD_Display_Mapping[] = {
     // Positions 0 and 1 are the Weekday or Mode digits
     {
         .segment = {
@@ -508,7 +505,8 @@ static const digit_mapping_t Watch_Display_Mapping[] = {
         },
     },
 };
-#endif
 
 void watch_display_character(uint8_t character, uint8_t position);
 void watch_display_character_lp_seconds(uint8_t character, uint8_t position);
+
+void _watch_update_indicator_segments(void);
