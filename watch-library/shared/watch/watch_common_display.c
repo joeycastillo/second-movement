@@ -29,7 +29,17 @@
 #include <stdlib.h>
 #include <math.h>
 
-uint32_t IndicatorSegments[7] = {0};
+uint32_t IndicatorSegments[7] = {
+    SLCD_SEGID(0, 17), // WATCH_INDICATOR_SIGNAL
+    SLCD_SEGID(0, 16), // WATCH_INDICATOR_BELL
+    SLCD_SEGID(2, 17), // WATCH_INDICATOR_PM
+    SLCD_SEGID(2, 16), // WATCH_INDICATOR_24H
+    SLCD_SEGID(1, 10), // WATCH_INDICATOR_LAP
+
+    // Aliases for indicators unavailable on the original F-91W LCD
+    SLCD_SEGID(1, 10), // WATCH_INDICATOR_BATTERY (same as LAP)
+    SLCD_SEGID(4, 0)   // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
+};
 
 void watch_display_character(uint8_t character, uint8_t position) {
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
@@ -376,14 +386,5 @@ void _watch_update_indicator_segments(void) {
         IndicatorSegments[4] = SLCD_SEGID(1,  0); // WATCH_INDICATOR_LAP
         IndicatorSegments[5] = SLCD_SEGID(2,  0); // WATCH_INDICATOR_BATTERY
         IndicatorSegments[6] = SLCD_SEGID(3,  0); // WATCH_INDICATOR_SLEEP
-    } else {
-        IndicatorSegments[0] = SLCD_SEGID(0, 17); // WATCH_INDICATOR_SIGNAL
-        IndicatorSegments[1] = SLCD_SEGID(0, 16); // WATCH_INDICATOR_BELL
-        IndicatorSegments[2] = SLCD_SEGID(2, 17); // WATCH_INDICATOR_PM
-        IndicatorSegments[3] = SLCD_SEGID(2, 16); // WATCH_INDICATOR_24H
-        IndicatorSegments[4] = SLCD_SEGID(1, 10); // WATCH_INDICATOR_LAP
-        // Aliases for indicators unavailable on the original F-91W LCD
-        IndicatorSegments[5] = SLCD_SEGID(1, 10); // WATCH_INDICATOR_BATTERY (same as LAP)
-        IndicatorSegments[6] = SLCD_SEGID(4, 0);  // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
     }
 }
