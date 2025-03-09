@@ -37,6 +37,10 @@ static long blink_interval_id = - 1;
 static bool tick_state;
 static long tick_interval_id = -1;
 
+watch_lcd_type_t watch_get_lcd_type(void) {
+    return WATCH_LCD_TYPE_CLASSIC;
+}
+
 void watch_enable_display(void) {
     watch_clear_display();
 }
