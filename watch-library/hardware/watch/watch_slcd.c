@@ -22,6 +22,9 @@
  * SOFTWARE.
  */
 
+#include <stdlib.h>
+#include "delay.h"
+#include "usb.h"
 #include "pins.h"
 #include "watch_slcd.h"
 #include "watch_common_display.h"
