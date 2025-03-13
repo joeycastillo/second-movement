@@ -40,8 +40,8 @@
 
 typedef struct {
     uint8_t sign: 1;    // 0-1
-    uint8_t hundreds: 1;    // 0-1, ignored for latitude
-    uint8_t tens: 4;        // 0-9 (must wrap at 10)
+    uint8_t hundreds: 5;    // 0-1, ignored for latitude
+    uint8_t tens: 5;        // 0-18 (wraps at 10 on clasic LCD, 18 on custom LCD)
     uint8_t ones: 4;        // 0-9 (must wrap at 10)
     uint8_t tenths: 4;      // 0-9 (must wrap at 10)
     uint8_t hundredths: 4;  // 0-9 (must wrap at 10)
