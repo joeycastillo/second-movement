@@ -43,6 +43,8 @@
 #include "lis2dw.h"
 #include "tc.h"
 #include "evsys.h"
+#include "delay.h"
+#include "movement_activity.h"
 
 #include "movement_config.h"
 
@@ -169,6 +171,10 @@ static void _movement_handle_top_of_minute(void) {
             printf("Entering low energy mode due to inactivity.\n");
             movement_request_sleep();
         }
+    }
+
+    if ((date_time.unit.minute % 5) == 0) {
+        _movement_log_data();
     }
 #endif
 

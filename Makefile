@@ -135,6 +135,7 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
+  ./movement_activity.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk

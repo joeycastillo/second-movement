@@ -27,56 +27,24 @@
 #include "activity_logging_face.h"
 #include "filesystem.h"
 #include "watch.h"
-#include "tc.h"
-#include "thermistor_driver.h"
+#include "movement_activity.h"
+#include "watch_utility.h"
 
 #ifdef HAS_ACCELEROMETER
 
-// hacky: we're just tapping into Movement's global state.
-// we should make better API for this.
-extern uint8_t stationary_minutes;
-
-static void _activity_logging_face_log_data(activity_logging_state_t *state) {
-    watch_date_time_t date_time = movement_get_local_date_time();
-    size_t pos = state->data_points % ACTIVITY_LOGGING_NUM_DATA_POINTS;
-    activity_logging_data_point_t data_point = {0};    
-
-    data_point.bit.day = date_time.unit.day;
-    data_point.bit.month = date_time.unit.month;
-    data_point.bit.hour = date_time.unit.hour;
-    data_point.bit.minute = date_time.unit.minute;
-    data_point.bit.stationary_minutes = stationary_minutes;
-    data_point.bit.orientation_changes = tc_count16_get_count(2); // orientation changes are counted in TC2
-
-    // write data point. WARNING: Crashes the system if out of space, freezing the time at the moment of the crash.
-    // In this exploratory phase, I'm treating this as a "feature" that tells me to dump the data and begin again.
-    if (filesystem_append_file("activity.dat", (char *)&data_point, sizeof(activity_logging_data_point_t))) {
-        printf("Data point written\n");
-    } else {
-        printf("Failed to write data point\n");
-    }
-
-    // test for off-wrist temperature stuff
-    thermistor_driver_enable();
-    float temperature_c = thermistor_driver_get_temperature();
-    thermistor_driver_disable();
-    uint16_t temperature = temperature_c * 1000;
-    if (filesystem_append_file("activity.dat", (char *)&temperature, sizeof(uint16_t))) {
-        printf("Temperature written: %d\n", temperature);
-    } else {
-        printf("Failed to write temperature\n");
-    }
-
-    state->data[pos].reg = data_point.reg;
-    state->data_points++;
-
-    // reset the number of orientation changes.
-    tc_count16_set_count(2, 0);
-}
-
 static void _activity_logging_face_update_display(activity_logging_state_t *state, bool clock_mode_24h) {
-    int8_t pos = (state->data_points - 1 - state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
     char buf[8];
+    uint32_t count = 0;
+    movement_activity_data_point *data_points = movement_get_data_log(&count);
+    int8_t pos = (count - 1 - state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
+    watch_date_time_t timestamp = movement_get_local_date_time();
+
+    // round to previous 5 minute increment
+    timestamp.unit.minute = timestamp.unit.minute - (timestamp.unit.minute % 5);
+    // advance backward by 5 minutes for each increment of state->display_index
+    uint32_t unix_timestamp = watch_utility_date_time_to_unix_time(timestamp, movement_get_current_timezone_offset());
+    unix_timestamp -= 300 * state->display_index;
+    timestamp = watch_utility_date_time_from_unix_time(unix_timestamp, movement_get_current_timezone_offset());
 
     watch_clear_indicator(WATCH_INDICATOR_24H);
     watch_clear_indicator(WATCH_INDICATOR_PM);
@@ -94,21 +62,21 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
         if (clock_mode_24h) {
             watch_set_indicator(WATCH_INDICATOR_24H);
         } else {
-            if (state->data[pos].bit.hour > 11) watch_set_indicator(WATCH_INDICATOR_PM);
-            state->data[pos].bit.hour %= 12;
-            if (state->data[pos].bit.hour == 0) state->data[pos].bit.hour = 12;
+            if (timestamp.unit.hour > 11) watch_set_indicator(WATCH_INDICATOR_PM);
+            timestamp.unit.hour %= 12;
+            if (timestamp.unit.hour == 0) timestamp.unit.hour = 12;
         }
         watch_display_text(WATCH_POSITION_TOP_LEFT, "AT");
-        sprintf(buf, "%2d", state->data[pos].bit.day);
+        sprintf(buf, "%2d", timestamp.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%2d%02d%02d", state->data[pos].bit.hour, state->data[pos].bit.minute, 0);
+        sprintf(buf, "%2d%02d%02d", timestamp.unit.hour, timestamp.unit.minute, 0);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else {
         // we are displaying the number of accelerometer wakeups and orientation changes
         watch_display_text(WATCH_POSITION_TOP, "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%-3u/%2d", state->data[pos].bit.orientation_changes > 999 ? 999 : state->data[pos].bit.orientation_changes, state->data[pos].bit.stationary_minutes);
+        sprintf(buf, "%-3u/%2d", data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes, data_points[pos].bit.stationary_minutes);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
 }
@@ -118,10 +86,6 @@ void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) 
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(activity_logging_state_t));
         memset(*context_ptr, 0, sizeof(activity_logging_state_t));
-        // create file if it doesn't exist
-        if (!filesystem_file_exists("activity.dat")) {
-            filesystem_write_file("activity.dat", "", 0);
-        }
     }
 }
 
@@ -157,9 +121,6 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
                 _activity_logging_face_update_display(state, movement_clock_mode_24h());
             }
             break;
-        case EVENT_BACKGROUND_TASK:
-            _activity_logging_face_log_data(state);
-            break;
         default:
             movement_default_loop_handler(event);
             break;
@@ -170,16 +131,6 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
 
 void activity_logging_face_resign(void *context) {
     (void) context;
-}
-
-movement_watch_face_advisory_t activity_logging_face_advise(void *context) {
-    (void) context;
-    movement_watch_face_advisory_t retval = { 0 };
-
-    // log data every 5 minutes
-    retval.wants_background_task = (movement_get_local_date_time().unit.minute % 5) == 0;
-
-    return retval;
 }
 
 #endif

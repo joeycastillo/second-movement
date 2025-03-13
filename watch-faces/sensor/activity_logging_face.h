@@ -41,23 +41,9 @@
 
 #define ACTIVITY_LOGGING_NUM_DATA_POINTS (36)
 
-typedef union {
-    struct {
-        uint32_t day: 5;
-        uint32_t month: 4;
-        uint32_t hour: 5;
-        uint32_t minute: 6;
-        uint32_t stationary_minutes: 3;
-        uint32_t orientation_changes: 9;
-    } bit;
-    uint32_t reg;
-} activity_logging_data_point_t;
-
 typedef struct {
     uint8_t display_index;  // the index we are displaying on screen
     uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
-    int32_t data_points;    // the absolute number of data points logged
-    activity_logging_data_point_t data[ACTIVITY_LOGGING_NUM_DATA_POINTS];
 } activity_logging_state_t;
 
 void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -71,7 +57,7 @@ movement_watch_face_advisory_t activity_logging_face_advise(void *context);
     activity_logging_face_activate, \
     activity_logging_face_loop, \
     activity_logging_face_resign, \
-    activity_logging_face_advise, \
+    NULL, \
 })
 
 #endif // HAS_TEMPERATURE_SENSOR
