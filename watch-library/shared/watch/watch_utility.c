@@ -334,7 +334,7 @@ uint8_t watch_utility_days_in_month(uint8_t month, uint16_t year) {
 char _scratch_timezone[7] = {0};
 
 char *watch_utility_time_zone_name_at_index(int32_t tzindex) {
-    char *zone_in_rom = (zone_names + 8 * tzindex);
+    char *zone_in_rom = ((char *)zone_names + 8 * tzindex);
 
     if (watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM) {
         // classic LCD can get a pointer to ROM
