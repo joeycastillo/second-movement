@@ -233,16 +233,6 @@ void lis2dw_disable_stationary_motion_detection(void) {
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_DUR, configuration & ~LIS2DW_WAKE_UP_DUR_STATIONARY);
 }
 
-void lis2dw_enable_double_tap_event(void) {
-    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | LIS2DW_WAKE_UP_THS_ENABLE_DOUBLE_TAP);
-}
-
-void lis2dw_disable_double_tap_event(void) {
-    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
-    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration & ~LIS2DW_WAKE_UP_THS_ENABLE_DOUBLE_TAP);
-}
-
 void lis2dw_configure_wakeup_threshold(uint8_t threshold) {
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS) & 0b11000000;
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | threshold);
@@ -254,6 +244,8 @@ void lis2dw_configure_6d_threshold(uint8_t threshold) {
 }
 
 void lis2dw_configure_tap_threshold(uint8_t threshold_x, uint8_t threshold_y, uint8_t threshold_z, uint8_t axes_to_enable) {
+    (void) threshold_x;
+    (void) threshold_y;
     uint8_t configuration;
     // if (axes_to_enable & LIS2DW_REG_TAP_THS_Z_X_AXIS_ENABLE);   // X axis tap not implemented
     // if (axes_to_enable & LIS2DW_REG_TAP_THS_Z_Y_AXIS_ENABLE);   // Y axis tap not implemented
