@@ -672,6 +672,9 @@ void app_setup(void) {
         watch_rtc_register_alarm_callback(cb_alarm_fired, alarm_time, ALARM_MATCH_SS);
     }
 
+    // LCD autodetect uses the buttons as a a failsafe, so we should run it before we enable the button interrupts
+    watch_enable_display();
+
     if (movement_state.le_mode_ticks != -1) {
         watch_disable_extwake_interrupt(HAL_GPIO_BTN_ALARM_pin());
 
@@ -740,7 +743,6 @@ void app_setup(void) {
 
         watch_enable_buzzer();
         watch_enable_leds();
-        watch_enable_display();
 
         movement_request_tick_frequency(1);
 
