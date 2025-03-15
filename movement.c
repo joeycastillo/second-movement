@@ -574,8 +574,8 @@ void app_init(void) {
 
     watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.reg == 0) {
-        // at first boot, set year to 2024
-        date_time.unit.year = 2024 - WATCH_RTC_REFERENCE_YEAR;
+        // at first boot, set year to 2025
+        date_time.unit.year = 2025 - WATCH_RTC_REFERENCE_YEAR;
         date_time.unit.month = 1;
         date_time.unit.day = 1;
         watch_rtc_set_date_time(date_time);
