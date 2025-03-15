@@ -128,6 +128,10 @@ watch_lcd_type_t watch_get_lcd_type(void) {
 }
 
 void watch_enable_display(void) {
+    // No need to do anything if the display is already enabled.
+    /// TODO: Wrap this in a gossamer call.
+    if (SLCD->CTRLA.bit.ENABLE) return;
+
     watch_discover_lcd_type();
 
     HAL_GPIO_SLCD0_pmuxen(HAL_GPIO_PMUX_B);
