@@ -50,8 +50,9 @@
 
 typedef union {
     struct {
-        uint8_t char_0;
-        uint8_t char_1;
+        char char_0;
+        char char_1;
+        char char_2;
         uint8_t timezone_index;
     } bit;
     uint32_t reg;
@@ -59,7 +60,7 @@ typedef union {
 
 typedef struct {
     world_clock_settings_t settings;
-    uint8_t backup_register;
+    uint8_t clock_index;
     uint8_t current_screen;
     uint32_t previous_date_time;
     int32_t current_offset;

@@ -218,7 +218,8 @@ void watch_display_text(watch_position_t location, const char *string) {
             watch_display_string(string, 0);
             #pragma GCC diagnostic pop
             if (watch_get_lcd_type()  == WATCH_LCD_TYPE_CUSTOM) {
-                watch_display_character(' ', 10);
+                if (strlen(string) >= 11) watch_display_character(string[10], 10);
+                else watch_display_character(' ', 10);
             }
     }
 }
