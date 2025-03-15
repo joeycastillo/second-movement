@@ -27,14 +27,14 @@
 #include "watch.h"
 
 const char preferences_face_titles[PREFERENCES_PAGE_NUM_PREFERENCES][11] = {
-    "CL        ",   // Clock: 12 or 24 hour
-    "BT   beep ",   // Mode button: how loud should it beep?
-    "TO        ",   // Timeout: how long before we snap back to the clock face?
-    "LE        ",   // Low Energy mode: how long before it engages?
-    "LT        ",   // Light: duration
-    "LT   red  ",   // Light: red component
-    "LT   green",   // Light: green component
-    "LT   blue ",   // Light: blue component (for watches with blue LED)
+    "CL        K",   // Clock: 12 or 24 hour
+    "BT   beep N",   // Mode button: how loud should it beep?
+    "TO        U",   // Timeout: how long before we snap back to the clock face?
+    "LE        M",   // Low Energy mode: how long before it engages?
+    "LT        D",   // Light: duration
+    "LT   red  C",   // Light: red component
+    "LT   greenC",   // Light: green component
+    "LT   blue C",   // Light: blue component (for watches with blue LED)
 };
 
 void preferences_face_setup(uint8_t watch_face_index, void ** context_ptr) {
