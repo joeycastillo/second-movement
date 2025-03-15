@@ -66,6 +66,7 @@ typedef struct {
 // display, time zones, buzzer behavior, LED color and low energy mode timeouts.
 typedef union {
     struct {
+        uint8_t version : 2;                // A version number for the struct. 0-3; let's try not to update too often.
         bool button_should_sound : 1;       // if true, pressing a button emits a sound.
         uint8_t to_interval : 2;            // an inactivity interval for asking the active face to resign.
         uint8_t le_interval : 3;            // 0 to disable low energy mode, or an inactivity interval for going into low energy mode.
@@ -81,10 +82,9 @@ typedef union {
         // altimeter to display feet or meters as easily as it tells a thermometer to display degrees in F or C.
         bool clock_mode_24h : 1;            // indicates whether clock should use 12 or 24 hour mode.
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
-
-        /// TODO: for #SecondMovement: move alarm_enabled out of preferences
-        bool alarm_enabled : 1;             // indicates whether there is at least one alarm enabled.
-        uint8_t reserved : 2;               // room for more preferences if needed.
+        
+        // That's 31 bits, leaving room for one more toggle if needed.
+        uint8_t reserved : 1;
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -260,7 +260,6 @@ typedef struct {
 } watch_face_t;
 
 typedef struct {
-    // properties stored in BACKUP register
     movement_settings_t settings;
 
     // transient properties
@@ -301,6 +300,9 @@ typedef struct {
 
     // backup register stuff
     uint8_t next_available_backup_register;
+
+    // temporary alarm enabled boolean, until we implement this in advisories
+    bool alarm_enabled;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);

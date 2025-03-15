@@ -514,15 +514,19 @@ void movement_set_backlight_dwell(uint8_t value) {
 }
 
 void movement_store_settings(void) {
-    watch_store_backup_data(movement_state.settings.reg, 0);
+    movement_settings_t old_settings;
+    filesystem_read_file("settings.u32", (char *)&old_settings, sizeof(movement_settings_t));
+    if (movement_state.settings.reg != old_settings.reg) {
+        filesystem_write_file("settings.u32", (char *)&movement_state.settings, sizeof(movement_settings_t));
+    }
 }
 
 bool movement_alarm_enabled(void) {
-    return movement_state.settings.bit.alarm_enabled;
+    return movement_state.alarm_enabled;
 }
 
 void movement_set_alarm_enabled(bool value) {
-    movement_state.settings.bit.alarm_enabled = value;
+    movement_state.alarm_enabled = value;
 }
 
 void movement_enable_tap_detection_if_available(void) {
@@ -569,6 +573,8 @@ void movement_disable_tap_detection_if_available(void) {
 void app_init(void) {
     _watch_init();
 
+    filesystem_init();
+
     watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.reg == 0) {
         // at first boot, set year to 2024
@@ -597,41 +603,52 @@ void app_init(void) {
 
     memset(&movement_state, 0, sizeof(movement_state));
 
-    movement_state.settings.bit.clock_mode_24h = MOVEMENT_DEFAULT_24H_MODE;
-    movement_state.settings.bit.time_zone = UTZ_UTC;
-    movement_state.settings.bit.led_red_color = MOVEMENT_DEFAULT_RED_COLOR;
-    movement_state.settings.bit.led_green_color = MOVEMENT_DEFAULT_GREEN_COLOR;
-#if defined(WATCH_BLUE_TCC_CHANNEL) && !defined(WATCH_GREEN_TCC_CHANNEL)
-    // If there is a blue LED but no green LED, this is a blue Special Edition board.
-    // In the past, the "green color" showed up as the blue color on the blue board.
-    if (MOVEMENT_DEFAULT_RED_COLOR == 0 && MOVEMENT_DEFAULT_BLUE_COLOR == 0) {
-        // If the red color is 0 and the blue color is 0, we'll fall back to the old
-        // behavior, since otherwise there would be no default LED color.
-        movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_GREEN_COLOR;
-    } else {
-        // however if either the red or blue color is nonzero, we'll assume the user
-        // has used the new defaults and knows what color they want. this could be red
-        // if blue is 0, or a custom color if both are nonzero.
-        movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
+    bool settings_file_exists = filesystem_file_exists("settings.u32");
+    movement_settings_t maybe_settings;
+    if (settings_file_exists && maybe_settings.bit.version == 0) {
+        filesystem_read_file("settings.u32", (char *) &maybe_settings, sizeof(movement_settings_t));
     }
-#else
-    movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
-#endif
-    movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
-    movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
-    movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
-    movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
 
+    if (settings_file_exists && maybe_settings.bit.version == 0) {
+        // If settings file exists and has a valid version, restore it!
+        movement_state.settings.reg = maybe_settings.reg;
+    } else {
+        // Otherwise set default values.
+        movement_state.settings.bit.version = 0;
+        movement_state.settings.bit.clock_mode_24h = MOVEMENT_DEFAULT_24H_MODE;
+        movement_state.settings.bit.time_zone = UTZ_UTC;
+        movement_state.settings.bit.led_red_color = MOVEMENT_DEFAULT_RED_COLOR;
+        movement_state.settings.bit.led_green_color = MOVEMENT_DEFAULT_GREEN_COLOR;
+    #if defined(WATCH_BLUE_TCC_CHANNEL) && !defined(WATCH_GREEN_TCC_CHANNEL)
+        // If there is a blue LED but no green LED, this is a blue Special Edition board.
+        // In the past, the "green color" showed up as the blue color on the blue board.
+        if (MOVEMENT_DEFAULT_RED_COLOR == 0 && MOVEMENT_DEFAULT_BLUE_COLOR == 0) {
+            // If the red color is 0 and the blue color is 0, we'll fall back to the old
+            // behavior, since otherwise there would be no default LED color.
+            movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_GREEN_COLOR;
+        } else {
+            // however if either the red or blue color is nonzero, we'll assume the user
+            // has used the new defaults and knows what color they want. this could be red
+            // if blue is 0, or a custom color if both are nonzero.
+            movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
+        }
+    #else
+        movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
+    #endif
+        movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
+        movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
+        movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
+        movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
+
+        movement_store_settings();
+    }
     movement_state.light_ticks = -1;
     movement_state.alarm_ticks = -1;
-    movement_state.next_available_backup_register = 4;
+    movement_state.next_available_backup_register = 2;
     _movement_reset_inactivity_countdown();
-
-    filesystem_init();
 }
 
 void app_wake_from_backup(void) {
-    /// TODO: #SecondMovement needs to restore settings from file system.
 }
 
 void app_setup(void) {
