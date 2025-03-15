@@ -4,6 +4,7 @@ SRCS += \
   ./watch-faces/clock/world_clock_face.c \
   ./watch-faces/complication/advanced_alarm_face.c \
   ./watch-faces/complication/countdown_face.c \
+  ./watch-faces/complication/stopwatch_face.c \
   ./watch-faces/complication/fast_stopwatch_face.c \
   ./watch-faces/complication/sunrise_sunset_face.c \
   ./watch-faces/demo/accel_interrupt_count_face.c \

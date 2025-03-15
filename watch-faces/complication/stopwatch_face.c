@@ -55,24 +55,25 @@ static void _stopwatch_face_update_display(stopwatch_state_t *stopwatch_state, b
         // display maxes out just shy of 40 days, thanks to the limit on the day digits (0-39)
         stopwatch_state->running = false;
         movement_cancel_background_task();
-        watch_display_string("st39235959", 0);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "39");
+        watch_display_text(WATCH_POSITION_BOTTOM, "235959");
         return;
     }
 
     watch_duration_t duration = watch_utility_seconds_to_duration(stopwatch_state->seconds_counted);
     char buf[14];
 
-    sprintf(buf, "st  %02d%02d  ", duration.hours, duration.minutes);
-    watch_display_string(buf, 0);
+    sprintf(buf, "%02d%02d  ", duration.hours, duration.minutes);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
     if (duration.days != 0) {
         sprintf(buf, "%2d", (uint8_t)duration.days);
-        watch_display_string(buf, 2);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     }
 
     if (show_seconds) {
         sprintf(buf, "%02d", duration.seconds);
-        watch_display_string(buf, 8);
+        watch_display_text(WATCH_POSITION_SECONDS, buf);
     }
 }
 
@@ -97,10 +98,12 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             watch_set_colon();
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "STW", "ST");
             // fall through
         case EVENT_TICK:
             if (stopwatch_state->start_time.reg == 0) {
-                watch_display_string("st  000000", 0);
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
             } else {
                 _stopwatch_face_update_display(stopwatch_state, true);
             }
@@ -110,7 +113,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             if (!stopwatch_state->running) {
                 stopwatch_state->start_time.reg = 0;
                 stopwatch_state->seconds_counted = 0;
-                watch_display_string("st  000000", 0);
+                watch_display_text(WATCH_POSITION_BOTTOM, "000000");
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -148,7 +151,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                 // since the tick animation is running, displaying the stopped time could be misleading,
                 // as it could imply that the stopwatch is running. instead, show a blank display to
                 // indicate that we are in sleep mode.
-                watch_display_string("st  ----  ", 0);
+                watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
             } else {
                 // this OTOH shouldn't happen anymore; if we're running, we shouldn't enter low energy mode
                 _stopwatch_face_update_display(stopwatch_state, false);
