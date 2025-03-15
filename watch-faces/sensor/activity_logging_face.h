@@ -39,7 +39,7 @@
 #include "movement.h"
 #include "watch.h"
 
-#define ACTIVITY_LOGGING_NUM_DATA_POINTS (36)
+#define ACTIVITY_LOGGING_NUM_DATA_POINTS (100)
 
 typedef struct {
     uint8_t display_index;  // the index we are displaying on screen
