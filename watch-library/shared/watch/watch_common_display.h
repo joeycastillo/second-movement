@@ -48,7 +48,7 @@ typedef union digit_mapping_t {
 static const uint8_t Custom_LCD_Character_Set[] =
 {
     0b00000000, // [space]
-    0b00000000, // ! (unused)
+    0b00111100, // ! L with an extra C segment (use !J to make a W)
     0b00100010, // "
     0b01100011, // # (degree symbol, hash mark doesn't fit)
     0b11101101, // $ (S with a downstroke)
@@ -89,7 +89,7 @@ static const uint8_t Custom_LCD_Character_Set[] =
     0b00111101, // G
     0b01110110, // H
     0b10001001, // I (only works in position 0)
-    0b00001110, // J
+    0b00011110, // J
     0b01110101, // K
     0b00111000, // L
     0b10110111, // M (only works in position 0)
@@ -103,7 +103,7 @@ static const uint8_t Custom_LCD_Character_Set[] =
     0b00111110, // U
     0b00111110, // V
     0b10111110, // W (only works in position 0)
-    0b01111110, // X
+    0b11110110, // X
     0b01101110, // Y
     0b00011011, // Z
     0b00111001, // [
