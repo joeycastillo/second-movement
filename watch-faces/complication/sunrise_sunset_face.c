@@ -32,6 +32,7 @@
 #include "watch.h"
 #include "watch_utility.h"
 #include "watch_common_display.h"
+#include "filesystem.h"
 #include "sunriset.h"
 
 #if __EMSCRIPTEN__
@@ -39,6 +40,23 @@
 #endif
 
 static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
+
+static void persist_location_to_filesystem(movement_location_t new_location) {
+    movement_location_t maybe_location = {0};
+
+    filesystem_read_file("location.u32", (char *) &maybe_location.reg, sizeof(movement_location_t));
+    if (new_location.reg != maybe_location.reg) {
+        filesystem_write_file("location.u32", (char *) &new_location.reg, sizeof(movement_location_t));
+    }
+}
+
+static movement_location_t load_location_from_filesystem() {
+    movement_location_t location = {0};
+
+    filesystem_read_file("location.u32", (char *) &location.reg, sizeof(movement_location_t));
+
+    return location;
+}
 
 static void _sunrise_sunset_set_expiration(sunrise_sunset_state_t *state, watch_date_time_t next_rise_set) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(next_rise_set, 0);
@@ -51,7 +69,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     bool show_next_match = false;
     movement_location_t movement_location;
     if (state->longLatToUse == 0 || _location_count <= 1)
-        movement_location = (movement_location_t) watch_get_backup_data(1);
+        movement_location = load_location_from_filesystem();
     else{
         movement_location.bit.latitude = longLatPresets[state->longLatToUse].latitude;
         movement_location.bit.longitude = longLatPresets[state->longLatToUse].longitude;
@@ -207,7 +225,7 @@ static void _sunrise_sunset_face_update_location_register(sunrise_sunset_state_t
         int16_t lon = _sunrise_sunset_face_latlon_from_struct(state->working_longitude);
         movement_location.bit.latitude = lat;
         movement_location.bit.longitude = lon;
-        watch_store_backup_data(movement_location.reg, 1);
+        persist_location_to_filesystem(movement_location);
         state->location_changed = false;
     }
 }
@@ -432,7 +450,7 @@ void sunrise_sunset_face_activate(void *context) {
 
 
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
-    movement_location_t movement_location = (movement_location_t) watch_get_backup_data(1);
+    movement_location_t movement_location = load_location_from_filesystem();
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
 }
@@ -527,7 +545,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
-            if (watch_get_backup_data(1) == 0) {
+            if (load_location_from_filesystem().reg == 0) {
                 // if no location set, return home
                 movement_move_to_face(0);
             } else if (state->page || state->rise_index) {
