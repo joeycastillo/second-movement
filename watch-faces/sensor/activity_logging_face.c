@@ -36,7 +36,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
     char buf[8];
     uint32_t count = 0;
     movement_activity_data_point *data_points = movement_get_data_log(&count);
-    int8_t pos = (count - 1 - state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
+    int32_t pos = ((int32_t)count - 1 - (int32_t)state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
     watch_date_time_t timestamp = movement_get_local_date_time();
 
     // round to previous 5 minute increment
@@ -52,7 +52,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
 
     if (pos < 0) {
         // no data at this index
-        watch_display_text_with_fallback(WATCH_POSITION_TOP, "ACT L", "AC");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "AC");
         watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
@@ -66,14 +66,14 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
             timestamp.unit.hour %= 12;
             if (timestamp.unit.hour == 0) timestamp.unit.hour = 12;
         }
-        watch_display_text(WATCH_POSITION_TOP_LEFT, "AT");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "T*D", "AT");
         sprintf(buf, "%2d", timestamp.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         sprintf(buf, "%2d%02d%02d", timestamp.unit.hour, timestamp.unit.minute, 0);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else {
         // we are displaying the number of accelerometer wakeups and orientation changes
-        watch_display_text(WATCH_POSITION_TOP, "AC");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         sprintf(buf, "%-3u/%2d", data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes, data_points[pos].bit.stationary_minutes);
