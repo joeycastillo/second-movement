@@ -67,6 +67,7 @@ INCLUDES += \
 
 # Add your source files here.
 SRCS += \
+  ./dummy.c \
   ./littlefs/lfs.c \
   ./littlefs/lfs_util.c \
   ./filesystem/filesystem.c \
