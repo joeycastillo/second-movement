@@ -121,7 +121,7 @@ void irq_handler_tc1(void) {
 
 static inline void _button_beep() {
     // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
 }
 
 /// @brief Display minutes, seconds and fractions derived from 128 Hz tick counter
