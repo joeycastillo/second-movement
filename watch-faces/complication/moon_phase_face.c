@@ -107,6 +107,7 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
             break;
         case 4:
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "FULL  ", " FULL ");
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
                 watch_set_pixel(2, 13);
                 watch_set_pixel(2, 15);
