@@ -36,7 +36,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
     char buf[8];
     uint32_t count = 0;
     movement_activity_data_point *data_points = movement_get_data_log(&count);
-    int32_t pos = ((int32_t)count - 1 - (int32_t)state->display_index) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
+    int32_t pos = ((int32_t)count - 1 - (int32_t)state->display_index) % MOVEMENT_NUM_DATA_POINTS;
     watch_date_time_t timestamp = movement_get_local_date_time();
 
     // round to previous 5 minute increment
