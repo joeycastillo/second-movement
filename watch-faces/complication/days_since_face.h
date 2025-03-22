@@ -22,11 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef DAY_ONE_FACE_H_
-#define DAY_ONE_FACE_H_
+#pragma once
 
 /*
- * DAY ONE face
+ * DAYS SINCE face (previously Day One)
  *
  * This watch face displays the number of days since or until a given date.
  * It was originally designed to display the number of days you’ve been alive,
@@ -55,29 +54,39 @@ typedef enum {
     PAGE_MONTH,
     PAGE_DAY,
     PAGE_DATE
-} day_one_page_t;
+} days_since_page_t;
+
+typedef union {
+    struct {
+        uint16_t year : 12;  // good through the year 4095
+        uint8_t month : 4;
+        uint8_t day : 5;
+        uint8_t hour : 5;
+        uint8_t minute : 6;
+    } bit;
+    uint32_t reg;
+} days_since_date_t;
 
 typedef struct {
-    day_one_page_t current_page;
-    uint16_t birth_year;
-    uint8_t birth_month;
-    uint8_t birth_day;
+    days_since_page_t current_page;
+    uint8_t face_index;
+    uint16_t working_year;
+    uint8_t working_month;
+    uint8_t working_day;
     bool birthday_changed;
     bool quick_cycle;
     uint8_t ticks;
-} day_one_state_t;
+} days_since_state_t;
 
-void day_one_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void day_one_face_activate(void *context);
-bool day_one_face_loop(movement_event_t event, void *context);
-void day_one_face_resign(void *context);
+void days_since_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void days_since_face_activate(void *context);
+bool days_since_face_loop(movement_event_t event, void *context);
+void days_since_face_resign(void *context);
 
-#define day_one_face ((const watch_face_t){ \
-    day_one_face_setup, \
-    day_one_face_activate, \
-    day_one_face_loop, \
-    day_one_face_resign, \
+#define days_since_face ((const watch_face_t){ \
+    days_since_face_setup, \
+    days_since_face_activate, \
+    days_since_face_loop, \
+    days_since_face_resign, \
     NULL, \
 })
-
-#endif // DAY_ONE_FACE_H_

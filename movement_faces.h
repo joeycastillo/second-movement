@@ -33,6 +33,7 @@
 #include "fast_stopwatch_face.h"
 #include "sunrise_sunset_face.h"
 #include "moon_phase_face.h"
+#include "days_since_face.h"
 #include "character_set_face.h"
 #include "accel_interrupt_count_face.h"
 #include "all_segments_face.h"

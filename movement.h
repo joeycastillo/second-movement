@@ -100,21 +100,6 @@ typedef union {
     uint32_t reg;
 } movement_location_t;
 
-// movement_birthdate_t is for storing the user's birth date. This will be useful for calculating the user's age — or
-// hey, playing happy birthday at midnight? Fields for birth time (with hour and minute resolution) are also available,
-// partly because they fit so nicely, but also because they can be useful for certain astrological calculations.
-// If you create a UI for birth date or need to access it, look for it in the RTC's BKUP[2] register.
-typedef union {
-    struct {
-        uint16_t year : 12;  // good through the year 4095
-        uint8_t month : 4;
-        uint8_t day : 5;
-        uint8_t hour : 5;
-        uint8_t minute : 6;
-    } bit;
-    uint32_t reg;
-} movement_birthdate_t;
-
 // movement_reserved_t is a placeholder for future use of the BKUP[3] register.
 typedef union {
     struct {
