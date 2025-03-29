@@ -308,7 +308,13 @@ void watch_start_sleep_animation(uint32_t duration) {
 
 bool watch_sleep_animation_is_running(void) {
     // TODO: wrap this in gossamer call
-    return SLCD->CTRLD.bit.CSREN;
+    if (_installed_display == WATCH_LCD_TYPE_CUSTOM) {
+        // COM3, SEG0 contains the half moon icon
+        return SLCD->SDATAL3.bit.SDATA & 1;
+    } else {
+        // CSREN indicates that the tick/tick animation is running
+        return SLCD->CTRLD.bit.CSREN;
+    }
 }
 
 void watch_stop_sleep_animation(void) {
