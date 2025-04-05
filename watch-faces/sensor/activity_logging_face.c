@@ -93,13 +93,14 @@ void activity_logging_face_activate(void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     state->display_index = 0;
     state->ts_ticks = 0;
+    state->data_dump_idx = -1;
 }
 
 bool activity_logging_face_loop(movement_event_t event, void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     switch (event.event_type) {
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            if (state->data_dump_idx == -1) movement_move_to_face(0);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             // light button shows the timestamp, but if you need the light, long press it.
@@ -116,9 +117,42 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             _activity_logging_face_update_display(state, movement_clock_mode_24h());
             break;
+        case EVENT_ALARM_LONG_PRESS:
+            state->data_dump_idx = 0;
+            /// FIXME: Battery indicator is now Arrows indicator.
+            watch_set_indicator(WATCH_INDICATOR_BATTERY);
+            movement_request_tick_frequency(4);
+            watch_set_decimal_if_available();
+            // fall through
         case EVENT_TICK:
             if (state->ts_ticks && --state->ts_ticks == 0) {
                 _activity_logging_face_update_display(state, movement_clock_mode_24h());
+            }
+            if (state->data_dump_idx != -1) {
+                // dance through the full buffer
+                char buf[8];
+                uint32_t count = 0;
+                movement_activity_data_point *data_points = movement_get_data_log(&count);
+                int32_t pos = ((int32_t)count - 1 - (int32_t)state->data_dump_idx) % MOVEMENT_NUM_DATA_POINTS;
+
+                sprintf(buf, "%03d ", state->data_dump_idx);
+                watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf + 2);
+                sprintf(buf, "%3d%3d", data_points[pos].bit.measured_temperature - 300, data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes);
+                buf[6] = 0;
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
+                sprintf(buf, "%2d", data_points[pos].bit.stationary_minutes);
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+
+                state->data_dump_idx++;
+                if (state->data_dump_idx >= MOVEMENT_NUM_DATA_POINTS) {
+                    state->data_dump_idx = -1;
+                    /// FIXME: Battery indicator is now Arrows indicator.
+                    watch_clear_indicator(WATCH_INDICATOR_BATTERY);
+                    watch_clear_decimal_if_available();
+                    movement_request_tick_frequency(1);
+                    state->display_index = 0;
+                    _activity_logging_face_update_display(state, movement_clock_mode_24h());
+                }
             }
             break;
         default:

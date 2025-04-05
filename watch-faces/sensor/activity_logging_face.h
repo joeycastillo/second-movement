@@ -32,8 +32,25 @@
  * ACTIVITY LOGGING
  *
  * This watch face works with Movement's built-in count of accelerometer
- * waekeups to log activity over time. It is very much a work in progress,
- * and these notes will expand as the functionality is fleshed out.
+ * waekeups to log activity over time.
+ *
+ * Default behavior is to show the last 100 data points. Format is:
+ *  - Top left is display title (LOG or AC for Activity)
+ *  - Top right is index backwards in the data log.
+ *  - Bottom left is the number of orientation changes in the five minutes logged.
+ *  - Bottom right is number of stationary minutes (0 to 5)
+ *
+ * A short press of the Light button reveals the time (bottom row) and date (top right) of the data point.
+ * The display will update to say "AT" the time and date, or "T+D" on custom LCD.
+ *
+ * A short press of the Alarm button moves backwards in the data log.
+ *
+ * A long press of the Alarm button initiates a rapid dump of the full activity log buffer. Works best on custom LCD:
+ *  - Top left is the index backwards in the data log.
+ *  - Top right is the number of stationary minutes (0 to 5)
+ *  - Bottom row should be viewed as two three digit numbers:
+ *    - Positions 0, 1 and 2 contain the number of orientation changes in the five minutes logged.
+ *    - Positions 3, 4 and 5 contain the temperature (256 = 25.6 degrees C)
  */
 
 #include "movement.h"
@@ -44,6 +61,7 @@
 typedef struct {
     uint8_t display_index;  // the index we are displaying on screen
     uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
+    int16_t data_dump_idx;  // for dumping the full activity log on long press of Alarm
 } activity_logging_state_t;
 
 void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
