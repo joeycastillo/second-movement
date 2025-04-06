@@ -6,6 +6,7 @@ GOSSAMER_PATH=gossamer
 # - sensorwatch_pro
 # - sensorwatch_green
 # - sensorwatch_red (also known as Sensor Watch Lite)
+# - sensorwatch_blue
 BOARD=sensorwatch_pro
 
 # Sensor Watch will detect the display, unless you are debugging over USB.
