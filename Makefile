@@ -10,10 +10,10 @@ BOARD=sensorwatch_pro
 
 # Sensor Watch will detect the display, unless you are debugging over USB.
 # If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
-# FORCE_DISPLAY_TYPE=CUSTOM
+FORCE_DISPLAY_TYPE=CUSTOM
 
 # Which sensor board?
-SENSOR=NONE
+SENSOR=MOTION
 
 # Support USB features?
 TINYUSB_CDC=1
