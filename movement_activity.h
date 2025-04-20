@@ -33,7 +33,7 @@
 
 typedef union {
     struct {
-        uint32_t stationary_minutes: 3;
+        uint32_t active_minutes: 3;
         uint32_t orientation_changes: 9;
         uint32_t measured_temperature: 10;
         uint32_t measured_light: 10;

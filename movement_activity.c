@@ -34,16 +34,16 @@ movement_activity_data_point movement_activity_log[MOVEMENT_NUM_DATA_POINTS] = {
 // the absolute number of data points logged
 uint32_t data_points = 0;
 
-// hacky: we're just tapping into Movement's global state for stationary detection.
+// hacky: we're just tapping into Movement's global state for activity detection.
 // do we need better API for this? i'm less bothered now that it's all in Movement.
-extern uint8_t stationary_minutes;
+extern uint8_t active_minutes;
 
 void _movement_log_data(void) {
     size_t pos = data_points % MOVEMENT_NUM_DATA_POINTS;
     movement_activity_data_point data_point = {0};
 
-    // Movement tracks stationary minutes when deciding whether to sleep.
-    data_point.bit.stationary_minutes = stationary_minutes;
+    // Movement tracks active minutes when deciding whether to sleep.
+    data_point.bit.active_minutes = active_minutes;
 
     // orientation changes are counted in TC2. stash them in the data point...
     data_point.bit.orientation_changes = tc_count16_get_count(2);

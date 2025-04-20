@@ -288,3 +288,7 @@ lis2dw_wakeup_source_t lis2dw_get_wakeup_source() {
 lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void) {
     return (lis2dw_interrupt_source_t) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_ALL_INT_SRC);
 }
+
+uint8_t lis2dw_get_wakeup_threshold(void) {
+    return watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS) & 0b00111111;
+}

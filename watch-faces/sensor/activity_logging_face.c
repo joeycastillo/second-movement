@@ -76,7 +76,7 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "AC");
         sprintf(buf, "%2d", state->display_index);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%-3u/%2d", data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes, data_points[pos].bit.stationary_minutes);
+        sprintf(buf, "%-3u/%2d", data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes, data_points[pos].bit.active_minutes);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
 }
@@ -140,7 +140,7 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
                 sprintf(buf, "%3d%3d", data_points[pos].bit.measured_temperature - 300, data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes);
                 buf[6] = 0;
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
-                sprintf(buf, "%2d", data_points[pos].bit.stationary_minutes);
+                sprintf(buf, "%2d", data_points[pos].bit.active_minutes);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 
                 state->data_dump_idx++;

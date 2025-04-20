@@ -129,6 +129,8 @@ static void _watch_disable_all_pins_except_rtc(void) {
     uint32_t config = RTC->MODE0.TAMPCTRL.reg;
     uint32_t portb_pins_to_disable = 0xFFFFFFFF;
 
+    /// FIXME: Watch library shouldn't be responsible for this, but ovement uses PB03 for orientation tracking. Keep it on.
+    portb_pins_to_disable &= 0xFFFFFFF7;
     // if there's an action set on RTC/IN[0], leave PB00 configured
     if (config & RTC_TAMPCTRL_IN0ACT_Msk) portb_pins_to_disable &= 0xFFFFFFFE;
     // same with RTC/IN[1] and PB02
@@ -150,7 +152,10 @@ static void _watch_disable_all_pins_except_rtc(void) {
 static void _watch_disable_all_peripherals_except_slcd(void) {
     _watch_disable_tcc();
     watch_disable_adc();
-    watch_disable_external_interrupts();
+    /// FIXME: I just disabled this next line since we need the EIC's event system connection to count orientation changes.
+    // The TODO item: need to power profile the impact of keeping EIC enabled, as well as the UI implications.
+    // watch_disable_external_interrupts();
+
     /// TODO: Actually disable all these peripherals! #SecondMovement
     // watch_disable_i2c();
     // SERCOM3->USART.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;

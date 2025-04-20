@@ -33,7 +33,7 @@
 
 // hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
-extern uint8_t stationary_minutes;
+extern uint8_t active_minutes;
 
 static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
     (void) state;
@@ -48,7 +48,7 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
 
     // Orientation changes / active minutes
     uint16_t orientation_changes = tc_count16_get_count(2);
-    sprintf(buf, "%-3u/%2d", orientation_changes > 999 ? 999 : orientation_changes, stationary_minutes);
+    sprintf(buf, "%-3u/%2d", orientation_changes > 999 ? 999 : orientation_changes, active_minutes);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
@@ -57,9 +57,6 @@ void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(accel_interrupt_count_state_t));
         memset(*context_ptr, 0, sizeof(accel_interrupt_count_state_t));
-        accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)*context_ptr;
-        /// TODO: hook up to movement methods for tracking threshold
-        state->threshold = 8;
     }
 }
 
@@ -71,6 +68,9 @@ void accel_interrupt_count_face_activate(void *context) {
 
     // update more quickly to catch changes, also to blink setting
     movement_request_tick_frequency(4);
+
+    // fetch current threshold from accelerometer
+    state->threshold = lis2dw_get_wakeup_threshold();
 }
 
 bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
@@ -88,7 +88,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
                         watch_display_text(WATCH_POSITION_BOTTOM, "      ");
                     } else {
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-                        watch_display_text_with_fallback(WATCH_POSITION_TOP, "W_THS", "TH");
+                        watch_display_text_with_fallback(WATCH_POSITION_TOP, "WAKth", "TH");
                         watch_display_float_with_best_effort(state->new_threshold * 0.03125, " G");
                         printf("%s\n", buf);
                     }

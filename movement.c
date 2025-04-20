@@ -78,6 +78,7 @@ void cb_tick(void);
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
 uint8_t stationary_minutes = 0;
+uint8_t active_minutes = 0;
 #endif
 
 #if __EMSCRIPTEN__
@@ -155,23 +156,30 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
+    static const uint8_t stationary_minutes_for_sleep = 2;
 
 #ifdef HAS_ACCELEROMETER
-    if (stationary_minutes < 5) {
-        // if the watch has been stationary for fewer than 5 minutes, find out if it's still stationary.
-        if (HAL_GPIO_A4_read()) stationary_minutes++;
+    bool accelerometer_is_alseep = HAL_GPIO_A4_read();
+    if (!accelerometer_is_alseep) active_minutes++;
+    printf("Active minutes: %d\n", active_minutes);
+
+    if (stationary_minutes < 2) {
+        // if the watch has been stationary for fewer minutes than the cutoff, find out if it's still stationary.
+        if (accelerometer_is_alseep) stationary_minutes++;
         printf("Stationary minutes: %d\n", stationary_minutes);
 
-        // does this mark five stationary minutes? and are we not already asleep?
-        if (stationary_minutes == 5 && movement_state.le_mode_ticks != -1) {
+        // should we go to sleep? and are we not already asleep?
+        if (stationary_minutes >= stationary_minutes_for_sleep && movement_state.le_mode_ticks != -1) {
             // if so, enter low energy mode.
             printf("Entering low energy mode due to inactivity.\n");
             movement_request_sleep();
         }
     }
 
+    // log data every five minutes, and reset the active_minutes count.
     if ((date_time.unit.minute % 5) == 0) {
         _movement_log_data();
+        active_minutes = 0;
     }
 #endif
 
@@ -718,7 +726,7 @@ void app_setup(void) {
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(8);           // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
+            lis2dw_configure_wakeup_threshold(32);          // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
