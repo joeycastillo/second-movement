@@ -274,7 +274,9 @@ void _movement_log_data(void) {
     // midnight stuff:
     watch_date_time_t datetime = movement_get_local_date_time();
     if (datetime.unit.hour == 0 && datetime.unit.minute == 0) {
+        watch_enable_adc();
         midnight_voltage = watch_get_vcc_voltage();
+        watch_disable_adc();
         if (low_energy_minutes > 1440) low_energy_minutes = 1440;
         midnight_le_ratio = low_energy_minutes / 96;
         low_energy_minutes = 0;
