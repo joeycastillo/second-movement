@@ -100,8 +100,8 @@ void _movement_store_daily_info(void) {
     int8_t wake_minute = -1;
     int16_t sleep_duration = -1;
     int16_t maximum_temperature = -1;
-    int16_t worn_minutes = -1;
-    int16_t active_minutes = -1;
+    int16_t worn_minutes = 0;
+    int16_t active_minutes = 0;
 
     bool is_likely_worn = false;
 
@@ -169,9 +169,10 @@ void _movement_store_daily_info(void) {
         }
         if (i > 216) {
             // after 6:00 PM, start looking for sleep time
-            if (!is_likely_worn) continue;
-
             if (candidate_sleep_index == -1) {
+                // unless the watch is off-wrist
+                if (!is_likely_worn) continue;
+
                 // we don't yet have a likely bedtime
                 if (data.bit.orientation_changes < 10) {
                     // but if the orientation changes fell below 10, we may be asleep
@@ -199,15 +200,16 @@ void _movement_store_daily_info(void) {
             }
             if (candidate_sleep_index != -1 && candidate_wake_index == -1) {
                 // we are asleep, and we don't yet have a likely wake time.
-                if (data.bit.orientation_changes < 10) {
-                    sleep_duration += 5;
-                } else {
-                    // but if the orientation changes went above 10, we might!
+                if (data.bit.orientation_changes >= 10 || !is_likely_worn) {
+                    // but we might, if the orientation changes went above 10, or the wearer took off the watch.
                     candidate_wake_index = i;
+                } else {
+                    // otherwise add five minutes to sleep duration, less any truly agitated minutes.
+                    sleep_duration += 5 - data.bit.active_minutes;
                 }
             } else if (wake_hour == -1) {
                 // we have a candidate wake time, but haven't determined if the wearer is awake. look at the next 30 minutes to see if we can establish that.
-                if (data.bit.orientation_changes < 10) intervals_not_matching_expectation++;
+                if (data.bit.orientation_changes < 10 || is_likely_worn) intervals_not_matching_expectation++;
 
                 // regardless of whether we got to 30 minutes, if the wearer was dead to the world in two intervals after the candidate wake time, they fell back asleep.
                 if (intervals_not_matching_expectation > 2) {
@@ -227,11 +229,11 @@ void _movement_store_daily_info(void) {
     }
 
     movement_data_log_entry_t entry = {
-        .bit.sleep_time.hour = sleep_hour,
-        .bit.sleep_time.minute = sleep_minute,
-        .bit.wake_time.hour = wake_hour,
-        .bit.wake_time.minute = wake_minute,
-        .bit.sleep_duration = sleep_duration,
+        .bit.sleep_time.hour = sleep_hour == -1 ? 0x1F : sleep_hour,
+        .bit.sleep_time.minute = sleep_minute == -1 ? 0xF : sleep_minute,
+        .bit.wake_time.hour = wake_hour == -1 ? 0x1F : wake_hour,
+        .bit.wake_time.minute = wake_minute == -1 ? 0xF : wake_minute,
+        .bit.sleep_duration = sleep_duration == -1 ? 0x3FF : sleep_duration,
         .bit.worn_unworn_ratio = worn_minutes / 96,
         .bit.maximum_temperature = maximum_temperature,
         .bit.active_minutes = active_minutes,
