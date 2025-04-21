@@ -41,6 +41,32 @@ typedef union {
     uint32_t reg;
 } movement_activity_data_point;
 
+typedef union {
+    struct {
+        // SLEEP TRACKING
+        struct {
+            uint64_t hour: 5;   // local hour, 0-23
+            uint64_t minute: 4; // nearest five minutes, 0-12
+        } sleep_time;
+        struct {
+            uint64_t hour: 5;   // local hour, 0-23
+            uint64_t minute: 4; // nearest five minutes, 0-12
+        } wake_time;
+        uint64_t sleep_duration: 10; // minutes
+        uint64_t worn_unworn_ratio: 4;
+        uint64_t maximum_temperature: 10;
+
+        // ACTIVITY TRACKING
+        uint64_t active_minutes: 10;
+
+        // SYSTEM HEALTH
+        uint64_t battery_voltage: 8;
+        uint64_t le_wake_ratio: 4;
+    } bit;
+    uint32_t reg;
+} movement_data_log_entry_t;
+
+
 /// @brief Internal function, called every 5 minutes to log data.
 void _movement_log_data(void);
 

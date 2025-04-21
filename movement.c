@@ -81,6 +81,8 @@ uint8_t stationary_minutes = 0;
 uint8_t active_minutes = 0;
 #endif
 
+uint16_t low_energy_minutes = 0;
+
 #if __EMSCRIPTEN__
 void yield(void) {
 }
@@ -156,9 +158,9 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
-    static const uint8_t stationary_minutes_for_sleep = 2;
 
 #ifdef HAS_ACCELEROMETER
+    static const uint8_t stationary_minutes_for_sleep = 2;
     bool accelerometer_is_alseep = HAL_GPIO_A4_read();
     if (!accelerometer_is_alseep) active_minutes++;
     printf("Active minutes: %d\n", active_minutes);
@@ -182,6 +184,11 @@ static void _movement_handle_top_of_minute(void) {
         active_minutes = 0;
     }
 #endif
+
+    // if we are in low energy mode, increment the number of low energy mode minutes
+    if (movement_state.le_mode_ticks == -1) {
+        low_energy_minutes++;
+    }
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
