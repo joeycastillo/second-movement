@@ -77,7 +77,6 @@ void cb_tick(void);
 #ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
-uint8_t stationary_minutes = 0;
 uint8_t active_minutes = 0;
 #endif
 
@@ -156,25 +155,11 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
-    static const uint8_t stationary_minutes_for_sleep = 2;
 
 #ifdef HAS_ACCELEROMETER
     bool accelerometer_is_alseep = HAL_GPIO_A4_read();
     if (!accelerometer_is_alseep) active_minutes++;
     printf("Active minutes: %d\n", active_minutes);
-
-    if (stationary_minutes < 2) {
-        // if the watch has been stationary for fewer minutes than the cutoff, find out if it's still stationary.
-        if (accelerometer_is_alseep) stationary_minutes++;
-        printf("Stationary minutes: %d\n", stationary_minutes);
-
-        // should we go to sleep? and are we not already asleep?
-        if (stationary_minutes >= stationary_minutes_for_sleep && movement_state.le_mode_ticks != -1) {
-            // if so, enter low energy mode.
-            printf("Entering low energy mode due to inactivity.\n");
-            movement_request_sleep();
-        }
-    }
 
     // log data every five minutes, and reset the active_minutes count.
     if ((date_time.unit.minute % 5) == 0) {
@@ -1047,8 +1032,6 @@ void cb_accelerometer_event(void) {
 
 void cb_accelerometer_wake(void) {
     event.event_type = EVENT_ACCELEROMETER_WAKE;
-    // reset the stationary minutes counter; we're counting consecutive stationary minutes.
-    stationary_minutes = 0;
     // also: wake up!
     _movement_reset_inactivity_countdown();
 }
