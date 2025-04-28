@@ -746,7 +746,10 @@ void app_setup(void) {
             // a falling edge on INT2 indicates the accelerometer has woken up.
             lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
             HAL_GPIO_A4_in();
-            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+
+            // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
+            // Still if you want to wake on motion, you can do it by uncommenting this line:
+            // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
 
             lis2dw_enable_interrupts();
         }
