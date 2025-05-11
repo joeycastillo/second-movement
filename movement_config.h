@@ -38,7 +38,7 @@ const watch_face_t watch_faces[] = {
     voltage_face,
     days_since_face,
     accel_interrupt_count_face,
-    preferences_face,
+    settings_face,
     set_time_face,
 };
 

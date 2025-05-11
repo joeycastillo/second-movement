@@ -19,6 +19,7 @@ SRCS += \
   ./watch-faces/sensor/voltage_face.c \
   ./watch-faces/settings/set_time_face.c \
   ./watch-faces/settings/preferences_face.c \
+  ./watch-faces/settings/settings_face.c \
   ./watch-faces/demo/light_sensor_face.c \
   ./watch-faces/demo/irda_demo_face.c \
   ./watch-faces/demo/file_demo_face.c \
