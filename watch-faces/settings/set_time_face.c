@@ -30,7 +30,8 @@
 #include "zones.h"
 
 #define SET_TIME_FACE_NUM_SETTINGS (7)
-const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"  ", "YR", "MO", "DA", "HR", "M1", "SE"};
+const char set_time_face_titles[SET_TIME_FACE_NUM_SETTINGS][6] = {"     ", "Year ", "Month", "Day  ", "Hour ", "Minut", "Secnd"};
+const char set_time_face_fallback_titles[SET_TIME_FACE_NUM_SETTINGS][3] = {"  ", "YR", "MO", "DA", "HR", "M1", "SE"};
 
 static bool _quick_ticks_running;
 static int32_t current_offset;
@@ -127,8 +128,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     }
 
     char buf[11];
-    watch_display_text(WATCH_POSITION_TOP_LEFT, (char *) set_time_face_titles[current_page]);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, (char *) set_time_face_titles[current_page], (char *) set_time_face_fallback_titles[current_page]);
     if (current_page < 1) {
         watch_display_text(WATCH_POSITION_TOP_RIGHT, " Z");
         if (current_offset < 0) watch_display_text(WATCH_POSITION_TOP_LEFT, "- ");
