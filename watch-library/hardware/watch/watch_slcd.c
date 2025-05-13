@@ -248,7 +248,7 @@ void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32
         case WATCH_INDICATOR_LAP:
             mask = 0b0010;
             break;
-        case WATCH_INDICATOR_BATTERY:
+        case WATCH_INDICATOR_ARROWS:
             mask = 0b0100;
             break;
         case WATCH_INDICATOR_SLEEP:

@@ -119,8 +119,7 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_LONG_PRESS:
             state->data_dump_idx = 0;
-            /// FIXME: Battery indicator is now Arrows indicator.
-            watch_set_indicator(WATCH_INDICATOR_BATTERY);
+            watch_set_indicator(WATCH_INDICATOR_ARROWS);
             movement_request_tick_frequency(4);
             watch_set_decimal_if_available();
             // fall through
@@ -146,8 +145,7 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
                 state->data_dump_idx++;
                 if (state->data_dump_idx >= MOVEMENT_NUM_DATA_POINTS) {
                     state->data_dump_idx = -1;
-                    /// FIXME: Battery indicator is now Arrows indicator.
-                    watch_clear_indicator(WATCH_INDICATOR_BATTERY);
+                    watch_clear_indicator(WATCH_INDICATOR_ARROWS);
                     watch_clear_decimal_if_available();
                     movement_request_tick_frequency(1);
                     state->display_index = 0;

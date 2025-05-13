@@ -52,11 +52,11 @@ typedef enum {
     WATCH_INDICATOR_BELL,       ///< The small bell indicating that an alarm is set.
     WATCH_INDICATOR_PM,         ///< The PM indicator, indicating that a time is in the afternoon.
     WATCH_INDICATOR_24H,        ///< The 24H indicator, indicating that the watch is in a 24-hour mode.
-    WATCH_INDICATOR_LAP,        ///< The LAP indicator; the F-91W uses this in its stopwatch UI.
+    WATCH_INDICATOR_LAP,        ///< The LAP indicator; the F-91W uses this in its stopwatch UI. On custom LCD it's a looped arrow.
 
     // These next indicators are only available on the new custom LCD:
-    WATCH_INDICATOR_BATTERY,    ///< The battery indicator. Will fall back to the LAP icon on the original F-91W LCD.
-    WATCH_INDICATOR_SLEEP,      ///< The sleep indicator. No fallback here; use the tick animation to indicate sleep.
+    WATCH_INDICATOR_ARROWS,     ///< The interlocking arrows indicator; indicates data transfer, or can signal to change the battery.
+    WATCH_INDICATOR_SLEEP,      ///< The sleep indicator.
 
     // You can generally address the colon using dedicated functions, but it's also available here if needed.
     WATCH_INDICATOR_COLON,      ///< The colon between hours and minutes.

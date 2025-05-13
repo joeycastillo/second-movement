@@ -36,8 +36,8 @@ uint32_t IndicatorSegments[7] = {
     SLCD_SEGID(2, 16), // WATCH_INDICATOR_24H
     SLCD_SEGID(1, 10), // WATCH_INDICATOR_LAP
 
-    // Aliases for indicators unavailable on the original F-91W LCD
-    SLCD_SEGID(1, 10), // WATCH_INDICATOR_BATTERY (same as LAP)
+    // Placeholders for indicators unavailable on the original F-91W LCD
+    SLCD_SEGID(4, 0),  // WATCH_INDICATOR_ARROWS (does not exist, will set in SDATAL4 which is harmless)
     SLCD_SEGID(4, 0)   // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
 };
 
@@ -374,7 +374,7 @@ void watch_clear_all_indicators(void) {
     watch_clear_indicator(WATCH_INDICATOR_PM);
     watch_clear_indicator(WATCH_INDICATOR_24H);
     watch_clear_indicator(WATCH_INDICATOR_LAP);
-    watch_clear_indicator(WATCH_INDICATOR_BATTERY);
+    watch_clear_indicator(WATCH_INDICATOR_ARROWS);
     watch_clear_indicator(WATCH_INDICATOR_SLEEP);
 }
 
@@ -385,7 +385,7 @@ void _watch_update_indicator_segments(void) {
         IndicatorSegments[2] = SLCD_SEGID(3, 21); // WATCH_INDICATOR_PM
         IndicatorSegments[3] = SLCD_SEGID(2, 21); // WATCH_INDICATOR_24H
         IndicatorSegments[4] = SLCD_SEGID(1,  0); // WATCH_INDICATOR_LAP
-        IndicatorSegments[5] = SLCD_SEGID(2,  0); // WATCH_INDICATOR_BATTERY
+        IndicatorSegments[5] = SLCD_SEGID(2,  0); // WATCH_INDICATOR_ARROWS
         IndicatorSegments[6] = SLCD_SEGID(3,  0); // WATCH_INDICATOR_SLEEP
     }
 }

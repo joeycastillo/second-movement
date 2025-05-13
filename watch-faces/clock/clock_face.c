@@ -82,8 +82,14 @@ static void clock_indicate_pm(watch_date_time_t date_time) {
 }
 
 static void clock_indicate_low_available_power(clock_state_t *clock) {
-    // Set the LAP indicator if battery power is low
-    clock_indicate(WATCH_INDICATOR_LAP, clock->battery_low);
+    // Set the low battery indicator if battery power is low
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        // interlocking arrows imply "exchange" the battery.
+        clock_indicate(WATCH_INDICATOR_ARROWS, clock->battery_low);
+    } else {
+        // LAP indicator on classic LCD is an adequate fallback.
+        clock_indicate(WATCH_INDICATOR_LAP, clock->battery_low);
+    }
 }
 
 static watch_date_time_t clock_24h_to_12h(watch_date_time_t date_time) {
