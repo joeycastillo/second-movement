@@ -43,14 +43,16 @@ void watch_disable_external_interrupts(void) {
 
 void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, eic_interrupt_trigger_t trigger) {
     watch_enable_digital_input(pin);
+    bool filten = false;
 
     // check if this is a button pin
     if (pin == HAL_GPIO_BTN_LIGHT_pin() || pin == HAL_GPIO_BTN_MODE_pin() || pin == HAL_GPIO_BTN_ALARM_pin()) {
         // if so, enable the pull-down resistor
         watch_enable_pull_down(pin);
+        filten = true;
     }
 
-    int8_t channel = eic_configure_pin(pin, trigger);
+    int8_t channel = eic_configure_pin(pin, trigger, filten);
     if (channel >= 0 && channel < 16) {
         printf("Configured port %d pin %d on channel %d\n", pin >> 5, pin & 0x1F, channel);
         eic_enable_interrupt(pin);

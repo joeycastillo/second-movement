@@ -719,7 +719,7 @@ void app_setup(void) {
             lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
             HAL_GPIO_A3_in();
             HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
-            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_RISING);
+            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_RISING, false);
             // but rather than hooking it up to an interrupt callback, we'll have it trigger an event.
             eic_enable_event(HAL_GPIO_A3_pin());
 
