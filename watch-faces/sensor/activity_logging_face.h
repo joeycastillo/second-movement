@@ -37,7 +37,7 @@
  * Default behavior is to show the last 100 data points. Format is:
  *  - Top left is display title (LOG or AC for Activity)
  *  - Top right is index backwards in the data log.
- *  - Bottom left is the number of orientation changes in the five minutes logged.
+ *  - Bottom left is the number of orientation changes in the five minutes logged. (currently non-functional)
  *  - Bottom right is number of stationary minutes (0 to 5)
  *
  * A short press of the Light button reveals the time (bottom row) and date (top right) of the data point.

@@ -47,7 +47,8 @@ static void _accel_interrupt_count_face_update_display(accel_interrupt_count_sta
     else watch_display_text(WATCH_POSITION_TOP_RIGHT, " A");
 
     // Orientation changes / active minutes
-    uint16_t orientation_changes = tc_count16_get_count(2);
+    uint16_t orientation_changes = 0;
+    if (tc_is_enabled(2)) orientation_changes = tc_count16_get_count(2);
     sprintf(buf, "%-3u/%2d", orientation_changes > 999 ? 999 : orientation_changes, active_minutes);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }

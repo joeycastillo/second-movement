@@ -45,10 +45,12 @@ void _movement_log_data(void) {
     // Movement tracks active minutes when deciding whether to sleep.
     data_point.bit.active_minutes = active_minutes;
 
-    // orientation changes are counted in TC2. stash them in the data point...
-    data_point.bit.orientation_changes = tc_count16_get_count(2);
-    // ...and then reset the number of orientation changes.
-    tc_count16_set_count(2, 0);
+    if (tc_is_enabled(2)) {
+        // orientation changes are counted in TC2. stash them in the data point...
+        data_point.bit.orientation_changes = tc_count16_get_count(2);
+        // ...and then reset the number of orientation changes.
+        tc_count16_set_count(2, 0);
+    }
 
     // log the temperature
     thermistor_driver_enable();

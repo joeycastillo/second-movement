@@ -521,9 +521,6 @@ void movement_set_alarm_enabled(bool value) {
 
 void movement_enable_tap_detection_if_available(void) {
 #ifdef HAS_ACCELEROMETER
-    // disable event on INT1/A3 (normally tracks orientation changes)
-    eic_disable_event(HAL_GPIO_A3_pin());
-
     // configure tap duration threshold and enable Z axis
     lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
     lis2dw_configure_tap_duration(10, 2, 2);
@@ -553,10 +550,6 @@ void movement_disable_tap_detection_if_available(void) {
     eic_disable_interrupt(HAL_GPIO_A3_pin());
     // ...disable Z axis (not sure if this is needed, does this save power?)...
     lis2dw_configure_tap_threshold(0, 0, 0, 0);
-    // ...re-enable tracking of orientation changes...
-    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-    // ...and re-enable the event.
-    eic_enable_event(HAL_GPIO_A3_pin());
 #endif
 }
 
@@ -716,31 +709,11 @@ void app_setup(void) {
 
             // set up interrupts:
             // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
-            lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            HAL_GPIO_A3_in();
-            HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
-            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_RISING, false);
-            // but rather than hooking it up to an interrupt callback, we'll have it trigger an event.
-            eic_enable_event(HAL_GPIO_A3_pin());
-
-            // that event will increment a counter on TC2. So let's set that up:
-            if (!tc_is_enabled(2)) {
-                // TC2 clocked from GCLK3, the 1024 Hz clock. No further division.
-                tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
-            }
-            // COUNT16 mode, count up to 65535 orientation changes (we will reset before it overflows)
-            tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
-            // run in standby (we spend most of our time in standby)
-            tc_set_run_in_standby(2, true);
-            // finally set the event action to count up when an event is received.
-            tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
-            // enable TC2!
-            tc_enable(2);
-
-            // now configure the event system:
-            // on channel 0, route the INT3 event generator to the TC2 event user. Run in standby, on the asynchronous path.
-            evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
-            // this concludes the setup for orientation tracking.
+            /// TODO: We had routed this interrupt to TC2 to count orientation changes, but TC2 consumed too much power.
+            /// Orientation changes helped with sleep tracking; would love to bring this back if we can find a low power solution.
+            /// For now, commenting these lines out; check commit 27f0c629d865f4bc56bc6e678da1eb8f4b919093 for power-hungry but working code.
+            // lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
+            // HAL_GPIO_A3_in();
 
             // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
             // a falling edge on INT2 indicates the accelerometer has woken up.
