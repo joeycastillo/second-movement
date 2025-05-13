@@ -153,11 +153,9 @@ static void _watch_disable_all_pins_except_rtc(void) {
 static void _watch_disable_all_peripherals_except_slcd(void) {
     _watch_disable_tcc();
     watch_disable_adc();
-    /// FIXME: I just disabled this next line since we need the EIC's event system connection to count orientation changes.
-    // The TODO item: need to power profile the impact of keeping EIC enabled, as well as the UI implications.
-    // watch_disable_external_interrupts();
+    watch_disable_external_interrupts();
 
-    /// TODO: Actually disable all these peripherals! #SecondMovement
+    /// TODO: Actually disable all these peripherals? Disabling I2C seems to have no impact fwiw.
     // watch_disable_i2c();
     // SERCOM3->USART.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
     // MCLK->APBCMASK.reg &= ~MCLK_APBCMASK_SERCOM3;
