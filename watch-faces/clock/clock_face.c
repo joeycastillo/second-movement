@@ -36,10 +36,10 @@
 #include "watch_utility.h"
 #include "watch_common_display.h"
 
-// 2.2 volts will happen when the battery has maybe 5-10% remaining?
-// we can refine this later.
+// 2.4 volts seems to offer adequate warning of a low battery condition?
+// refined based on user reports and personal observations; may need further adjustment.
 #ifndef CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD
-#define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2200
+#define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
 typedef struct {
