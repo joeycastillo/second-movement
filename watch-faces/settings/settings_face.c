@@ -230,16 +230,25 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].display = red_led_setting_display;
         state->settings_screens[current_setting].advance = red_led_setting_advance;
         current_setting++;
+#else
+        (void)red_led_setting_display;
+        (void)red_led_setting_advance;
 #endif
 #ifdef WATCH_GREEN_TCC_CHANNEL
         state->settings_screens[current_setting].display = green_led_setting_display;
         state->settings_screens[current_setting].advance = green_led_setting_advance;
         current_setting++;
+#else
+        (void)green_led_setting_display;
+        (void)green_led_setting_advance;
 #endif
 #ifdef WATCH_BLUE_TCC_CHANNEL
         state->settings_screens[current_setting].display = blue_led_setting_display;
         state->settings_screens[current_setting].advance = blue_led_setting_advance;
         current_setting++;
+#else
+        (void)blue_led_setting_display;
+        (void)blue_led_setting_advance;
 #endif
     }
 }
