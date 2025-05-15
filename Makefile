@@ -1,25 +1,36 @@
 # Keep this first line.
 GOSSAMER_PATH=gossamer
 
-# Which board are we building for?
+# Which board are we building for? Commented out to force a choice when building.
 # Options are:
 # - sensorwatch_pro
 # - sensorwatch_green
 # - sensorwatch_red (also known as Sensor Watch Lite)
-BOARD=sensorwatch_pro
+# BOARD=sensorwatch_pro
 
 # Sensor Watch will detect the display, unless you are debugging over USB.
 # If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
-FORCE_DISPLAY_TYPE=CUSTOM
+FORCE_DISPLAY_TYPE=CLASSIC
 
 # Which sensor board?
-SENSOR=MOTION
+SENSOR=NONE
+
+# End of user configurable options.
 
 # Support USB features?
 TINYUSB_CDC=1
 
-# Leave this line here.
+# Now we're all set to include gossamer's make rules.
 include $(GOSSAMER_PATH)/make.mk
+
+define n
+
+
+endef
+
+ifndef BOARD
+$(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red$n    make BOARD=sensorwatch_green$n    make BOARD=sensorwatch_blue$n    make BOARD=sensorwatch_pro$n$n)
+endif
 
 ifeq ($(SENSOR), MOTION)
   DEFINES += -DHAS_ACCELEROMETER
