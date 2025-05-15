@@ -34,10 +34,10 @@ const watch_face_t watch_faces[] = {
     moon_phase_face,
     countdown_face,
     stopwatch_face,
-    settings_face,
-    set_time_face,
     temperature_display_face,
-    voltage_face
+    voltage_face,
+    settings_face,
+    set_time_face
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
