@@ -567,14 +567,6 @@ void app_init(void) {
     }
     HAL_GPIO_VBUS_DET_off();
 
-#if defined(NO_FREQCORR)
-    watch_rtc_freqcorr_write(0, 0);
-#elif defined(WATCH_IS_BLUE_BOARD)
-    watch_rtc_freqcorr_write(11, 0);
-#else
-    watch_rtc_freqcorr_write(22, 0);
-#endif
-
     memset(&movement_state, 0, sizeof(movement_state));
 
     bool settings_file_exists = filesystem_file_exists("settings.u32");
