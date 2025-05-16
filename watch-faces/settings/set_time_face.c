@@ -98,7 +98,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (current_page != 2) {
+            if (current_page != 6) {
                 _quick_ticks_running = true;
                 movement_request_tick_frequency(8);
             }
