@@ -20,7 +20,7 @@ jobs:
         with:
           submodules: recursive
       - name: Compile movement firmware
-        run: make
+        run: make BOARD=sensorwatch_red
         working-directory: '.'
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -38,7 +38,7 @@ jobs:
         with:
           submodules: recursive
       - name: Compile movement
-        run: emmake make
+        run: emmake make BOARD=sensorwatch_red
         working-directory: '.'
       - name: Archive simulator build
         working-directory: './build-sim'
