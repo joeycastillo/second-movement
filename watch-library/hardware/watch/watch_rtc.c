@@ -71,7 +71,7 @@ void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency
     // this left-justifies the period in a 32-bit integer.
     uint32_t tmp = (frequency & 0xFF) << 24;
     // now we can count the leading zeroes to get the value we need.
-    // 0x01 (1 Hz) will have 7 leading zeros for PER7. 0xF0 (128 Hz) will have no leading zeroes for PER0.
+    // 0x01 (1 Hz) will have 7 leading zeros for PER7. 0x80 (128 Hz) will have no leading zeroes for PER0.
     uint8_t per_n = __builtin_clz(tmp);
 
     // this also maps nicely to an index for our list of tick callbacks.
