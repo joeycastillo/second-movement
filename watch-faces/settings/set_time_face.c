@@ -51,7 +51,7 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
         case 1: // month
             date_time.unit.month = (date_time.unit.month % 12) + 1;
             break;
-        case 2: { // day
+        case 2: // day
             date_time.unit.day = (date_time.unit.day % watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) + 1;
             break;
         case 4: // hour
@@ -63,7 +63,6 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
         case 6: // second
             date_time.unit.second = 0;
             break;
-        }
     }
     movement_set_local_date_time(date_time);
 }
