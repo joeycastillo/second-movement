@@ -27,8 +27,6 @@
 #include "tc.h"
 #include "thermistor_driver.h"
 
-#ifdef HAS_ACCELEROMETER
-
 // RAM to stash the data points.
 movement_activity_data_point movement_activity_log[MOVEMENT_NUM_DATA_POINTS] = {0};
 // the absolute number of data points logged
@@ -74,5 +72,3 @@ movement_activity_data_point *movement_get_data_log(uint32_t *count) {
     *count = data_points;
     return movement_activity_log;
 }
-
-#endif

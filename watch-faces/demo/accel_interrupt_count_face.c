@@ -29,8 +29,6 @@
 #include "tc.h"
 #include "watch.h"
 
-#ifdef HAS_ACCELEROMETER
-
 // hacky: we're just tapping into Movement's global state.
 // we should make better API for this.
 extern uint8_t active_minutes;
@@ -133,5 +131,3 @@ movement_watch_face_advisory_t accel_interrupt_count_face_advise(void *context) 
 
     return retval;
 }
-
-#endif // HAS_ACCELEROMETER

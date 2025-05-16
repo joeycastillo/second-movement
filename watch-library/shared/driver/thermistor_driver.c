@@ -27,9 +27,9 @@
 #include "watch.h"
 #include "watch_utility.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
 
 void thermistor_driver_enable(void) {
+#ifdef HAS_TEMPERATURE_SENSOR
     // Enable the ADC peripheral, which we'll use to read the thermistor value.
     watch_enable_adc();
     // Enable analog circuitry on the sense pin, which is tied to the thermistor resistor divider.
@@ -39,9 +39,11 @@ void thermistor_driver_enable(void) {
     HAL_GPIO_TS_ENABLE_out();
     // and make sure it's off.
     HAL_GPIO_TS_ENABLE_write(!THERMISTOR_ENABLE_VALUE);
+#endif
 }
 
 void thermistor_driver_disable(void) {
+#ifdef HAS_TEMPERATURE_SENSOR
     // Disable the ADC peripheral.
     watch_disable_adc();
     // Disable analog circuitry on the sense pin to save power.
@@ -49,9 +51,11 @@ void thermistor_driver_disable(void) {
     HAL_GPIO_TEMPSENSE_off();
     // Disable the enable pin's output circuitry.
     HAL_GPIO_TS_ENABLE_off();
+#endif
 }
 
 float thermistor_driver_get_temperature(void) {
+#ifdef HAS_TEMPERATURE_SENSOR
     // set the enable pin to the level that powers the thermistor circuit.
     HAL_GPIO_TS_ENABLE_write(THERMISTOR_ENABLE_VALUE);
     // get the sense pin level
@@ -60,6 +64,7 @@ float thermistor_driver_get_temperature(void) {
     HAL_GPIO_TS_ENABLE_write(!THERMISTOR_ENABLE_VALUE);
 
     return watch_utility_thermistor_temperature(value, THERMISTOR_HIGH_SIDE, THERMISTOR_B_COEFFICIENT, THERMISTOR_NOMINAL_TEMPERATURE, THERMISTOR_NOMINAL_RESISTANCE, THERMISTOR_SERIES_RESISTANCE);
+#else
+    return (float) 0xFFFFFFFF;
+#endif
 }
-
-#endif // HAS_TEMPERATURE_SENSOR

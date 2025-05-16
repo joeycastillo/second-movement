@@ -286,6 +286,9 @@ typedef struct {
 
     // temporary alarm enabled boolean, until we implement this in advisories
     bool alarm_enabled;
+
+    // boolean set if accelerometer is detected
+    bool has_lis2dw;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -362,5 +365,5 @@ bool movement_alarm_enabled(void);
 void movement_set_alarm_enabled(bool value);
 
 // if the board has an accelerometer, these functions will enable or disable tap detection.
-void movement_enable_tap_detection_if_available(void);
-void movement_disable_tap_detection_if_available(void);
+bool movement_enable_tap_detection_if_available(void);
+bool movement_disable_tap_detection_if_available(void);

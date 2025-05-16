@@ -218,13 +218,10 @@ void countdown_face_activate(void *context) {
 
     movement_request_tick_frequency(1);
     quick_ticks_running = false;
-#if HAS_ACCELEROMETER
-    if (state->mode != cd_running) {
+    if (state->mode != cd_running && movement_enable_tap_detection_if_available()) {
         state->tap_detection_ticks = TAP_DETECTION_SECONDS;
         state->has_tapped_once = false;
-        movement_enable_tap_detection_if_available();
     }
-#endif
 }
 
 bool countdown_face_loop(movement_event_t event, void *context) {

@@ -30,8 +30,6 @@
 #include "movement_activity.h"
 #include "watch_utility.h"
 
-#ifdef HAS_ACCELEROMETER
-
 static void _activity_logging_face_update_display(activity_logging_state_t *state, bool clock_mode_24h) {
     char buf[8];
     uint32_t count = 0;
@@ -164,5 +162,3 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
 void activity_logging_face_resign(void *context) {
     (void) context;
 }
-
-#endif

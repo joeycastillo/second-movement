@@ -26,8 +26,6 @@
 
 #include "pins.h"
 
-#ifdef HAS_ACCELEROMETER
-
 /*
  * ACTIVITY LOGGING
  *
@@ -77,5 +75,3 @@ movement_watch_face_advisory_t activity_logging_face_advise(void *context);
     activity_logging_face_resign, \
     NULL, \
 })
-
-#endif // HAS_TEMPERATURE_SENSOR

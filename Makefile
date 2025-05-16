@@ -32,10 +32,6 @@ ifndef BOARD
 $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red$n    make BOARD=sensorwatch_green$n    make BOARD=sensorwatch_blue$n    make BOARD=sensorwatch_pro$n$n)
 endif
 
-ifeq ($(SENSOR), MOTION)
-  DEFINES += -DHAS_ACCELEROMETER
-endif
-
 ifeq ($(SENSOR), TEMPERATURE)
   DEFINES += -DTEMPERATURE_BOARD_INSTALLED
 endif
@@ -99,9 +95,7 @@ SRCS += \
   ./watch-library/shared/watch/watch_utility.c \
 
 
-ifeq ($(SENSOR), MOTION)
 SRCS += ./watch-library/shared/driver/lis2dw.c
-endif
 
 ifdef EMSCRIPTEN
 

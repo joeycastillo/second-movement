@@ -24,8 +24,6 @@
 
 #pragma once
 
-#ifdef HAS_ACCELEROMETER
-
 #include <stdint.h>
 
 // Log 36 hours of data points. Each data point captures 5 minutes.
@@ -48,5 +46,3 @@ void _movement_log_data(void);
 /// @param count is a pointer to a uint32_t. The absolute number of data points logged is returned by reference.
 /// You can assume that log[count % MOVEMENT_NUM_DATA_POINTS] is the latest data point, and work backwards from there.
 movement_activity_data_point *movement_get_data_log(uint32_t *count);
-
-#endif

@@ -74,11 +74,9 @@ void cb_alarm_fired(void);
 void cb_fast_tick(void);
 void cb_tick(void);
 
-#ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
 uint8_t active_minutes = 0;
-#endif
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -156,17 +154,17 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
 
-#ifdef HAS_ACCELEROMETER
-    bool accelerometer_is_alseep = HAL_GPIO_A4_read();
-    if (!accelerometer_is_alseep) active_minutes++;
-    printf("Active minutes: %d\n", active_minutes);
+    if (movement_state.has_lis2dw) {
+        bool accelerometer_is_alseep = HAL_GPIO_A4_read();
+        if (!accelerometer_is_alseep) active_minutes++;
+        printf("Active minutes: %d\n", active_minutes);
 
-    // log data every five minutes, and reset the active_minutes count.
-    if ((date_time.unit.minute % 5) == 0) {
-        _movement_log_data();
-        active_minutes = 0;
+        // log data every five minutes, and reset the active_minutes count.
+        if ((date_time.unit.minute % 5) == 0) {
+            _movement_log_data();
+            active_minutes = 0;
+        }
     }
-#endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
@@ -519,38 +517,46 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
 }
 
-void movement_enable_tap_detection_if_available(void) {
-#ifdef HAS_ACCELEROMETER
-    // configure tap duration threshold and enable Z axis
-    lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
-    lis2dw_configure_tap_duration(10, 2, 2);
+bool movement_enable_tap_detection_if_available(void) {
+    if (movement_state.has_lis2dw) {
+        // configure tap duration threshold and enable Z axis
+        lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
+        lis2dw_configure_tap_duration(10, 2, 2);
 
-    // ramp data rate up to 400 Hz and high performance mode
-    lis2dw_set_low_noise_mode(true);
-    lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-    lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+        // ramp data rate up to 400 Hz and high performance mode
+        lis2dw_set_low_noise_mode(true);
+        lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
+        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
 
-    // Settling time (1 sample duration, i.e. 1/400Hz)
-    delay_ms(3);
+        // Settling time (1 sample duration, i.e. 1/400Hz)
+        delay_ms(3);
 
-    // enable tap detection on INT1/A3.
-    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
-    // and enable the cb_accelerometer_event interrupt callback, so we can catch tap events.
-    watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
-#endif
+        // enable tap detection on INT1/A3.
+        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
+        // and enable the cb_accelerometer_event interrupt callback, so we can catch tap events.
+        watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
+
+        return true;
+    }
+
+    return false;
 }
 
-void movement_disable_tap_detection_if_available(void) {
-#ifdef HAS_ACCELEROMETER
-    // Ramp data rate back down to the usual lowest rate to save power.
-    lis2dw_set_low_noise_mode(false);
-    lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
-    lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
-    // disable the interrupt on INT1/A3...
-    eic_disable_interrupt(HAL_GPIO_A3_pin());
-    // ...disable Z axis (not sure if this is needed, does this save power?)...
-    lis2dw_configure_tap_threshold(0, 0, 0, 0);
-#endif
+bool movement_disable_tap_detection_if_available(void) {
+    if (movement_state.has_lis2dw) {
+        // Ramp data rate back down to the usual lowest rate to save power.
+        lis2dw_set_low_noise_mode(false);
+        lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        // disable the interrupt on INT1/A3...
+        eic_disable_interrupt(HAL_GPIO_A3_pin());
+        // ...disable Z axis (not sure if this is needed, does this save power?)...
+        lis2dw_configure_tap_threshold(0, 0, 0, 0);
+
+        return true;
+    }
+
+    return false;
 }
 
 void app_init(void) {
@@ -679,16 +685,11 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), cb_light_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
-#ifdef HAS_ACCELEROMETER
-// gossamer doesn't include all the chip-specific constants, so we have to fake them here.
-#ifndef EVSYS_ID_GEN_EIC_EXTINT_3
-#define EVSYS_ID_GEN_EIC_EXTINT_3 18
-#endif
-#ifndef EVSYS_ID_USER_TC2_EVU
-#define EVSYS_ID_USER_TC2_EVU 17
-#endif
+#ifdef I2C_SERCOM
         watch_enable_i2c();
         if (lis2dw_begin()) {
+            movement_state.has_lis2dw = true;
+
             lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
             lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
             lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
@@ -717,6 +718,8 @@ void app_setup(void) {
             // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
 
             lis2dw_enable_interrupts();
+        } else {
+            watch_disable_i2c();
         }
 #endif
 
@@ -984,7 +987,6 @@ void cb_tick(void) {
     }
 }
 
-#ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void) {
     uint8_t int_src = lis2dw_get_interrupt_source();
 
@@ -1003,5 +1005,3 @@ void cb_accelerometer_wake(void) {
     // also: wake up!
     _movement_reset_inactivity_countdown();
 }
-
-#endif
