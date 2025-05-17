@@ -8,9 +8,8 @@ GOSSAMER_PATH=gossamer
 # - sensorwatch_red (also known as Sensor Watch Lite)
 # BOARD=sensorwatch_pro
 
-# Sensor Watch will detect the display, unless you are debugging over USB.
-# If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
-FORCE_DISPLAY_TYPE=CLASSIC
+# Set this to the type of display in your watch: classic or custom. Commented out to force a choice when building.
+# DISPLAY=classic
 
 # End of user configurable options.
 
@@ -26,15 +25,20 @@ define n
 endef
 
 ifndef BOARD
-$(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red$n    make BOARD=sensorwatch_green$n    make BOARD=sensorwatch_blue$n    make BOARD=sensorwatch_pro$n$n)
+  $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
 endif
 
-ifdef FORCE_DISPLAY_TYPE
-  ifeq ($(FORCE_DISPLAY_TYPE), CUSTOM)
+ifndef DISPLAY
+  $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+else
+  ifeq ($(DISPLAY), custom)
     DEFINES += -DFORCE_CUSTOM_LCD_TYPE
-  endif
-  ifeq ($(FORCE_DISPLAY_TYPE), CLASSIC)
+  else ifeq ($(DISPLAY), classic)
     DEFINES += -DFORCE_CLASSIC_LCD_TYPE
+  else ifeq ($(DISPLAY), autodetect)
+    $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
+  else
+    $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
   endif
 endif
 
