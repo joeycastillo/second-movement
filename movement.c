@@ -560,12 +560,26 @@ bool movement_disable_tap_detection_if_available(void) {
     return false;
 }
 
+float movement_get_temperature(void) {
+    float temperature_c = (float)0xFFFFFFFF;
+
+    if (movement_state.has_thermistor) {
+        thermistor_driver_enable();
+        temperature_c = thermistor_driver_get_temperature();
+        thermistor_driver_disable();
+    } else if (movement_state.has_lis2dw) {
+            int16_t val = lis2dw_get_temperature();
+            val = val >> 4;
+            temperature_c = 25 + (float)val / 16.0;
+    }
+
+    return temperature_c;
+}
+
 void app_init(void) {
     _watch_init();
 
     filesystem_init();
-
-    movement_state.has_thermistor = thermistor_driver_init();
 
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
@@ -577,6 +591,8 @@ void app_init(void) {
     HAL_GPIO_VBUS_DET_off();
 
     memset(&movement_state, 0, sizeof(movement_state));
+
+    movement_state.has_thermistor = thermistor_driver_init();
 
     bool settings_file_exists = filesystem_file_exists("settings.u32");
     movement_settings_t maybe_settings;

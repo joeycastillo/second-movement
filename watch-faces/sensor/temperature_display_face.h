@@ -26,8 +26,6 @@
 
 #include "pins.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
-
 /*
  * THERMISTOR READOUT (aka Temperature Display)
  *
@@ -65,5 +63,3 @@ void temperature_display_face_resign(void *context);
     temperature_display_face_resign, \
     NULL, \
 })
-
-#endif // HAS_TEMPERATURE_SENSOR

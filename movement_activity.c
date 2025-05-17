@@ -51,9 +51,7 @@ void _movement_log_data(void) {
     }
 
     // log the temperature
-    thermistor_driver_enable();
-    float temperature_c = thermistor_driver_get_temperature();
-    thermistor_driver_disable();
+    float temperature_c = movement_get_temperature();
     // offset the temperature by 30, so -30°C is 0, and 72.3°C is 102.3
     temperature_c = temperature_c + 30;
     if (temperature_c < 0) temperature_c = 0;

@@ -28,18 +28,13 @@
 #include "thermistor_driver.h"
 #include "watch.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
-
 static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger_state) {
-    thermistor_driver_enable();
     watch_date_time_t date_time = watch_rtc_get_date_time();
     size_t pos = logger_state->data_points % THERMISTOR_LOGGING_NUM_DATA_POINTS;
 
     logger_state->data[pos].timestamp.reg = date_time.reg;
-    logger_state->data[pos].temperature_c = thermistor_driver_get_temperature();
+    logger_state->data[pos].temperature_c = movement_get_temperature();
     logger_state->data_points++;
-
-    thermistor_driver_disable();
 }
 
 static void _temperature_logging_face_update_display(thermistor_logger_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
@@ -150,5 +145,3 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context) {
 
     return retval;
 }
-
-#endif

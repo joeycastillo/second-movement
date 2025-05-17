@@ -26,8 +26,6 @@
 
 #include "pins.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
-
 /*
  * THERMISTOR LOGGING (aka Temperature Log)
  *
@@ -86,5 +84,3 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context);
     temperature_logging_face_resign, \
     temperature_logging_face_advise, \
 })
-
-#endif // HAS_TEMPERATURE_SENSOR

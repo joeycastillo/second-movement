@@ -370,3 +370,8 @@ void movement_set_alarm_enabled(bool value);
 // if the board has an accelerometer, these functions will enable or disable tap detection.
 bool movement_enable_tap_detection_if_available(void);
 bool movement_disable_tap_detection_if_available(void);
+
+// If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
+// If the board has multiple temperature sensors, it will use the most accurate one available.
+// If the board has no temperature sensors, it will return 0xFFFFFFFF.
+float movement_get_temperature(void);
