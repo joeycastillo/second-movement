@@ -81,8 +81,9 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
 
                 if (checksum != expected_checksum) {
                     // failed
+                    movement_force_led_on(48, 0, 0);
                     watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAD  ", "BA");
-                    watch_display_text(WATCH_POSITION_BOTTOM, "HEADER");
+                    watch_display_text(WATCH_POSITION_BOTTOM, "HEAdER");
                     break;
                 }
                 // valid header! To make it easier on ourselves, we're going to make byte 14 zero...
@@ -91,9 +92,11 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
                 char *filename = data + 2;
 
                 if (expected_size == 0) {
+                    // Success! All we need is a header to delete a file.
+                    movement_force_led_on(0, 48, 0);
                     filesystem_rm(filename);
                     watch_display_text_with_fallback(WATCH_POSITION_TOP, "FILE ", "FI");
-                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "dELETE", " delet");
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "dELETE", " deLet");
                     break;
                 }
 
@@ -104,19 +107,22 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
 
                 if (checksum != expected_checksum) {
                     // failed
+                    movement_force_led_on(48, 0, 0);
                     watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAD  ", "BA");
-                    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "DATA  ", " Data ");
+                    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "data  ", " data ");
                     break;
                 }
 
                 // Valid data! Write it to the file system.
                 filesystem_write_file(filename, data + 16, expected_size);
-                watch_display_text_with_fallback(WATCH_POSITION_TOP, "RECVD", "RC");
+                watch_display_text_with_fallback(WATCH_POSITION_TOP, "RECVd", "RC");
+                movement_force_led_on(0, 48, 0);
 
                 char buf[8];
                 sprintf(buf, "%4db ", expected_size);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
             } else {
+                movement_force_led_off();
                 watch_display_text(WATCH_POSITION_FULL, "    no dat");
             }
         }
