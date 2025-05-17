@@ -98,6 +98,12 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
                 state->active_minutes_today = 0;
             }
             break;
+        case EVENT_LOW_ENERGY_UPDATE:
+            // start tick animation if necessary
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
+            // update the display as usual
+            _activity_logging_face_update_display(state);
+            break;
         default:
             movement_default_loop_handler(event);
             break;

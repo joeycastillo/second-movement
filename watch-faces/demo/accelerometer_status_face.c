@@ -91,6 +91,9 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                 state->threshold = state->new_threshold;
                 state->is_setting = false;
                 break;
+            case EVENT_TIMEOUT:
+                movement_move_to_face(0);
+                break;
             default:
                 movement_default_loop_handler(event);
                 break;
@@ -100,6 +103,14 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
             case EVENT_ACTIVATE:
             case EVENT_TICK:
                 _accelerometer_status_face_update_display(state);
+                break;
+            case EVENT_LOW_ENERGY_UPDATE:
+                // start tick animation if necessary
+                if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
+                // update the display
+                _accelerometer_status_face_update_display(state);
+                // on classic LCD, clear seconds since they interfere with the sleep animation.
+                if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) watch_display_text(WATCH_POSITION_SECONDS, "  ");
                 break;
             case EVENT_ALARM_LONG_PRESS:
                 state->new_threshold = state->threshold;
