@@ -12,9 +12,6 @@ GOSSAMER_PATH=gossamer
 # If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
 FORCE_DISPLAY_TYPE=CLASSIC
 
-# Which sensor board?
-SENSOR=NONE
-
 # End of user configurable options.
 
 # Support USB features?
@@ -30,10 +27,6 @@ endef
 
 ifndef BOARD
 $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red$n    make BOARD=sensorwatch_green$n    make BOARD=sensorwatch_blue$n    make BOARD=sensorwatch_pro$n$n)
-endif
-
-ifeq ($(SENSOR), TEMPERATURE)
-  DEFINES += -DTEMPERATURE_BOARD_INSTALLED
 endif
 
 ifdef FORCE_DISPLAY_TYPE

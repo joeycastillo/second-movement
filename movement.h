@@ -287,6 +287,9 @@ typedef struct {
     // temporary alarm enabled boolean, until we implement this in advisories
     bool alarm_enabled;
 
+    // boolean set if thermistor is detected
+    bool has_thermistor;
+
     // boolean set if accelerometer is detected
     bool has_lis2dw;
 } movement_state_t;

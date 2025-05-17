@@ -45,6 +45,7 @@
 #include "evsys.h"
 #include "delay.h"
 #include "movement_activity.h"
+#include "thermistor_driver.h"
 
 #include "movement_config.h"
 
@@ -563,6 +564,8 @@ void app_init(void) {
     _watch_init();
 
     filesystem_init();
+
+    movement_state.has_thermistor = thermistor_driver_init();
 
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
