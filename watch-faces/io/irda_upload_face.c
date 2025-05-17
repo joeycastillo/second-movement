@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "irda_demo_face.h"
+#include "irda_upload_face.h"
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
@@ -33,7 +33,7 @@
 
 #ifdef HAS_IR_SENSOR
 
-void irda_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void irda_upload_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(irda_demo_state_t));
@@ -42,7 +42,7 @@ void irda_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     }    
 }
 
-void irda_demo_face_activate(void *context) {
+void irda_upload_face_activate(void *context) {
     irda_demo_state_t *state = (irda_demo_state_t *)context;
     (void) state;
     HAL_GPIO_IR_ENABLE_out();
@@ -54,7 +54,7 @@ void irda_demo_face_activate(void *context) {
     uart_enable_instance(0);
 }
 
-bool irda_demo_face_loop(movement_event_t event, void *context) {
+bool irda_upload_face_loop(movement_event_t event, void *context) {
     irda_demo_state_t *state = (irda_demo_state_t *)context;
     (void) state;
 
@@ -131,7 +131,7 @@ bool irda_demo_face_loop(movement_event_t event, void *context) {
     return false;
 }
 
-void irda_demo_face_resign(void *context) {
+void irda_upload_face_resign(void *context) {
     (void) context;
     uart_disable_instance(0);
     HAL_GPIO_IRSENSE_pmuxdis();

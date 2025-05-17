@@ -40,16 +40,16 @@ typedef struct {
     uint8_t unused;
 } irda_demo_state_t;
 
-void irda_demo_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void irda_demo_face_activate(void *context);
-bool irda_demo_face_loop(movement_event_t event, void *context);
-void irda_demo_face_resign(void *context);
+void irda_upload_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void irda_upload_face_activate(void *context);
+bool irda_upload_face_loop(movement_event_t event, void *context);
+void irda_upload_face_resign(void *context);
 
-#define irda_demo_face ((const watch_face_t){ \
-    irda_demo_face_setup, \
-    irda_demo_face_activate, \
-    irda_demo_face_loop, \
-    irda_demo_face_resign, \
+#define irda_upload_face ((const watch_face_t){ \
+    irda_upload_face_setup, \
+    irda_upload_face_activate, \
+    irda_upload_face_loop, \
+    irda_upload_face_resign, \
     NULL, \
 })
 

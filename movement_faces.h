@@ -46,7 +46,7 @@
 #include "preferences_face.h"
 #include "settings_face.h"
 #include "light_sensor_face.h"
-#include "irda_demo_face.h"
+#include "irda_upload_face.h"
 #include "file_demo_face.h"
 #include "chirpy_demo_face.h"
 // New includes go above this line.

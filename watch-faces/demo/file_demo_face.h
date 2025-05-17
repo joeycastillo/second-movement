@@ -30,7 +30,7 @@
  * FILE DISPLAY DEMO
  *
  * Displays the contents of a file on the watch. 
- * For use with the irda_demo_face that allows uploading files to the watch.
+ * For use with the irda_upload_face that allows uploading files to the watch.
  *
  */
 
