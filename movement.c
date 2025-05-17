@@ -534,8 +534,6 @@ bool movement_enable_tap_detection_if_available(void) {
 
         // enable tap detection on INT1/A3.
         lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
-        // and enable the cb_accelerometer_event interrupt callback, so we can catch tap events.
-        watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
         return true;
     }
@@ -549,8 +547,6 @@ bool movement_disable_tap_detection_if_available(void) {
         lis2dw_set_low_noise_mode(false);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
-        // disable the interrupt on INT1/A3...
-        eic_disable_interrupt(HAL_GPIO_A3_pin());
         // ...disable Z axis (not sure if this is needed, does this save power?)...
         lis2dw_configure_tap_threshold(0, 0, 0, 0);
 
@@ -735,6 +731,10 @@ void app_setup(void) {
             // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
             // Still if you want to wake on motion, you can do it by uncommenting this line:
             // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+
+            // later on, we are going to use INT1 for tap detection. We'll set up that interrupt here,
+            // but it will only fire once tap recognition is enabled.
+            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
             lis2dw_enable_interrupts();
         } else {
