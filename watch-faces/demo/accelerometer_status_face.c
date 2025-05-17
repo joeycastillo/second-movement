@@ -24,34 +24,26 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "accel_interrupt_count_face.h"
+#include "accelerometer_status_face.h"
 #include "lis2dw.h"
 #include "tc.h"
 #include "watch.h"
 
-// hacky: we're just tapping into Movement's global state.
-// we should make better API for this.
-extern uint8_t active_minutes;
-
-static void _accel_interrupt_count_face_update_display(accel_interrupt_count_state_t *state) {
+static void _accelerometer_status_face_update_display(accel_interrupt_count_state_t *state) {
     (void) state;
-    char buf[8];
 
     // Accelerometer title
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "AC");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "ACCEL", "AC");
+
+    // sensing is live!
+    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
 
     // Sleep/active state
-    if (HAL_GPIO_A4_read()) watch_display_text(WATCH_POSITION_TOP_RIGHT, " S");
-    else watch_display_text(WATCH_POSITION_TOP_RIGHT, " A");
-
-    // Orientation changes / active minutes
-    uint16_t orientation_changes = 0;
-    if (tc_is_enabled(2)) orientation_changes = tc_count16_get_count(2);
-    sprintf(buf, "%-3u/%2d", orientation_changes > 999 ? 999 : orientation_changes, active_minutes);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    if (HAL_GPIO_A4_read()) watch_display_text(WATCH_POSITION_BOTTOM, "Still ");
+    else watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Active", " ACtiv");
 }
 
-void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void accelerometer_status_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(accel_interrupt_count_state_t));
@@ -59,7 +51,7 @@ void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_
     }
 }
 
-void accel_interrupt_count_face_activate(void *context) {
+void accelerometer_status_face_activate(void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
     // never in settings mode at the start
@@ -72,10 +64,11 @@ void accel_interrupt_count_face_activate(void *context) {
     state->threshold = lis2dw_get_wakeup_threshold();
 }
 
-bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
+bool accelerometer_status_face_loop(movement_event_t event, void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
     if (state->is_setting) {
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
         switch (event.event_type) {
             case EVENT_LIGHT_BUTTON_DOWN:
                 state->new_threshold = (state->new_threshold + 1) % 64;
@@ -106,7 +99,7 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
         switch (event.event_type) {
             case EVENT_ACTIVATE:
             case EVENT_TICK:
-                _accel_interrupt_count_face_update_display(state);
+                _accelerometer_status_face_update_display(state);
                 break;
             case EVENT_ALARM_LONG_PRESS:
                 state->new_threshold = state->threshold;
@@ -121,13 +114,6 @@ bool accel_interrupt_count_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-void accel_interrupt_count_face_resign(void *context) {
+void accelerometer_status_face_resign(void *context) {
     (void) context;
-}
-
-movement_watch_face_advisory_t accel_interrupt_count_face_advise(void *context) {
-    (void) context;
-    movement_watch_face_advisory_t retval = { 0 };
-
-    return retval;
 }

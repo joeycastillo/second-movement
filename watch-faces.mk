@@ -9,7 +9,7 @@ SRCS += \
   ./watch-faces/complication/sunrise_sunset_face.c \
   ./watch-faces/complication/moon_phase_face.c \
   ./watch-faces/complication/days_since_face.c \
-  ./watch-faces/demo/accel_interrupt_count_face.c \
+  ./watch-faces/demo/accelerometer_status_face.c \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/float_demo_face.c \

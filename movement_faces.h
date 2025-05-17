@@ -35,7 +35,7 @@
 #include "moon_phase_face.h"
 #include "days_since_face.h"
 #include "character_set_face.h"
-#include "accel_interrupt_count_face.h"
+#include "accelerometer_status_face.h"
 #include "all_segments_face.h"
 #include "float_demo_face.h"
 #include "temperature_display_face.h"

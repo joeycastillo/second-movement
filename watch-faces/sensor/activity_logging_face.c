@@ -27,55 +27,44 @@
 #include "activity_logging_face.h"
 #include "filesystem.h"
 #include "watch.h"
-#include "movement_activity.h"
 #include "watch_utility.h"
 
-static void _activity_logging_face_update_display(activity_logging_state_t *state, bool clock_mode_24h) {
+static void _activity_logging_face_update_display(activity_logging_state_t *state) {
     char buf[8];
-    uint32_t count = 0;
-    movement_activity_data_point *data_points = movement_get_data_log(&count);
-    int32_t pos = ((int32_t)count - 1 - (int32_t)state->display_index) % MOVEMENT_NUM_DATA_POINTS;
     watch_date_time_t timestamp = movement_get_local_date_time();
 
-    // round to previous 5 minute increment
-    timestamp.unit.minute = timestamp.unit.minute - (timestamp.unit.minute % 5);
-    // advance backward by 5 minutes for each increment of state->display_index
-    uint32_t unix_timestamp = watch_utility_date_time_to_unix_time(timestamp, movement_get_current_timezone_offset());
-    unix_timestamp -= 300 * state->display_index;
-    timestamp = watch_utility_date_time_from_unix_time(unix_timestamp, movement_get_current_timezone_offset());
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ACT", "AC");
 
-    watch_clear_indicator(WATCH_INDICATOR_24H);
-    watch_clear_indicator(WATCH_INDICATOR_PM);
-    watch_clear_colon();
-
-    if (pos < 0) {
-        // no data at this index
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "AC");
-        watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
-        sprintf(buf, "%2d", state->display_index);
+    if (state->display_index == 0) {
+        // if we are at today, just show the count so far
+        snprintf(buf, 8, "%2d", timestamp.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-    } else if (state->ts_ticks) {
-        // we are displaying the timestamp in response to a button press
-        watch_set_colon();
-        if (clock_mode_24h) {
-            watch_set_indicator(WATCH_INDICATOR_24H);
-        } else {
-            if (timestamp.unit.hour > 11) watch_set_indicator(WATCH_INDICATOR_PM);
-            timestamp.unit.hour %= 12;
-            if (timestamp.unit.hour == 0) timestamp.unit.hour = 12;
-        }
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "T*D", "AT");
-        sprintf(buf, "%2d", timestamp.unit.day);
-        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%2d%02d%02d", timestamp.unit.hour, timestamp.unit.minute, 0);
+        snprintf(buf, 8, "%4d  ", state->active_minutes_today);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
+
+        // also indicate that this is the active day — we are still sensing active minutes!
+        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     } else {
-        // we are displaying the number of accelerometer wakeups and orientation changes
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOG", "AC");
-        sprintf(buf, "%2d", state->display_index);
+        // otherwise we need to go into the log.
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        int32_t pos = ((int16_t)state->data_points - (int32_t)state->display_index) % ACTIVITY_LOGGING_NUM_DAYS;
+        // get day of month for today - display_index
+        uint32_t unixtime = watch_utility_date_time_to_unix_time(timestamp, movement_get_current_timezone_offset());
+        unixtime -= 86400 * state->display_index;
+        timestamp = watch_utility_date_time_from_unix_time(unixtime, movement_get_current_timezone_offset());    
+
+        // display date
+        snprintf(buf, 8, "%2d", timestamp.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        sprintf(buf, "%-3u/%2d", data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes, data_points[pos].bit.active_minutes);
-        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+
+        if (pos < 0) {
+            // no data at this index
+            watch_display_text(WATCH_POSITION_BOTTOM, "no dat");
+        } else {
+            // we are displaying the number active minutes
+            snprintf(buf, 8, "%4d  ", state->activity_log[pos]);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+        }
     }
 }
 
@@ -90,65 +79,23 @@ void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 void activity_logging_face_activate(void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     state->display_index = 0;
-    state->ts_ticks = 0;
-    state->data_dump_idx = -1;
 }
 
 bool activity_logging_face_loop(movement_event_t event, void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     switch (event.event_type) {
-        case EVENT_TIMEOUT:
-            if (state->data_dump_idx == -1) movement_move_to_face(0);
-            break;
-        case EVENT_LIGHT_LONG_PRESS:
-            // light button shows the timestamp, but if you need the light, long press it.
-            movement_illuminate_led();
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            state->ts_ticks = 2;
-            _activity_logging_face_update_display(state, movement_clock_mode_24h());
-            break;
         case EVENT_ALARM_BUTTON_DOWN:
-            state->display_index = (state->display_index + 1) % ACTIVITY_LOGGING_NUM_DATA_POINTS;
-            state->ts_ticks = 0;
+            state->display_index = (state->display_index + 1) % ACTIVITY_LOGGING_NUM_DAYS;
             // fall through
         case EVENT_ACTIVATE:
-            _activity_logging_face_update_display(state, movement_clock_mode_24h());
+            _activity_logging_face_update_display(state);
             break;
-        case EVENT_ALARM_LONG_PRESS:
-            state->data_dump_idx = 0;
-            watch_set_indicator(WATCH_INDICATOR_ARROWS);
-            movement_request_tick_frequency(4);
-            watch_set_decimal_if_available();
-            // fall through
-        case EVENT_TICK:
-            if (state->ts_ticks && --state->ts_ticks == 0) {
-                _activity_logging_face_update_display(state, movement_clock_mode_24h());
-            }
-            if (state->data_dump_idx != -1) {
-                // dance through the full buffer
-                char buf[8];
-                uint32_t count = 0;
-                movement_activity_data_point *data_points = movement_get_data_log(&count);
-                int32_t pos = ((int32_t)count - 1 - (int32_t)state->data_dump_idx) % MOVEMENT_NUM_DATA_POINTS;
-
-                sprintf(buf, "%03d ", state->data_dump_idx);
-                watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf + 2);
-                sprintf(buf, "%3d%3d", data_points[pos].bit.measured_temperature - 300, data_points[pos].bit.orientation_changes > 999 ? 999 : data_points[pos].bit.orientation_changes);
-                buf[6] = 0;
-                watch_display_text(WATCH_POSITION_BOTTOM, buf);
-                sprintf(buf, "%2d", data_points[pos].bit.active_minutes);
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-
-                state->data_dump_idx++;
-                if (state->data_dump_idx >= MOVEMENT_NUM_DATA_POINTS) {
-                    state->data_dump_idx = -1;
-                    watch_clear_indicator(WATCH_INDICATOR_ARROWS);
-                    watch_clear_decimal_if_available();
-                    movement_request_tick_frequency(1);
-                    state->display_index = 0;
-                    _activity_logging_face_update_display(state, movement_clock_mode_24h());
-                }
+        case EVENT_BACKGROUND_TASK:
+            {
+                size_t pos = state->data_points % ACTIVITY_LOGGING_NUM_DAYS;
+                state->activity_log[pos] = state->active_minutes_today;
+                state->data_points++;
+                state->active_minutes_today = 0;
             }
             break;
         default:
@@ -161,4 +108,19 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
 
 void activity_logging_face_resign(void *context) {
     (void) context;
+}
+
+movement_watch_face_advisory_t activity_logging_face_advise(void *context) {
+    activity_logging_state_t *state = (activity_logging_state_t *)context;
+    movement_watch_face_advisory_t retval = { 0 };
+
+    if (HAL_GPIO_A4_read()) state->active_minutes_today++;
+
+    watch_date_time_t datetime = movement_get_local_date_time();
+    // request a background task at midnight to shuffle the data into the log
+    if (datetime.unit.hour == 0 && datetime.unit.minute == 0) {
+        retval.wants_background_task = true;
+    }
+
+    return retval;
 }

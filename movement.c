@@ -44,7 +44,6 @@
 #include "tc.h"
 #include "evsys.h"
 #include "delay.h"
-#include "movement_activity.h"
 #include "thermistor_driver.h"
 
 #include "movement_config.h"
@@ -77,7 +76,6 @@ void cb_tick(void);
 
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
-uint8_t active_minutes = 0;
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -154,18 +152,6 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
-
-    if (movement_state.has_lis2dw) {
-        bool accelerometer_is_alseep = HAL_GPIO_A4_read();
-        if (!accelerometer_is_alseep) active_minutes++;
-        printf("Active minutes: %d\n", active_minutes);
-
-        // log data every five minutes, and reset the active_minutes count.
-        if ((date_time.unit.minute % 5) == 0) {
-            _movement_log_data();
-            active_minutes = 0;
-        }
-    }
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {

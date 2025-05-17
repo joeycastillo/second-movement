@@ -54,12 +54,13 @@
 #include "movement.h"
 #include "watch.h"
 
-#define ACTIVITY_LOGGING_NUM_DATA_POINTS (100)
+#define ACTIVITY_LOGGING_NUM_DAYS (14)
 
 typedef struct {
-    uint8_t display_index;  // the index we are displaying on screen
-    uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
-    int16_t data_dump_idx;  // for dumping the full activity log on long press of Alarm
+    uint16_t activity_log[ACTIVITY_LOGGING_NUM_DAYS];   // the activity log
+    uint16_t data_points;                               // the number of days logged
+    uint8_t display_index;                              // the index we are displaying on screen
+    uint16_t active_minutes_today;                      // the number of active minutes logged today
 } activity_logging_state_t;
 
 void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -73,5 +74,5 @@ movement_watch_face_advisory_t activity_logging_face_advise(void *context);
     activity_logging_face_activate, \
     activity_logging_face_loop, \
     activity_logging_face_resign, \
-    NULL, \
+    activity_logging_face_advise, \
 })
