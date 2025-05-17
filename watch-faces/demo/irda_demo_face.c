@@ -63,58 +63,53 @@ bool irda_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            char data[32];
-            char filename[9];
-            char content[30];
-            size_t bytes_read = uart_read_instance(0, data, 32);
+            char data[64];
+            size_t bytes_read = uart_read_instance(0, data, 64);
+            watch_clear_display();
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
+
             if (bytes_read) {
-                // data is in the format: ">FILENAME>CONTENT" followed by a one-byte checksum
-                uint8_t checksum = 0;
-                for (size_t i = 0; i < bytes_read - 1; i++) {
-                    checksum += data[i];
-                }
-                if (checksum != data[bytes_read - 1]) {
+                // data is in the following format, where S is Size, F is Filename and C is checksum:
+                // SSFFFFFFFFFFFFCC
+                // after that, we get SS bytes of data, followed by a two-byte checksum
+                uint16_t expected_size = ((uint16_t *)data)[0];
+                uint16_t expected_checksum = ((uint16_t *)data)[7];
+
+                uint16_t checksum = 0;
+
+                for (size_t i = 0; i < 14; i++) checksum += data[i];
+
+                if (checksum != expected_checksum) {
                     // failed
-                    movement_force_led_on(48, 0, 0);
-                } else {
-                    // parse the data
-                    if (data[0] != '>') {
-                        // failed
-                        movement_force_led_on(48, 30, 0);
-                    } else {
-                        size_t i = 1;
-                        while (data[i] != '>' && i < 9) {
-                            filename[i - 1] = data[i];
-                            i++;
-                        }
-                        if (i == 9) {
-                            // failed
-                            movement_force_led_on(48, 0, 30);
-                        } else {
-                            filename[i - 1] = 0;
-                            i++;
-                            size_t j = 0;
-                            while (i < bytes_read - 1) {
-                                content[j] = data[i];
-                                i++;
-                                j++;
-                            }
-                            content[j] = 0;
-                        }
-                    }
-                    // write the data to the file
-                    filesystem_write_file(filename, content, strlen(content));
-                    movement_force_led_on(0, 48, 0);
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAD  ", "BA");
+                    watch_display_text(WATCH_POSITION_BOTTOM, "HEADER");
+                    break;
                 }
-                char buf[14];
-                snprintf(buf, 11, "IR%2d%c%c%c%c%c%c", bytes_read, data[1], data[2], data[3], data[4], data[5], data[6]);
-                watch_clear_display();
-                watch_display_text(WATCH_POSITION_FULL, buf);
-                data[31] = 0;
-                printf("%s\n", data);
-                printf("%s\n", buf);
+                // valid header! To make it easier on ourselves, we're going to make byte 14 zero...
+                data[14] = 0;
+                // so that now buf[2] points to our null-terminated filename.
+                char *filename = data + 2;
+
+                // now let's check the data.
+                checksum = 0;
+                memcpy(&expected_checksum, data + 16 + expected_size, 2);
+                for (uint16_t i = 16; i < 16 + expected_size; i++) checksum += data[i];
+
+                if (checksum != expected_checksum) {
+                    // failed
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAD  ", "BA");
+                    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "DATA  ", " Data ");
+                    break;
+                }
+
+                // Valid data! Write it to the file system.
+                filesystem_write_file(filename, data + 16, expected_size);
+                watch_display_text_with_fallback(WATCH_POSITION_TOP, "RECVD", "RC");
+
+                char buf[8];
+                sprintf(buf, "%4db ", expected_size);
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
             } else {
-                movement_force_led_off();
                 watch_display_text(WATCH_POSITION_FULL, "    no dat");
             }
         }
