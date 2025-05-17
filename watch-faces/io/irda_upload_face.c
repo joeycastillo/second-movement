@@ -63,8 +63,9 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            char data[64];
-            size_t bytes_read = uart_read_instance(0, data, 64);
+            // need more work here: we seem to top out at 64 bytes coming in, and even then it takes a lot of tries.
+            char data[256];
+            size_t bytes_read = uart_read_instance(0, data, 256);
             watch_clear_display();
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
 
