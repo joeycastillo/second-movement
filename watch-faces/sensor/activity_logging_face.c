@@ -114,7 +114,7 @@ movement_watch_face_advisory_t activity_logging_face_advise(void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
 
-    if (HAL_GPIO_A4_read()) state->active_minutes_today++;
+    if (!HAL_GPIO_A4_read()) state->active_minutes_today++;
 
     watch_date_time_t datetime = movement_get_local_date_time();
     // request a background task at midnight to shuffle the data into the log
