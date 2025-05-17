@@ -90,6 +90,13 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
                 // so that now buf[2] points to our null-terminated filename.
                 char *filename = data + 2;
 
+                if (expected_size == 0) {
+                    filesystem_rm(filename);
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "FILE ", "FI");
+                    watch_display_text_with_fallback(WATCH_POSITION_TOP, "dELETE", " delet");
+                    break;
+                }
+
                 // now let's check the data.
                 checksum = 0;
                 memcpy(&expected_checksum, data + 16 + expected_size, 2);
