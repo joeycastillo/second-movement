@@ -7,7 +7,8 @@ on:
       - gh-pages
 
 env:
-  COLOR: BLUE
+  BOARD: sensorwatch_red
+  DISPLAY: classic
 
 jobs: 
   build:
@@ -20,7 +21,7 @@ jobs:
         with:
           submodules: recursive
       - name: Compile movement firmware
-        run: make BOARD=sensorwatch_red
+        run: make
         working-directory: '.'
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -38,7 +39,7 @@ jobs:
         with:
           submodules: recursive
       - name: Compile movement
-        run: emmake make BOARD=sensorwatch_red
+        run: emmake make
         working-directory: '.'
       - name: Archive simulator build
         working-directory: './build-sim'
