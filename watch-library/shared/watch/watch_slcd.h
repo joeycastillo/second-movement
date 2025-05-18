@@ -148,9 +148,6 @@ void watch_display_text(watch_position_t location, const char *string);
  *       displayed:
  *        * At the top left, the custom LCD can display "NYC" but the original F-91W LCD can't display "NY"
  *          due to the shared segments in position 1 (Try "MA" for Manhattan or "BR" for Brooklyn / Bronx.)
- *          On the other hand, the original F-91W can display "FR" for Friday thanks to its extra segment in
- *          position 1, but the custom LCD can only display lowercase R, "Fri", due to the more simplistic
- *          8-segment design of all the digits.
  *        * On the top right, the original F-91W LCD can only display numbers from 0 to 39, while the custom
  *          LCD can display any two 7-segment characters. Thus something like a 60 second countdown may have
  *          to display some fallback when more than 40 seconds remain, then switch to counting down from 39.
@@ -159,15 +156,17 @@ void watch_display_text(watch_position_t location, const char *string);
  *          and latitude:
  *
  *            watch_display_main_line_with_fallback("14990#W", "-14990") // "149.90°W" or "-149.90"
- *            watch_display_main_line_with_fallback(" 6122#N", "+ 6122") // "61.22°N" or "+61.22"
+ *            watch_display_main_line_with_fallback("6122#N", "+ 6122") // "61.22°N" or "+61.22"
  *
  *          In the first example, the leading 1 allows us to dusplay "146.90°W" on the custom LCD, with the
  *          numeric portion in the clock digits, and the "°W" hint in the small seconds digits. Meanwhile on
  *          the classic LCD, the fallback string "-14990" will display -149 in the large clock digits, and
  *          90 in the small seconds digits, indicating that this is a decimal portion.
- *          In the second example, the leading space allows us to display "61.22°N" on the custom LCD, with
- *          the "°N" in the seconds place, while the fallback string "+ 6122" will display +61 on the large
- *          clock digits, and 22 in the small seconds digits, indicating that this is a decimal portion.
+ *
+ *          In the second example, we can display "61.22°N" on the custom LCD, with the "°N" in the seconds
+ *          place, while the fallback string "+ 6122" will display +61 on the large clock digits, and 22 in
+ *          the small seconds digits, indicating that this is a decimal portion.
+ *
  *          In addition, on the original Casio LCD, the first digit of the hours and seconds display have
  *          their top and bottom segments linked, which causes some limitations (like the short "lowercase"
  *          '7', and the inability to use 'b', 'd', 'f', 'k', 'p', 'q', 't', 'x' or 'y' in those spots. You
