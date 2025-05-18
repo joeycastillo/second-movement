@@ -114,6 +114,11 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
             // update the display as usual
             _activity_logging_face_update_display(state);
             break;
+        case EVENT_TIMEOUT:
+            // snap back to today on timeout
+            state->display_index = 0;
+            _activity_logging_face_update_display(state);
+            break;
         default:
             movement_default_loop_handler(event);
             break;
