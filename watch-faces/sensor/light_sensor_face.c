@@ -61,21 +61,18 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            char buf[14];
+            char buf[7];
             uint16_t light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
-            snprintf(buf, 14, "LL  %-6d", light_level);
-            watch_display_text(WATCH_POSITION_FULL, buf);
-            printf("%s\n", buf);
+            snprintf(buf, 7, "%-6d", light_level);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LIGHT", "LL");
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            break;
-        case EVENT_ALARM_BUTTON_UP:
+            // suppress LED, as it would interfere with light sensing
             break;
         case EVENT_TIMEOUT:
-            break;
-        case EVENT_LOW_ENERGY_UPDATE:
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
+            movement_move_to_face(0);
             break;
         default:
             return movement_default_loop_handler(event);
