@@ -13,6 +13,7 @@ SRCS += \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \
   ./watch-faces/sensor/accelerometer_status_face.c \
+  ./watch-faces/sensor/light_meter_face.c \
   ./watch-faces/sensor/temperature_display_face.c \
   ./watch-faces/sensor/temperature_logging_face.c \
   ./watch-faces/sensor/activity_logging_face.c \
