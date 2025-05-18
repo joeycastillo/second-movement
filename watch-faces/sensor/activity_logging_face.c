@@ -88,6 +88,9 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
             state->display_index = (state->display_index + 1) % ACTIVITY_LOGGING_NUM_DAYS;
             // fall through
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) {
+                watch_stop_sleep_animation();
+            }
             _activity_logging_face_update_display(state);
             break;
         case EVENT_BACKGROUND_TASK:
