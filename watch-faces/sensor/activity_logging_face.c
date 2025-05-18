@@ -93,6 +93,13 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
             }
             _activity_logging_face_update_display(state);
             break;
+        case EVENT_TICK:
+            {
+                if (movement_get_local_date_time().unit.second == 0 && state->display_index == 0) {
+                    _activity_logging_face_update_display(state);
+                }
+            }
+            break;
         case EVENT_BACKGROUND_TASK:
             {
                 size_t pos = state->data_points % ACTIVITY_LOGGING_NUM_DAYS;
