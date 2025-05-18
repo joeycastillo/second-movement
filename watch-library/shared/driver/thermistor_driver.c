@@ -68,6 +68,13 @@ bool thermistor_driver_init(void) {
     // value should be >15000 and <55000 and (between -4° and 76° C)
     if (value < 15000 || value > 55000) has_thermistor = false;
 
+    // clean up, disable everything we enabled earlier.
+    watch_disable_adc();
+    HAL_GPIO_TEMPSENSE_off();
+    HAL_GPIO_TEMPSENSE_pmuxdis();
+    HAL_GPIO_TS_ENABLE_write(!THERMISTOR_ENABLE_VALUE);
+    HAL_GPIO_TS_ENABLE_off();
+
     return has_thermistor;
 }
 
