@@ -118,8 +118,7 @@ void watch_clear_display(void);
 
 /** @brief Displays a string at the given position, starting from the top left. There are ten digits.
            A space in any position will clear that digit.
-  * @deprecated This function is deprecated. Use `watch_display_top_left`, `watch_display_top_right`
-                and `watch_display_main_line` instead
+  * @deprecated Use `watch_display_text` and `watch_display_text_with_fallback` instead.
   * @param string A null-terminated string.
   * @param position The position where you wish to start displaying the string. The day of week digits
   *                 are positions 0 and 1; the day of month digits are positions 2 and 3, and the main
