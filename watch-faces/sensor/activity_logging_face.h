@@ -29,26 +29,18 @@
 /*
  * ACTIVITY LOGGING
  *
- * This watch face works with Movement's built-in count of accelerometer
- * waekeups to log activity over time.
+ * This watch face works with Movement's built-in tracking of accelerometer state to log activity over time.
+ * The watch face shows the number of active minutes counted for each of the last 14 days. Layout:
  *
- * Default behavior is to show the last 100 data points. Format is:
- *  - Top left is display title (LOG or AC for Activity)
- *  - Top right is index backwards in the data log.
- *  - Bottom left is the number of orientation changes in the five minutes logged. (currently non-functional)
- *  - Bottom right is number of stationary minutes (0 to 5)
+ *  - Top left is display title (ACT or AC for Activity)
+ *  - Top right is the day of the month corresponding to the data point shown on screen.
+ *  - Bottom row is the number of active minutes counted on the given day.
+ *  - If the display is showing today's active minutes, the SIGNAL indicator is also energized, to remind you
+ *    that the accelerometer sensor is sensing, and the watch face is still counting today's active minutes.
  *
- * A short press of the Light button reveals the time (bottom row) and date (top right) of the data point.
- * The display will update to say "AT" the time and date, or "T+D" on custom LCD.
+ * A short press of the Alarm button moves backwards in the data log, showing yesterday's active minutes,
+ * then the day before, etc. going back 14 days.
  *
- * A short press of the Alarm button moves backwards in the data log.
- *
- * A long press of the Alarm button initiates a rapid dump of the full activity log buffer. Works best on custom LCD:
- *  - Top left is the index backwards in the data log.
- *  - Top right is the number of stationary minutes (0 to 5)
- *  - Bottom row should be viewed as two three digit numbers:
- *    - Positions 0, 1 and 2 contain the number of orientation changes in the five minutes logged.
- *    - Positions 3, 4 and 5 contain the temperature (256 = 25.6 degrees C)
  */
 
 #include "movement.h"
