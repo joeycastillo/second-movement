@@ -254,25 +254,30 @@ void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32
   */
 void watch_stop_blink(void);
 
-/** @brief Begins a two-segment "tick-tock" animation in position 8.
-  * @details Six of the seven segments in position 8 (and only position 8) are capable of autonomous
-  *          animation. This animation is very basic, and consists of moving a bit pattern forward
+/** @brief Begins a two-segment "tick-tock" animation in position 8 on the classic LCD, or energizes
+ *         the crescent moon icon on the custom LCD to indicate a sleep mode.
+  * @details On the classic Casio LCD, six of the seven segments in position 8 can animate themselves
+  *          autonomously. This animation is very basic, and consists of moving a bit pattern forward
   *          or backward in a shift register whose positions map to fixed segments on the LCD. Given
   *          this constraint, an animation across all six segments does not make sense; so the watch
   *          library offers only a simple "tick/tock" in segments D and E. This animation does not
   *          require any CPU resources, and will continue even in STANDBY and Sleep mode (but not Deep
   *          Sleep mode, since that mode turns off the LCD).
   * @param duration The duration of each frame in ms. 500 milliseconds produces a classic tick/tock.
+  * @note On the custom LCD, this function illuminates the crescent moon icon with no animation. The
+  *       duration parameter is unused and ignored.
   */
 void watch_start_sleep_animation(uint32_t duration);
 
-/** @brief Checks if the tick animation is currently running.
-  * @return true if the animation is running; false otherwise.
+/** @brief Checks if the sleep state is currently shown
+  * @return true if the animation is running on classic, or the sleep indicator is energized on custom.
+  *         false otherwise.
   */
 bool watch_sleep_animation_is_running(void);
 
 /** @brief Stops the tick/tock animation and clears all animating segments.
-  * @details This will stop the animation and clear all segments in position 8.
+  * @details On the classic LCD this will stop the animation and clear all segments in position 8.
+  *          On the custom LCD, it will turn off the crescent moon indicator.
   */
 void watch_stop_sleep_animation(void);
 /// @}
