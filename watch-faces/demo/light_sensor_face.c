@@ -34,16 +34,11 @@
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(light_sensor_state_t));
-        memset(*context_ptr, 0, sizeof(light_sensor_state_t));
-        // Do any one-time tasks in here; the inside of this conditional happens only at boot.
-    }    
+    (void) context_ptr;
 }
 
 void light_sensor_face_activate(void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
-    (void) state;
+    (void) context;
     HAL_GPIO_IR_ENABLE_out();
     HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
@@ -53,8 +48,7 @@ void light_sensor_face_activate(void *context) {
 }
 
 bool light_sensor_face_loop(movement_event_t event, void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
-    (void) state;
+    (void) context;
 
     switch (event.event_type) {
         case EVENT_NONE:
