@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "light_meter_face.h"
 #include "tc.h"
 #include "eic.h"
@@ -33,10 +34,9 @@
 #ifdef HAS_IR_SENSOR
 
 static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t subsecond) {
-    watch_clear_display();
-
     if (state->mode >= LIGHT_METER_MODE_AP_IS_SETTING_ISO) {
         // Handle ISO settings mode.
+        watch_clear_display();
         // Custom LCD can say "ISO". On Classic, we can't show an S in position 1, so "FI" for FIlm speed will have to suffice.
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ISO", "FI");
 
@@ -80,7 +80,7 @@ static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t
         // we are in aperture or shutter priority mode.
         light_meter_aperture_t aperture;
         light_meter_shutter_speed_t shutter;
-        uint32_t light_level;
+        uint16_t light_level;
 
         if (!adc_is_enabled()) {
             /// TODO: need to test this more. If a background task takes a reading and disables the ADC,
@@ -92,22 +92,36 @@ static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t
 
         light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
 
+        /// FIXME: This curve is garbage, but in theory it was meant to convert the light level to an exposure index at ISO 25.
+        // Readings were taken with the custom LCD and the standard Casio light spreader in place.
+        // PLENTY of room for improvement here!
+        const float L = 63188.86f;
+        const float k = 0.8654f;
+        const float x0 = 7.45f;
+        const float C = 2491.21f;
+        float exposure_index = x0 + (1.0f / k) * log((L / ((float)light_level - C)) - 1);
+        if (isnan(exposure_index)) exposure_index = 0;
+
+        int8_t target_exposure_index_at_f1_or_1s = (int8_t) round(exposure_index) + state->iso;
+
         if (state->mode == LIGHT_METER_MODE_APERTURE_PRIORITY) {
             aperture = state->aperture_priority;
-            /// TODO: Calculate actual shutter speed
-            shutter = light_level * LIGHT_METER_SHUTTER_COUNT / 65535;
+            shutter = target_exposure_index_at_f1_or_1s - (state->aperture_priority - LIGHT_METER_APERTURE_F1);
         } else {
             shutter = state->shutter_priority;
-            /// TODO: Calculate actual aperture
-            aperture = light_level * LIGHT_METER_APERTURE_COUNT / 65535;
+            aperture = target_exposure_index_at_f1_or_1s - (state->shutter_priority - LIGHT_METER_SHUTTER_1_SEC);
         }
+        if (shutter < LIGHT_METER_SHUTTER_1_SEC) shutter = LIGHT_METER_SHUTTER_1_SEC;
+        if (aperture < LIGHT_METER_APERTURE_F1) aperture = LIGHT_METER_APERTURE_F1;
 
         // F stop is shown in both AP and SP modes.
+        watch_clear_display();
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, " F/", " F");
 
         switch (aperture) {
             case LIGHT_METER_APERTURE_F1:
-                watch_display_text(WATCH_POSITION_TOP_RIGHT, "1 ");
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+                watch_display_text_with_fallback(WATCH_POSITION_TOP, "TooLo", "LO");
                 break;
             case LIGHT_METER_APERTURE_F1_4:
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, "14");
@@ -141,8 +155,8 @@ static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t
             case LIGHT_METER_APERTURE_F32:
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, "32");
                 break;
-            case LIGHT_METER_APERTURE_COUNT:
-                // will not reach here
+            default:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "too HI", "HIGH  ");
                 break;
         }
 
@@ -154,6 +168,10 @@ static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t
         }
 
         switch (shutter) {
+            case LIGHT_METER_SHUTTER_1_SEC:
+            case LIGHT_METER_SHUTTER_1_2:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "tooLOw", " LO   ");
+                break;
             case LIGHT_METER_SHUTTER_1_4:
                 watch_display_text(WATCH_POSITION_MINUTES, " 4");
                 break;
@@ -189,8 +207,8 @@ static void _light_meter_face_update_display(light_meter_state_t *state, uint8_t
             case LIGHT_METER_SHUTTER_1_4000:
                 watch_display_text(WATCH_POSITION_HOURS, "40");
                 break;
-            case LIGHT_METER_SHUTTER_COUNT:
-                // will not reach here
+            default:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "too HI", "HIGH  ");
                 break;
         }
     }

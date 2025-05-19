@@ -32,14 +32,15 @@
  * LIGHT METER
  *
  * EXTREME WORK IN PROGRESS on a photographic light meter.
- * Currently does not display working exposure readings! This commit is just a
- * user interface for the light meter, with fake readings until I calibrate it.
+ * Currently not even remotely calibrated! I did one afternoon of tests with light
+ * transmitted through the custom LCD, and half-assedly applied a curve that almost
+ * not not quite entirely fit the data. Pull requests welcome!
  *
  */
 
 typedef enum {
-    LIGHT_METER_APERTURE_F1 = 0,
-    LIGHT_METER_APERTURE_F1_4,
+    LIGHT_METER_APERTURE_F1 = -1,   // f/1 will not appear as an aperture priority option
+    LIGHT_METER_APERTURE_F1_4,      // numbered 0, f/1.4 is the first aperture priority option
     LIGHT_METER_APERTURE_F2,
     LIGHT_METER_APERTURE_F2_8,
     LIGHT_METER_APERTURE_F4,
@@ -53,7 +54,9 @@ typedef enum {
 } light_meter_aperture_t;
 
 typedef enum {
-    LIGHT_METER_SHUTTER_1_4 = 0,
+    LIGHT_METER_SHUTTER_1_SEC = -2, // 1 second and 1/2 second will not appear as a shutter priority option
+    LIGHT_METER_SHUTTER_1_2,
+    LIGHT_METER_SHUTTER_1_4, // numbered 0, 1/4 second is the first one to appear in AP list
     LIGHT_METER_SHUTTER_1_8,
     LIGHT_METER_SHUTTER_1_15,
     LIGHT_METER_SHUTTER_1_30,
