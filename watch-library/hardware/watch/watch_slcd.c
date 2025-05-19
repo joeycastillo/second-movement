@@ -40,6 +40,58 @@ static uint16_t _slcd_fc_min_ms_bypass = 0;
 
 static watch_lcd_type_t _installed_display = WATCH_LCD_TYPE_UNKNOWN;
 
+/// NOTE: The function below was commented out because LCD autodetection proved unreliable.
+/// While I would love to fix it, I can't figure it out in time for the product launch.
+/// Instead, this function simply implements the failsafe: red LED glows until one of two
+/// buttons is pressed: bottom left button for classic LCD, bottom right button for custom.
+/// 
+void watch_discover_lcd_type(void) {
+    #if defined(FORCE_CUSTOM_LCD_TYPE)
+    _installed_display = WATCH_LCD_TYPE_CUSTOM;
+    goto valid_display_detected;
+    #elif defined(FORCE_CLASSIC_LCD_TYPE)
+    _installed_display = WATCH_LCD_TYPE_CLASSIC;
+    goto valid_display_detected;
+    #endif
+
+    // Don't bother detecting the LCD type if we're plugged into USB.
+    if (usb_is_enabled()) return;
+
+    // Set red LED to indicate that LED detection is active.
+    watch_enable_leds();
+    watch_set_led_color_rgb(16, 0, 0);
+
+    // Configure buttons as inputs.
+    HAL_GPIO_BTN_MODE_in();
+    HAL_GPIO_BTN_MODE_pulldown();
+    HAL_GPIO_BTN_ALARM_in();
+    HAL_GPIO_BTN_ALARM_pulldown();
+
+    // Press MODE for classic, ALARM for new. The mnemonic to remember this: left button,
+    // backwards in time: classic LCD; right button, forward in time: new custom LCD.
+    while(1) {
+        if (HAL_GPIO_BTN_MODE_read()) {
+            _installed_display = WATCH_LCD_TYPE_CLASSIC;
+            break;
+        }
+        if (HAL_GPIO_BTN_ALARM_read()) {
+            _installed_display = WATCH_LCD_TYPE_CUSTOM;
+            break;
+        }
+
+        delay_ms(4);
+    }
+
+    // LCD was detected. Kill the LED.
+    // Don't worry about the buttons, they'll be taken care of later.
+    watch_set_led_off();
+    watch_disable_leds();
+
+    // Update indicator segment mapping based on the detected display (they are v different).
+    _watch_update_indicator_segments();
+}
+
+/*
 void watch_discover_lcd_type(void) {
     #if defined(FORCE_CUSTOM_LCD_TYPE)
     _installed_display = WATCH_LCD_TYPE_CUSTOM;
@@ -140,6 +192,8 @@ void watch_discover_lcd_type(void) {
 valid_display_detected:
     _watch_update_indicator_segments();
 }
+
+*/
 
 watch_lcd_type_t watch_get_lcd_type(void) {
     return _installed_display;
