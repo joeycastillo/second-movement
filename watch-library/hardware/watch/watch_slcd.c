@@ -48,10 +48,11 @@ static watch_lcd_type_t _installed_display = WATCH_LCD_TYPE_UNKNOWN;
 void watch_discover_lcd_type(void) {
     #if defined(FORCE_CUSTOM_LCD_TYPE)
     _installed_display = WATCH_LCD_TYPE_CUSTOM;
-    goto valid_display_detected;
+    _watch_update_indicator_segments();
+    return;
     #elif defined(FORCE_CLASSIC_LCD_TYPE)
     _installed_display = WATCH_LCD_TYPE_CLASSIC;
-    goto valid_display_detected;
+    return;
     #endif
 
     // Don't bother detecting the LCD type if we're plugged into USB.
