@@ -135,7 +135,14 @@ movement_watch_face_advisory_t activity_logging_face_advise(void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
 
-    if (!HAL_GPIO_A4_read()) state->active_minutes_today++;
+    if (!HAL_GPIO_A4_read()) {
+        // only count this as an active minute if the previous minute was also active.
+        // otherwise, set the flag and we'll count the next minute if the wearer is still active.
+        if (state->previous_minute_was_active) state->active_minutes_today++;
+        else state->previous_minute_was_active = true;
+    } else {
+        state->previous_minute_was_active = false;
+    }
 
     watch_date_time_t datetime = movement_get_local_date_time();
     // request a background task at midnight to shuffle the data into the log

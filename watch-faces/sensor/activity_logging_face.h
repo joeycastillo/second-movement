@@ -53,6 +53,7 @@ typedef struct {
     uint16_t data_points;                               // the number of days logged
     uint8_t display_index;                              // the index we are displaying on screen
     uint16_t active_minutes_today;                      // the number of active minutes logged today
+    bool previous_minute_was_active;                    // we only want to count two or more consecutive active minutes
 } activity_logging_state_t;
 
 void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
