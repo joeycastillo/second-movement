@@ -42,16 +42,39 @@ static void beep_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BTN", "BT");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "beep  ", " beep ");
     if (subsecond % 2) {
-            if (movement_button_should_sound()) {
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " Y");
+        if (movement_button_should_sound()) {
+            if (movement_button_volume() == WATCH_BUZZER_VOLUME_LOUD) {
+                // H for HIGH
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+            }
+            else {
+                // L for LOW
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+            }
         } else {
+            // N for NONE
             watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
         }
     }
 }
 
 static void beep_setting_advance(void) {
-    movement_set_button_should_sound(!movement_button_should_sound());
+    if (!movement_button_should_sound()) {
+        // was muted. make it soft.
+        movement_set_button_should_sound(true);
+        movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
+        beep_setting_display(1);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
+    } else if (movement_button_volume() == WATCH_BUZZER_VOLUME_SOFT) {
+        // was soft. make it loud.
+        movement_set_button_volume(WATCH_BUZZER_VOLUME_LOUD);
+        beep_setting_display(1);
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_LOUD);
+    } else {
+        // was loud. make it silent.
+        movement_set_button_should_sound(false);
+        beep_setting_display(1);
+    }
 }
 
 static void timeout_setting_display(uint8_t subsecond) {

@@ -83,8 +83,7 @@ typedef union {
         bool clock_mode_24h : 1;            // indicates whether clock should use 12 or 24 hour mode.
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
-        // That's 31 bits, leaving room for one more toggle if needed.
-        uint8_t reserved : 1;
+        bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -340,6 +339,9 @@ void movement_set_local_date_time(watch_date_time_t date_time);
 
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);
+
+watch_buzzer_volume_t movement_button_volume(void);
+void movement_set_button_volume(watch_buzzer_volume_t value);
 
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);

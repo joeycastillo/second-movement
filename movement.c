@@ -434,6 +434,14 @@ void movement_set_button_should_sound(bool value) {
     movement_state.settings.bit.button_should_sound = value;
 }
 
+watch_buzzer_volume_t movement_button_volume(void) {
+    return movement_state.settings.bit.button_volume;
+}
+
+void movement_set_button_volume(watch_buzzer_volume_t value) {
+    movement_state.settings.bit.button_volume = value;
+}
+
 movement_clock_mode_t movement_clock_mode_24h(void) {
     return movement_state.settings.bit.clock_mode_24h ? MOVEMENT_CLOCK_MODE_24H : MOVEMENT_CLOCK_MODE_12H;
 }
@@ -609,6 +617,7 @@ void app_init(void) {
         movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
     #endif
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
+        movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
         movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
         movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
@@ -767,7 +776,7 @@ bool app_loop(void) {
     if (movement_state.watch_face_changed) {
         if (movement_state.settings.bit.button_should_sound) {
             // low note for nonzero case, high note for return to watch_face 0
-            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, WATCH_BUZZER_VOLUME_SOFT);
+            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, movement_state.settings.bit.button_volume);
         }
         wf->resign(watch_face_contexts[movement_state.current_face_idx]);
         movement_state.current_face_idx = movement_state.next_face_idx;
