@@ -118,6 +118,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     button_beep();
                     // also turn the alarm on since they just set it.
                     state->alarm_is_on = 1;
+                    movement_set_alarm_enabled(true);
                     watch_set_indicator(WATCH_INDICATOR_SIGNAL);
                     _alarm_face_display_alarm_time(state);
                     break;
@@ -127,8 +128,13 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
                 // in normal mode, toggle alarm on/off.
                 state->alarm_is_on ^= 1;
-                if ( state->alarm_is_on ) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                if ( state->alarm_is_on ) {
+                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                    movement_set_alarm_enabled(true);
+                } else {
+                    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                    movement_set_alarm_enabled(false);
+                }
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -177,7 +183,6 @@ movement_watch_face_advisory_t alarm_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
 
     if ( state->alarm_is_on ) {
-        retval.has_active_alarm = true;
         watch_date_time_t now = movement_get_local_date_time();
         retval.wants_background_task = (state->hour==now.unit.hour && state->minute==now.unit.minute);
         // We’re at the mercy of the advise handler
