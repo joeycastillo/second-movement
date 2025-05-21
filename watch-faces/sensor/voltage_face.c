@@ -50,6 +50,7 @@ bool voltage_face_loop(movement_event_t event, void *context) {
     watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             _voltage_face_update_display();
             break;
         case EVENT_TICK:

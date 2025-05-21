@@ -63,6 +63,7 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
                 movement_move_to_next_face();
                 return false;
             }
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP", "TE");
             // force a measurement to be taken immediately.
             date_time.unit.second = 0;
