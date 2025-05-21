@@ -178,28 +178,35 @@ static void nanosec_update_display() {
 
     switch (nanosec_screen) {
         case 0:
-            sprintf(buf, "FC  %6d", nanosec_state.freq_correction);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "FCorr", "FC");
+            sprintf(buf, "%6d", nanosec_state.freq_correction);
             break;
         case 1:
-            sprintf(buf, "T0  %6d", nanosec_state.center_temperature);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "CTMP ", "T0");
+            sprintf(buf, "%6d", nanosec_state.center_temperature);
             break;
         case 2:
-            sprintf(buf, "2C  %6d", nanosec_state.quadratic_tempco);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "2Coef", "2C");
+            sprintf(buf, "%6d", nanosec_state.quadratic_tempco);
             break;
         case 3:
-            sprintf(buf, "3C  %6d", nanosec_state.cubic_tempco);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "3Coef", "3C");
+            sprintf(buf, "%6d", nanosec_state.cubic_tempco);
             break;
         case 4: // Profile
-            sprintf(buf, "PR      P%1d", nanosec_state.correction_profile);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "PROFL", "PR");
+            sprintf(buf, "    P%1d", nanosec_state.correction_profile);
             break;
         case 5: // Cadence
-            sprintf(buf, "CD      %2d", nanosec_state.correction_cadence);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "Cadnc", "CD");
+            sprintf(buf, "    %2d", nanosec_state.correction_cadence);
             break;
         case 6: // Aging
-            sprintf(buf, "AA  %6d", nanosec_state.aging_ppm_pa);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "AgeCo", "CD");
+            sprintf(buf, "%6d", nanosec_state.aging_ppm_pa);
             break;
     }
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void value_increase(int16_t delta) {

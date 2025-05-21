@@ -28,6 +28,7 @@
 #include "finetune_face.h"
 #include "nanosec_face.h"
 #include "watch_utility.h"
+#include "delay.h"
 
 extern nanosec_state_t nanosec_state;
 
@@ -44,7 +45,7 @@ void finetune_face_activate(void *context) {
     (void) context;
 
     // Handle any tasks related to your watch face coming on screen.
-    watch_display_string("FT", 0);
+    watch_display_text(WATCH_POSITION_TOP_LEFT, "FT");
     total_adjustment = 0;
     finetune_page = 0;
 }
@@ -62,32 +63,33 @@ static void finetune_update_display(void) {
     char buf[25];
 
     if (finetune_page == 0) {
-        watch_display_string("FT", 0);
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "FTU", "FT");
         watch_date_time_t date_time = watch_rtc_get_date_time();
-        sprintf(buf, "%02d", date_time.unit.second);
-        watch_display_string(buf, 8);
-
-        sprintf(buf, "%04d", abs(total_adjustment));
-        watch_display_string(buf, 4);
+        sprintf(buf, "%04d%02d", abs(total_adjustment), date_time.unit.second);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
         if (total_adjustment < 0) {
-            watch_display_string("--", 2);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, "--");
         } else {
-            watch_display_string("  ", 2);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
         }
     } else if (finetune_page == 1) {
         float hours = finetune_get_hours_passed();
-
-        sprintf(buf, "DT  %4d%02d", (int)hours, (int)(fmodf(hours, 1.) * 100));
-        watch_display_string(buf, 0);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP, "DELtA", "DT");
+        sprintf(buf, "%4d%02d", (int)hours, (int)(fmodf(hours, 1.) * 100));
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
     } else if (finetune_page == 2) {
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Frq", " F");
         if (finetune_get_hours_passed() < 6) {
-            sprintf(buf, " F  6HR   ");
-            watch_display_string(buf, 0);
+            watch_display_text(WATCH_POSITION_BOTTOM, "6HR   ");
         } else {
             float correction = finetune_get_correction();
-            sprintf(buf, " F%s%2d%04d", (total_adjustment < 0) ? " -" : "  ", (int)fabsf(correction), (int)(remainderf(fabsf(correction), 1.) * 10000));
-            watch_display_string(buf, 0);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, (total_adjustment < 0) ? " -" : "  ");
+
+            sprintf(buf, "%2d%04d", (int)fabsf(correction), (int)(remainderf(fabsf(correction), 1.) * 10000));
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
     }
 }

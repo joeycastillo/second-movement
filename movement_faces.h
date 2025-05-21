@@ -48,4 +48,6 @@
 #include "light_sensor_face.h"
 #include "irda_upload_face.h"
 #include "chirpy_demo_face.h"
+#include "finetune_face.h"
+#include "nanosec_face.h"
 // New includes go above this line.

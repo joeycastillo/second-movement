@@ -21,6 +21,8 @@ SRCS += \
   ./watch-faces/settings/set_time_face.c \
   ./watch-faces/settings/preferences_face.c \
   ./watch-faces/settings/settings_face.c \
+  ./watch-faces/settings/finetune_face.c \
+  ./watch-faces/settings/nanosec_face.c \
   ./watch-faces/io/chirpy_demo_face.c \
   ./watch-faces/io/irda_upload_face.c \
 # New watch faces go above this line.
