@@ -53,7 +53,8 @@ void watch_enable_analog_input(const uint16_t pin);
 uint16_t watch_get_analog_pin_level(const uint16_t pin);
 
 /** @brief Returns the voltage of the VCC supply in millivolts (i.e. 3000 mV == 3.0 V). If running on
-  *        a coin cell, this will be the battery voltage.
+  *        a coin cell, this will be the battery voltage. If the ADC is not running when this function
+  *        is called, it enabled the ADC briefly, and returns it to the off state.
   * @details Unlike other ADC functions, this function does not return a raw value from the ADC, but
   *          rather scales it to an actual number of millivolts. This is because the ADC doesn't let
   *          us measure VCC per se; it instead lets us measure VCC / 4, and we choose to measure it

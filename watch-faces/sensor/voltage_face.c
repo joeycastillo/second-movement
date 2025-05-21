@@ -28,9 +28,7 @@
 #include "watch.h"
 
 static void _voltage_face_update_display(void) {
-    watch_enable_adc();
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
-    watch_disable_adc();
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BAT", "BA");
     watch_display_float_with_best_effort(voltage, " V");

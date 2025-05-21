@@ -51,9 +51,7 @@ void _watch_init(void) {
     while(!SUPC->STATUS.bit.VREGRDY); // wait for voltage regulator to become ready
 
     // check the battery voltage...
-    watch_enable_adc();
     uint16_t battery_voltage = watch_get_vcc_voltage();
-    watch_disable_adc();
     // ...because we can enable the more efficient low power regulator if the system voltage is > 2.5V
     // still, enable LPEFF only if the battery voltage is comfortably above this threshold.
     if (battery_voltage >= 2700) {
