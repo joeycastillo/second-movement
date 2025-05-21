@@ -2,6 +2,7 @@
  * MIT License
  *
  * Copyright (c) 2022 Josh Berson
+ * Copyright (c) 2025 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +23,10 @@
  * SOFTWARE.
  */
 
-#ifndef WAKE_FACE_H_
-#define WAKE_FACE_H_
+#pragma once
 
 /*
- * WAKE daily alarm face
+ * Daily ALARM face (formerly WAKE Face)
  *
  * Basic daily alarm clock face. Seems useful if nothing else in the interest
  * of feature parity with the F-91W’s OEM module, 593.
@@ -42,25 +42,30 @@
 
 #include "movement.h"
 
+// enum for setting alarm time
+typedef enum {
+    ALARM_FACE_SETTING_MODE_NONE = 0,
+    ALARM_FACE_SETTING_MODE_SETTING_HOUR,
+    ALARM_FACE_SETTING_MODE_SETTING_MINUTE
+} alarm_face_setting_mode_t;
+
 typedef struct {
     uint32_t hour : 5;
     uint32_t minute : 6;
-    uint32_t mode : 1;
-} wake_face_state_t;
+    uint32_t alarm_is_on : 1;
+    alarm_face_setting_mode_t setting_mode : 2;
+} alarm_face_state_t;
 
-void wake_face_setup(uint8_t watch_face_index, void **context_ptr);
-void wake_face_activate(void *context);
-bool wake_face_loop(movement_event_t event, void *context);
-void wake_face_resign(void *context);
-movement_watch_face_advisory_t wake_face_advise(void *context);
+void alarm_face_setup(uint8_t watch_face_index, void **context_ptr);
+void alarm_face_activate(void *context);
+bool alarm_face_loop(movement_event_t event, void *context);
+void alarm_face_resign(void *context);
+movement_watch_face_advisory_t alarm_face_advise(void *context);
 
-#define wake_face ((const watch_face_t){ \
-    wake_face_setup, \
-    wake_face_activate, \
-    wake_face_loop, \
-    wake_face_resign, \
-    wake_face_advise \
+#define alarm_face ((const watch_face_t){ \
+    alarm_face_setup, \
+    alarm_face_activate, \
+    alarm_face_loop, \
+    alarm_face_resign, \
+    alarm_face_advise \
 })
-
-#endif // WAKE_FACE_H_
-
