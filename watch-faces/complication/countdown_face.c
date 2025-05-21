@@ -229,6 +229,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "TIMER", "CD");
             draw(state, event.subsecond);
             break;
@@ -359,6 +360,13 @@ bool countdown_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
+            // we will only get this if the timer is stopped.
+            if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+                // clear out the last two digits and replace them with the sleep mode indicator
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
+            }
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
+            break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // intentionally squelch the light default event; we only show the light when cd is running or reset
             break;
