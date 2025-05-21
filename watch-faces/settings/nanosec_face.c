@@ -327,6 +327,7 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             // watch_start_sleep_animation(500);
             break;
         case EVENT_BACKGROUND_TASK:
+        {
             // Here we measure temperature and do main frequency correction
             float temperature_c = movement_get_temperature();
             float voltage = (float)watch_get_vcc_voltage() / 1000.0;
@@ -348,6 +349,7 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
                         ) / 0.95367); // 1 correction unit is 0.095367ppm.
 
             apply_RTC_correction(correction);
+        }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit
