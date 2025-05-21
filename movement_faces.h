@@ -43,7 +43,6 @@
 #include "light_meter_face.h"
 #include "voltage_face.h"
 #include "set_time_face.h"
-#include "preferences_face.h"
 #include "settings_face.h"
 #include "light_sensor_face.h"
 #include "irda_upload_face.h"

@@ -19,7 +19,6 @@ SRCS += \
   ./watch-faces/sensor/activity_logging_face.c \
   ./watch-faces/sensor/voltage_face.c \
   ./watch-faces/settings/set_time_face.c \
-  ./watch-faces/settings/preferences_face.c \
   ./watch-faces/settings/settings_face.c \
   ./watch-faces/settings/finetune_face.c \
   ./watch-faces/settings/nanosec_face.c \
