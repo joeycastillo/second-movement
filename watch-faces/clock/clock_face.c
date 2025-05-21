@@ -64,8 +64,8 @@ static void clock_indicate_alarm() {
     clock_indicate(WATCH_INDICATOR_SIGNAL, movement_alarm_enabled());
 }
 
-static void clock_indicate_time_signal(clock_state_t *clock) {
-    clock_indicate(WATCH_INDICATOR_BELL, clock->time_signal_enabled);
+static void clock_indicate_time_signal(clock_state_t *state) {
+    clock_indicate(WATCH_INDICATOR_BELL, state->time_signal_enabled);
 }
 
 static void clock_indicate_24h() {
@@ -81,14 +81,14 @@ static void clock_indicate_pm(watch_date_time_t date_time) {
     clock_indicate(WATCH_INDICATOR_PM, clock_is_pm(date_time));
 }
 
-static void clock_indicate_low_available_power(clock_state_t *clock) {
+static void clock_indicate_low_available_power(clock_state_t *state) {
     // Set the low battery indicator if battery power is low
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
         // interlocking arrows imply "exchange" the battery.
-        clock_indicate(WATCH_INDICATOR_ARROWS, clock->battery_low);
+        clock_indicate(WATCH_INDICATOR_ARROWS, state->battery_low);
     } else {
         // LAP indicator on classic LCD is an adequate fallback.
-        clock_indicate(WATCH_INDICATOR_LAP, clock->battery_low);
+        clock_indicate(WATCH_INDICATOR_LAP, state->battery_low);
     }
 }
 
@@ -102,24 +102,24 @@ static watch_date_time_t clock_24h_to_12h(watch_date_time_t date_time) {
     return date_time;
 }
 
-static void clock_check_battery_periodically(clock_state_t *clock, watch_date_time_t date_time) {
+static void clock_check_battery_periodically(clock_state_t *state, watch_date_time_t date_time) {
     // check the battery voltage once a day
-    if (date_time.unit.day == clock->last_battery_check) { return; }
+    if (date_time.unit.day == state->last_battery_check) { return; }
 
-    clock->last_battery_check = date_time.unit.day;
+    state->last_battery_check = date_time.unit.day;
 
     watch_enable_adc();
     uint16_t voltage = watch_get_vcc_voltage();
     watch_disable_adc();
 
-    clock->battery_low = voltage < CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD;
+    state->battery_low = voltage < CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD;
 
-    clock_indicate_low_available_power(clock);
+    clock_indicate_low_available_power(state);
 }
 
-static void clock_toggle_time_signal(clock_state_t *clock) {
-    clock->time_signal_enabled = !clock->time_signal_enabled;
-    clock_indicate_time_signal(clock);
+static void clock_toggle_time_signal(clock_state_t *state) {
+    state->time_signal_enabled = !state->time_signal_enabled;
+    clock_indicate_time_signal(state);
 }
 
 static void clock_display_all(watch_date_time_t date_time) {
@@ -173,8 +173,8 @@ static bool clock_display_some(watch_date_time_t current, watch_date_time_t prev
     }
 }
 
-static void clock_display_clock(clock_state_t *clock, watch_date_time_t current) {
-    if (!clock_display_some(current, clock->date_time.previous)) {
+static void clock_display_clock(clock_state_t *state, watch_date_time_t current) {
+    if (!clock_display_some(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm(current);
             current = clock_24h_to_12h(current);
@@ -230,18 +230,18 @@ void clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 }
 
 void clock_face_activate(void *context) {
-    clock_state_t *clock = (clock_state_t *) context;
+    clock_state_t *state = (clock_state_t *) context;
 
     clock_stop_tick_tock_animation();
 
-    clock_indicate_time_signal(clock);
+    clock_indicate_time_signal(state);
     clock_indicate_alarm();
     clock_indicate_24h();
 
     watch_set_colon();
 
     // this ensures that none of the timestamp fields will match, so we can re-render them all.
-    clock->date_time.previous.reg = 0xFFFFFFFF;
+    state->date_time.previous.reg = 0xFFFFFFFF;
 }
 
 bool clock_face_loop(movement_event_t event, void *context) {
