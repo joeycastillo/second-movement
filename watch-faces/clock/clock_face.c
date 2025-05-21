@@ -42,16 +42,6 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
-typedef struct {
-    struct {
-        watch_date_time_t previous;
-    } date_time;
-    uint8_t last_battery_check;
-    uint8_t watch_face_index;
-    bool time_signal_enabled;
-    bool battery_low;
-} clock_state_t;
-
 static void clock_indicate(watch_indicator_t indicator, bool on) {
     if (on) {
         watch_set_indicator(indicator);
