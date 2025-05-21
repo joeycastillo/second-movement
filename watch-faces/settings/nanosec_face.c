@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "thermistor_driver.h"
 #include "nanosec_face.h"
 #include "filesystem.h"
 #include "watch_utility.h"
@@ -329,10 +328,12 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_BACKGROUND_TASK:
             // Here we measure temperature and do main frequency correction
-            thermistor_driver_enable();
-            float temperature_c = thermistor_driver_get_temperature();
+            float temperature_c = movement_get_temperature();
             float voltage = (float)watch_get_vcc_voltage() / 1000.0;
-            thermistor_driver_disable();
+
+            // If temperature is 0xFFFFFFFF, no temperature sensor is installed.
+            // Should we assume nominal temperature here? Seems better than aborting.
+            if (temperature_c == 0xFFFFFFFF) temperature_c = nanosec_state.center_temperature;
             // L22 correction scaling is 0.95367ppm per 1 in FREQCORR
             // At wrong temperature crystall starting to run slow, negative correction will speed up frequency to correct
             // Default 32kHz correciton factor is -0.034, centered around 25°C
