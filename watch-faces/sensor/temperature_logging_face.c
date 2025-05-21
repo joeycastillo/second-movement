@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "temperature_logging_face.h"
-#include "thermistor_driver.h"
 #include "watch.h"
 
 static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger_state) {

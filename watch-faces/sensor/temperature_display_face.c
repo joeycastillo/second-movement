@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "temperature_display_face.h"
-#include "thermistor_driver.h"
 #include "watch.h"
 
 static bool skip = false;
