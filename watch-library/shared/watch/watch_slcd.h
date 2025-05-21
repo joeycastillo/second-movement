@@ -42,9 +42,9 @@
   */
 /// @{
 
-#define SLCD_SEGID(com, seg) (((com) << 16) | (seg))
-#define SLCD_COMNUM(segid) (((segid) >> 16) & 0xFF)
-#define SLCD_SEGNUM(segid) ((segid)&0xFF)
+#define SLCD_SEGID(com, seg) (((com) << 5) | (seg))
+#define SLCD_COMNUM(segid) (((segid) >> 5) & 0x07)
+#define SLCD_SEGNUM(segid) ((segid) & 0x1F)
 
 /// An enum listing the icons and indicators available on the watch.
 typedef enum {

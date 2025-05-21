@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-uint32_t IndicatorSegments[8] = {
+uint8_t IndicatorSegments[8] = {
     SLCD_SEGID(0, 17), // WATCH_INDICATOR_SIGNAL
     SLCD_SEGID(0, 16), // WATCH_INDICATOR_BELL
     SLCD_SEGID(2, 17), // WATCH_INDICATOR_PM
