@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-uint32_t IndicatorSegments[7] = {
+uint32_t IndicatorSegments[8] = {
     SLCD_SEGID(0, 17), // WATCH_INDICATOR_SIGNAL
     SLCD_SEGID(0, 16), // WATCH_INDICATOR_BELL
     SLCD_SEGID(2, 17), // WATCH_INDICATOR_PM
@@ -38,7 +38,8 @@ uint32_t IndicatorSegments[7] = {
 
     // Placeholders for indicators unavailable on the original F-91W LCD
     SLCD_SEGID(4, 0),  // WATCH_INDICATOR_ARROWS (does not exist, will set in SDATAL4 which is harmless)
-    SLCD_SEGID(4, 0)   // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
+    SLCD_SEGID(4, 0),  // WATCH_INDICATOR_SLEEP (does not exist, will set in SDATAL4 which is harmless)
+    SLCD_SEGID(4, 0)   // WATCH_INDICATOR_COLON (does not exist, will set in SDATAL4 which is harmless)
 };
 
 void watch_display_character(uint8_t character, uint8_t position) {
@@ -387,5 +388,6 @@ void _watch_update_indicator_segments(void) {
         IndicatorSegments[4] = SLCD_SEGID(1,  0); // WATCH_INDICATOR_LAP
         IndicatorSegments[5] = SLCD_SEGID(2,  0); // WATCH_INDICATOR_ARROWS
         IndicatorSegments[6] = SLCD_SEGID(3,  0); // WATCH_INDICATOR_SLEEP
+        IndicatorSegments[7] = SLCD_SEGID(4,  0); // WATCH_INDICATOR_SLEEP
     }
 }
