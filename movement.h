@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include "watch.h"
 #include "utz.h"
+#include "lis2dw.h"
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
@@ -291,6 +292,8 @@ typedef struct {
 
     // boolean set if accelerometer is detected
     bool has_lis2dw;
+    // data rate for background accelerometer sensing
+    lis2dw_data_rate_t accelerometer_background_rate;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -372,6 +375,10 @@ void movement_set_alarm_enabled(bool value);
 // if the board has an accelerometer, these functions will enable or disable tap detection.
 bool movement_enable_tap_detection_if_available(void);
 bool movement_disable_tap_detection_if_available(void);
+
+// gets and sets the accelerometer data rate in the background
+lis2dw_data_rate_t movement_get_accelerometer_background_rate(void);
+bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

@@ -73,6 +73,8 @@ void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) 
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(activity_logging_state_t));
         memset(*context_ptr, 0, sizeof(activity_logging_state_t));
+        // At first run, tell Movement to run the accelerometer in the background. It will now run at this rate forever.
+        movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_LOWEST);
     }
 }
 

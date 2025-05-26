@@ -54,6 +54,13 @@ void accelerometer_status_face_setup(uint8_t watch_face_index, void ** context_p
 void accelerometer_status_face_activate(void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
+    // get the current data rate from Movement
+    state->old_rate = movement_get_accelerometer_background_rate();
+    if (state->old_rate == LIS2DW_DATA_RATE_POWERDOWN) {
+        // if accelerometer was powered down, power it up at the lowest possible rate
+        movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_LOWEST);
+    }
+
     // never in settings mode at the start
     state->is_setting = false;
 
@@ -126,5 +133,9 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
 }
 
 void accelerometer_status_face_resign(void *context) {
-    (void) context;
+    accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
+
+    // restore old data rate. This only does something if old_rate was POWERDOWN.
+    // If the old rate was anything other than POWERDOWN, we didn't change anything and this will be a no-op.
+    movement_set_accelerometer_background_rate(state->old_rate);
 }

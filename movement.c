@@ -40,7 +40,6 @@
 #include "shell.h"
 #include "utz.h"
 #include "zones.h"
-#include "lis2dw.h"
 #include "tc.h"
 #include "evsys.h"
 #include "delay.h"
@@ -539,12 +538,30 @@ bool movement_disable_tap_detection_if_available(void) {
     if (movement_state.has_lis2dw) {
         // Ramp data rate back down to the usual lowest rate to save power.
         lis2dw_set_low_noise_mode(false);
-        lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
+        lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
         // ...disable Z axis (not sure if this is needed, does this save power?)...
         lis2dw_configure_tap_threshold(0, 0, 0, 0);
 
         return true;
+    }
+
+    return false;
+}
+
+lis2dw_data_rate_t movement_get_accelerometer_background_rate(void) {
+    if (movement_state.has_lis2dw) return movement_state.accelerometer_background_rate;
+    else return LIS2DW_DATA_RATE_POWERDOWN;
+}
+
+bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate) {
+    if (movement_state.has_lis2dw) {
+        if (movement_state.accelerometer_background_rate != new_rate) {
+            lis2dw_set_data_rate(new_rate);
+            movement_state.accelerometer_background_rate = new_rate;
+
+            return true;
+        }
     }
 
     return false;
@@ -702,7 +719,6 @@ void app_setup(void) {
             lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
             lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
             lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // sample at 1.6 Hz, lowest rate available
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
@@ -730,7 +746,14 @@ void app_setup(void) {
             // but it will only fire once tap recognition is enabled.
             watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
+            // Enable the interrupts...
             lis2dw_enable_interrupts();
+
+            // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
+            // Tap detection will ramp up sesing and make use of the A3 interrupt.
+            // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
+            movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
         } else {
             watch_disable_i2c();
         }
