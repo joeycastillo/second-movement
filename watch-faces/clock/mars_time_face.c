@@ -31,25 +31,25 @@
 // note: lander coordinates come from Mars24's `marslandmarks.xml` file
 static double site_longitudes[MARS_TIME_NUM_SITES] = {
     0,                      // Mars Coordinated Time, at the meridian
-    360.0 - 109.9,          // Zhurong lander site
     360.0 - 77.45088572,    // Perseverance lander site
-    360.0 - 135.623447,     // InSight lander site
     360.0 - 137.441635,     // Curiosity lander site
 };
 
-static char site_names[MARS_TIME_NUM_SITES][3] = {
+static char site_names_classic[MARS_TIME_NUM_SITES][3] = {
     "MC",
-    "ZH",
     "PE",
-    "IN",
     "CU",
+};
+
+static char site_names_custom[MARS_TIME_NUM_SITES][4] = {
+    "MTC",
+    "PER",
+    "CUR",
 };
 
 static uint16_t landing_sols[MARS_TIME_NUM_SITES] = {
     0,
-    52387,
     52304,
-    51511,
     49269,
 };
 
@@ -68,8 +68,8 @@ static void _h_to_hms(mars_clock_hms_t *date_time, double h) {
 }
 
 static void _update(mars_time_state_t *state) {
-    char buf[11];
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    char buf[8];
+    watch_date_time_t date_time = movement_get_local_date_time();
     uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
     // TODO: I'm skipping over some steps here.
     // https://www.giss.nasa.gov/tools/mars24/help/algorithm.html
@@ -88,22 +88,25 @@ static void _update(mars_time_state_t *state) {
         lmt = fmod(lmst + 24, 24);
     }
 
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, site_names_custom[state->current_site], site_names_classic[state->current_site]);
+
     if (state->displaying_sol) {
         // TODO: this is not right, mission sol should turn over at midnight local time?
         uint16_t sol = floor(msd) - landing_sols[state->current_site];
-        if (sol < 1000) sprintf(&buf[0], "%s  Sol%3d", site_names[state->current_site], sol);
-        else sprintf(&buf[0], "%s $%6d", site_names[state->current_site], sol);
+        sprintf(buf, "%6d", sol);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, " $");
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
         watch_clear_colon();
         watch_clear_indicator(WATCH_INDICATOR_24H);
     } else {
         mars_clock_hms_t mars_time;
         _h_to_hms(&mars_time, lmt);
-        sprintf(&buf[0], "%s  %02d%02d%02d", site_names[state->current_site], mars_time.hour, mars_time.minute, mars_time.second);
+        sprintf(buf, "%02d%02d%02d", mars_time.hour, mars_time.minute, mars_time.second);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
         watch_set_colon();
         watch_set_indicator(WATCH_INDICATOR_24H);
     }
-
-    watch_display_string(buf, 0);
 }
 
 void mars_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {

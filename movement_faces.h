@@ -50,4 +50,5 @@
 #include "chirpy_demo_face.h"
 #include "finetune_face.h"
 #include "nanosec_face.h"
+#include "mars_time_face.h"
 // New includes go above this line.
