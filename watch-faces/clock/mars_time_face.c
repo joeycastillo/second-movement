@@ -120,6 +120,11 @@ void mars_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void mars_time_face_activate(void *context) {
     mars_time_state_t *state = (mars_time_state_t *)context;
     (void) state;
+
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+        watch_stop_blink();
+    }
 }
 
 bool mars_time_face_loop(movement_event_t event, void *context) {
@@ -141,13 +146,12 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
             state->current_site = (state->current_site + 1) % MARS_TIME_NUM_SITES;
             _update(state);
             break;
-        case EVENT_TIMEOUT:
-            // TODO: make this lower power so we can avoid timeout
-            movement_move_to_face(0);
-            break;
         case EVENT_LOW_ENERGY_UPDATE:
-            // TODO: low energy update
-            // watch_start_sleep_animation(500);
+            // a mars solar second is 1.0275 seconds, so the animation should tick at half of that.
+            if (!watch_sleep_animation_is_running()) {
+                watch_start_sleep_animation(514);
+                watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 514);
+            }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit
