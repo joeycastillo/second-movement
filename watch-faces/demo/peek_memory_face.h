@@ -24,32 +24,37 @@
 
 #pragma once
 
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "alarm_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "stopwatch_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
-#include "moon_phase_face.h"
-#include "days_since_face.h"
-#include "character_set_face.h"
-#include "accelerometer_status_face.h"
-#include "all_segments_face.h"
-#include "temperature_display_face.h"
-#include "temperature_logging_face.h"
-#include "activity_logging_face.h"
-#include "light_meter_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "settings_face.h"
-#include "light_sensor_face.h"
-#include "irda_upload_face.h"
-#include "chirpy_demo_face.h"
-#include "finetune_face.h"
-#include "nanosec_face.h"
-#include "mars_time_face.h"
-#include "peek_memory_face.h"
-// New includes go above this line.
+/*
+ * PEEK FACE
+ *
+ * This watch face displays a location in memory in a given format.
+ * Currently hard coded but would be cool to let user select it somehow.
+ *
+ * Only works with custom LCD. This is for debugging purposes only.
+ */
+
+#include "movement.h"
+
+/// TODO: more formats, signed and unsigned decimal, etc.
+typedef enum {
+    PEEK_MEMORY_FORMAT_HEX = 0,
+    PEEK_MEMORY_FORMAT_DATE
+} peek_memory_format_t;
+
+typedef struct {
+    uint8_t format;
+    void *location;
+} peek_memory_state_t;
+
+void peek_memory_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void peek_memory_face_activate(void *context);
+bool peek_memory_face_loop(movement_event_t event, void *context);
+void peek_memory_face_resign(void *context);
+
+#define peek_memory_face ((const watch_face_t){ \
+    peek_memory_face_setup, \
+    peek_memory_face_activate, \
+    peek_memory_face_loop, \
+    peek_memory_face_resign, \
+    NULL, \
+})
