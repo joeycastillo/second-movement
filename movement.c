@@ -636,7 +636,11 @@ void app_init(void) {
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
         movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
+#ifdef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+        movement_state.settings.bit.le_interval = 0;
+#else
         movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
+#endif
         movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
 
         movement_store_settings();
@@ -774,6 +778,8 @@ void app_setup(void) {
     }
 }
 
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+
 static void _sleep_mode_app_loop(void) {
     movement_state.needs_wake = false;
     // as long as le_mode_ticks is -1 (i.e. we are in low energy mode), we wake up here, update the screen, and go right back to sleep.
@@ -790,6 +796,8 @@ static void _sleep_mode_app_loop(void) {
         else watch_enter_sleep_mode();
     }
 }
+
+#endif
 
 bool app_loop(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
@@ -828,6 +836,7 @@ bool app_loop(void) {
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
 
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
     // if we have timed out of our low energy mode countdown, enter low energy mode.
     if (movement_state.le_mode_ticks == 0) {
         movement_state.le_mode_ticks = -1;
@@ -848,6 +857,7 @@ bool app_loop(void) {
         // need to figure out if there's a better heuristic for determining how we woke up.
         app_setup();
     }
+#endif
 
     // default to being allowed to sleep by the face.
     bool can_sleep = true;

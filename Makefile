@@ -42,6 +42,10 @@ else
   endif
 endif
 
+ifdef NOSLEEP
+    DEFINES += -DMOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+endif
+
 ifdef EMSCRIPTEN
 all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).html
 $(BUILD)/$(BIN).html: $(OBJS)

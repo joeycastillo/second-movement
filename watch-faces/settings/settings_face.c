@@ -243,12 +243,15 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].display = timeout_setting_display;
         state->settings_screens[current_setting].advance = timeout_setting_advance;
         current_setting++;
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         state->settings_screens[current_setting].display = low_energy_setting_display;
         state->settings_screens[current_setting].advance = low_energy_setting_advance;
         current_setting++;
+#endif
         state->settings_screens[current_setting].display = led_duration_setting_display;
         state->settings_screens[current_setting].advance = led_duration_setting_advance;
         current_setting++;
+        state->led_color_start = current_setting;
 #ifdef WATCH_RED_TCC_CHANNEL
         state->settings_screens[current_setting].display = red_led_setting_display;
         state->settings_screens[current_setting].advance = red_led_setting_advance;
@@ -308,7 +311,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
             return movement_default_loop_handler(event);
     }
 
-    if (state->current_page > 4) {
+    if (state->current_page >= state->led_color_start) {
         movement_color_t color = movement_backlight_color();
         // this bitwise math turns #000 into #000000, #111 into #111111, etc.
         movement_force_led_on(color.red | color.red << 4,
