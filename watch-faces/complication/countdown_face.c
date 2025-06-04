@@ -356,7 +356,9 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                 state->mode = cd_reset;
                 store_countdown(state);
                 movement_request_tick_frequency(1);
-                button_beep();
+            }
+            if (state->mode != cd_running) {
+                movement_move_to_face(0);
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
