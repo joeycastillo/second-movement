@@ -146,7 +146,7 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_LONG_PRESS:
             movement_illuminate_led();
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ALARM_LONG_PRESS:
             state->current_site = (state->current_site + 1) % MARS_TIME_NUM_SITES;
             _update(state, false);
             break;
