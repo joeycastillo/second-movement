@@ -53,7 +53,7 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
     (void) context;
     watch_date_time_t date_time = watch_rtc_get_date_time();
     switch (event.event_type) {
-        case EVENT_ALARM_BUTTON_DOWN:
+        case EVENT_ALARM_LONG_PRESS:
             movement_set_use_imperial_units(!movement_use_imperial_units());
             _temperature_display_face_update_display(movement_use_imperial_units());
             break;
