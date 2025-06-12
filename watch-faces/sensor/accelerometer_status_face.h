@@ -25,11 +25,13 @@
 #pragma once
 
 /*
- * Accelerometer Interrupt Counter
+ * Accelerometer Status / Settings
  *
- * This is an experimental watch face for counting the number of interrupts that
- * the Sensor Watch Motion acceleromoeter board fires. I expect it will be removed
- * once we integrate accelerometer functionality more deeply into Movement.
+ * Meant to be used in conjunction with the activity_logging_face. Shows the current
+ * status of the accelerometer active/still status pin, and allows adjusting the
+ * motion threshold via a long press of ALARM. Note that this will not work without
+ * activity_logging_face in the lineup as activity_logging_face is the one that enables
+ * background accelerometer sensing.
  */
 
 #include "movement.h"
