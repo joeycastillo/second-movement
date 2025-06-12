@@ -38,7 +38,6 @@
 typedef struct {
     uint8_t new_threshold;
     uint8_t threshold;
-    lis2dw_data_rate_t old_rate;
     bool is_setting;
 } accel_interrupt_count_state_t;
 
