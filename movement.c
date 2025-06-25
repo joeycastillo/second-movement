@@ -716,53 +716,60 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
 #ifdef I2C_SERCOM
-        // if accelerometer was already detected and set up, no need to set it up again.
-        if (!movement_state.has_lis2dw) {
+        static bool lis2dw_checked = false;
+        if (!lis2dw_checked) {
             watch_enable_i2c();
             if (lis2dw_begin()) {
                 movement_state.has_lis2dw = true;
-
-                lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
-                lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
-                lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
-                lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
-                lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
-                lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-                lis2dw_configure_wakeup_threshold(32);          // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
-                lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
-
-                // set up interrupts:
-                // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
-                /// TODO: We had routed this interrupt to TC2 to count orientation changes, but TC2 consumed too much power.
-                /// Orientation changes helped with sleep tracking; would love to bring this back if we can find a low power solution.
-                /// For now, commenting these lines out; check commit 27f0c629d865f4bc56bc6e678da1eb8f4b919093 for power-hungry but working code.
-                // lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-                // HAL_GPIO_A3_in();
-
-                // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
-                // a falling edge on INT2 indicates the accelerometer has woken up.
-                lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
-                HAL_GPIO_A4_in();
-
-                // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
-                // Still if you want to wake on motion, you can do it by uncommenting this line:
-                // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
-
-                // later on, we are going to use INT1 for tap detection. We'll set up that interrupt here,
-                // but it will only fire once tap recognition is enabled.
-                watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
-
-                // Enable the interrupts...
-                lis2dw_enable_interrupts();
-
-                // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
-                // Tap detection will ramp up sesing and make use of the A3 interrupt.
-                // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
-                lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
-                movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
             } else {
+                movement_state.has_lis2dw = false;
                 watch_disable_i2c();
             }
+            lis2dw_checked = true;
+        } else if (movement_state.has_lis2dw) {
+            watch_enable_i2c();
+            lis2dw_begin();
+        }
+
+        if (movement_state.has_lis2dw) {
+            lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
+            lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
+            lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
+            lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
+            lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
+            lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
+            lis2dw_configure_wakeup_threshold(32);          // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
+            lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
+
+            // set up interrupts:
+            // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
+            /// TODO: We had routed this interrupt to TC2 to count orientation changes, but TC2 consumed too much power.
+            /// Orientation changes helped with sleep tracking; would love to bring this back if we can find a low power solution.
+            /// For now, commenting these lines out; check commit 27f0c629d865f4bc56bc6e678da1eb8f4b919093 for power-hungry but working code.
+            // lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
+            // HAL_GPIO_A3_in();
+
+            // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
+            // a falling edge on INT2 indicates the accelerometer has woken up.
+            lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
+            HAL_GPIO_A4_in();
+
+            // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
+            // Still if you want to wake on motion, you can do it by uncommenting this line:
+            // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+
+            // later on, we are going to use INT1 for tap detection. We'll set up that interrupt here,
+            // but it will only fire once tap recognition is enabled.
+            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
+
+            // Enable the interrupts...
+            lis2dw_enable_interrupts();
+
+            // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
+            // Tap detection will ramp up sesing and make use of the A3 interrupt.
+            // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
+            movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
         }
 #endif
 
