@@ -716,16 +716,16 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
 #ifdef I2C_SERCOM
-        static bool lis2dw_initialized = false;
-        if (!lis2dw_initialized) {
+        static bool lis2dw_checked = false;
+        if (!lis2dw_checked) {
             watch_enable_i2c();
             if (lis2dw_begin()) {
                 movement_state.has_lis2dw = true;
-                lis2dw_initialized = true;
             } else {
                 movement_state.has_lis2dw = false;
                 watch_disable_i2c();
             }
+            lis2dw_checked = true;
         } else if (movement_state.has_lis2dw) {
             watch_enable_i2c();
             lis2dw_begin();
