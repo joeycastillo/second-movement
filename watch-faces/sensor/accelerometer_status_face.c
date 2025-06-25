@@ -70,7 +70,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
     if (state->is_setting) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
         switch (event.event_type) {
-            case EVENT_LIGHT_BUTTON_DOWN:
+            case EVENT_ALARM_BUTTON_DOWN:
                 state->new_threshold = (state->new_threshold + 1) % 64;
                 // fall through
             case EVENT_TICK:
@@ -87,7 +87,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                     }
                 }
                 break;
-            case EVENT_ALARM_BUTTON_UP:
+            case EVENT_LIGHT_BUTTON_DOWN:
                 movement_set_accelerometer_motion_threshold(state->new_threshold);
                 state->threshold = state->new_threshold;
                 watch_clear_decimal_if_available();
