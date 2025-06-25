@@ -137,7 +137,7 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
             break;
         case EVENT_TIMEOUT:
-            // movement_move_to_face(0);
+            movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
