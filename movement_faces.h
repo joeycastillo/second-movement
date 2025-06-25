@@ -51,4 +51,5 @@
 #include "nanosec_face.h"
 #include "mars_time_face.h"
 #include "peek_memory_face.h"
+#include "tarot_face.h"
 // New includes go above this line.
