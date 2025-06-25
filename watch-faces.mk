@@ -11,6 +11,7 @@ SRCS += \
   ./watch-faces/complication/sunrise_sunset_face.c \
   ./watch-faces/complication/moon_phase_face.c \
   ./watch-faces/complication/days_since_face.c \
+  ./watch-faces/complication/squash_face.c \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \
