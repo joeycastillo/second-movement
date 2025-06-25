@@ -78,6 +78,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                     char buf[11];
                     if (event.subsecond % 2) {
                         watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+                        watch_clear_decimal_if_available();
                     } else {
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
                         watch_display_text_with_fallback(WATCH_POSITION_TOP, "WAKth", "TH");
