@@ -61,7 +61,7 @@ void accelerometer_status_face_activate(void *context) {
     movement_request_tick_frequency(4);
 
     // fetch current threshold from accelerometer
-    state->threshold = lis2dw_get_wakeup_threshold();
+    state->threshold = movement_get_accelerometer_motion_threshold();
 }
 
 bool accelerometer_status_face_loop(movement_event_t event, void *context) {
@@ -87,7 +87,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                 }
                 break;
             case EVENT_ALARM_BUTTON_UP:
-                lis2dw_configure_wakeup_threshold(state->new_threshold);
+                movement_set_accelerometer_motion_threshold(state->new_threshold);
                 state->threshold = state->new_threshold;
                 watch_clear_decimal_if_available();
                 state->is_setting = false;

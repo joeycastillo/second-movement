@@ -567,6 +567,24 @@ bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate) {
     return false;
 }
 
+uint8_t movement_get_accelerometer_motion_threshold(void) {
+    if (movement_state.has_lis2dw) return movement_state.accelerometer_motion_threshold;
+    else return 0;
+}
+
+bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
+    if (movement_state.has_lis2dw) {
+        if (movement_state.accelerometer_motion_threshold != new_threshold) {
+            lis2dw_configure_wakeup_threshold(new_threshold);
+            movement_state.accelerometer_motion_threshold = new_threshold;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
 
@@ -660,6 +678,7 @@ void app_init(void) {
         watch_rtc_set_date_time(date_time);
     }
 
+    if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
     movement_state.light_ticks = -1;
     movement_state.alarm_ticks = -1;
@@ -738,7 +757,7 @@ void app_setup(void) {
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(32);          // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
+            lis2dw_configure_wakeup_threshold(movement_state.accelerometer_motion_threshold); // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
