@@ -37,7 +37,7 @@ static bool _quick_ticks_running;
 static uint8_t _ts_ticks = 0;
 static int16_t _text_pos;
 static const char* _text_looping;
-static const char title_text[] = "Periodic Table";
+static const char title_text[] = "Periodic table";
 
 void periodic_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
@@ -127,123 +127,123 @@ typedef struct
 #define MAX_ELEMENT 118
 const element table[MAX_ELEMENT] = {
     { .symbol = "H", .name = "Hydrogen", .year_discovered = 1671, .atomic_mass = 101, .electronegativity = 220, .group = NONE },
-    { .symbol = "HE", .name = "Helium", .year_discovered = 1868, .atomic_mass = 400, .electronegativity = 0, .group = ZERO },
-    { .symbol = "LI", .name = "Lithium", .year_discovered = 1817, .atomic_mass = 694, .electronegativity = 98, .group = ONE },
-    { .symbol = "BE", .name = "Beryllium", .year_discovered = 1798, .atomic_mass = 901, .electronegativity = 157, .group = TWO },
+    { .symbol = "He", .name = "Helium", .year_discovered = 1868, .atomic_mass = 400, .electronegativity = 0, .group = ZERO },
+    { .symbol = "Li", .name = "Lithium", .year_discovered = 1817, .atomic_mass = 694, .electronegativity = 98, .group = ONE },
+    { .symbol = "Be", .name = "Beryllium", .year_discovered = 1798, .atomic_mass = 901, .electronegativity = 157, .group = TWO },
     { .symbol = "B", .name = "Boron", .year_discovered = 1787, .atomic_mass = 1081, .electronegativity = 204, .group = THREE },
     { .symbol = "C", .name = "Carbon", .year_discovered = -26000, .atomic_mass = 1201, .electronegativity = 255, .group = FOUR },
     { .symbol = "N", .name = "Nitrogen", .year_discovered = 1772, .atomic_mass = 1401, .electronegativity = 304, .group = FIVE },
     { .symbol = "O", .name = "Oxygen", .year_discovered = 1771, .atomic_mass = 1600, .electronegativity = 344, .group = SIX },
     { .symbol = "F", .name = "Fluorine", .year_discovered = 1771, .atomic_mass = 1900, .electronegativity = 398, .group = SEVEN },
-    { .symbol = "NE", .name = "Neon", .year_discovered = 1898, .atomic_mass = 2018, .electronegativity = 0, .group = ZERO },
-    { .symbol = "NA", .name = "Sodium", .year_discovered = 1702, .atomic_mass = 2299, .electronegativity = 93, .group = ONE },
-    { .symbol = "MG", .name = "Magnesium", .year_discovered = 1755, .atomic_mass = 2431, .electronegativity = 131, .group = TWO },
-    { .symbol = "AL", .name = "Aluminium", .year_discovered = 1746, .atomic_mass = 2698, .electronegativity = 161, .group = THREE },
-    { .symbol = "SI", .name = "Silicon", .year_discovered = 1739, .atomic_mass = 2809, .electronegativity = 190, .group = FOUR },
+    { .symbol = "Ne", .name = "Neon", .year_discovered = 1898, .atomic_mass = 2018, .electronegativity = 0, .group = ZERO },
+    { .symbol = "Na", .name = "Sodium", .year_discovered = 1702, .atomic_mass = 2299, .electronegativity = 93, .group = ONE },
+    { .symbol = "Mg", .name = "Magnesium", .year_discovered = 1755, .atomic_mass = 2431, .electronegativity = 131, .group = TWO },
+    { .symbol = "Al", .name = "Aluminium", .year_discovered = 1746, .atomic_mass = 2698, .electronegativity = 161, .group = THREE },
+    { .symbol = "Si", .name = "Silicon", .year_discovered = 1739, .atomic_mass = 2809, .electronegativity = 190, .group = FOUR },
     { .symbol = "P", .name = "Phosphorus", .year_discovered = 1669, .atomic_mass = 3097, .electronegativity = 219, .group = FIVE },
     { .symbol = "S", .name = "Sulfur", .year_discovered = -2000, .atomic_mass = 3206, .electronegativity = 258, .group = SIX },
-    { .symbol = "CL", .name = "Chlorine", .year_discovered = 1774, .atomic_mass = 3545., .electronegativity = 316, .group = SEVEN },
-    { .symbol = "AR", .name = "Argon", .year_discovered = 1894, .atomic_mass = 3995., .electronegativity = 0, .group = ZERO },
+    { .symbol = "Cl", .name = "Chlorine", .year_discovered = 1774, .atomic_mass = 3545., .electronegativity = 316, .group = SEVEN },
+    { .symbol = "Ar", .name = "Argon", .year_discovered = 1894, .atomic_mass = 3995., .electronegativity = 0, .group = ZERO },
     { .symbol = "K", .name = "Potassium", .year_discovered = 1702, .atomic_mass = 3910, .electronegativity = 82, .group = ONE },
-    { .symbol = "CA", .name = "Calcium", .year_discovered = 1739, .atomic_mass = 4008, .electronegativity = 100, .group = TWO },
-    { .symbol = "SC", .name = "Scandium", .year_discovered = 1879, .atomic_mass = 4496, .electronegativity = 136, .group = TRANSITION },
-    { .symbol = "TI", .name = "Titanium", .year_discovered = 1791, .atomic_mass = 4787, .electronegativity = 154, .group = TRANSITION },
+    { .symbol = "Ca", .name = "Calcium", .year_discovered = 1739, .atomic_mass = 4008, .electronegativity = 100, .group = TWO },
+    { .symbol = "Sc", .name = "Scandium", .year_discovered = 1879, .atomic_mass = 4496, .electronegativity = 136, .group = TRANSITION },
+    { .symbol = "Ti", .name = "Titanium", .year_discovered = 1791, .atomic_mass = 4787, .electronegativity = 154, .group = TRANSITION },
     { .symbol = "W", .name = "Vanadium", .year_discovered = 1801, .atomic_mass = 5094, .electronegativity = 163, .group = TRANSITION },
-    { .symbol = "CR", .name = "Chromium", .year_discovered = 1797, .atomic_mass = 5200, .electronegativity = 166, .group = TRANSITION },
-    { .symbol = "MN", .name = "Manganese", .year_discovered = 1774, .atomic_mass = 5494, .electronegativity = 155, .group = TRANSITION },
-    { .symbol = "FE", .name = "Iron", .year_discovered = -5000, .atomic_mass = 5585, .electronegativity = 183, .group = TRANSITION },
-    { .symbol = "CO", .name = "Cobalt", .year_discovered = 1735, .atomic_mass = 5893, .electronegativity = 188, .group = TRANSITION },
-    { .symbol = "NI", .name = "Nickel", .year_discovered = 1751, .atomic_mass = 5869, .electronegativity = 191, .group = TRANSITION },
-    { .symbol = "CU", .name = "Copper", .year_discovered = -9000, .atomic_mass = 6355, .electronegativity = 190, .group = TRANSITION },
-    { .symbol = "ZN", .name = "Zinc", .year_discovered = -1000, .atomic_mass = 6538, .electronegativity = 165, .group = TRANSITION },
-    { .symbol = "GA", .name = "Gallium", .year_discovered = 1875, .atomic_mass = 6972, .electronegativity = 181, .group = THREE },
-    { .symbol = "GE", .name = "Germanium", .year_discovered = 1886, .atomic_mass = 7263, .electronegativity = 201, .group = FOUR },
-    { .symbol = "AS", .name = "Arsenic", .year_discovered = 300, .atomic_mass = 7492, .electronegativity = 218, .group = FIVE },
-    { .symbol = "SE", .name = "Selenium", .year_discovered = 1817, .atomic_mass = 7897, .electronegativity = 255, .group = SIX },
-    { .symbol = "BR", .name = "Bromine", .year_discovered = 1825, .atomic_mass = 7990., .electronegativity = 296, .group = SEVEN },
-    { .symbol = "KR", .name = "Krypton", .year_discovered = 1898, .atomic_mass = 8380, .electronegativity = 300, .group = ZERO },
-    { .symbol = "RB", .name = "Rubidium", .year_discovered = 1861, .atomic_mass = 8547, .electronegativity = 82, .group = ONE },
-    { .symbol = "SR", .name = "Strontium", .year_discovered = 1787, .atomic_mass = 8762, .electronegativity = 95, .group = TWO },
+    { .symbol = "Cr", .name = "Chromium", .year_discovered = 1797, .atomic_mass = 5200, .electronegativity = 166, .group = TRANSITION },
+    { .symbol = "Mn", .name = "Manganese", .year_discovered = 1774, .atomic_mass = 5494, .electronegativity = 155, .group = TRANSITION },
+    { .symbol = "Fe", .name = "Iron", .year_discovered = -5000, .atomic_mass = 5585, .electronegativity = 183, .group = TRANSITION },
+    { .symbol = "Co", .name = "Cobalt", .year_discovered = 1735, .atomic_mass = 5893, .electronegativity = 188, .group = TRANSITION },
+    { .symbol = "Ni", .name = "Nickel", .year_discovered = 1751, .atomic_mass = 5869, .electronegativity = 191, .group = TRANSITION },
+    { .symbol = "Cu", .name = "Copper", .year_discovered = -9000, .atomic_mass = 6355, .electronegativity = 190, .group = TRANSITION },
+    { .symbol = "Zn", .name = "Zinc", .year_discovered = -1000, .atomic_mass = 6538, .electronegativity = 165, .group = TRANSITION },
+    { .symbol = "Ga", .name = "Gallium", .year_discovered = 1875, .atomic_mass = 6972, .electronegativity = 181, .group = THREE },
+    { .symbol = "Ge", .name = "Germanium", .year_discovered = 1886, .atomic_mass = 7263, .electronegativity = 201, .group = FOUR },
+    { .symbol = "As", .name = "Arsenic", .year_discovered = 300, .atomic_mass = 7492, .electronegativity = 218, .group = FIVE },
+    { .symbol = "Se", .name = "Selenium", .year_discovered = 1817, .atomic_mass = 7897, .electronegativity = 255, .group = SIX },
+    { .symbol = "Br", .name = "Bromine", .year_discovered = 1825, .atomic_mass = 7990., .electronegativity = 296, .group = SEVEN },
+    { .symbol = "Kr", .name = "Krypton", .year_discovered = 1898, .atomic_mass = 8380, .electronegativity = 300, .group = ZERO },
+    { .symbol = "Rb", .name = "Rubidium", .year_discovered = 1861, .atomic_mass = 8547, .electronegativity = 82, .group = ONE },
+    { .symbol = "Sr", .name = "Strontium", .year_discovered = 1787, .atomic_mass = 8762, .electronegativity = 95, .group = TWO },
     { .symbol = "Y", .name = "Yttrium", .year_discovered = 1794, .atomic_mass = 8891, .electronegativity = 122, .group = TRANSITION },
-    { .symbol = "ZR", .name = "Zirconium", .year_discovered = 1789, .atomic_mass = 9122, .electronegativity = 133, .group = TRANSITION },
-    { .symbol = "NB", .name = "Niobium", .year_discovered = 1801, .atomic_mass = 9291, .electronegativity = 160, .group = TRANSITION },
-    { .symbol = "MO", .name = "Molybdenum", .year_discovered = 1778, .atomic_mass = 9595, .electronegativity = 216, .group = TRANSITION },
-    { .symbol = "TC", .name = "Technetium", .year_discovered = 1937, .atomic_mass = 9700, .electronegativity = 190, .group = TRANSITION },
-    { .symbol = "RU", .name = "Ruthenium", .year_discovered = 1844, .atomic_mass = 10107, .electronegativity = 220, .group = TRANSITION },
-    { .symbol = "RH", .name = "Rhodium", .year_discovered = 1804, .atomic_mass = 10291, .electronegativity = 228, .group = TRANSITION },
-    { .symbol = "PD", .name = "Palladium", .year_discovered = 1802, .atomic_mass = 10642, .electronegativity = 220, .group = TRANSITION },
-    { .symbol = "AG", .name = "Silver", .year_discovered = -5000, .atomic_mass = 10787, .electronegativity = 193, .group = TRANSITION },
-    { .symbol = "CD", .name = "Cadmium", .year_discovered = 1817, .atomic_mass = 11241, .electronegativity = 169, .group = TRANSITION },
-    { .symbol = "IN", .name = "Indium", .year_discovered = 1863, .atomic_mass = 11482, .electronegativity = 178, .group = THREE },
-    { .symbol = "SN", .name = "Tin", .year_discovered = -3500, .atomic_mass = 11871, .electronegativity = 196, .group = FOUR },
-    { .symbol = "SB", .name = "Antimony", .year_discovered = -3000, .atomic_mass = 12176, .electronegativity = 205, .group = FIVE },
-    { .symbol = "TE", .name = "Tellurium", .year_discovered = 1782, .atomic_mass = 12760, .electronegativity = 210, .group = SIX },
+    { .symbol = "Zr", .name = "Zirconium", .year_discovered = 1789, .atomic_mass = 9122, .electronegativity = 133, .group = TRANSITION },
+    { .symbol = "Nb", .name = "Niobium", .year_discovered = 1801, .atomic_mass = 9291, .electronegativity = 160, .group = TRANSITION },
+    { .symbol = "Mo", .name = "Molybdenum", .year_discovered = 1778, .atomic_mass = 9595, .electronegativity = 216, .group = TRANSITION },
+    { .symbol = "Tc", .name = "Technetium", .year_discovered = 1937, .atomic_mass = 9700, .electronegativity = 190, .group = TRANSITION },
+    { .symbol = "Ru", .name = "Ruthenium", .year_discovered = 1844, .atomic_mass = 10107, .electronegativity = 220, .group = TRANSITION },
+    { .symbol = "Rh", .name = "Rhodium", .year_discovered = 1804, .atomic_mass = 10291, .electronegativity = 228, .group = TRANSITION },
+    { .symbol = "Pd", .name = "Palladium", .year_discovered = 1802, .atomic_mass = 10642, .electronegativity = 220, .group = TRANSITION },
+    { .symbol = "Ag", .name = "Silver", .year_discovered = -5000, .atomic_mass = 10787, .electronegativity = 193, .group = TRANSITION },
+    { .symbol = "Cd", .name = "Cadmium", .year_discovered = 1817, .atomic_mass = 11241, .electronegativity = 169, .group = TRANSITION },
+    { .symbol = "In", .name = "Indium", .year_discovered = 1863, .atomic_mass = 11482, .electronegativity = 178, .group = THREE },
+    { .symbol = "Sn", .name = "Tin", .year_discovered = -3500, .atomic_mass = 11871, .electronegativity = 196, .group = FOUR },
+    { .symbol = "Sb", .name = "Antimony", .year_discovered = -3000, .atomic_mass = 12176, .electronegativity = 205, .group = FIVE },
+    { .symbol = "Te", .name = "Tellurium", .year_discovered = 1782, .atomic_mass = 12760, .electronegativity = 210, .group = SIX },
     { .symbol = "I", .name = "Iodine", .year_discovered = 1811, .atomic_mass = 12690, .electronegativity = 266, .group = SEVEN },
-    { .symbol = "XE", .name = "Xenon", .year_discovered = 1898, .atomic_mass = 13129, .electronegativity = 260, .group = ZERO },
-    { .symbol = "CS", .name = "Caesium", .year_discovered = 1860, .atomic_mass = 13291, .electronegativity = 79, .group = ONE },
-    { .symbol = "BA", .name = "Barium", .year_discovered = 1772, .atomic_mass = 13733., .electronegativity = 89, .group = TWO },
-    { .symbol = "LA", .name = "Lanthanum", .year_discovered = 1838, .atomic_mass = 13891, .electronegativity = 110, .group = LANTHANIDE },
-    { .symbol = "CE", .name = "Cerium", .year_discovered = 1803, .atomic_mass = 14012, .electronegativity = 112, .group = LANTHANIDE },
-    { .symbol = "PR", .name = "Praseodymium", .year_discovered = 1885, .atomic_mass = 14091, .electronegativity = 113, .group = LANTHANIDE },
-    { .symbol = "ND", .name = "Neodymium", .year_discovered = 1841, .atomic_mass = 14424, .electronegativity = 114, .group = LANTHANIDE },
-    { .symbol = "PM", .name = "Promethium", .year_discovered = 1945, .atomic_mass = 14500, .electronegativity = 113, .group = LANTHANIDE },
-    { .symbol = "SM", .name = "Samarium", .year_discovered = 1879, .atomic_mass = 15036., .electronegativity = 117, .group = LANTHANIDE },
-    { .symbol = "EU", .name = "Europium", .year_discovered = 1896, .atomic_mass = 15196, .electronegativity = 120, .group = LANTHANIDE },
-    { .symbol = "GD", .name = "Gadolinium", .year_discovered = 1880, .atomic_mass = 15725, .electronegativity = 120, .group = LANTHANIDE },
-    { .symbol = "TB", .name = "Terbium", .year_discovered = 1843, .atomic_mass = 15893, .electronegativity = 120, .group = LANTHANIDE },
-    { .symbol = "DY", .name = "Dysprosium", .year_discovered = 1886, .atomic_mass = 16250, .electronegativity = 122, .group = LANTHANIDE },
-    { .symbol = "HO", .name = "Holmium", .year_discovered = 1878, .atomic_mass = 16493, .electronegativity = 123, .group = LANTHANIDE },
-    { .symbol = "ER", .name = "Erbium", .year_discovered = 1843, .atomic_mass = 16726, .electronegativity = 124, .group = LANTHANIDE },
-    { .symbol = "TM", .name = "Thulium", .year_discovered = 1879, .atomic_mass = 16893, .electronegativity = 125, .group = LANTHANIDE },
-    { .symbol = "YB", .name = "Ytterbium", .year_discovered = 1878, .atomic_mass = 17305, .electronegativity = 110, .group = LANTHANIDE },
-    { .symbol = "LU", .name = "Lutetium", .year_discovered = 1906, .atomic_mass = 17497, .electronegativity = 127, .group = LANTHANIDE },
-    { .symbol = "HF", .name = "Hafnium", .year_discovered = 1922, .atomic_mass = 17849, .electronegativity = 130, .group = TRANSITION },
-    { .symbol = "TA", .name = "Tantalum", .year_discovered = 1802, .atomic_mass = 18095, .electronegativity = 150, .group = TRANSITION },
+    { .symbol = "Xe", .name = "Xenon", .year_discovered = 1898, .atomic_mass = 13129, .electronegativity = 260, .group = ZERO },
+    { .symbol = "Cs", .name = "Caesium", .year_discovered = 1860, .atomic_mass = 13291, .electronegativity = 79, .group = ONE },
+    { .symbol = "Ba", .name = "Barium", .year_discovered = 1772, .atomic_mass = 13733., .electronegativity = 89, .group = TWO },
+    { .symbol = "La", .name = "Lanthanum", .year_discovered = 1838, .atomic_mass = 13891, .electronegativity = 110, .group = LANTHANIDE },
+    { .symbol = "Ce", .name = "Cerium", .year_discovered = 1803, .atomic_mass = 14012, .electronegativity = 112, .group = LANTHANIDE },
+    { .symbol = "Pr", .name = "Praseodymium", .year_discovered = 1885, .atomic_mass = 14091, .electronegativity = 113, .group = LANTHANIDE },
+    { .symbol = "Nd", .name = "Neodymium", .year_discovered = 1841, .atomic_mass = 14424, .electronegativity = 114, .group = LANTHANIDE },
+    { .symbol = "Pm", .name = "Promethium", .year_discovered = 1945, .atomic_mass = 14500, .electronegativity = 113, .group = LANTHANIDE },
+    { .symbol = "Sm", .name = "Samarium", .year_discovered = 1879, .atomic_mass = 15036., .electronegativity = 117, .group = LANTHANIDE },
+    { .symbol = "Eu", .name = "Europium", .year_discovered = 1896, .atomic_mass = 15196, .electronegativity = 120, .group = LANTHANIDE },
+    { .symbol = "Gd", .name = "Gadolinium", .year_discovered = 1880, .atomic_mass = 15725, .electronegativity = 120, .group = LANTHANIDE },
+    { .symbol = "Tb", .name = "Terbium", .year_discovered = 1843, .atomic_mass = 15893, .electronegativity = 120, .group = LANTHANIDE },
+    { .symbol = "Dy", .name = "Dysprosium", .year_discovered = 1886, .atomic_mass = 16250, .electronegativity = 122, .group = LANTHANIDE },
+    { .symbol = "Ho", .name = "Holmium", .year_discovered = 1878, .atomic_mass = 16493, .electronegativity = 123, .group = LANTHANIDE },
+    { .symbol = "Er", .name = "Erbium", .year_discovered = 1843, .atomic_mass = 16726, .electronegativity = 124, .group = LANTHANIDE },
+    { .symbol = "Tm", .name = "Thulium", .year_discovered = 1879, .atomic_mass = 16893, .electronegativity = 125, .group = LANTHANIDE },
+    { .symbol = "Yb", .name = "Ytterbium", .year_discovered = 1878, .atomic_mass = 17305, .electronegativity = 110, .group = LANTHANIDE },
+    { .symbol = "Lu", .name = "Lutetium", .year_discovered = 1906, .atomic_mass = 17497, .electronegativity = 127, .group = LANTHANIDE },
+    { .symbol = "Hf", .name = "Hafnium", .year_discovered = 1922, .atomic_mass = 17849, .electronegativity = 130, .group = TRANSITION },
+    { .symbol = "Ta", .name = "Tantalum", .year_discovered = 1802, .atomic_mass = 18095, .electronegativity = 150, .group = TRANSITION },
     { .symbol = "W", .name = "Tungsten", .year_discovered = 1781, .atomic_mass = 18384, .electronegativity = 236, .group = TRANSITION },
-    { .symbol = "RE", .name = "Rhenium", .year_discovered = 1908, .atomic_mass = 18621, .electronegativity = 190, .group = TRANSITION },
-    { .symbol = "OS", .name = "Osmium", .year_discovered = 1803, .atomic_mass = 19023, .electronegativity = 220, .group = TRANSITION },
-    { .symbol = "IR", .name = "Iridium", .year_discovered = 1803, .atomic_mass = 19222, .electronegativity = 220, .group = TRANSITION },
-    { .symbol = "PT", .name = "Platinum", .year_discovered = -600, .atomic_mass = 19508, .electronegativity = 228, .group = TRANSITION },
-    { .symbol = "AU", .name = "Gold", .year_discovered = -6000, .atomic_mass = 19697, .electronegativity = 254, .group = TRANSITION },
-    { .symbol = "HG", .name = "Mercury", .year_discovered = -1500, .atomic_mass = 20059, .electronegativity = 200, .group = TRANSITION },
-    { .symbol = "TL", .name = "Thallium", .year_discovered = 1861, .atomic_mass = 20438, .electronegativity = 162, .group = THREE },
-    { .symbol = "PB", .name = "Lead", .year_discovered = -7000, .atomic_mass = 20720, .electronegativity = 187, .group = FOUR },
-    { .symbol = "BI", .name = "Bismuth", .year_discovered = 1500, .atomic_mass = 20898, .electronegativity = 202, .group = FIVE },
-    { .symbol = "PO", .name = "Polonium", .year_discovered = 1898, .atomic_mass = 20900, .electronegativity = 200, .group = SIX },
-    { .symbol = "AT", .name = "Astatine", .year_discovered = 1940, .atomic_mass = 21000, .electronegativity = 220, .group = SEVEN },
-    { .symbol = "RN", .name = "Radon", .year_discovered = 1899, .atomic_mass = 22200, .electronegativity = 220, .group = ZERO },
-    { .symbol = "FR", .name = "Francium", .year_discovered = 1939, .atomic_mass = 22300, .electronegativity = 79, .group = ONE },
-    { .symbol = "RA", .name = "Radium", .year_discovered = 1898, .atomic_mass = 22600, .electronegativity = 90, .group = TWO },
-    { .symbol = "AC", .name = "Actinium", .year_discovered = 1902, .atomic_mass = 22700, .electronegativity = 110, .group = ACTINIDE },
-    { .symbol = "TH", .name = "Thorium", .year_discovered = 1829, .atomic_mass = 23204, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "PA", .name = "Protactinium", .year_discovered = 1913, .atomic_mass = 23104, .electronegativity = 150, .group = ACTINIDE },
+    { .symbol = "Re", .name = "Rhenium", .year_discovered = 1908, .atomic_mass = 18621, .electronegativity = 190, .group = TRANSITION },
+    { .symbol = "Os", .name = "Osmium", .year_discovered = 1803, .atomic_mass = 19023, .electronegativity = 220, .group = TRANSITION },
+    { .symbol = "Ir", .name = "Iridium", .year_discovered = 1803, .atomic_mass = 19222, .electronegativity = 220, .group = TRANSITION },
+    { .symbol = "Pt", .name = "Platinum", .year_discovered = -600, .atomic_mass = 19508, .electronegativity = 228, .group = TRANSITION },
+    { .symbol = "Au", .name = "Gold", .year_discovered = -6000, .atomic_mass = 19697, .electronegativity = 254, .group = TRANSITION },
+    { .symbol = "Hf", .name = "Mercury", .year_discovered = -1500, .atomic_mass = 20059, .electronegativity = 200, .group = TRANSITION },
+    { .symbol = "Tl", .name = "Thallium", .year_discovered = 1861, .atomic_mass = 20438, .electronegativity = 162, .group = THREE },
+    { .symbol = "Pb", .name = "Lead", .year_discovered = -7000, .atomic_mass = 20720, .electronegativity = 187, .group = FOUR },
+    { .symbol = "Bi", .name = "Bismuth", .year_discovered = 1500, .atomic_mass = 20898, .electronegativity = 202, .group = FIVE },
+    { .symbol = "Po", .name = "Polonium", .year_discovered = 1898, .atomic_mass = 20900, .electronegativity = 200, .group = SIX },
+    { .symbol = "At", .name = "Astatine", .year_discovered = 1940, .atomic_mass = 21000, .electronegativity = 220, .group = SEVEN },
+    { .symbol = "Rn", .name = "Radon", .year_discovered = 1899, .atomic_mass = 22200, .electronegativity = 220, .group = ZERO },
+    { .symbol = "Fr", .name = "Francium", .year_discovered = 1939, .atomic_mass = 22300, .electronegativity = 79, .group = ONE },
+    { .symbol = "Ra", .name = "Radium", .year_discovered = 1898, .atomic_mass = 22600, .electronegativity = 90, .group = TWO },
+    { .symbol = "Ac", .name = "Actinium", .year_discovered = 1902, .atomic_mass = 22700, .electronegativity = 110, .group = ACTINIDE },
+    { .symbol = "Th", .name = "Thorium", .year_discovered = 1829, .atomic_mass = 23204, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Pa", .name = "Protactinium", .year_discovered = 1913, .atomic_mass = 23104, .electronegativity = 150, .group = ACTINIDE },
     { .symbol = "U", .name = "Uranium", .year_discovered = 1789, .atomic_mass = 23803, .electronegativity = 138, .group = ACTINIDE },
-    { .symbol = "NP", .name = "Neptunium", .year_discovered = 1940, .atomic_mass = 23700, .electronegativity = 136, .group = ACTINIDE },
-    { .symbol = "PU", .name = "Plutonium", .year_discovered = 1941, .atomic_mass = 24400, .electronegativity = 128, .group = ACTINIDE },
-    { .symbol = "AM", .name = "Americium", .year_discovered = 1944, .atomic_mass = 24300, .electronegativity = 113, .group = ACTINIDE },
-    { .symbol = "CM", .name = "Curium", .year_discovered = 1944, .atomic_mass = 24700, .electronegativity = 128, .group = ACTINIDE },
-    { .symbol = "BK", .name = "Berkelium", .year_discovered = 1949, .atomic_mass = 24700, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "CF", .name = "Californium", .year_discovered = 1950, .atomic_mass = 25100, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "ES", .name = "Einsteinium", .year_discovered = 1952, .atomic_mass = 25200, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "FM", .name = "Fermium", .year_discovered = 1953, .atomic_mass = 25700, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "MD", .name = "Mendelevium", .year_discovered = 1955, .atomic_mass = 25800, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "NO", .name = "Nobelium", .year_discovered = 1965, .atomic_mass = 25900, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "LR", .name = "Lawrencium", .year_discovered = 1961, .atomic_mass = 26600, .electronegativity = 130, .group = ACTINIDE },
-    { .symbol = "RF", .name = "Rutherfordium", .year_discovered = 1969, .atomic_mass = 26700, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "DB", .name = "Dubnium", .year_discovered = 1970, .atomic_mass = 26800, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "SG", .name = "Seaborgium", .year_discovered = 1974, .atomic_mass = 26700, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "BH", .name = "Bohrium", .year_discovered = 1981, .atomic_mass = 27000, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "HS", .name = "Hassium", .year_discovered = 1984, .atomic_mass = 27100, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "MT", .name = "Meitnerium", .year_discovered = 1982, .atomic_mass = 27800, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "DS", .name = "Darmstadtium", .year_discovered = 1994, .atomic_mass = 28100, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "RG", .name = "Roentgenium", .year_discovered = 1994, .atomic_mass = 28200, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "CN", .name = "Copernicium", .year_discovered = 1996, .atomic_mass = 28500, .electronegativity = 0, .group = TRANSITION },
-    { .symbol = "NH", .name = "Nihonium", .year_discovered = 2004, .atomic_mass = 28600, .electronegativity = 0, .group = THREE },
-    { .symbol = "FL", .name = "Flerovium", .year_discovered = 1999, .atomic_mass = 28900, .electronegativity = 0, .group = FOUR },
-    { .symbol = "MC", .name = "Moscovium", .year_discovered = 2003, .atomic_mass = 29000, .electronegativity = 0, .group = FIVE },
-    { .symbol = "LW", .name = "Livermorium", .year_discovered = 2000, .atomic_mass = 29300, .electronegativity = 0, .group = SIX },
-    { .symbol = "TS", .name = "Tennessine", .year_discovered = 2009, .atomic_mass = 29400, .electronegativity = 0, .group = SEVEN },
-    { .symbol = "OG", .name = "Oganesson", .year_discovered = 2002, .atomic_mass = 29400, .electronegativity = 0, .group = ZERO },
+    { .symbol = "Np", .name = "Neptunium", .year_discovered = 1940, .atomic_mass = 23700, .electronegativity = 136, .group = ACTINIDE },
+    { .symbol = "Pu", .name = "Plutonium", .year_discovered = 1941, .atomic_mass = 24400, .electronegativity = 128, .group = ACTINIDE },
+    { .symbol = "Am", .name = "Americium", .year_discovered = 1944, .atomic_mass = 24300, .electronegativity = 113, .group = ACTINIDE },
+    { .symbol = "Cm", .name = "Curium", .year_discovered = 1944, .atomic_mass = 24700, .electronegativity = 128, .group = ACTINIDE },
+    { .symbol = "Bk", .name = "Berkelium", .year_discovered = 1949, .atomic_mass = 24700, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Cf", .name = "Californium", .year_discovered = 1950, .atomic_mass = 25100, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Es", .name = "Einsteinium", .year_discovered = 1952, .atomic_mass = 25200, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Fm", .name = "Fermium", .year_discovered = 1953, .atomic_mass = 25700, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Md", .name = "Mendelevium", .year_discovered = 1955, .atomic_mass = 25800, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "No", .name = "Nobelium", .year_discovered = 1965, .atomic_mass = 25900, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Lr", .name = "Lawrencium", .year_discovered = 1961, .atomic_mass = 26600, .electronegativity = 130, .group = ACTINIDE },
+    { .symbol = "Rf", .name = "Rutherfordium", .year_discovered = 1969, .atomic_mass = 26700, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Db", .name = "Dubnium", .year_discovered = 1970, .atomic_mass = 26800, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Sg", .name = "Seaborgium", .year_discovered = 1974, .atomic_mass = 26700, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Bh", .name = "Bohrium", .year_discovered = 1981, .atomic_mass = 27000, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Hs", .name = "Hassium", .year_discovered = 1984, .atomic_mass = 27100, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Mt", .name = "Meitnerium", .year_discovered = 1982, .atomic_mass = 27800, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Ds", .name = "Darmstadtium", .year_discovered = 1994, .atomic_mass = 28100, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Rg", .name = "Roentgenium", .year_discovered = 1994, .atomic_mass = 28200, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Cn", .name = "Copernicium", .year_discovered = 1996, .atomic_mass = 28500, .electronegativity = 0, .group = TRANSITION },
+    { .symbol = "Nh", .name = "Nihonium", .year_discovered = 2004, .atomic_mass = 28600, .electronegativity = 0, .group = THREE },
+    { .symbol = "Fl", .name = "Flerovium", .year_discovered = 1999, .atomic_mass = 28900, .electronegativity = 0, .group = FOUR },
+    { .symbol = "Mc", .name = "Moscovium", .year_discovered = 2003, .atomic_mass = 29000, .electronegativity = 0, .group = FIVE },
+    { .symbol = "Lw", .name = "Livermorium", .year_discovered = 2000, .atomic_mass = 29300, .electronegativity = 0, .group = SIX },
+    { .symbol = "Ts", .name = "Tennessine", .year_discovered = 2009, .atomic_mass = 29400, .electronegativity = 0, .group = SEVEN },
+    { .symbol = "Og", .name = "Oganesson", .year_discovered = 2002, .atomic_mass = 29400, .electronegativity = 0, .group = ZERO },
 };
 
 static void _make_upper(char *string) {
@@ -264,7 +264,9 @@ static void _display_element(periodic_state_t *state)
     watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_group_name(table[atomic_num - 1].group));
 
     strcpy(ele, table[atomic_num - 1].symbol);
-    _make_upper(ele);
+    if (watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM)
+        _make_upper(ele);
+
     sprintf(buf, "%3d %-2s", atomic_num, ele);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
@@ -345,21 +347,28 @@ static void stop_quick_cyc(void){
     movement_request_tick_frequency(FREQ);
 }
 
-static int16_t _loop_text(const char* text, int8_t curr_loc, uint8_t char_len){
+static int16_t _loop_text(const char* text, int8_t curr_loc, bool shift){
     // if curr_loc, then use that many ticks as a delay before looping
     char buf[15];
     uint8_t text_len = strlen(text);
-    uint8_t pos = 10 - char_len;
     if (curr_loc == -1) curr_loc = 0;  // To avoid double-showing the 0
-    if (char_len >= text_len || curr_loc < 0) {
-        sprintf(buf, "%.6s", text);
+    if (text_len <= 6 || curr_loc < 0) {
+        if (shift)
+            sprintf(buf, " %.5s", text);
+        else
+            sprintf(buf, "%.6s", text);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
         if (curr_loc < 0) return ++curr_loc;
         return 0;
     }
     else if (curr_loc == (text_len + 1))
         curr_loc = 0;
-    sprintf(buf, "%.6s %.6s", text + curr_loc, text);  // Take wrapping substring
+
+    if (shift) // Extra space on title screen on F-91W screen
+        sprintf(buf, " %.6s %.6s", text + curr_loc, text);  // Take wrapping substring
+    else 
+        sprintf(buf, "%.6s %.6s", text + curr_loc, text);  // Take wrapping substring
+
     buf[6] = '\0'; // Prevent overflow
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     return curr_loc + 1; // Next position
@@ -371,7 +380,7 @@ static void _display_title(periodic_state_t *state){
     watch_clear_all_indicators();
     _text_looping = title_text;
     _text_pos = FREQ * -1;
-    _text_pos = _loop_text(_text_looping, _text_pos, (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) ? 6 : 5);
+    _text_pos = _loop_text(_text_looping, _text_pos, watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM);
 }
 
 static void _display_screen(periodic_state_t *state, bool should_sound){
@@ -453,8 +462,8 @@ bool periodic_face_loop(movement_event_t event, void *context)
         _display_screen(state, false);
         break;
     case EVENT_TICK:
-        if (state->mode == SCREEN_TITLE) _text_pos = _loop_text(_text_looping, _text_pos, (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) ? 6 : 5);
-        else if (state->mode == SCREEN_FULL_NAME) _text_pos = _loop_text(_text_looping, _text_pos, 6);
+        if (state->mode == SCREEN_TITLE) _text_pos = _loop_text(_text_looping, _text_pos, watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM);
+        else if (state->mode == SCREEN_FULL_NAME) _text_pos = _loop_text(_text_looping, _text_pos, false);
         if (_quick_ticks_running) {
             if (HAL_GPIO_BTN_LIGHT_read()) _handle_backward(state, false);
             else if (HAL_GPIO_BTN_ALARM_read()) _handle_forward(state, false);
@@ -537,6 +546,7 @@ bool periodic_face_loop(movement_event_t event, void *context)
         break;
     case EVENT_LOW_ENERGY_UPDATE:
         // Display static title and tick animation during LE
+        watch_clear_display();
         watch_display_text(WATCH_POSITION_TOP_LEFT, "Pd");
         watch_display_text(WATCH_POSITION_BOTTOM, "Table");
         watch_start_sleep_animation(500);
