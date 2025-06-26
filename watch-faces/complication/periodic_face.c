@@ -71,11 +71,17 @@ typedef enum {
 } PeriodicScreens;
 
 const char screen_name[SCREENS_COUNT][3] = {
-    [SCREEN_ATOMIC_MASS] = "am",
+    [SCREEN_ATOMIC_MASS] = "ma",
     [SCREEN_DISCOVER_YEAR] = " y",
     [SCREEN_ELECTRONEGATIVITY] = "EL",
     [SCREEN_FULL_NAME] = " n",
 };
+
+// Compatability for original LCD
+static inline const char* _get_screen_name(PeriodicScreens screen) {
+    if (screen == SCREEN_ATOMIC_MASS && watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM) return "am";
+    return screen_name[screen];
+}
 
 typedef enum {
     NONE = 0,
@@ -108,6 +114,7 @@ const char group_name[GROUPS_COUNT][3] = {
     [LANTHANIDE] = "La",
 };
 
+// Compatability for original LCD
 static inline const char* _get_group_name(PeriodicGroup group) {
     if (group == LANTHANIDE && watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM) return "1a";
     return group_name[group];
@@ -263,12 +270,16 @@ static void _display_element(periodic_state_t *state)
     
     watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_group_name(table[atomic_num - 1].group));
 
-    strcpy(ele, table[atomic_num - 1].symbol);
-    if (watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM)
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) { // Display symbol at top
+        watch_display_text(WATCH_POSITION_TOP_LEFT, table[atomic_num - 1].symbol);
+        sprintf(buf, "%3d", atomic_num);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    } else {
+        strcpy(ele, table[atomic_num - 1].symbol);
         _make_upper(ele);
-
-    sprintf(buf, "%3d %-2s", atomic_num, ele);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+        sprintf(buf, "%3d %-2s", atomic_num, ele);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    }
 }
 
 static void _display_atomic_mass(periodic_state_t *state)
@@ -279,18 +290,27 @@ static void _display_atomic_mass(periodic_state_t *state)
     uint16_t decimal = mass % 100;
 
     watch_display_text(WATCH_POSITION_TOP_LEFT, table[state->atomic_num - 1].symbol);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, screen_name[state->mode]);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_screen_name(state->mode));
 
-    if (decimal == 0)
-        sprintf(buf, "%4d", integer);
-    else
-        sprintf(buf, "%3d_%.2d", integer, decimal);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf); 
+    if (decimal == 0) {
+            sprintf(buf, "%4d", integer);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf); 
+    } else {
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM && integer < 200) { // Display using decimal point
+            watch_set_decimal_if_available();
+            sprintf(buf, "%6d", mass);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf+2); // Truncate string to keep 0s in tens pos 
+            if (integer >= 100) // Use extra 100s digit on the left
+                watch_set_pixel(0, 22);
+        } else { // Display using _
+            sprintf(buf, "%3d_%.2d", integer, decimal);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf); 
+        }
+    }
 }
 
 static void _display_year_discovered(periodic_state_t *state)
 {
-    char buf[11];
     char year_buf[7];
     int16_t year = table[state->atomic_num - 1].year_discovered;
     if (abs(year) > 9999)
@@ -303,20 +323,30 @@ static void _display_year_discovered(periodic_state_t *state)
     }
 
     watch_display_text(WATCH_POSITION_TOP_LEFT, table[state->atomic_num - 1].symbol);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, screen_name[state->mode]);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_screen_name(state->mode));
     watch_display_text(WATCH_POSITION_BOTTOM, year_buf); 
 }
 
 static void _display_name(periodic_state_t *state)
 {
-    _text_looping = table[state->atomic_num - 1].name;
-    _text_pos = 0;
-    
     watch_display_text(WATCH_POSITION_TOP_LEFT, table[state->atomic_num - 1].symbol);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, screen_name[state->mode]);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_screen_name(state->mode));
+
+    const char* elm_name = table[state->atomic_num - 1].name;
+
+    // Better display for 'I' on new LCD
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM && elm_name[0] == 'I' && strlen(elm_name) <= 7){
+        watch_display_text(WATCH_POSITION_BOTTOM, elm_name+1); 
+        watch_set_pixel(0, 22);
+        return;
+    }
+
+
+    _text_looping = elm_name;
+    _text_pos = 0;
 
     char buf[7];
-    sprintf(buf, "%.6s", table[state->atomic_num - 1].name);
+    sprintf(buf, "%.6s", elm_name);
     watch_display_text(WATCH_POSITION_BOTTOM, buf); 
 }
 
@@ -328,12 +358,19 @@ static void _display_electronegativity(periodic_state_t *state)
     uint16_t decimal = electronegativity % 100;
 
     watch_display_text(WATCH_POSITION_TOP_LEFT, table[state->atomic_num - 1].symbol);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, screen_name[state->mode]);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_screen_name(state->mode));
 
-    if (decimal == 0)
+    if (decimal == 0){
         sprintf(buf, "%4d", integer);
-    else
-        sprintf(buf, "%3d_%.2d", integer, decimal);
+    } else {
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+            // Integer always under 100 so no need to handle extra place
+            watch_set_decimal_if_available();
+            sprintf(buf, "%4d", electronegativity);
+        } else {
+            sprintf(buf, "%3d_%.2d", integer, decimal);
+        }
+    }
     watch_display_text(WATCH_POSITION_BOTTOM, buf); 
 }
 
@@ -463,7 +500,9 @@ bool periodic_face_loop(movement_event_t event, void *context)
         break;
     case EVENT_TICK:
         if (state->mode == SCREEN_TITLE) _text_pos = _loop_text(_text_looping, _text_pos, watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM);
-        else if (state->mode == SCREEN_FULL_NAME) _text_pos = _loop_text(_text_looping, _text_pos, false);
+        else if (state->mode == SCREEN_FULL_NAME && 
+            !(watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM && table[state->atomic_num - 1].name[0] == 'I' && strlen(table[state->atomic_num - 1].name) <= 7)) 
+                _text_pos = _loop_text(_text_looping, _text_pos, false);
         if (_quick_ticks_running) {
             if (HAL_GPIO_BTN_LIGHT_read()) _handle_backward(state, false);
             else if (HAL_GPIO_BTN_ALARM_read()) _handle_forward(state, false);
@@ -527,12 +566,8 @@ bool periodic_face_loop(movement_event_t event, void *context)
         case SCREEN_TITLE:
             movement_move_to_face(0);
             return true;
-        case SCREEN_ELEMENT:
-            state->mode = SCREEN_TITLE;
-            _display_screen(state, movement_button_should_sound());
-            break;
         default:
-            state->mode = SCREEN_ELEMENT;
+            state->mode = SCREEN_TITLE;
             _display_screen(state, movement_button_should_sound());
             break;
         }
