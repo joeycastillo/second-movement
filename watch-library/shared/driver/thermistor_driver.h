@@ -26,8 +26,6 @@
 
 #include "pins.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
-
 // TODO: Do these belong in movement_config.h? In settings we can set on the watch? In an EEPROM configuration area?
 // Think on this. [joey 11/22]
 #define THERMISTOR_ENABLE_VALUE (false)
@@ -37,8 +35,7 @@
 #define THERMISTOR_NOMINAL_RESISTANCE (10000.0)
 #define THERMISTOR_SERIES_RESISTANCE (10000.0)
 
+bool thermistor_driver_init(void);
 void thermistor_driver_enable(void);
 void thermistor_driver_disable(void);
 float thermistor_driver_get_temperature(void);
-
-#endif // HAS_TEMPERATURE_SENSOR

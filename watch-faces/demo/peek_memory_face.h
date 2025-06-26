@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Joey Castillo
+ * Copyright (c) 2022 Joey Castillo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,29 +24,37 @@
 
 #pragma once
 
-#ifdef HAS_ACCELEROMETER
+/*
+ * PEEK FACE
+ *
+ * This watch face displays a location in memory in a given format.
+ * Currently hard coded but would be cool to let user select it somehow.
+ *
+ * Only works with custom LCD. This is for debugging purposes only.
+ */
 
-#include <stdint.h>
+#include "movement.h"
 
-// Log 36 hours of data points. Each data point captures 5 minutes.
-#define MOVEMENT_NUM_DATA_POINTS (36 * (60 / 5))
+/// TODO: more formats, signed and unsigned decimal, etc.
+typedef enum {
+    PEEK_MEMORY_FORMAT_HEX = 0,
+    PEEK_MEMORY_FORMAT_DATE
+} peek_memory_format_t;
 
-typedef union {
-    struct {
-        uint32_t stationary_minutes: 3;
-        uint32_t orientation_changes: 9;
-        uint32_t measured_temperature: 10;
-        uint32_t measured_light: 10;
-    } bit;
-    uint32_t reg;
-} movement_activity_data_point;
+typedef struct {
+    uint8_t format;
+    void *location;
+} peek_memory_state_t;
 
-/// @brief Internal function, called every 5 minutes to log data.
-void _movement_log_data(void);
+void peek_memory_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void peek_memory_face_activate(void *context);
+bool peek_memory_face_loop(movement_event_t event, void *context);
+void peek_memory_face_resign(void *context);
 
-/// @brief Returns a pointer to the data log.
-/// @param count is a pointer to a uint32_t. The absolute number of data points logged is returned by reference.
-/// You can assume that log[count % MOVEMENT_NUM_DATA_POINTS] is the latest data point, and work backwards from there.
-movement_activity_data_point *movement_get_data_log(uint32_t *count);
-
-#endif
+#define peek_memory_face ((const watch_face_t){ \
+    peek_memory_face_setup, \
+    peek_memory_face_activate, \
+    peek_memory_face_loop, \
+    peek_memory_face_resign, \
+    NULL, \
+})

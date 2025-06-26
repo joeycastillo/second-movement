@@ -32,13 +32,11 @@
  * LIGHT SENSOR PLAYGROUND
  *
  * Temporary watch face for playing with the light sensor.
+ * WARNING: This watch face may not play nicely with watch faces that use the ADC in the background,
+ * such as the temperature logger. More improvement and testing needs to be done before this is can
+ * be considered a production-ready watch face.
  *
  */
-
-typedef struct {
-    // Anything you need to keep track of, put it here!
-    uint8_t unused;
-} light_sensor_state_t;
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void light_sensor_face_activate(void *context);

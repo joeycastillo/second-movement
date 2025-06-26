@@ -153,7 +153,10 @@ void world_clock_face_activate(void *context) {
     state->current_screen = 0;
     _update_timezone_offset(state);
 
-    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+        watch_stop_blink();
+    }
 }
 
 static bool world_clock_face_do_display_mode(movement_event_t event, world_clock_state_t *state) {
@@ -207,7 +210,11 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
                 watch_display_text(WATCH_POSITION_HOURS, buf + 2);
                 watch_display_text(WATCH_POSITION_MINUTES, buf + 4);
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE) {
-                    if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
+                    if (!watch_sleep_animation_is_running()) {
+                        watch_display_text(WATCH_POSITION_SECONDS, "  ");
+                        watch_start_sleep_animation(500);
+                        watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
+                    }
                 } else {
                     watch_display_text(WATCH_POSITION_SECONDS, buf + 6);
                 }

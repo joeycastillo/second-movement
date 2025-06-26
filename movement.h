@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include "watch.h"
 #include "utz.h"
+#include "lis2dw.h"
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
@@ -83,8 +84,7 @@ typedef union {
         bool clock_mode_24h : 1;            // indicates whether clock should use 12 or 24 hour mode.
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
-        // That's 31 bits, leaving room for one more toggle if needed.
-        uint8_t reserved : 1;
+        bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -286,6 +286,16 @@ typedef struct {
 
     // temporary alarm enabled boolean, until we implement this in advisories
     bool alarm_enabled;
+
+    // boolean set if thermistor is detected
+    bool has_thermistor;
+
+    // boolean set if accelerometer is detected
+    bool has_lis2dw;
+    // data rate for background accelerometer sensing
+    lis2dw_data_rate_t accelerometer_background_rate;
+    // threshold for considering the wearer is in motion
+    uint8_t accelerometer_motion_threshold;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -335,6 +345,9 @@ void movement_set_local_date_time(watch_date_time_t date_time);
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);
 
+watch_buzzer_volume_t movement_button_volume(void);
+void movement_set_button_volume(watch_buzzer_volume_t value);
+
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);
 
@@ -362,5 +375,18 @@ bool movement_alarm_enabled(void);
 void movement_set_alarm_enabled(bool value);
 
 // if the board has an accelerometer, these functions will enable or disable tap detection.
-void movement_enable_tap_detection_if_available(void);
-void movement_disable_tap_detection_if_available(void);
+bool movement_enable_tap_detection_if_available(void);
+bool movement_disable_tap_detection_if_available(void);
+
+// gets and sets the accelerometer data rate in the background
+lis2dw_data_rate_t movement_get_accelerometer_background_rate(void);
+bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
+
+// gets and sets the accelerometer motion threshold
+uint8_t movement_get_accelerometer_motion_threshold(void);
+bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
+
+// If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
+// If the board has multiple temperature sensors, it will use the most accurate one available.
+// If the board has no temperature sensors, it will return 0xFFFFFFFF.
+float movement_get_temperature(void);

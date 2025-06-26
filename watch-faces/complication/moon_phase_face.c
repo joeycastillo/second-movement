@@ -158,6 +158,7 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             _update(state, state->offset);
             break;
         case EVENT_TICK:

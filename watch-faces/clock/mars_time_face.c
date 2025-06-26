@@ -31,25 +31,25 @@
 // note: lander coordinates come from Mars24's `marslandmarks.xml` file
 static double site_longitudes[MARS_TIME_NUM_SITES] = {
     0,                      // Mars Coordinated Time, at the meridian
-    360.0 - 109.9,          // Zhurong lander site
     360.0 - 77.45088572,    // Perseverance lander site
-    360.0 - 135.623447,     // InSight lander site
     360.0 - 137.441635,     // Curiosity lander site
 };
 
-static char site_names[MARS_TIME_NUM_SITES][3] = {
+static char site_names_classic[MARS_TIME_NUM_SITES][3] = {
     "MC",
-    "ZH",
     "PE",
-    "IN",
     "CU",
+};
+
+static char site_names_custom[MARS_TIME_NUM_SITES][4] = {
+    "MTC",
+    "PER",
+    "CUR",
 };
 
 static uint16_t landing_sols[MARS_TIME_NUM_SITES] = {
     0,
-    52387,
     52304,
-    51511,
     49269,
 };
 
@@ -67,9 +67,9 @@ static void _h_to_hms(mars_clock_hms_t *date_time, double h) {
 	date_time->second = round(seconds % 60);
 }
 
-static void _update(mars_time_state_t *state) {
-    char buf[11];
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+static void _update(mars_time_state_t *state, bool low_energy_mode) {
+    char buf[8];
+    watch_date_time_t date_time = movement_get_local_date_time();
     uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset());
     // TODO: I'm skipping over some steps here.
     // https://www.giss.nasa.gov/tools/mars24/help/algorithm.html
@@ -88,22 +88,29 @@ static void _update(mars_time_state_t *state) {
         lmt = fmod(lmst + 24, 24);
     }
 
-    if (state->displaying_sol) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, site_names_custom[state->current_site], site_names_classic[state->current_site]);
+
+    if (state->displaying_sol && !low_energy_mode) {
         // TODO: this is not right, mission sol should turn over at midnight local time?
         uint16_t sol = floor(msd) - landing_sols[state->current_site];
-        if (sol < 1000) sprintf(&buf[0], "%s  Sol%3d", site_names[state->current_site], sol);
-        else sprintf(&buf[0], "%s $%6d", site_names[state->current_site], sol);
+        sprintf(buf, "%6d", sol);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, " $");
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
         watch_clear_colon();
         watch_clear_indicator(WATCH_INDICATOR_24H);
     } else {
         mars_clock_hms_t mars_time;
         _h_to_hms(&mars_time, lmt);
-        sprintf(&buf[0], "%s  %02d%02d%02d", site_names[state->current_site], mars_time.hour, mars_time.minute, mars_time.second);
+        if (low_energy_mode) {
+            sprintf(buf, "%02d%02d  ", mars_time.hour, mars_time.minute);
+        } else {
+            sprintf(buf, "%02d%02d%02d", mars_time.hour, mars_time.minute, mars_time.second);
+        }
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
         watch_set_colon();
         watch_set_indicator(WATCH_INDICATOR_24H);
     }
-
-    watch_display_string(buf, 0);
 }
 
 void mars_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -117,6 +124,11 @@ void mars_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void mars_time_face_activate(void *context) {
     mars_time_state_t *state = (mars_time_state_t *)context;
     (void) state;
+
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+        watch_stop_blink();
+    }
 }
 
 bool mars_time_face_loop(movement_event_t event, void *context) {
@@ -125,26 +137,26 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-            _update(state);
+            _update(state, false);
             break;
         case EVENT_LIGHT_BUTTON_UP:
             state->displaying_sol = !state->displaying_sol;
-            _update(state);
+            _update(state, false);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             movement_illuminate_led();
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_ALARM_LONG_PRESS:
             state->current_site = (state->current_site + 1) % MARS_TIME_NUM_SITES;
-            _update(state);
-            break;
-        case EVENT_TIMEOUT:
-            // TODO: make this lower power so we can avoid timeout
-            movement_move_to_face(0);
+            _update(state, false);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            // TODO: low energy update
-            // watch_start_sleep_animation(500);
+            // a mars solar second is 1.0275 seconds, so the animation should tick at half of that.
+            if (!watch_sleep_animation_is_running()) {
+                watch_start_sleep_animation(514);
+                watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 514);
+            }
+            _update(state, true);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit

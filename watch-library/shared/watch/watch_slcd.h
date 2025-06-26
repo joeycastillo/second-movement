@@ -42,9 +42,9 @@
   */
 /// @{
 
-#define SLCD_SEGID(com, seg) (((com) << 16) | (seg))
-#define SLCD_COMNUM(segid) (((segid) >> 16) & 0xFF)
-#define SLCD_SEGNUM(segid) ((segid)&0xFF)
+#define SLCD_SEGID(com, seg) (((com) << 5) | (seg))
+#define SLCD_COMNUM(segid) (((segid) >> 5) & 0x07)
+#define SLCD_SEGNUM(segid) ((segid) & 0x1F)
 
 /// An enum listing the icons and indicators available on the watch.
 typedef enum {
@@ -52,11 +52,11 @@ typedef enum {
     WATCH_INDICATOR_BELL,       ///< The small bell indicating that an alarm is set.
     WATCH_INDICATOR_PM,         ///< The PM indicator, indicating that a time is in the afternoon.
     WATCH_INDICATOR_24H,        ///< The 24H indicator, indicating that the watch is in a 24-hour mode.
-    WATCH_INDICATOR_LAP,        ///< The LAP indicator; the F-91W uses this in its stopwatch UI.
+    WATCH_INDICATOR_LAP,        ///< The LAP indicator; the F-91W uses this in its stopwatch UI. On custom LCD it's a looped arrow.
 
     // These next indicators are only available on the new custom LCD:
-    WATCH_INDICATOR_BATTERY,    ///< The battery indicator. Will fall back to the LAP icon on the original F-91W LCD.
-    WATCH_INDICATOR_SLEEP,      ///< The sleep indicator. No fallback here; use the tick animation to indicate sleep.
+    WATCH_INDICATOR_ARROWS,     ///< The interlocking arrows indicator; indicates data transfer, or can signal to change the battery.
+    WATCH_INDICATOR_SLEEP,      ///< The sleep indicator.
 
     // You can generally address the colon using dedicated functions, but it's also available here if needed.
     WATCH_INDICATOR_COLON,      ///< The colon between hours and minutes.
@@ -118,8 +118,7 @@ void watch_clear_display(void);
 
 /** @brief Displays a string at the given position, starting from the top left. There are ten digits.
            A space in any position will clear that digit.
-  * @deprecated This function is deprecated. Use `watch_display_top_left`, `watch_display_top_right`
-                and `watch_display_main_line` instead
+  * @deprecated Use `watch_display_text` and `watch_display_text_with_fallback` instead.
   * @param string A null-terminated string.
   * @param position The position where you wish to start displaying the string. The day of week digits
   *                 are positions 0 and 1; the day of month digits are positions 2 and 3, and the main
@@ -149,9 +148,6 @@ void watch_display_text(watch_position_t location, const char *string);
  *       displayed:
  *        * At the top left, the custom LCD can display "NYC" but the original F-91W LCD can't display "NY"
  *          due to the shared segments in position 1 (Try "MA" for Manhattan or "BR" for Brooklyn / Bronx.)
- *          On the other hand, the original F-91W can display "FR" for Friday thanks to its extra segment in
- *          position 1, but the custom LCD can only display lowercase R, "Fri", due to the more simplistic
- *          8-segment design of all the digits.
  *        * On the top right, the original F-91W LCD can only display numbers from 0 to 39, while the custom
  *          LCD can display any two 7-segment characters. Thus something like a 60 second countdown may have
  *          to display some fallback when more than 40 seconds remain, then switch to counting down from 39.
@@ -160,15 +156,17 @@ void watch_display_text(watch_position_t location, const char *string);
  *          and latitude:
  *
  *            watch_display_main_line_with_fallback("14990#W", "-14990") // "149.90°W" or "-149.90"
- *            watch_display_main_line_with_fallback(" 6122#N", "+ 6122") // "61.22°N" or "+61.22"
+ *            watch_display_main_line_with_fallback("6122#N", "+ 6122") // "61.22°N" or "+61.22"
  *
  *          In the first example, the leading 1 allows us to dusplay "146.90°W" on the custom LCD, with the
  *          numeric portion in the clock digits, and the "°W" hint in the small seconds digits. Meanwhile on
  *          the classic LCD, the fallback string "-14990" will display -149 in the large clock digits, and
  *          90 in the small seconds digits, indicating that this is a decimal portion.
- *          In the second example, the leading space allows us to display "61.22°N" on the custom LCD, with
- *          the "°N" in the seconds place, while the fallback string "+ 6122" will display +61 on the large
- *          clock digits, and 22 in the small seconds digits, indicating that this is a decimal portion.
+ *
+ *          In the second example, we can display "61.22°N" on the custom LCD, with the "°N" in the seconds
+ *          place, while the fallback string "+ 6122" will display +61 on the large clock digits, and 22 in
+ *          the small seconds digits, indicating that this is a decimal portion.
+ *
  *          In addition, on the original Casio LCD, the first digit of the hours and seconds display have
  *          their top and bottom segments linked, which causes some limitations (like the short "lowercase"
  *          '7', and the inability to use 'b', 'd', 'f', 'k', 'p', 'q', 't', 'x' or 'y' in those spots. You
@@ -256,25 +254,30 @@ void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32
   */
 void watch_stop_blink(void);
 
-/** @brief Begins a two-segment "tick-tock" animation in position 8.
-  * @details Six of the seven segments in position 8 (and only position 8) are capable of autonomous
-  *          animation. This animation is very basic, and consists of moving a bit pattern forward
+/** @brief Begins a two-segment "tick-tock" animation in position 8 on the classic LCD, or energizes
+ *         the crescent moon icon on the custom LCD to indicate a sleep mode.
+  * @details On the classic Casio LCD, six of the seven segments in position 8 can animate themselves
+  *          autonomously. This animation is very basic, and consists of moving a bit pattern forward
   *          or backward in a shift register whose positions map to fixed segments on the LCD. Given
   *          this constraint, an animation across all six segments does not make sense; so the watch
   *          library offers only a simple "tick/tock" in segments D and E. This animation does not
   *          require any CPU resources, and will continue even in STANDBY and Sleep mode (but not Deep
   *          Sleep mode, since that mode turns off the LCD).
   * @param duration The duration of each frame in ms. 500 milliseconds produces a classic tick/tock.
+  * @note On the custom LCD, this function illuminates the crescent moon icon with no animation. The
+  *       duration parameter is unused and ignored.
   */
 void watch_start_sleep_animation(uint32_t duration);
 
-/** @brief Checks if the tick animation is currently running.
-  * @return true if the animation is running; false otherwise.
+/** @brief Checks if the sleep state is currently shown
+  * @return true if the animation is running on classic, or the sleep indicator is energized on custom.
+  *         false otherwise.
   */
 bool watch_sleep_animation_is_running(void);
 
 /** @brief Stops the tick/tock animation and clears all animating segments.
-  * @details This will stop the animation and clear all segments in position 8.
+  * @details On the classic LCD this will stop the animation and clear all segments in position 8.
+  *          On the custom LCD, it will turn off the crescent moon indicator.
   */
 void watch_stop_sleep_animation(void);
 /// @}

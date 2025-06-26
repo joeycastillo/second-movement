@@ -28,9 +28,7 @@
 #include "watch.h"
 
 static void _voltage_face_update_display(void) {
-    watch_enable_adc();
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
-    watch_disable_adc();
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BAT", "BA");
     watch_display_float_with_best_effort(voltage, " V");
@@ -50,6 +48,7 @@ bool voltage_face_loop(movement_event_t event, void *context) {
     watch_date_time_t date_time;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             _voltage_face_update_display();
             break;
         case EVENT_TICK:

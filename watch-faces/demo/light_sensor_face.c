@@ -34,16 +34,11 @@
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
-    if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(light_sensor_state_t));
-        memset(*context_ptr, 0, sizeof(light_sensor_state_t));
-        // Do any one-time tasks in here; the inside of this conditional happens only at boot.
-    }    
+    (void) context_ptr;
 }
 
 void light_sensor_face_activate(void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
-    (void) state;
+    (void) context;
     HAL_GPIO_IR_ENABLE_out();
     HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
@@ -53,29 +48,25 @@ void light_sensor_face_activate(void *context) {
 }
 
 bool light_sensor_face_loop(movement_event_t event, void *context) {
-    light_sensor_state_t *state = (light_sensor_state_t *)context;
-    (void) state;
+    (void) context;
 
     switch (event.event_type) {
         case EVENT_NONE:
         case EVENT_ACTIVATE:
         case EVENT_TICK:
         {
-            char buf[14];
+            char buf[7];
             uint16_t light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
-            snprintf(buf, 14, "LL  %-6d", light_level);
-            watch_display_text(WATCH_POSITION_FULL, buf);
-            printf("%s\n", buf);
+            snprintf(buf, 7, "%-6d", light_level);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LIGHT", "LL");
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            break;
-        case EVENT_ALARM_BUTTON_UP:
+            // suppress LED, as it would interfere with light sensing
             break;
         case EVENT_TIMEOUT:
-            break;
-        case EVENT_LOW_ENERGY_UPDATE:
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
+            movement_move_to_face(0);
             break;
         default:
             return movement_default_loop_handler(event);

@@ -1,42 +1,50 @@
 # Keep this first line.
 GOSSAMER_PATH=gossamer
 
-# Which board are we building for?
+# Which board are we building for? Commented out to force a choice when building.
 # Options are:
 # - sensorwatch_pro
 # - sensorwatch_green
 # - sensorwatch_red (also known as Sensor Watch Lite)
 # - sensorwatch_blue
-BOARD=sensorwatch_pro
+# BOARD=sensorwatch_pro
 
-# Sensor Watch will detect the display, unless you are debugging over USB.
-# If you need to force a specific display, set this to the type you want, CLASSIC or CUSTOM
-# FORCE_DISPLAY_TYPE=CUSTOM
+# Set this to the type of display in your watch: classic or custom. Commented out to force a choice when building.
+# DISPLAY=classic
 
-# Which sensor board?
-SENSOR=NONE
+# End of user configurable options.
 
 # Support USB features?
 TINYUSB_CDC=1
 
-# Leave this line here.
+# Now we're all set to include gossamer's make rules.
 include $(GOSSAMER_PATH)/make.mk
 
-ifeq ($(SENSOR), MOTION)
-  DEFINES += -DHAS_ACCELEROMETER
+define n
+
+
+endef
+
+ifndef BOARD
+  $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
 endif
 
-ifeq ($(SENSOR), TEMPERATURE)
-  DEFINES += -DTEMPERATURE_BOARD_INSTALLED
-endif
-
-ifdef FORCE_DISPLAY_TYPE
-  ifeq ($(FORCE_DISPLAY_TYPE), CUSTOM)
+ifndef DISPLAY
+  $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+else
+  ifeq ($(DISPLAY), custom)
     DEFINES += -DFORCE_CUSTOM_LCD_TYPE
-  endif
-  ifeq ($(FORCE_DISPLAY_TYPE), CLASSIC)
+  else ifeq ($(DISPLAY), classic)
     DEFINES += -DFORCE_CLASSIC_LCD_TYPE
+  else ifeq ($(DISPLAY), autodetect)
+    $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
+  else
+    $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
   endif
+endif
+
+ifdef NOSLEEP
+    DEFINES += -DMOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
 endif
 
 ifdef EMSCRIPTEN
@@ -89,9 +97,7 @@ SRCS += \
   ./watch-library/shared/watch/watch_utility.c \
 
 
-ifeq ($(SENSOR), MOTION)
 SRCS += ./watch-library/shared/driver/lis2dw.c
-endif
 
 ifdef EMSCRIPTEN
 
@@ -141,7 +147,6 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
-  ./movement_activity.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk

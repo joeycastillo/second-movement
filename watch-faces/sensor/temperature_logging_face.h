@@ -26,8 +26,6 @@
 
 #include "pins.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
-
 /*
  * THERMISTOR LOGGING (aka Temperature Log)
  *
@@ -59,7 +57,7 @@
 #include "movement.h"
 #include "watch.h"
 
-#define THERMISTOR_LOGGING_NUM_DATA_POINTS (36)
+#define TEMPERATURE_LOGGING_NUM_DATA_POINTS (36)
 
 typedef struct {
     watch_date_time_t timestamp;
@@ -70,8 +68,8 @@ typedef struct {
     uint8_t display_index;  // the index we are displaying on screen
     uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
     int32_t data_points;    // the absolute number of data points logged
-    thermistor_logger_data_point_t data[THERMISTOR_LOGGING_NUM_DATA_POINTS];
-} thermistor_logger_state_t;
+    thermistor_logger_data_point_t data[TEMPERATURE_LOGGING_NUM_DATA_POINTS];
+} temperature_logging_state_t;
 
 void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void temperature_logging_face_activate(void *context);
@@ -86,5 +84,3 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context);
     temperature_logging_face_resign, \
     temperature_logging_face_advise, \
 })
-
-#endif // HAS_TEMPERATURE_SENSOR

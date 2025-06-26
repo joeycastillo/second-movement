@@ -25,41 +25,45 @@
 #include <stdlib.h>
 #include <string.h>
 #include "temperature_display_face.h"
-#include "thermistor_driver.h"
 #include "watch.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
+static bool skip = false;
 
 static void _temperature_display_face_update_display(bool in_fahrenheit) {
-    thermistor_driver_enable();
-    float temperature_c = thermistor_driver_get_temperature();
+    float temperature_c = movement_get_temperature();
     if (in_fahrenheit) {
         watch_display_float_with_best_effort(temperature_c * 1.8 + 32.0, "#F");
     } else {
         watch_display_float_with_best_effort(temperature_c, "#C");
     }
-    thermistor_driver_disable();
 }
 
 void temperature_display_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     (void) context_ptr;
+    // if temperature is invalid, we don't have a temperature sensor which means we shouldn't be here.
+    if (movement_get_temperature() == 0xFFFFFFFF) skip = true;
 }
 
 void temperature_display_face_activate(void *context) {
     (void) context;
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP", "TE");
 }
 
 bool temperature_display_face_loop(movement_event_t event, void *context) {
     (void) context;
     watch_date_time_t date_time = watch_rtc_get_date_time();
     switch (event.event_type) {
-        case EVENT_ALARM_BUTTON_DOWN:
+        case EVENT_ALARM_LONG_PRESS:
             movement_set_use_imperial_units(!movement_use_imperial_units());
             _temperature_display_face_update_display(movement_use_imperial_units());
             break;
         case EVENT_ACTIVATE:
+            if (skip) {
+                movement_move_to_next_face();
+                return false;
+            }
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP", "TE");
             // force a measurement to be taken immediately.
             date_time.unit.second = 0;
             // fall through
@@ -96,5 +100,3 @@ bool temperature_display_face_loop(movement_event_t event, void *context) {
 void temperature_display_face_resign(void *context) {
     (void) context;
 }
-
-#endif

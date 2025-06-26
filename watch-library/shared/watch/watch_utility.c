@@ -33,7 +33,7 @@ const char * watch_utility_get_weekday(watch_date_time_t date_time) {
 }
 
 const char * watch_utility_get_long_weekday(watch_date_time_t date_time) {
-    static const char weekdays[7][4] = {"MON", "TUE", "WED", "THU", "Fri", "SAT", "SUN"};
+    static const char weekdays[7][4] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
     return weekdays[watch_utility_get_iso8601_weekday_number(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day) - 1];
 }
 

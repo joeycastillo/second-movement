@@ -375,4 +375,6 @@ lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 
 lis2dw_wakeup_source_t lis2dw_get_wakeup_source(void);
 
+uint8_t lis2dw_get_wakeup_threshold(void);
+
 #endif // LIS2DW_H

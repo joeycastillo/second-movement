@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "thermistor_driver.h"
 #include "nanosec_face.h"
 #include "filesystem.h"
 #include "watch_utility.h"
@@ -178,28 +177,35 @@ static void nanosec_update_display() {
 
     switch (nanosec_screen) {
         case 0:
-            sprintf(buf, "FC  %6d", nanosec_state.freq_correction);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "FCorr", "FC");
+            sprintf(buf, "%6d", nanosec_state.freq_correction);
             break;
         case 1:
-            sprintf(buf, "T0  %6d", nanosec_state.center_temperature);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "CTMP ", "T0");
+            sprintf(buf, "%6d", nanosec_state.center_temperature);
             break;
         case 2:
-            sprintf(buf, "2C  %6d", nanosec_state.quadratic_tempco);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "2Coef", "2C");
+            sprintf(buf, "%6d", nanosec_state.quadratic_tempco);
             break;
         case 3:
-            sprintf(buf, "3C  %6d", nanosec_state.cubic_tempco);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "3Coef", "3C");
+            sprintf(buf, "%6d", nanosec_state.cubic_tempco);
             break;
         case 4: // Profile
-            sprintf(buf, "PR      P%1d", nanosec_state.correction_profile);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "PROFL", "PR");
+            sprintf(buf, "    P%1d", nanosec_state.correction_profile);
             break;
         case 5: // Cadence
-            sprintf(buf, "CD      %2d", nanosec_state.correction_cadence);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "Cadnc", "CD");
+            sprintf(buf, "    %2d", nanosec_state.correction_cadence);
             break;
         case 6: // Aging
-            sprintf(buf, "AA  %6d", nanosec_state.aging_ppm_pa);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "AgeCo", "CD");
+            sprintf(buf, "%6d", nanosec_state.aging_ppm_pa);
             break;
     }
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void value_increase(int16_t delta) {
@@ -321,11 +327,14 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             // watch_start_sleep_animation(500);
             break;
         case EVENT_BACKGROUND_TASK:
+        {
             // Here we measure temperature and do main frequency correction
-            thermistor_driver_enable();
-            float temperature_c = thermistor_driver_get_temperature();
+            float temperature_c = movement_get_temperature();
             float voltage = (float)watch_get_vcc_voltage() / 1000.0;
-            thermistor_driver_disable();
+
+            // If temperature is 0xFFFFFFFF, no temperature sensor is installed.
+            // Should we assume nominal temperature here? Seems better than aborting.
+            if (temperature_c == 0xFFFFFFFF) temperature_c = nanosec_state.center_temperature;
             // L22 correction scaling is 0.95367ppm per 1 in FREQCORR
             // At wrong temperature crystall starting to run slow, negative correction will speed up frequency to correct
             // Default 32kHz correciton factor is -0.034, centered around 25°C
@@ -340,6 +349,7 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
                         ) / 0.95367); // 1 correction unit is 0.095367ppm.
 
             apply_RTC_correction(correction);
+        }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit

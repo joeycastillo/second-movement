@@ -25,17 +25,17 @@
 #pragma once
 
 /*
- * Accelerometer Interrupt Counter
+ * Accelerometer Status / Settings
  *
- * This is an experimental watch face for counting the number of interrupts that
- * the Sensor Watch Motion acceleromoeter board fires. I expect it will be removed
- * once we integrate accelerometer functionality more deeply into Movement.
+ * Meant to be used in conjunction with the activity_logging_face. Shows the current
+ * status of the accelerometer active/still status pin, and allows adjusting the
+ * motion threshold via a long press of ALARM. Note that this will not work without
+ * activity_logging_face in the lineup as activity_logging_face is the one that enables
+ * background accelerometer sensing.
  */
 
 #include "movement.h"
 #include "watch.h"
-
-#ifdef HAS_ACCELEROMETER
 
 typedef struct {
     uint8_t new_threshold;
@@ -43,18 +43,15 @@ typedef struct {
     bool is_setting;
 } accel_interrupt_count_state_t;
 
-void accel_interrupt_count_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void accel_interrupt_count_face_activate(void *context);
-bool accel_interrupt_count_face_loop(movement_event_t event, void *context);
-void accel_interrupt_count_face_resign(void *context);
-movement_watch_face_advisory_t accel_interrupt_count_face_advise(void *context);
+void accelerometer_status_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void accelerometer_status_face_activate(void *context);
+bool accelerometer_status_face_loop(movement_event_t event, void *context);
+void accelerometer_status_face_resign(void *context);
 
-#define accel_interrupt_count_face ((const watch_face_t){ \
-    accel_interrupt_count_face_setup, \
-    accel_interrupt_count_face_activate, \
-    accel_interrupt_count_face_loop, \
-    accel_interrupt_count_face_resign, \
-    accel_interrupt_count_face_advise, \
+#define accelerometer_status_face ((const watch_face_t){ \
+    accelerometer_status_face_setup, \
+    accelerometer_status_face_activate, \
+    accelerometer_status_face_loop, \
+    accelerometer_status_face_resign, \
+    NULL, \
 })
-
-#endif // HAS_ACCELEROMETER

@@ -32,11 +32,13 @@ const watch_face_t watch_faces[] = {
     world_clock_face,
     sunrise_sunset_face,
     moon_phase_face,
-    countdown_face,
     stopwatch_face,
+    countdown_face,
+    alarm_face,
+    temperature_display_face,
     voltage_face,
-    preferences_face,
-    set_time_face,
+    settings_face,
+    set_time_face
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
@@ -47,7 +49,7 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 3)
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT
@@ -64,6 +66,8 @@ const watch_face_t watch_faces[] = {
 
 /* Enable or disable the sound on mode button press */
 #define MOVEMENT_DEFAULT_BUTTON_SOUND true
+
+#define MOVEMENT_DEFAULT_BUTTON_VOLUME WATCH_BUZZER_VOLUME_SOFT
 
 /* Set the timeout before switching back to the main watch face
  * Valid values are:
@@ -85,7 +89,7 @@ const watch_face_t watch_faces[] = {
  * 6: 1 day
  * 7: 7 days
  */
-#define MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL 0
+#define MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL 2
 
 /* Set the led duration
  * Valid values are:

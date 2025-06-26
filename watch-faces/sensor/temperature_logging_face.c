@@ -25,25 +25,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include "temperature_logging_face.h"
-#include "thermistor_driver.h"
 #include "watch.h"
 
-#ifdef HAS_TEMPERATURE_SENSOR
+static bool skip = false;
 
-static void _temperature_logging_face_log_data(thermistor_logger_state_t *logger_state) {
-    thermistor_driver_enable();
+static void _temperature_logging_face_log_data(temperature_logging_state_t *logger_state) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
-    size_t pos = logger_state->data_points % THERMISTOR_LOGGING_NUM_DATA_POINTS;
+    size_t pos = logger_state->data_points % TEMPERATURE_LOGGING_NUM_DATA_POINTS;
 
     logger_state->data[pos].timestamp.reg = date_time.reg;
-    logger_state->data[pos].temperature_c = thermistor_driver_get_temperature();
+    logger_state->data[pos].temperature_c = movement_get_temperature();
     logger_state->data_points++;
-
-    thermistor_driver_disable();
 }
 
-static void _temperature_logging_face_update_display(thermistor_logger_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
-    int8_t pos = (logger_state->data_points - 1 - logger_state->display_index) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
+static void _temperature_logging_face_update_display(temperature_logging_state_t *logger_state, bool in_fahrenheit, bool clock_mode_24h) {
+    int8_t pos = (logger_state->data_points - 1 - logger_state->display_index) % TEMPERATURE_LOGGING_NUM_DATA_POINTS;
     char buf[7];
 
     watch_clear_indicator(WATCH_INDICATOR_24H);
@@ -87,20 +83,24 @@ static void _temperature_logging_face_update_display(thermistor_logger_state_t *
 
 void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
+
+    // if temperature is invalid, we don't have a temperature sensor which means we shouldn't be here.
+    if (movement_get_temperature() == 0xFFFFFFFF) skip = true;
+
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(thermistor_logger_state_t));
-        memset(*context_ptr, 0, sizeof(thermistor_logger_state_t));
+        *context_ptr = malloc(sizeof(temperature_logging_state_t));
+        memset(*context_ptr, 0, sizeof(temperature_logging_state_t));
     }
 }
 
 void temperature_logging_face_activate(void *context) {
-    thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
+    temperature_logging_state_t *logger_state = (temperature_logging_state_t *)context;
     logger_state->display_index = 0;
     logger_state->ts_ticks = 0;
 }
 
 bool temperature_logging_face_loop(movement_event_t event, void *context) {
-    thermistor_logger_state_t *logger_state = (thermistor_logger_state_t *)context;
+    temperature_logging_state_t *logger_state = (temperature_logging_state_t *)context;
     switch (event.event_type) {
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
@@ -114,10 +114,14 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_ALARM_BUTTON_DOWN:
-            logger_state->display_index = (logger_state->display_index + 1) % THERMISTOR_LOGGING_NUM_DATA_POINTS;
+            logger_state->display_index = (logger_state->display_index + 1) % TEMPERATURE_LOGGING_NUM_DATA_POINTS;
             logger_state->ts_ticks = 0;
             // fall through
         case EVENT_ACTIVATE:
+            if (skip) {
+                movement_move_to_next_face();
+                return false;
+            }
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h());
             break;
         case EVENT_TICK:
@@ -150,5 +154,3 @@ movement_watch_face_advisory_t temperature_logging_face_advise(void *context) {
 
     return retval;
 }
-
-#endif

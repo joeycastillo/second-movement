@@ -129,6 +129,9 @@ static void _watch_disable_all_pins_except_rtc(void) {
     uint32_t config = RTC->MODE0.TAMPCTRL.reg;
     uint32_t portb_pins_to_disable = 0xFFFFFFFF;
 
+    /// FIXME: Watch library shouldn't be responsible for this, but Movement uses PB00 and PB03 for activity and orientation tracking.
+    ///        As such, we need to keep them on.
+    portb_pins_to_disable &= 0xFFFFFFF6;
     // if there's an action set on RTC/IN[0], leave PB00 configured
     if (config & RTC_TAMPCTRL_IN0ACT_Msk) portb_pins_to_disable &= 0xFFFFFFFE;
     // same with RTC/IN[1] and PB02
@@ -151,7 +154,8 @@ static void _watch_disable_all_peripherals_except_slcd(void) {
     _watch_disable_tcc();
     watch_disable_adc();
     watch_disable_external_interrupts();
-    /// TODO: Actually disable all these peripherals! #SecondMovement
+
+    /// TODO: Actually disable all these peripherals? Disabling I2C seems to have no impact fwiw.
     // watch_disable_i2c();
     // SERCOM3->USART.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
     // MCLK->APBCMASK.reg &= ~MCLK_APBCMASK_SERCOM3;

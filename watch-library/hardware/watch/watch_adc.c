@@ -67,6 +67,11 @@ void _watch_set_analog_reference_voltage(uint8_t reference) {
 uint16_t watch_get_vcc_voltage(void) {
     // stash the previous reference so we can restore it when we're done.
     uint8_t oldref = ADC->REFCTRL.bit.REFSEL;
+    // same with the previous state of the ADC
+    bool adc_was_disabled = !adc_is_enabled();
+
+    // enable the ADC if needed
+    if (adc_was_disabled) watch_enable_adc();
 
     // if we weren't already using the internal reference voltage, select it now.
     if (oldref != ADC_REFCTRL_REFSEL_INTREF_Val) _watch_set_analog_reference_voltage(ADC_REFCTRL_REFSEL_INTREF_Val);
@@ -76,6 +81,9 @@ uint16_t watch_get_vcc_voltage(void) {
 
     // restore the old reference, if needed.
     if (oldref != ADC_REFCTRL_REFSEL_INTREF_Val) _watch_set_analog_reference_voltage(oldref);
+
+    // and restore the ADC to its previous state
+    if (adc_was_disabled) watch_disable_adc();
 
     return (uint16_t)((raw_val * 1000) / (1024 * 1 << ADC->AVGCTRL.bit.SAMPLENUM));
 }

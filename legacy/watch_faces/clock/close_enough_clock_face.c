@@ -109,9 +109,7 @@ bool close_enough_clock_face_loop(movement_event_t event, void *context) {
             // check the battery voltage once a day...
             if (date_time.unit.day != state->last_battery_check) {
                 state->last_battery_check = date_time.unit.day;
-                watch_enable_adc();
                 uint16_t voltage = watch_get_vcc_voltage();
-                watch_disable_adc();
                 // 2.2 volts will happen when the battery has maybe 5-10% remaining?
                 // we can refine this later.
                 state->battery_low = (voltage < 2200);

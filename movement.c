@@ -40,11 +40,10 @@
 #include "shell.h"
 #include "utz.h"
 #include "zones.h"
-#include "lis2dw.h"
 #include "tc.h"
 #include "evsys.h"
 #include "delay.h"
-#include "movement_activity.h"
+#include "thermistor_driver.h"
 
 #include "movement_config.h"
 
@@ -74,11 +73,8 @@ void cb_alarm_fired(void);
 void cb_fast_tick(void);
 void cb_tick(void);
 
-#ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
-uint8_t stationary_minutes = 0;
-#endif
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -155,25 +151,6 @@ static inline void _movement_disable_fast_tick_if_possible(void) {
 
 static void _movement_handle_top_of_minute(void) {
     watch_date_time_t date_time = watch_rtc_get_date_time();
-
-#ifdef HAS_ACCELEROMETER
-    if (stationary_minutes < 5) {
-        // if the watch has been stationary for fewer than 5 minutes, find out if it's still stationary.
-        if (HAL_GPIO_A4_read()) stationary_minutes++;
-        printf("Stationary minutes: %d\n", stationary_minutes);
-
-        // does this mark five stationary minutes? and are we not already asleep?
-        if (stationary_minutes == 5 && movement_state.le_mode_ticks != -1) {
-            // if so, enter low energy mode.
-            printf("Entering low energy mode due to inactivity.\n");
-            movement_request_sleep();
-        }
-    }
-
-    if ((date_time.unit.minute % 5) == 0) {
-        _movement_log_data();
-    }
-#endif
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
@@ -456,6 +433,14 @@ void movement_set_button_should_sound(bool value) {
     movement_state.settings.bit.button_should_sound = value;
 }
 
+watch_buzzer_volume_t movement_button_volume(void) {
+    return movement_state.settings.bit.button_volume;
+}
+
+void movement_set_button_volume(watch_buzzer_volume_t value) {
+    movement_state.settings.bit.button_volume = value;
+}
+
 movement_clock_mode_t movement_clock_mode_24h(void) {
     return movement_state.settings.bit.clock_mode_24h ? MOVEMENT_CLOCK_MODE_24H : MOVEMENT_CLOCK_MODE_12H;
 }
@@ -526,45 +511,94 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
 }
 
-void movement_enable_tap_detection_if_available(void) {
-#ifdef HAS_ACCELEROMETER
-    // disable event on INT1/A3 (normally tracks orientation changes)
-    eic_disable_event(HAL_GPIO_A3_pin());
+bool movement_enable_tap_detection_if_available(void) {
+    if (movement_state.has_lis2dw) {
+        // configure tap duration threshold and enable Z axis
+        lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
+        lis2dw_configure_tap_duration(10, 2, 2);
 
-    // configure tap duration threshold and enable Z axis
-    lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
-    lis2dw_configure_tap_duration(10, 2, 2);
+        // ramp data rate up to 400 Hz and high performance mode
+        lis2dw_set_low_noise_mode(true);
+        lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
+        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
 
-    // ramp data rate up to 400 Hz and high performance mode
-    lis2dw_set_low_noise_mode(true);
-    lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-    lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+        // Settling time (1 sample duration, i.e. 1/400Hz)
+        delay_ms(3);
 
-    // Settling time (1 sample duration, i.e. 1/400Hz)
-    delay_ms(3);
+        // enable tap detection on INT1/A3.
+        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
 
-    // enable tap detection on INT1/A3.
-    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
-    // and enable the cb_accelerometer_event interrupt callback, so we can catch tap events.
-    watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
-#endif
+        return true;
+    }
+
+    return false;
 }
 
-void movement_disable_tap_detection_if_available(void) {
-#ifdef HAS_ACCELEROMETER
-    // Ramp data rate back down to the usual lowest rate to save power.
-    lis2dw_set_low_noise_mode(false);
-    lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
-    lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
-    // disable the interrupt on INT1/A3...
-    eic_disable_interrupt(HAL_GPIO_A3_pin());
-    // ...disable Z axis (not sure if this is needed, does this save power?)...
-    lis2dw_configure_tap_threshold(0, 0, 0, 0);
-    // ...re-enable tracking of orientation changes...
-    lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-    // ...and re-enable the event.
-    eic_enable_event(HAL_GPIO_A3_pin());
-#endif
+bool movement_disable_tap_detection_if_available(void) {
+    if (movement_state.has_lis2dw) {
+        // Ramp data rate back down to the usual lowest rate to save power.
+        lis2dw_set_low_noise_mode(false);
+        lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        // ...disable Z axis (not sure if this is needed, does this save power?)...
+        lis2dw_configure_tap_threshold(0, 0, 0, 0);
+
+        return true;
+    }
+
+    return false;
+}
+
+lis2dw_data_rate_t movement_get_accelerometer_background_rate(void) {
+    if (movement_state.has_lis2dw) return movement_state.accelerometer_background_rate;
+    else return LIS2DW_DATA_RATE_POWERDOWN;
+}
+
+bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate) {
+    if (movement_state.has_lis2dw) {
+        if (movement_state.accelerometer_background_rate != new_rate) {
+            lis2dw_set_data_rate(new_rate);
+            movement_state.accelerometer_background_rate = new_rate;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+uint8_t movement_get_accelerometer_motion_threshold(void) {
+    if (movement_state.has_lis2dw) return movement_state.accelerometer_motion_threshold;
+    else return 0;
+}
+
+bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
+    if (movement_state.has_lis2dw) {
+        if (movement_state.accelerometer_motion_threshold != new_threshold) {
+            lis2dw_configure_wakeup_threshold(new_threshold);
+            movement_state.accelerometer_motion_threshold = new_threshold;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+float movement_get_temperature(void) {
+    float temperature_c = (float)0xFFFFFFFF;
+
+    if (movement_state.has_thermistor) {
+        thermistor_driver_enable();
+        temperature_c = thermistor_driver_get_temperature();
+        thermistor_driver_disable();
+    } else if (movement_state.has_lis2dw) {
+            int16_t val = lis2dw_get_temperature();
+            val = val >> 4;
+            temperature_c = 25 + (float)val / 16.0;
+    }
+
+    return temperature_c;
 }
 
 void app_init(void) {
@@ -581,15 +615,9 @@ void app_init(void) {
     }
     HAL_GPIO_VBUS_DET_off();
 
-#if defined(NO_FREQCORR)
-    watch_rtc_freqcorr_write(0, 0);
-#elif defined(WATCH_IS_BLUE_BOARD)
-    watch_rtc_freqcorr_write(11, 0);
-#else
-    watch_rtc_freqcorr_write(22, 0);
-#endif
-
     memset(&movement_state, 0, sizeof(movement_state));
+
+    movement_state.has_thermistor = thermistor_driver_init();
 
     bool settings_file_exists = filesystem_file_exists("settings.u32");
     movement_settings_t maybe_settings;
@@ -624,8 +652,13 @@ void app_init(void) {
         movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
     #endif
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
+        movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
+#ifdef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+        movement_state.settings.bit.le_interval = 0;
+#else
         movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
+#endif
         movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
 
         movement_store_settings();
@@ -645,6 +678,7 @@ void app_init(void) {
         watch_rtc_set_date_time(date_time);
     }
 
+    if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
     movement_state.light_ticks = -1;
     movement_state.alarm_ticks = -1;
@@ -686,7 +720,6 @@ void app_setup(void) {
         // set up the 1 minute alarm (for background tasks and low power updates)
         watch_date_time_t alarm_time;
         alarm_time.reg = 0;
-        alarm_time.unit.second = 59; // after a match, the alarm fires at the next rising edge of CLK_RTC_CNT, so 59 seconds lets us update at :00
         watch_rtc_register_alarm_callback(cb_alarm_fired, alarm_time, ALARM_MATCH_SS);
     }
 
@@ -701,61 +734,61 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), cb_light_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
-#ifdef HAS_ACCELEROMETER
-// gossamer doesn't include all the chip-specific constants, so we have to fake them here.
-#ifndef EVSYS_ID_GEN_EIC_EXTINT_3
-#define EVSYS_ID_GEN_EIC_EXTINT_3 18
-#endif
-#ifndef EVSYS_ID_USER_TC2_EVU
-#define EVSYS_ID_USER_TC2_EVU 17
-#endif
-        watch_enable_i2c();
-        if (lis2dw_begin()) {
+#ifdef I2C_SERCOM
+        static bool lis2dw_checked = false;
+        if (!lis2dw_checked) {
+            watch_enable_i2c();
+            if (lis2dw_begin()) {
+                movement_state.has_lis2dw = true;
+            } else {
+                movement_state.has_lis2dw = false;
+                watch_disable_i2c();
+            }
+            lis2dw_checked = true;
+        } else if (movement_state.has_lis2dw) {
+            watch_enable_i2c();
+            lis2dw_begin();
+        }
+
+        if (movement_state.has_lis2dw) {
             lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);         // select low power (not high performance) mode
             lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
             lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);  // sample at 1.6 Hz, lowest rate available
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
-            lis2dw_configure_wakeup_threshold(8);           // g threshold to wake up: (2 * FS / 64) where FS is "full scale" of ±2g.
+            lis2dw_configure_wakeup_threshold(movement_state.accelerometer_motion_threshold); // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
             lis2dw_configure_6d_threshold(3);               // 0-3 is 80, 70, 60, or 50 degrees. 50 is least precise, hopefully most sensitive?
 
             // set up interrupts:
             // INT1 is wired to pin A3. We'll configure the accelerometer to output an interrupt on INT1 when it detects an orientation change.
-            lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
-            HAL_GPIO_A3_in();
-            HAL_GPIO_A3_pmuxen(HAL_GPIO_PMUX_EIC);
-            eic_configure_pin(HAL_GPIO_A3_pin(), INTERRUPT_TRIGGER_RISING);
-            // but rather than hooking it up to an interrupt callback, we'll have it trigger an event.
-            eic_enable_event(HAL_GPIO_A3_pin());
-
-            // that event will increment a counter on TC2. So let's set that up:
-            if (!tc_is_enabled(2)) {
-                // TC2 clocked from GCLK3, the 1024 Hz clock. No further division.
-                tc_init(2, GENERIC_CLOCK_3, TC_PRESCALER_DIV1);
-            }
-            // COUNT16 mode, count up to 65535 orientation changes (we will reset before it overflows)
-            tc_set_counter_mode(2, TC_COUNTER_MODE_16BIT);
-            // run in standby (we spend most of our time in standby)
-            tc_set_run_in_standby(2, true);
-            // finally set the event action to count up when an event is received.
-            tc_set_event_action(2, TC_EVENT_ACTION_COUNT);
-            // enable TC2!
-            tc_enable(2);
-
-            // now configure the event system:
-            // on channel 0, route the INT3 event generator to the TC2 event user. Run in standby, on the asynchronous path.
-            evsys_configure_channel(0, EVSYS_ID_GEN_EIC_EXTINT_3, EVSYS_ID_USER_TC2_EVU, true, true);
-            // this concludes the setup for orientation tracking.
+            /// TODO: We had routed this interrupt to TC2 to count orientation changes, but TC2 consumed too much power.
+            /// Orientation changes helped with sleep tracking; would love to bring this back if we can find a low power solution.
+            /// For now, commenting these lines out; check commit 27f0c629d865f4bc56bc6e678da1eb8f4b919093 for power-hungry but working code.
+            // lis2dw_configure_int1(LIS2DW_CTRL4_INT1_6D);
+            // HAL_GPIO_A3_in();
 
             // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
             // a falling edge on INT2 indicates the accelerometer has woken up.
             lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
             HAL_GPIO_A4_in();
-            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
 
+            // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
+            // Still if you want to wake on motion, you can do it by uncommenting this line:
+            // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+
+            // later on, we are going to use INT1 for tap detection. We'll set up that interrupt here,
+            // but it will only fire once tap recognition is enabled.
+            watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
+
+            // Enable the interrupts...
             lis2dw_enable_interrupts();
+
+            // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
+            // Tap detection will ramp up sesing and make use of the A3 interrupt.
+            // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
+            movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
         }
 #endif
 
@@ -774,6 +807,8 @@ void app_setup(void) {
     }
 }
 
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+
 static void _sleep_mode_app_loop(void) {
     movement_state.needs_wake = false;
     // as long as le_mode_ticks is -1 (i.e. we are in low energy mode), we wake up here, update the screen, and go right back to sleep.
@@ -791,6 +826,8 @@ static void _sleep_mode_app_loop(void) {
     }
 }
 
+#endif
+
 bool app_loop(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
     bool woke_up_for_buzzer = false;
@@ -798,7 +835,7 @@ bool app_loop(void) {
     if (movement_state.watch_face_changed) {
         if (movement_state.settings.bit.button_should_sound) {
             // low note for nonzero case, high note for return to watch_face 0
-            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, WATCH_BUZZER_VOLUME_SOFT);
+            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, movement_state.settings.bit.button_volume);
         }
         wf->resign(watch_face_contexts[movement_state.current_face_idx]);
         movement_state.current_face_idx = movement_state.next_face_idx;
@@ -828,6 +865,7 @@ bool app_loop(void) {
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
 
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
     // if we have timed out of our low energy mode countdown, enter low energy mode.
     if (movement_state.le_mode_ticks == 0) {
         movement_state.le_mode_ticks = -1;
@@ -848,6 +886,7 @@ bool app_loop(void) {
         // need to figure out if there's a better heuristic for determining how we woke up.
         app_setup();
     }
+#endif
 
     // default to being allowed to sleep by the face.
     bool can_sleep = true;
@@ -1023,7 +1062,6 @@ void cb_tick(void) {
     }
 }
 
-#ifdef HAS_ACCELEROMETER
 void cb_accelerometer_event(void) {
     uint8_t int_src = lis2dw_get_interrupt_source();
 
@@ -1039,10 +1077,6 @@ void cb_accelerometer_event(void) {
 
 void cb_accelerometer_wake(void) {
     event.event_type = EVENT_ACCELEROMETER_WAKE;
-    // reset the stationary minutes counter; we're counting consecutive stationary minutes.
-    stationary_minutes = 0;
     // also: wake up!
     _movement_reset_inactivity_countdown();
 }
-
-#endif

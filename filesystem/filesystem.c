@@ -252,6 +252,11 @@ static void filesystem_cat(char *filename) {
 }
 
 bool filesystem_write_file(char *filename, char *text, int32_t length) {
+    if (filesystem_get_free_space() <= 256) {
+        printf("No free space!\n");
+        return false;    
+    }
+
     int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_RDWR | LFS_O_CREAT | LFS_O_TRUNC);
     if (err < 0) return false;
     err = lfs_file_write(&eeprom_filesystem, &file, text, length);
@@ -260,6 +265,11 @@ bool filesystem_write_file(char *filename, char *text, int32_t length) {
 }
 
 bool filesystem_append_file(char *filename, char *text, int32_t length) {
+    if (filesystem_get_free_space() <= 256) {
+        printf("No free space!\n");
+        return false;    
+    }
+
     int err = lfs_file_open(&eeprom_filesystem, &file, filename, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_APPEND);
     if (err < 0) return false;
     err = lfs_file_write(&eeprom_filesystem, &file, text, length);

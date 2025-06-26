@@ -67,7 +67,7 @@ static inline void load_countdown(countdown_state_t *state) {
 
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
+    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
 }
 
 static void schedule_countdown(countdown_state_t *state) {
@@ -218,13 +218,10 @@ void countdown_face_activate(void *context) {
 
     movement_request_tick_frequency(1);
     quick_ticks_running = false;
-#if HAS_ACCELEROMETER
-    if (state->mode != cd_running) {
+    if (state->mode != cd_running && movement_enable_tap_detection_if_available()) {
         state->tap_detection_ticks = TAP_DETECTION_SECONDS;
         state->has_tapped_once = false;
-        movement_enable_tap_detection_if_available();
     }
-#endif
 }
 
 bool countdown_face_loop(movement_event_t event, void *context) {
@@ -232,6 +229,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "TIMER", "CD");
             draw(state, event.subsecond);
             break;
@@ -358,10 +356,19 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                 state->mode = cd_reset;
                 store_countdown(state);
                 movement_request_tick_frequency(1);
-                button_beep();
+            }
+            if (state->mode != cd_running) {
+                movement_move_to_face(0);
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
+            // we will only get this if the timer is stopped.
+            if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+                // clear out the last two digits and replace them with the sleep mode indicator
+                watch_display_text(WATCH_POSITION_SECONDS, "  ");
+            }
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
+            break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // intentionally squelch the light default event; we only show the light when cd is running or reset
             break;

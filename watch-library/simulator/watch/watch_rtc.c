@@ -160,20 +160,20 @@ void watch_rtc_register_alarm_callback(watch_cb_t callback, watch_date_time_t al
 
     double timeout = EM_ASM_DOUBLE({
         const now = Date.now();
-        const date = new Date(now + $0);
+        const date = new Date(now);
 
-        const hour = ($1 >> 12) & 0x1f;
-        const minute = ($1 >> 6) & 0x3f;
-        const second = $1 & 0x3f;
+        const hour = ($0 >> 12) & 0x1f;
+        const minute = ($0 >> 6) & 0x3f;
+        const second = $0 & 0x3f;
 
-        if ($2 == 1) { // SS
+        if ($1 == 1) { // SS
             if (second < date.getSeconds()) date.setMinutes(date.getMinutes() + 1);
             date.setSeconds(second);
-        } else if ($2 == 2) { // MMSS
+        } else if ($1 == 2) { // MMSS
             if (second < date.getSeconds()) date.setMinutes(date.getMinutes() + 1);
             if (minute < date.getMinutes()) date.setHours(date.getHours() + 1);
             date.setMinutes(minute, second);
-        } else if ($2 == 3) { // HHMMSS
+        } else if ($1 == 3) { // HHMMSS
             if (second < date.getSeconds()) date.setMinutes(date.getMinutes() + 1);
             if (minute < date.getMinutes()) date.setHours(date.getHours() + 1);
             if (hour < date.getHours()) date.setDate(date.getDate() + 1);
@@ -183,7 +183,7 @@ void watch_rtc_register_alarm_callback(watch_cb_t callback, watch_date_time_t al
         }
 
         return date - now;
-    }, time_offset, alarm_time.reg, mask);
+    }, alarm_time.reg, mask);
 
     alarm_callback = callback;
     alarm_timeout_id = emscripten_set_timeout(watch_invoke_alarm_callback, timeout, NULL);
