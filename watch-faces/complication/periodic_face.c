@@ -564,8 +564,7 @@ bool periodic_face_loop(movement_event_t event, void *context)
         switch (state->mode)
         {
         case SCREEN_TITLE:
-            movement_move_to_face(0);
-            return true;
+            return movement_default_loop_handler(event);
         default:
             state->mode = SCREEN_TITLE;
             _display_screen(state, movement_button_should_sound());
