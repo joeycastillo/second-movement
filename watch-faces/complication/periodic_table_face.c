@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "periodic_face.h"
+#include "periodic_table_face.h"
 
 #define FREQ_FAST 8
 #define FREQ 2
@@ -39,19 +39,19 @@ static int16_t _text_pos;
 static const char* _text_looping;
 static const char title_text[] = "Periodic table";
 
-void periodic_face_setup(uint8_t watch_face_index, void **context_ptr)
+void periodic_table_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
     (void)watch_face_index;
     if (*context_ptr == NULL)
     {
-        *context_ptr = malloc(sizeof(periodic_state_t));
-        memset(*context_ptr, 0, sizeof(periodic_state_t));
+        *context_ptr = malloc(sizeof(periodic_table_state_t));
+        memset(*context_ptr, 0, sizeof(periodic_table_state_t));
     }
 }
 
-void periodic_face_activate(void *context)
+void periodic_table_face_activate(void *context)
 {
-    periodic_state_t *state = (periodic_state_t *)context;
+    periodic_table_state_t *state = (periodic_table_state_t *)context;
 
     state->atomic_num = 0;
     state->mode = 0;
@@ -262,7 +262,7 @@ static void _make_upper(char *string) {
     }
 }
 
-static void _display_element(periodic_state_t *state)
+static void _display_element(periodic_table_state_t *state)
 {
     char buf[7];
     char ele[3];
@@ -282,7 +282,7 @@ static void _display_element(periodic_state_t *state)
     }
 }
 
-static void _display_atomic_mass(periodic_state_t *state)
+static void _display_atomic_mass(periodic_table_state_t *state)
 {
     char buf[7];
     uint16_t mass = table[state->atomic_num - 1].atomic_mass;
@@ -309,7 +309,7 @@ static void _display_atomic_mass(periodic_state_t *state)
     }
 }
 
-static void _display_year_discovered(periodic_state_t *state)
+static void _display_year_discovered(periodic_table_state_t *state)
 {
     char year_buf[7];
     int16_t year = table[state->atomic_num - 1].year_discovered;
@@ -327,7 +327,7 @@ static void _display_year_discovered(periodic_state_t *state)
     watch_display_text(WATCH_POSITION_BOTTOM, year_buf); 
 }
 
-static void _display_name(periodic_state_t *state)
+static void _display_name(periodic_table_state_t *state)
 {
     watch_display_text(WATCH_POSITION_TOP_LEFT, table[state->atomic_num - 1].symbol);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, _get_screen_name(state->mode));
@@ -350,7 +350,7 @@ static void _display_name(periodic_state_t *state)
     watch_display_text(WATCH_POSITION_BOTTOM, buf); 
 }
 
-static void _display_electronegativity(periodic_state_t *state)
+static void _display_electronegativity(periodic_table_state_t *state)
 {
     char buf[11];
     uint16_t electronegativity = table[state->atomic_num - 1].electronegativity;
@@ -411,7 +411,7 @@ static int16_t _loop_text(const char* text, int8_t curr_loc, bool shift){
     return curr_loc + 1; // Next position
 }
 
-static void _display_title(periodic_state_t *state){
+static void _display_title(periodic_table_state_t *state){
     state->atomic_num = 0;
     watch_clear_colon();
     watch_clear_all_indicators();
@@ -420,7 +420,7 @@ static void _display_title(periodic_state_t *state){
     _text_pos = _loop_text(_text_looping, _text_pos, watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM);
 }
 
-static void _display_screen(periodic_state_t *state, bool should_sound){
+static void _display_screen(periodic_table_state_t *state, bool should_sound){
     watch_clear_display();
     watch_clear_all_indicators();
     switch (state->mode)
@@ -448,14 +448,14 @@ static void _display_screen(periodic_state_t *state, bool should_sound){
     if (should_sound) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
-static void _handle_forward(periodic_state_t *state, bool should_sound){
+static void _handle_forward(periodic_table_state_t *state, bool should_sound){
     state->atomic_num = (state->atomic_num % MAX_ELEMENT) + 1; // Wraps back to 1
     state->mode = SCREEN_ELEMENT;
     _display_screen(state, false);
     if (should_sound) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
-static void _handle_backward(periodic_state_t *state, bool should_sound){
+static void _handle_backward(periodic_table_state_t *state, bool should_sound){
     if (state->atomic_num <= 1) state->atomic_num = MAX_ELEMENT;
     else state->atomic_num = state->atomic_num - 1;
     state->mode = SCREEN_ELEMENT;
@@ -463,7 +463,7 @@ static void _handle_backward(periodic_state_t *state, bool should_sound){
     if (should_sound) watch_buzzer_play_note(BUZZER_NOTE_A6, 50);
 }
 
-static void _handle_mode_still_pressed(periodic_state_t *state, bool should_sound) {
+static void _handle_mode_still_pressed(periodic_table_state_t *state, bool should_sound) {
     if (_ts_ticks != 0){
         if (!HAL_GPIO_BTN_MODE_read()) {
             _ts_ticks = 0;
@@ -489,9 +489,9 @@ static void _handle_mode_still_pressed(periodic_state_t *state, bool should_soun
     }
 }
 
-bool periodic_face_loop(movement_event_t event, void *context)
+bool periodic_table_face_loop(movement_event_t event, void *context)
 {
-    periodic_state_t *state = (periodic_state_t *)context;
+    periodic_table_state_t *state = (periodic_table_state_t *)context;
     switch (event.event_type)
     {
     case EVENT_ACTIVATE:
@@ -592,7 +592,7 @@ bool periodic_face_loop(movement_event_t event, void *context)
     return true;
 }
 
-void periodic_face_resign(void *context)
+void periodic_table_face_resign(void *context)
 {
     (void)context;
 

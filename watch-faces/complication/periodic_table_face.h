@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef PERIODIC_FACE_H_
-#define PERIODIC_FACE_H_
+#ifndef PERIODIC_TABLE_FACE_H_
+#define PERIODIC_TABLE_FACE_H_
 
 #include "movement.h"
 
@@ -70,20 +70,20 @@ typedef struct {
     uint8_t atomic_num;
     uint8_t mode;
     uint8_t selection_index;
-} periodic_state_t;
+} periodic_table_state_t;
 
-void periodic_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void periodic_face_activate(void *context);
-bool periodic_face_loop(movement_event_t event, void *context);
-void periodic_face_resign(void *context);
+void periodic_table_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void periodic_table_face_activate(void *context);
+bool periodic_table_face_loop(movement_event_t event, void *context);
+void periodic_table_face_resign(void *context);
 
-#define periodic_face ((const watch_face_t){ \
-    periodic_face_setup, \
-    periodic_face_activate, \
-    periodic_face_loop, \
-    periodic_face_resign, \
+#define periodic_table_face ((const watch_face_t){ \
+    periodic_table_face_setup, \
+    periodic_table_face_activate, \
+    periodic_table_face_loop, \
+    periodic_table_face_resign, \
     NULL, \
 })
 
-#endif // PERIODIC_FACE_H_
+#endif // PERIODIC_TABLE_FACE_H_
 
