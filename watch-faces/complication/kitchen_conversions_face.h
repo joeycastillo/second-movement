@@ -33,13 +33,13 @@
  *
  * How to use
  * ----------
- * Short press the alarm button to move forward through menus, and long press to move backwards
+ * Short press the light button to move forward through menus, and long press to move backwards
  *
- * Press the light button to cycle through options in the menus
+ * Press the alarm button to cycle through options in the menus
  *
- * When inputting a number, the light button moves forward one place and the alarm button increments a digit by one
+ * When inputting a number, the light button moves forward one place and the alarm button increments the value of the selected digit
  *
- * To convert between Imperial (GB) and US (A) measurements of volume, hold the light button
+ * To convert between Imperial (GB) and US (A) measurements of volume, hold the alarm button
  *
  */
 
@@ -68,7 +68,7 @@ typedef struct
     bool to_is_us;
     uint32_t selection_value;
     uint8_t selection_index;
-    bool light_held;
+    bool alarm_held;
 } kitchen_conversions_state_t;
 
 void kitchen_conversions_face_setup(uint8_t watch_face_index, void **context_ptr);
