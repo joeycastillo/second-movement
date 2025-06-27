@@ -294,6 +294,8 @@ typedef struct {
     bool has_lis2dw;
     // data rate for background accelerometer sensing
     lis2dw_data_rate_t accelerometer_background_rate;
+    // threshold for considering the wearer is in motion
+    uint8_t accelerometer_motion_threshold;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -379,6 +381,10 @@ bool movement_disable_tap_detection_if_available(void);
 // gets and sets the accelerometer data rate in the background
 lis2dw_data_rate_t movement_get_accelerometer_background_rate(void);
 bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
+
+// gets and sets the accelerometer motion threshold
+uint8_t movement_get_accelerometer_motion_threshold(void);
+bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

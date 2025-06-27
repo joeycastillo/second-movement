@@ -67,7 +67,9 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
             char data[256];
             size_t bytes_read = uart_read_instance(0, data, 256);
             watch_clear_display();
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
+            watch_set_indicator(WATCH_INDICATOR_ARROWS);
+            if (watch_rtc_get_date_time().unit.second % 4 < 2) watch_display_text_with_fallback(WATCH_POSITION_TOP, "IrDA", "IR");
+            else watch_display_text_with_fallback(WATCH_POSITION_TOP, "FREE ", "DF");
 
             if (bytes_read) {
                 // data is in the following format, where S is Size, F is Filename and C is checksum:
@@ -124,7 +126,9 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
             } else {
                 movement_force_led_off();
-                watch_display_text(WATCH_POSITION_FULL, "    no dat");
+                char buf[7];
+                snprintf(buf, 7, "%4ld b", filesystem_get_free_space());
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
             }
         }
             break;
@@ -133,7 +137,7 @@ bool irda_upload_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
             break;
         case EVENT_TIMEOUT:
-            // movement_move_to_face(0);
+            movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             watch_display_text(WATCH_POSITION_TOP_RIGHT, " <");
