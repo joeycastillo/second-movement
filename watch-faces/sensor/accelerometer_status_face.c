@@ -61,7 +61,7 @@ void accelerometer_status_face_activate(void *context) {
     movement_request_tick_frequency(4);
 
     // fetch current threshold from accelerometer
-    state->threshold = lis2dw_get_wakeup_threshold();
+    state->threshold = movement_get_accelerometer_motion_threshold();
 }
 
 bool accelerometer_status_face_loop(movement_event_t event, void *context) {
@@ -70,7 +70,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
     if (state->is_setting) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
         switch (event.event_type) {
-            case EVENT_LIGHT_BUTTON_DOWN:
+            case EVENT_ALARM_BUTTON_DOWN:
                 state->new_threshold = (state->new_threshold + 1) % 64;
                 // fall through
             case EVENT_TICK:
@@ -78,6 +78,7 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                     char buf[11];
                     if (event.subsecond % 2) {
                         watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+                        watch_clear_decimal_if_available();
                     } else {
                         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
                         watch_display_text_with_fallback(WATCH_POSITION_TOP, "WAKth", "TH");
@@ -86,8 +87,8 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
                     }
                 }
                 break;
-            case EVENT_ALARM_BUTTON_UP:
-                lis2dw_configure_wakeup_threshold(state->new_threshold);
+            case EVENT_LIGHT_BUTTON_DOWN:
+                movement_set_accelerometer_motion_threshold(state->new_threshold);
                 state->threshold = state->new_threshold;
                 watch_clear_decimal_if_available();
                 state->is_setting = false;
