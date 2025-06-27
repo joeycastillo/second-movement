@@ -66,6 +66,12 @@ static const unit temps[TEMP_COUNT] = {
     {"Gas Mk", 25., 25., 250},
 };
 
+static const unit temps_custom[TEMP_COUNT] = {
+    {" #C", 1.8, 1.8, 32},
+    {" #F", 1., 1., 0}, // BASE
+    {"Gas Mk", 25., 25., 250},
+};
+
 static const unit vols[VOL_COUNT] = {
     {"  n&L", 1., 1., 0}, // BASE (ml)
     {"   L", 1000., 1000., 0},
@@ -92,7 +98,7 @@ static void reset_state(kitchen_conversions_state_t *state)
     state->to_is_us = movement_use_imperial_units();
     state->selection_value = 0;
     state->selection_index = 0;
-    state->light_held = false;
+    state->alarm_held = false;
 }
 
 void kitchen_conversions_face_setup(uint8_t watch_face_index, void **context_ptr)
@@ -139,7 +145,7 @@ static unit *get_unit_list(uint8_t measurement_i)
         return (unit *)weights;
 
     case TEMP:
-        return (unit *)temps;
+        return (unit *)(watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM ? temps_custom : temps);
 
     case VOL:
         return (unit *)vols;
@@ -168,7 +174,7 @@ static void display_units(uint8_t measurement_i, uint8_t list_i)
 {
     // Slighly hacky way to improve ml display on new LCD
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM && measurement_i == VOL && list_i == 0)
-        watch_display_text(WATCH_POSITION_BOTTOM, "    ml");
+        watch_display_text(WATCH_POSITION_BOTTOM, "    mL");
     else
         watch_display_text(WATCH_POSITION_BOTTOM, get_unit_list(measurement_i)[list_i].name);
 }
@@ -316,11 +322,11 @@ bool kitchen_conversions_face_loop(movement_event_t event, void *context)
             display(state, event.subsecond);
 
             // Increments input twice a second when light button held
-            if (state->light_held && event.subsecond % 2)
+            if (state->alarm_held && event.subsecond % 2)
                 increment_input(state);
         }
         break;
-    case EVENT_LIGHT_BUTTON_UP:
+    case EVENT_ALARM_BUTTON_UP:
         // Cycles options
         switch (state->pg)
         {
@@ -348,11 +354,11 @@ bool kitchen_conversions_face_loop(movement_event_t event, void *context)
         if (state->pg != result)
             display(state, event.subsecond);
 
-        state->light_held = false;
+        state->alarm_held = false;
 
         break;
 
-    case EVENT_ALARM_BUTTON_UP:
+    case EVENT_LIGHT_BUTTON_UP:
         // Increments selected digit
         if (state->pg == input)
         {
@@ -388,11 +394,11 @@ bool kitchen_conversions_face_loop(movement_event_t event, void *context)
 
         display(state, event.subsecond);
 
-        state->light_held = false;
+        state->alarm_held = false;
 
         break;
 
-    case EVENT_ALARM_LONG_PRESS:
+    case EVENT_LIGHT_LONG_PRESS:
         // Moves backwards through pages, resetting certain values
         if (state->pg != measurement)
         {
@@ -432,11 +438,11 @@ bool kitchen_conversions_face_loop(movement_event_t event, void *context)
             if (movement_button_should_sound())
                 watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
 
-            state->light_held = false;
+            state->alarm_held = false;
         }
         break;
 
-    case EVENT_LIGHT_LONG_PRESS:
+    case EVENT_ALARM_LONG_PRESS:
         // Switch between locales
         if (state->measurement_i == VOL)
         {
@@ -459,10 +465,14 @@ bool kitchen_conversions_face_loop(movement_event_t event, void *context)
             }
         }
 
+        // Sets flag to increment input digit when alarm button held
+        if (state->pg == input)
+            state->alarm_held = true;
+
         break;
 
-    case EVENT_LIGHT_LONG_UP:
-        state->light_held = false;
+    case EVENT_ALARM_LONG_UP:
+        state->alarm_held = false;
         break;
 
     case EVENT_TIMEOUT:
