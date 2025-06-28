@@ -139,9 +139,9 @@ bool breathing_face_loop(movement_event_t event, void *context) {
             switch (state->current_stage)
             {
             case 0: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Breath", "Breath"); if (state->sound_on) beep_in(); } break;
-            case 1: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   3", "In   3"); break;
-            case 2: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   2", "In   2"); break;
-            case 3: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   1", "In   1"); break;
+            case 1: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "In   3", "In   3"); break;
+            case 2: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "In   2", "In   2"); break;
+            case 3: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "In   1", "In   1"); break;
             
             case 4: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4"); if (state->sound_on) beep_in_hold(); } break;
             case 5: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3"); break;
