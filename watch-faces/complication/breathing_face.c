@@ -138,25 +138,25 @@ bool breathing_face_loop(movement_event_t event, void *context) {
 
             switch (state->current_stage)
             {
-            case 0: { watch_display_string("Breath", 4); if (state->sound_on) beep_in(); } break;
-            case 1: watch_display_string("In   3", 4); break;
-            case 2: watch_display_string("In   2", 4); break;
-            case 3: watch_display_string("In   1", 4); break;
+            case 0: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Breath", "Breath"); if (state->sound_on) beep_in(); } break;
+            case 1: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   3", "In   3"); break;
+            case 2: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   2", "In   2"); break;
+            case 3: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " In   1", "In   1"); break;
             
-            case 4: { watch_display_string("Hold 4", 4); if (state->sound_on) beep_in_hold(); } break;
-            case 5: watch_display_string("Hold 3", 4); break;
-            case 6: watch_display_string("Hold 2", 4); break;               
-            case 7:  watch_display_string("Hold 1", 4); break;
+            case 4: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4"); if (state->sound_on) beep_in_hold(); } break;
+            case 5: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3"); break;
+            case 6: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2"); break;               
+            case 7: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1"); break;
 
-            case 8: { watch_display_string("Ou t 4", 4); if (state->sound_on) beep_out(); } break;
-            case 9: watch_display_string("Ou t 3", 4); break;
-            case 10: watch_display_string("Ou t 2", 4); break;
-            case 11: watch_display_string("Ou t 1", 4); break;         
+            case 8: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  4", "Ou t 4"); if (state->sound_on) beep_out(); } break;
+            case 9: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  3", "Ou t 3"); break;
+            case 10: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  2", "Ou t 2"); break;
+            case 11: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  1", "Ou t 1"); break;         
             
-            case 12: { watch_display_string("Hold 4", 4); if (state->sound_on) beep_out_hold(); } break;
-            case 13: watch_display_string("Hold 3", 4); break;
-            case 14: watch_display_string("Hold 2", 4); break;     
-            case 15: watch_display_string("Hold 1", 4); break;     
+            case 12: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4"); if (state->sound_on) beep_out_hold(); } break;
+            case 13: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3"); break;
+            case 14: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2"); break;     
+            case 15: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1"); break;     
             default:
                 break;
             }
