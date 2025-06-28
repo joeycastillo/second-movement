@@ -24,7 +24,6 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
 #include "breathing_face.h"
 #include "watch.h"
 
@@ -42,14 +41,9 @@ static void beep_out_hold (breathing_state_t *state);
 static void update_indicators(breathing_state_t *state);
 
 void breathing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    // These next two lines just silence the compiler warnings associated with unused parameters.
-    // We have no use for the settings or the watch_face_index, so we make that explicit here.
-    (void) watch_face_index;
-    // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
+    (void) watch_face_index; // Unused parameter
     if (*context_ptr == NULL) {
-        // in this case, we allocate an area of memory sufficient to store the stuff we need to track.
         breathing_state_t *state = malloc(sizeof(breathing_state_t));
-        // Initialize the newly allocated state
         state->current_stage = 0;
         state->sound_on = true;  // Default to sound on for new instances
         state->light_on = true;  // Default to light on for new instances
@@ -67,88 +61,88 @@ void breathing_face_activate(void *context) {
 const int NOTE_LENGTH = 80;
 const int LED_BLINK_FREQUENCY = 8;
 
-void beep_in (breathing_state_t *state) {
-        const watch_buzzer_note_t notes[] = {
-            BUZZER_NOTE_C4,
-            BUZZER_NOTE_D4,
-            BUZZER_NOTE_E4,
-        };
-        const uint16_t durations[] = {
-            NOTE_LENGTH,
-            NOTE_LENGTH,
-            NOTE_LENGTH
-        };
-        for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-            if (state->light_on) {
-                watch_set_led_green();
-                state->led_blink_state = 1; // Mark for LED off on next tick
-                movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
-            }
-            watch_buzzer_play_note(notes[i], durations[i]);
+void beep_in(breathing_state_t *state) {
+    const watch_buzzer_note_t notes[] = {
+        BUZZER_NOTE_C4,
+        BUZZER_NOTE_D4,
+        BUZZER_NOTE_E4,
+    };
+    const uint16_t durations[] = {
+        NOTE_LENGTH,
+        NOTE_LENGTH,
+        NOTE_LENGTH
+    };
+    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
+        if (state->light_on) {
+            watch_set_led_green();
+            state->led_blink_state = 1; // Mark for LED off on next tick
+            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
+        watch_buzzer_play_note(notes[i], durations[i]);
+    }
 }
 
-void beep_in_hold (breathing_state_t *state) {
-        const watch_buzzer_note_t notes[] = {
-            BUZZER_NOTE_E4,
-            BUZZER_NOTE_REST,
-            BUZZER_NOTE_E4,
-        };
-        const uint16_t durations[] = {
-            NOTE_LENGTH,
-            NOTE_LENGTH * 2,
-            NOTE_LENGTH,
-        };
-        for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-            if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-                watch_set_led_green();
-                state->led_blink_state = 1; // Mark for LED off on next tick
-                movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
-            }
-            watch_buzzer_play_note(notes[i], durations[i]);
+void beep_in_hold(breathing_state_t *state) {
+    const watch_buzzer_note_t notes[] = {
+        BUZZER_NOTE_E4,
+        BUZZER_NOTE_REST,
+        BUZZER_NOTE_E4,
+    };
+    const uint16_t durations[] = {
+        NOTE_LENGTH,
+        NOTE_LENGTH * 2,
+        NOTE_LENGTH,
+    };
+    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
+        if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
+            watch_set_led_green();
+            state->led_blink_state = 1; // Mark for LED off on next tick
+            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
+        watch_buzzer_play_note(notes[i], durations[i]);
+    }
 }
 
-void beep_out (breathing_state_t *state) {
-        const watch_buzzer_note_t notes[] = {
-            BUZZER_NOTE_E4,
-            BUZZER_NOTE_D4,
-            BUZZER_NOTE_C4,
-        };
-        const uint16_t durations[] = {
-            NOTE_LENGTH,
-            NOTE_LENGTH,
-            NOTE_LENGTH,
-        };
-        for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-            if (state->light_on) {
-                watch_set_led_green();
-                state->led_blink_state = 1; // Mark for LED off on next tick
-                movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
-            }
-            watch_buzzer_play_note(notes[i], durations[i]);
+void beep_out(breathing_state_t *state) {
+    const watch_buzzer_note_t notes[] = {
+        BUZZER_NOTE_E4,
+        BUZZER_NOTE_D4,
+        BUZZER_NOTE_C4,
+    };
+    const uint16_t durations[] = {
+        NOTE_LENGTH,
+        NOTE_LENGTH,
+        NOTE_LENGTH,
+    };
+    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
+        if (state->light_on) {
+            watch_set_led_green();
+            state->led_blink_state = 1; // Mark for LED off on next tick
+            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
+        watch_buzzer_play_note(notes[i], durations[i]);
+    }
 }
 
-void beep_out_hold (breathing_state_t *state) {
-        const watch_buzzer_note_t notes[] = {
-            BUZZER_NOTE_C4,
-            BUZZER_NOTE_REST * 2,
-            BUZZER_NOTE_C4,
-        };
-        const uint16_t durations[] = {
-            NOTE_LENGTH,
-            NOTE_LENGTH,
-            NOTE_LENGTH,
-        };
-        for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-            if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-                watch_set_led_green();
-                state->led_blink_state = 1; // Mark for LED off on next tick
-                movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
-            }
-            watch_buzzer_play_note(notes[i], durations[i]);
+void beep_out_hold(breathing_state_t *state) {
+    const watch_buzzer_note_t notes[] = {
+        BUZZER_NOTE_C4,
+        BUZZER_NOTE_REST * 2,
+        BUZZER_NOTE_C4,
+    };
+    const uint16_t durations[] = {
+        NOTE_LENGTH,
+        NOTE_LENGTH,
+        NOTE_LENGTH,
+    };
+    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
+        if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
+            watch_set_led_green();
+            state->led_blink_state = 1; // Mark for LED off on next tick
+            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
+        watch_buzzer_play_note(notes[i], durations[i]);
+    }
 }
 
 static void update_indicators(breathing_state_t *state) {
@@ -236,8 +230,7 @@ bool breathing_face_loop(movement_event_t event, void *context) {
 }
 
 void breathing_face_resign(void *context) {
-    // our watch face, like most watch faces, has nothing special to do when resigning.
-    // watch faces that enable a peripheral or interact with a sensor may want to turn it off here.
+    (void) context; // Silence unused parameter warning
     watch_set_led_off();
-    movement_request_tick_frequency(1); // Ensure we return to normal frequency
+    movement_request_tick_frequency(1); // Return to normal frequency
 }
