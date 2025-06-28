@@ -46,6 +46,10 @@ watch_lcd_type_t watch_get_lcd_type(void) {
 }
 
 void watch_enable_display(void) {
+    #if defined(FORCE_CUSTOM_LCD_TYPE)
+    _watch_update_indicator_segments();
+    #endif
+
     EM_ASM({
         #if defined(FORCE_CUSTOM_LCD_TYPE)
         document.getElementById("classic").style.display = "none";
