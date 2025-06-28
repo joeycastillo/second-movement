@@ -63,6 +63,7 @@ endif
 # Add your include directories here.
 INCLUDES += \
   -I./ \
+  -I. \
   -I./tinyusb/src \
   -I./littlefs \
   -I./utz \
