@@ -95,7 +95,7 @@ void beep_in_hold(breathing_state_t *state) {
     };
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-            watch_set_led_green();
+            watch_set_led_red();
             state->led_blink_state = 1; // Mark for LED off on next tick
             movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
@@ -137,7 +137,7 @@ void beep_out_hold(breathing_state_t *state) {
     };
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-            watch_set_led_green();
+            watch_set_led_red();
             state->led_blink_state = 1; // Mark for LED off on next tick
             movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
         }
