@@ -52,4 +52,5 @@
 #include "mars_time_face.h"
 #include "peek_memory_face.h"
 #include "totp_face.h"
+#include "probability_face.h"
 // New includes go above this line.
