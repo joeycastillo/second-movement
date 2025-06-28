@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Ruben Nic
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,32 +24,35 @@
 
 #pragma once
 
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "alarm_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "stopwatch_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
-#include "moon_phase_face.h"
-#include "days_since_face.h"
-#include "character_set_face.h"
-#include "accelerometer_status_face.h"
-#include "all_segments_face.h"
-#include "temperature_display_face.h"
-#include "temperature_logging_face.h"
-#include "activity_logging_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "settings_face.h"
-#include "light_sensor_face.h"
-#include "irda_upload_face.h"
-#include "chirpy_demo_face.h"
-#include "finetune_face.h"
-#include "nanosec_face.h"
-#include "mars_time_face.h"
-#include "peek_memory_face.h"
-#include "close_enough_face.h"
-// New includes go above this line.
+#include "movement.h"
+
+/*
+ * CLOSE ENOUGH CLOCK FACE
+ *
+ * Displays the current time; but only in periods of 5.
+ * Just in the in the formats of:
+ * - "10 past 5" displayed as "10 P 5"
+ * - "15 to 7" displayed as "15 T 7"
+ * - "6 o'clock" displayed as "6 OC"
+ *
+ */
+
+typedef struct {
+    int prev_five_minute_period;
+    int prev_min_checked;
+    uint8_t last_battery_check;
+    bool battery_low;
+} close_enough_state_t;
+
+void close_enough_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void close_enough_face_activate(void *context);
+bool close_enough_face_loop(movement_event_t event, void *context);
+void close_enough_face_resign(void *context);
+
+#define close_enough_face ((const watch_face_t){ \
+    close_enough_face_setup, \
+    close_enough_face_activate, \
+    close_enough_face_loop, \
+    close_enough_face_resign, \
+    NULL, \
+})
