@@ -44,17 +44,17 @@ void breathing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     // At boot, context_ptr will be NULL indicating that we don't have anyplace to store our context.
     if (*context_ptr == NULL) {
         // in this case, we allocate an area of memory sufficient to store the stuff we need to track.
-        *context_ptr = malloc(sizeof(breathing_state_t));
+        breathing_state_t *state = malloc(sizeof(breathing_state_t));
+        // Initialize the newly allocated state
+        state->current_stage = 0;
+        state->sound_on = true;  // Default to sound on for new instances
+        *context_ptr = state;
     }
 }
 
 void breathing_face_activate(void *context) {
-    // same as above: silence the warning, we don't need to check the settings.
-    // we do however need to set some things in our context. Here we cast it to the correct type...
     breathing_state_t *state = (breathing_state_t *)context;
-    // ...and set the initial state of our watch face.
     state->current_stage = 0;
-    state->sound_on = true;
 }
 
 const int NOTE_LENGTH = 80;
@@ -174,20 +174,9 @@ bool breathing_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            // This low energy mode update occurs once a minute, if the watch face is in the
-            // foreground when Movement enters low energy mode. We have the option of supporting
-            // this mode, but since our watch face animates once a second, the "Hello there" face
-            // isn't very useful in this mode. So we choose not to support it. (continued below)
             break;
         case EVENT_TIMEOUT:
-            // ... Instead, we respond to the timeout event. This event happens after a configurable
-            // interval on screen (1-30 minutes). The watch will give us this event as a chance to
-            // resign control if we want to, and in this case, we do.
-            // This function will return the watch to the first screen (usually a simple clock),
-            // and it will do it long before the watch enters low energy mode. This ensures we
-            // won't be on screen, and thus opts us out of getting the EVENT_LOW_ENERGY_UPDATE above.
-            
-            // movement_move_to_face(0);
+            // We stay in this face until the user chooses to exit
             break;
         default:
             movement_default_loop_handler(event);
