@@ -433,32 +433,6 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     }
 }
 
-static bool _sunrise_sunset_face_is_longitude_corrupted(sunrise_sunset_lat_lon_settings_t lon_struct) {
-    int16_t lon_value = _sunrise_sunset_face_latlon_from_struct(lon_struct);
-    return (lon_struct.tens > 9) || (abs(lon_value) > 18000);
-}
-
-static sunrise_sunset_lat_lon_settings_t _sunrise_sunset_face_recover_longitude(sunrise_sunset_lat_lon_settings_t corrupted) {
-    sunrise_sunset_lat_lon_settings_t recovered = {0};
-    
-    if (corrupted.tens > 9) {
-        recovered.hundreds = corrupted.tens / 10;
-        recovered.tens = corrupted.tens % 10;
-        recovered.ones = corrupted.ones;
-        recovered.tenths = corrupted.tenths;
-        recovered.hundredths = corrupted.hundredths;
-        recovered.sign = corrupted.sign;
-        
-        int16_t recovered_value = _sunrise_sunset_face_latlon_from_struct(recovered);
-        if (abs(recovered_value) <= 18000) {
-            return recovered;
-        }
-    }
-    
-    memset(&recovered, 0, sizeof(recovered));
-    return recovered;
-}
-
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
@@ -485,21 +459,10 @@ void sunrise_sunset_face_activate(void *context) {
     }
 #endif
 
-
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
-    movement_location_t movement_location = load_location_from_filesystem();
+    movement_location_t movement_location = load_location_from_filesystem();    
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
-
-    // Detect and recover from corrupted longitude data
-    if (_sunrise_sunset_face_is_longitude_corrupted(state->working_longitude)) {
-        sunrise_sunset_lat_lon_settings_t recovered = _sunrise_sunset_face_recover_longitude(state->working_longitude);
-        state->working_longitude = recovered;
-        
-        // Save the corrected location immediately
-        state->location_changed = true;
-        _sunrise_sunset_face_update_location_register(state);
-    }
 }
 
 bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
