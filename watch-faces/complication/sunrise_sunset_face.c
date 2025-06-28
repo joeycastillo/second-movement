@@ -478,7 +478,7 @@ void sunrise_sunset_face_activate(void *context) {
 #endif
 
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
-    movement_location_t movement_location = load_location_from_filesystem();    
+    movement_location_t movement_location = load_location_from_filesystem();
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
 }
