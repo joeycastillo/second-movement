@@ -238,7 +238,6 @@ bool breathing_face_loop(movement_event_t event, void *context) {
 void breathing_face_resign(void *context) {
     // our watch face, like most watch faces, has nothing special to do when resigning.
     // watch faces that enable a peripheral or interact with a sensor may want to turn it off here.
-    breathing_state_t *state = (breathing_state_t *)context;
     watch_set_led_off();
     movement_request_tick_frequency(1); // Ensure we return to normal frequency
 }
