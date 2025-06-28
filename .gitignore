@@ -25,3 +25,5 @@ _autosave*
 fp-info-cache
 .~*
 *.plan
+/.direnv
+/.emscripten_cache
