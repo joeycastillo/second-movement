@@ -35,8 +35,40 @@
 #define DEFAULT_DICE_SIDES 2
 #define PROBABILITY_ANIMATION_TICK_FREQUENCY 8
 #define TAP_DETECTION_SECONDS 5
+#define ANIMATION_FRAMES 4
+#define SEGMENTS_PER_FRAME 2
 const uint16_t NUM_DICE_TYPES = 8; // Keep this consistent with # of dice types below
 const uint16_t DICE_TYPES[] = {2, 4, 6, 8, 10, 12, 20, 100};
+
+// Animation frame data: each frame defines which pixels to set
+// Each frame can have up to SEGMENTS_PER_FRAME pixels
+// Use {255, 255} to indicate end of pixel list for a frame
+typedef struct {
+    uint8_t com;
+    uint8_t seg;
+} com_seg_t;
+
+static const com_seg_t classic_lcd_animation_frames[ANIMATION_FRAMES][SEGMENTS_PER_FRAME] = {
+    // Frame 0: Second #1 F and C
+    {{1, 4}, {1, 6}},
+    // Frame 1: Second #1 A and D
+    {{2, 4}, {0, 6}},
+    // Frame 2: Second #1 B and E
+    {{2, 5}, {0, 5}},
+    // Frame 3: No pixels set (end animation)
+    {{255, 255}, {255, 255}}
+};
+
+static const com_seg_t custom_lcd_animation_frames[ANIMATION_FRAMES][SEGMENTS_PER_FRAME] = {
+    // Frame 0: Second #1 F and C
+    {{2, 6}, {2, 7}},
+    // Frame 1: Second #1 A and D
+    {{3, 6}, {0, 7}},
+    // Frame 2: Second #1 B and E
+    {{3, 7}, {0, 6}},
+    // Frame 3: No pixels set (end animation)
+    {{255, 255}, {255, 255}}
+};
 
 // --------------
 // Custom methods
@@ -91,7 +123,7 @@ static void display_dice_roll(probability_state_t *state)
             watch_display_text(WATCH_POSITION_BOTTOM, "HEAdS ");
         } else {
             // Tails
-            watch_display_text(WATCH_POSITION_BOTTOM, "TAILS ");
+            watch_display_text(WATCH_POSITION_BOTTOM, "TAiLS ");
         }
     } else {
         // Normal case: show rolled value using hours and minutes
@@ -128,36 +160,44 @@ static void display_dice_roll_animation(probability_state_t *state)
 {
     if (state->is_rolling)
     {
+        const com_seg_t (*animation_frames)[SEGMENTS_PER_FRAME] = classic_lcd_animation_frames;
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+            animation_frames = custom_lcd_animation_frames;
+        }
+
+        // Clear main display areas on first frame
         if (state->animation_frame == 0)
         {
-            // Clear main display areas and show rolling animation
             watch_display_text(WATCH_POSITION_HOURS, "  ");
             watch_display_text(WATCH_POSITION_MINUTES, "  ");
             watch_display_text(WATCH_POSITION_SECONDS, "  ");
-            watch_set_pixel(1, 4);
-            watch_set_pixel(1, 6);
-            state->animation_frame = 1;
         }
-        else if (state->animation_frame == 1)
+
+        // Clear pixels from previous frame (except on first frame)
+        if (state->animation_frame > 0)
         {
-            watch_clear_pixel(1, 4);
-            watch_clear_pixel(1, 6);
-            watch_set_pixel(2, 4);
-            watch_set_pixel(0, 6);
-            state->animation_frame = 2;
+            const com_seg_t *prev_frame = animation_frames[state->animation_frame - 1];
+            for (int i = 0; i < SEGMENTS_PER_FRAME; i++)
+            {
+                if (prev_frame[i].com == 255) break; // End of pixel list
+                watch_clear_pixel(prev_frame[i].com, prev_frame[i].seg);
+            }
         }
-        else if (state->animation_frame == 2)
+
+        // Set pixels for current frame
+        const com_seg_t *current_frame = animation_frames[state->animation_frame];
+        for (int i = 0; i < SEGMENTS_PER_FRAME; i++)
         {
-            watch_clear_pixel(2, 4);
-            watch_clear_pixel(0, 6);
-            watch_set_pixel(2, 5);
-            watch_set_pixel(0, 5);
-            state->animation_frame = 3;
+            if (current_frame[i].com == 255) break; // End of pixel list
+            watch_set_pixel(current_frame[i].com, current_frame[i].seg);
         }
-        else if (state->animation_frame == 3)
+
+        // Advance to next frame
+        state->animation_frame++;
+
+        // Check if animation is complete
+        if (state->animation_frame >= ANIMATION_FRAMES)
         {
-            watch_clear_pixel(2, 5);
-            watch_clear_pixel(0, 5);
             state->animation_frame = 0;
             state->is_rolling = false;
             movement_request_tick_frequency(1);
@@ -239,13 +279,6 @@ bool probability_face_loop(movement_event_t event, void *context)
         // Single tap cycles die type
         cycle_dice_type(state);
         display_dice_roll(state);
-
-        // Reset tap detection timer to keep accelerometer active
-        state->tap_detection_ticks = TAP_DETECTION_SECONDS;
-        break;
-    case EVENT_DOUBLE_TAP:
-        // Double tap rolls the die
-        roll_dice(state);
 
         // Reset tap detection timer to keep accelerometer active
         state->tap_detection_ticks = TAP_DETECTION_SECONDS;
