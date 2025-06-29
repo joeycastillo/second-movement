@@ -30,9 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "probability_face.h"
+#include "watch_common_display.h"
 
 #define DEFAULT_DICE_SIDES 2
 #define PROBABILITY_ANIMATION_TICK_FREQUENCY 8
+#define TAP_DETECTION_SECONDS 5
 const uint16_t NUM_DICE_TYPES = 8; // Keep this consistent with # of dice types below
 const uint16_t DICE_TYPES[] = {2, 4, 6, 8, 10, 12, 20, 100};
 
@@ -40,40 +42,68 @@ const uint16_t DICE_TYPES[] = {2, 4, 6, 8, 10, 12, 20, 100};
 // Custom methods
 // --------------
 
+static void abort_tap_detection(probability_state_t *state) {
+    state->tap_detection_ticks = 0;
+    movement_disable_tap_detection_if_available();
+}
+
+static void cycle_dice_type(probability_state_t *state) {
+    // Change how many sides the die has
+    for (int i = 0; i < NUM_DICE_TYPES; i++)
+    {
+        if (DICE_TYPES[i] == state->dice_sides)
+        {
+            if (i == NUM_DICE_TYPES - 1)
+            {
+                state->dice_sides = DICE_TYPES[0];
+            }
+            else
+            {
+                state->dice_sides = DICE_TYPES[i + 1];
+            }
+            break;
+        }
+    }
+    state->rolled_value = 0;
+}
+
 static void display_dice_roll(probability_state_t *state)
 {
     char buf[8];
-    if (state->rolled_value == 0)
-    {
-        if (state->dice_sides == 100)
-        {
-            sprintf(buf, " C    ");
+
+    // Display die type in top right position
+    if (state->dice_sides == 100) {
+        // Show "00" for d100
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, "00", " C");
+    } else {
+        sprintf(buf, "%2d", state->dice_sides);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    }
+
+    // Display rolled value
+    if (state->rolled_value == 0) {
+        // No roll yet - show dashes
+        watch_display_text(WATCH_POSITION_BOTTOM, "----  ");
+    } else if (state->dice_sides == 2) {
+        // Coin flip: show "Heads" or "Tails" across hours, minutes, and first digit of seconds
+        if (state->rolled_value == 1) {
+            // Heads
+            watch_display_text(WATCH_POSITION_BOTTOM, "HEAdS ");
+        } else {
+            // Tails
+            watch_display_text(WATCH_POSITION_BOTTOM, "TAILS ");
         }
-        else
-        {
-            sprintf(buf, "%2d    ", state->dice_sides);
+    } else {
+        // Normal case: show rolled value using hours and minutes
+        if (state->rolled_value == 100) {
+            // Show " 1:00" for 100
+            watch_display_text(WATCH_POSITION_BOTTOM, " 100");
+        } else {
+            // Show "  :XX" for 1-99
+            sprintf(buf, "%4d", state->rolled_value);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
     }
-    else if (state->dice_sides == 2)
-    {
-        if (state->rolled_value == 1)
-        {
-            sprintf(buf, "%2d   H", state->dice_sides);
-        }
-        else
-        {
-            sprintf(buf, "%2d   T", state->dice_sides);
-        }
-    }
-    else if (state->dice_sides == 100)
-    {
-        sprintf(buf, " C %3d", state->rolled_value);
-    }
-    else
-    {
-        sprintf(buf, "%2d %3d", state->dice_sides, state->rolled_value);
-    }
-    watch_display_string(buf, 4);
 }
 
 static void generate_random_number(probability_state_t *state)
@@ -86,13 +116,24 @@ static void generate_random_number(probability_state_t *state)
 #endif
 }
 
+static void roll_dice(probability_state_t *state)
+{
+    generate_random_number(state);
+    state->is_rolling = true;
+    // Dice rolling animation begins on next tick and new roll will be displayed on completion
+    movement_request_tick_frequency(PROBABILITY_ANIMATION_TICK_FREQUENCY);
+}
+
 static void display_dice_roll_animation(probability_state_t *state)
 {
     if (state->is_rolling)
     {
         if (state->animation_frame == 0)
         {
-            watch_display_string("   ", 7);
+            // Clear main display areas and show rolling animation
+            watch_display_text(WATCH_POSITION_HOURS, "  ");
+            watch_display_text(WATCH_POSITION_MINUTES, "  ");
+            watch_display_text(WATCH_POSITION_SECONDS, "  ");
             watch_set_pixel(1, 4);
             watch_set_pixel(1, 6);
             state->animation_frame = 1;
@@ -115,6 +156,8 @@ static void display_dice_roll_animation(probability_state_t *state)
         }
         else if (state->animation_frame == 3)
         {
+            watch_clear_pixel(2, 5);
+            watch_clear_pixel(0, 5);
             state->animation_frame = 0;
             state->is_rolling = false;
             movement_request_tick_frequency(1);
@@ -146,7 +189,17 @@ void probability_face_activate(void *context)
 
     state->dice_sides = DEFAULT_DICE_SIDES;
     state->rolled_value = 0;
-    watch_display_string("PR", 0);
+
+    // Display face identifier
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Prb", "PR");
+
+    // Set tick frequency to 1 for proper tap detection timing
+    movement_request_tick_frequency(1);
+
+    // Enable tap detection for a few seconds when face is activated
+    if (movement_enable_tap_detection_if_available()) {
+        state->tap_detection_ticks = TAP_DETECTION_SECONDS;
+    }
 }
 
 bool probability_face_loop(movement_event_t event, void *context)
@@ -165,36 +218,40 @@ bool probability_face_loop(movement_event_t event, void *context)
         break;
     case EVENT_TICK:
         display_dice_roll_animation(state);
-        break;
-    case EVENT_LIGHT_BUTTON_DOWN:
-        // Change how many sides the die has
-        for (int i = 0; i < NUM_DICE_TYPES; i++)
-        {
-            if (DICE_TYPES[i] == state->dice_sides)
-            {
-                if (i == NUM_DICE_TYPES - 1)
-                {
-                    state->dice_sides = DICE_TYPES[0];
-                }
-                else
-                {
-                    state->dice_sides = DICE_TYPES[i + 1];
-                }
-                break;
+
+        if (!state->is_rolling && state->tap_detection_ticks > 0) {
+            state->tap_detection_ticks--;
+            if (state->tap_detection_ticks == 0) {
+                movement_disable_tap_detection_if_available();
             }
         }
-        state->rolled_value = 0;
+        break;
+    case EVENT_LIGHT_BUTTON_DOWN:
+        // Cycle through die types
+        cycle_dice_type(state);
         display_dice_roll(state);
         break;
     case EVENT_ALARM_BUTTON_UP:
         // Roll the die
-        generate_random_number(state);
-        state->is_rolling = true;
-        // Dice rolling animation begins on next tick and new roll will be displayed on completion
-        movement_request_tick_frequency(PROBABILITY_ANIMATION_TICK_FREQUENCY);
+        roll_dice(state);
+        break;
+    case EVENT_SINGLE_TAP:
+        // Single tap cycles die type
+        cycle_dice_type(state);
+        display_dice_roll(state);
+
+        // Reset tap detection timer to keep accelerometer active
+        state->tap_detection_ticks = TAP_DETECTION_SECONDS;
+        break;
+    case EVENT_DOUBLE_TAP:
+        // Double tap rolls the die
+        roll_dice(state);
+
+        // Reset tap detection timer to keep accelerometer active
+        state->tap_detection_ticks = TAP_DETECTION_SECONDS;
         break;
     case EVENT_LOW_ENERGY_UPDATE:
-        watch_display_string("SLEEP ", 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, "SLEEP ");
         break;
     default:
         movement_default_loop_handler(event);
@@ -206,5 +263,8 @@ bool probability_face_loop(movement_event_t event, void *context)
 
 void probability_face_resign(void *context)
 {
-    (void)context;
+    probability_state_t *state = (probability_state_t *)context;
+
+    // Disable tap detection to save battery
+    abort_tap_detection(state);
 }
