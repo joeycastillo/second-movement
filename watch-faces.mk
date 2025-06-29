@@ -26,4 +26,5 @@ SRCS += \
   ./watch-faces/settings/nanosec_face.c \
   ./watch-faces/io/chirpy_demo_face.c \
   ./watch-faces/io/irda_upload_face.c \
+  ./watch-faces/complication/tarot_face.c \
 # New watch faces go above this line.
