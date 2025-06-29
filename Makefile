@@ -47,16 +47,7 @@ ifdef NOSLEEP
     DEFINES += -DMOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
 endif
 
-ifdef EMSCRIPTEN
-all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).html
-$(BUILD)/$(BIN).html: $(OBJS)
-	@echo HTML $@
-	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@ \
-		-s ASYNCIFY=1 \
-		-s EXPORTED_RUNTIME_METHODS=lengthBytesUTF8,printErr \
-		-s EXPORTED_FUNCTIONS=_main \
-		--shell-file=./watch-library/simulator/shell.html
-endif
+# Emscripten targets are now handled in rules.mk in gossamer
 
 # Add your include directories here.
 INCLUDES += \
