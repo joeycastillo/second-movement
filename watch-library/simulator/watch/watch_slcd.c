@@ -38,24 +38,24 @@ static bool tick_state;
 static long tick_interval_id = -1;
 
 watch_lcd_type_t watch_get_lcd_type(void) {
-    #if defined(FORCE_CUSTOM_LCD_TYPE)
+#if defined(FORCE_CUSTOM_LCD_TYPE)
     return WATCH_LCD_TYPE_CUSTOM;
-    #else
+#else
     return WATCH_LCD_TYPE_CLASSIC;
-    #endif
+#endif
 }
 
 void watch_enable_display(void) {
-    #if defined(FORCE_CUSTOM_LCD_TYPE)
+#if defined(FORCE_CUSTOM_LCD_TYPE)
     _watch_update_indicator_segments();
-    #endif
+#endif
 
     EM_ASM({
-        #if defined(FORCE_CUSTOM_LCD_TYPE)
+#if defined(FORCE_CUSTOM_LCD_TYPE)
         document.getElementById("classic").style.display = "none";
-        #else
+#else
         document.getElementById("custom").style.display = "none";
-        #endif
+#endif
     });
 
     watch_clear_display();
