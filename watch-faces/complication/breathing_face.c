@@ -31,7 +31,7 @@ typedef struct {
     uint8_t current_stage;
     bool sound_on;
     bool light_on;
-    uint8_t led_blink_state; // 0 = not blinking, 1 = LED on and should be turned off
+    uint8_t led_on_state; // 0 = LED off, 1 = LED on
 } breathing_state_t;
 
 static void beep_in (breathing_state_t *state);
@@ -47,7 +47,7 @@ void breathing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->current_stage = 0;
         state->sound_on = true;  // Default to sound on for new instances
         state->light_on = true;  // Default to light on for new instances
-        state->led_blink_state = 0;
+        state->led_on_state = 0;
         *context_ptr = state;
     }
 }
@@ -75,8 +75,7 @@ void beep_in(breathing_state_t *state) {
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on) {
             watch_set_led_green();
-            state->led_blink_state = 1; // Mark for LED off on next tick
-            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
+            state->led_on_state = 1;
         }
         watch_buzzer_play_note(notes[i], durations[i]);
     }
@@ -96,8 +95,7 @@ void beep_in_hold(breathing_state_t *state) {
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
             watch_set_led_red();
-            state->led_blink_state = 1; // Mark for LED off on next tick
-            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
+            state->led_on_state = 1;
         }
         watch_buzzer_play_note(notes[i], durations[i]);
     }
@@ -117,8 +115,7 @@ void beep_out(breathing_state_t *state) {
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on) {
             watch_set_led_green();
-            state->led_blink_state = 1; // Mark for LED off on next tick
-            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
+            state->led_on_state = 1;
         }
         watch_buzzer_play_note(notes[i], durations[i]);
     }
@@ -138,8 +135,7 @@ void beep_out_hold(breathing_state_t *state) {
     for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
         if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
             watch_set_led_red();
-            state->led_blink_state = 1; // Mark for LED off on next tick
-            movement_request_tick_frequency(LED_BLINK_FREQUENCY); // Request 8Hz for LED control
+            state->led_on_state = 1;
         }
         watch_buzzer_play_note(notes[i], durations[i]);
     }
@@ -164,14 +160,9 @@ bool breathing_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-
-            // Handle LED blinking state only on subsecond ticks
-            if (event.subsecond != 0 && state->led_blink_state == 1) {
-                if (event.subsecond % 2 == 0) {
-                    watch_set_led_off();
-                    state->led_blink_state = 0; // Clear the state after turning off
-                    movement_request_tick_frequency(1); // Return to normal frequency
-                }
+            if (state->led_on_state == 1) {
+                watch_set_led_off();
+                state->led_on_state = 0;
             }
 
             switch (state->current_stage)
@@ -232,5 +223,4 @@ bool breathing_face_loop(movement_event_t event, void *context) {
 void breathing_face_resign(void *context) {
     (void) context; // Silence unused parameter warning
     watch_set_led_off();
-    movement_request_tick_frequency(1); // Return to normal frequency
 }
