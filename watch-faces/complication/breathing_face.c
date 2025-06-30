@@ -29,24 +29,28 @@
 
 typedef struct {
     uint8_t current_stage;
-    bool sound_on;
-    bool light_on;
+    uint8_t indication_mode; // 0 = sound only, 1 = LED only, 2 = all off
     uint8_t led_on_state; // 0 = LED off, 1 = LED on
 } breathing_state_t;
 
-static void beep_in (breathing_state_t *state);
-static void beep_in_hold (breathing_state_t *state);
-static void beep_out (breathing_state_t *state);
-static void beep_out_hold (breathing_state_t *state);
 static void update_indicators(breathing_state_t *state);
+
+const int NOTE_LENGTH = 80;
+static const watch_buzzer_note_t IN_NOTES[] = { BUZZER_NOTE_C4, BUZZER_NOTE_D4, BUZZER_NOTE_E4 };
+static const uint16_t IN_DUR[] = { NOTE_LENGTH, NOTE_LENGTH, NOTE_LENGTH };
+static const watch_buzzer_note_t IN_HOLD_NOTES[] = { BUZZER_NOTE_E4, BUZZER_NOTE_REST, BUZZER_NOTE_E4 };
+static const uint16_t IN_HOLD_DUR[] = { NOTE_LENGTH, NOTE_LENGTH * 2, NOTE_LENGTH };
+static const watch_buzzer_note_t OUT_NOTES[] = { BUZZER_NOTE_E4, BUZZER_NOTE_D4, BUZZER_NOTE_C4 };
+static const uint16_t OUT_DUR[] = { NOTE_LENGTH, NOTE_LENGTH, NOTE_LENGTH };
+static const watch_buzzer_note_t OUT_HOLD_NOTES[] = { BUZZER_NOTE_C4, BUZZER_NOTE_REST * 2, BUZZER_NOTE_C4 };
+static const uint16_t OUT_HOLD_DUR[] = { NOTE_LENGTH, NOTE_LENGTH, NOTE_LENGTH };
 
 void breathing_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index; // Unused parameter
     if (*context_ptr == NULL) {
         breathing_state_t *state = malloc(sizeof(breathing_state_t));
         state->current_stage = 0;
-        state->sound_on = true;  // Default to sound on for new instances
-        state->light_on = true;  // Default to light on for new instances
+        state->indication_mode = 0; // Start with sound only
         state->led_on_state = 0;
         *context_ptr = state;
     }
@@ -58,99 +62,34 @@ void breathing_face_activate(void *context) {
     update_indicators(state);
 }
 
-const int NOTE_LENGTH = 80;
-const int LED_BLINK_FREQUENCY = 8;
-
-void beep_in(breathing_state_t *state) {
-    const watch_buzzer_note_t notes[] = {
-        BUZZER_NOTE_C4,
-        BUZZER_NOTE_D4,
-        BUZZER_NOTE_E4,
-    };
-    const uint16_t durations[] = {
-        NOTE_LENGTH,
-        NOTE_LENGTH,
-        NOTE_LENGTH
-    };
-    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-        if (state->light_on) {
-            watch_set_led_green();
-            state->led_on_state = 1;
-        }
-        watch_buzzer_play_note(notes[i], durations[i]);
-    }
-}
-
-void beep_in_hold(breathing_state_t *state) {
-    const watch_buzzer_note_t notes[] = {
-        BUZZER_NOTE_E4,
-        BUZZER_NOTE_REST,
-        BUZZER_NOTE_E4,
-    };
-    const uint16_t durations[] = {
-        NOTE_LENGTH,
-        NOTE_LENGTH * 2,
-        NOTE_LENGTH,
-    };
-    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-        if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-            watch_set_led_red();
-            state->led_on_state = 1;
-        }
-        watch_buzzer_play_note(notes[i], durations[i]);
-    }
-}
-
-void beep_out(breathing_state_t *state) {
-    const watch_buzzer_note_t notes[] = {
-        BUZZER_NOTE_E4,
-        BUZZER_NOTE_D4,
-        BUZZER_NOTE_C4,
-    };
-    const uint16_t durations[] = {
-        NOTE_LENGTH,
-        NOTE_LENGTH,
-        NOTE_LENGTH,
-    };
-    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-        if (state->light_on) {
-            watch_set_led_green();
-            state->led_on_state = 1;
-        }
-        watch_buzzer_play_note(notes[i], durations[i]);
-    }
-}
-
-void beep_out_hold(breathing_state_t *state) {
-    const watch_buzzer_note_t notes[] = {
-        BUZZER_NOTE_C4,
-        BUZZER_NOTE_REST * 2,
-        BUZZER_NOTE_C4,
-    };
-    const uint16_t durations[] = {
-        NOTE_LENGTH,
-        NOTE_LENGTH,
-        NOTE_LENGTH,
-    };
-    for(size_t i = 0, count = sizeof(notes) / sizeof(notes[0]); i < count; i++) {
-        if (state->light_on && notes[i] != BUZZER_NOTE_REST) {
-            watch_set_led_red();
-            state->led_on_state = 1;
-        }
-        watch_buzzer_play_note(notes[i], durations[i]);
-    }
-}
-
 static void update_indicators(breathing_state_t *state) {
-    if (state->sound_on) {
-        watch_set_indicator(WATCH_INDICATOR_BELL);
-    } else {
-        watch_clear_indicator(WATCH_INDICATOR_BELL);
+    switch (state->indication_mode) {
+        case 0: // sound only
+            watch_set_indicator(WATCH_INDICATOR_BELL);
+            watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+            break;
+        case 1: // LED only
+            watch_clear_indicator(WATCH_INDICATOR_BELL);
+            watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+            break;
+        case 2: // all off
+        default:
+            watch_clear_indicator(WATCH_INDICATOR_BELL);
+            watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+            break;
     }
-    if (state->light_on) {
-        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-    } else {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+}
+
+static void breathe_notify(breathing_state_t *state, const watch_buzzer_note_t *notes, const uint16_t *durations, size_t count, bool use_red_led) {
+    if (state->indication_mode == 2) return;
+    for (size_t i = 0; i < count; i++) {
+        if (state->indication_mode == 1 && notes[i] != BUZZER_NOTE_REST) {
+            if (use_red_led) watch_set_led_red();
+            else watch_set_led_green();
+            state->led_on_state = 1;
+        } else if (state->indication_mode == 0) {
+            watch_buzzer_play_note(notes[i], durations[i]);
+        }
     }
 }
 
@@ -165,28 +104,71 @@ bool breathing_face_loop(movement_event_t event, void *context) {
                 state->led_on_state = 0;
             }
 
-            switch (state->current_stage)
-            {
-            case 0: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Breath", "Breath"); if (state->sound_on) beep_in(state); } break;
-            case 1: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   3", "In   3"); break;
-            case 2: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   2", "In   2"); break;
-            case 3: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   1", "In   1"); break;
-            
-            case 4: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4"); if (state->sound_on) beep_in_hold(state); } break;
-            case 5: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3"); break;
-            case 6: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2"); break;               
-            case 7: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1"); break;
+            switch (state->current_stage) {
+              case 0: {
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Breath", "Breath");
+                if (state->indication_mode != 2)
+                  breathe_notify(state, IN_NOTES, IN_DUR, 3, false);
+                break;
+              }
+              case 1:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   3", "In   3");
+                break;
+              case 2:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   2", "In   2");
+                break;
+              case 3:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ln   1", "In   1");
+                break;
 
-            case 8: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  4", "Ou t 4"); if (state->sound_on) beep_out(state); } break;
-            case 9: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  3", "Ou t 3"); break;
-            case 10: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  2", "Ou t 2"); break;
-            case 11: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  1", "Ou t 1"); break;         
-            
-            case 12: { watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4"); if (state->sound_on) beep_out_hold(state); } break;
-            case 13: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3"); break;
-            case 14: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2"); break;     
-            case 15: watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1"); break;     
-            default:
+              case 4: {
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4");
+                if (state->indication_mode != 2)
+                  breathe_notify(state, IN_HOLD_NOTES, IN_HOLD_DUR, 3, true);
+                break;
+              }
+              case 5:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3");
+                break;
+              case 6:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2");
+                break;
+              case 7:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1");
+                break;
+
+              case 8: {
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  4", "Ou t 4");
+                if (state->indication_mode != 2)
+                  breathe_notify(state, OUT_NOTES, OUT_DUR, 3, false);
+                break;
+              }
+              case 9:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  3", "Ou t 3");
+                break;
+              case 10:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  2", "Ou t 2");
+                break;
+              case 11:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Out  1", "Ou t 1");
+                break;
+
+              case 12: {
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 4", "Hold 4");
+                if (state->indication_mode != 2)
+                  breathe_notify(state, OUT_HOLD_NOTES, OUT_HOLD_DUR, 3, true);
+                break;
+              }
+              case 13:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 3", "Hold 3");
+                break;
+              case 14:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 2", "Hold 2");
+                break;
+              case 15:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Hold 1", "Hold 1");
+                break;
+              default:
                 break;
             }
 
@@ -195,15 +177,9 @@ bool breathing_face_loop(movement_event_t event, void *context) {
 
             break;
         case EVENT_ALARM_BUTTON_UP:
-            state->sound_on = !state->sound_on;
+            // Cycle through the indication modes
+            state->indication_mode = (state->indication_mode + 1) % 3;
             update_indicators(state);
-            break;
-        case EVENT_LIGHT_LONG_PRESS:
-            state->light_on = !state->light_on;
-            update_indicators(state);
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            // Override built-in LED function to prevent interference with our LED control
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // We don't want to go to sleep while we're breathing.
