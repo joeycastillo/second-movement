@@ -54,11 +54,13 @@ bool beats_face_loop(movement_event_t event, void *context) {
     uint32_t centibeats;
 
     watch_date_time_t date_time;
+    uint8_t bmt_hour; // BMT = Biel Mean Time
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
-            date_time = movement_get_local_date_time();
-            centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
+            date_time = movement_get_utc_date_time();
+            bmt_hour = (date_time.unit.hour + 1) % 24;
+            centibeats = clock2beats(bmt_hour, date_time.unit.minute, date_time.unit.second, event.subsecond);
             if (centibeats == state->last_centibeat_displayed) {
                 // we missed this update, try again next subsecond
                 state->next_subsecond_update = (event.subsecond + 1) % BEAT_REFRESH_FREQUENCY;
@@ -73,8 +75,9 @@ bool beats_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(432);
-            date_time = movement_get_local_date_time();
-            centibeats = clock2beats(date_time.unit.hour, date_time.unit.minute, date_time.unit.second, event.subsecond, movement_get_current_timezone_offset());
+            date_time = movement_get_utc_date_time();
+            bmt_hour = (date_time.unit.hour + 1) % 24;
+            centibeats = clock2beats(bmt_hour, date_time.unit.minute, date_time.unit.second, event.subsecond);
             sprintf(buf, "%4lu  ", centibeats / 100);
 
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
@@ -92,14 +95,11 @@ void beats_face_resign(void *context) {
     (void) context;
 }
 
-uint32_t clock2beats(uint32_t hours, uint32_t minutes, uint32_t seconds, uint32_t subseconds, int16_t utc_offset) {
-    uint32_t retval = seconds * 1000 + (subseconds * 1000) / (BEAT_REFRESH_FREQUENCY);
-    retval += 60 * minutes * 1000;
-    retval += hours * 60 * 60 * 1000;
-    retval -= (utc_offset - 3600) * 1000;
-
-    retval /= 864; // convert to centibeats
-    retval %= 100000;
-
-    return retval;
+uint32_t clock2beats(uint32_t hours, uint32_t minutes, uint32_t seconds, uint32_t subseconds) {
+    // Calculate total milliseconds since midnight
+    uint32_t ms = (hours * 3600 + minutes * 60 + seconds) * 1000 + (subseconds * 1000) / BEAT_REFRESH_FREQUENCY;
+    // 1 beat = 86.4 seconds = 86400 ms, so 1 centibeat = 864 ms
+    uint32_t centibeats = ms / 864;
+    centibeats %= 100000;
+    return centibeats;
 }
