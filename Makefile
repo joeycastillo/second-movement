@@ -25,6 +25,8 @@ define n
 
 endef
 
+# Only require BOARD and DISPLAY for non-clean targets
+ifeq (,$(filter clean,$(MAKECMDGOALS)))
 ifndef BOARD
   $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
 endif
@@ -42,6 +44,7 @@ else
     $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
   endif
 endif
+endif
 
 ifdef NOSLEEP
     DEFINES += -DMOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
@@ -52,6 +55,7 @@ endif
 # Add your include directories here.
 INCLUDES += \
   -I./ \
+  -I. \
   -I./tinyusb/src \
   -I./littlefs \
   -I./utz \
