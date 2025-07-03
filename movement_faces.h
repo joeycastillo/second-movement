@@ -29,6 +29,7 @@
 #include "world_clock_face.h"
 #include "alarm_face.h"
 #include "advanced_alarm_face.h"
+#include "breathing_face.h"
 #include "countdown_face.h"
 #include "stopwatch_face.h"
 #include "fast_stopwatch_face.h"
