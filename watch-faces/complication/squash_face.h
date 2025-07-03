@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Johan Oskarsson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,41 @@
  * SOFTWARE.
  */
 
-#pragma once
+#ifndef SQUASH_FACE_H_
+#define SQUASH_FACE_H_
 
-#include "clock_face.h"
-#include "beats_face.h"
-#include "world_clock_face.h"
-#include "alarm_face.h"
-#include "advanced_alarm_face.h"
-#include "countdown_face.h"
-#include "stopwatch_face.h"
-#include "fast_stopwatch_face.h"
-#include "sunrise_sunset_face.h"
-#include "moon_phase_face.h"
-#include "days_since_face.h"
-#include "character_set_face.h"
-#include "accelerometer_status_face.h"
-#include "all_segments_face.h"
-#include "temperature_display_face.h"
-#include "temperature_logging_face.h"
-#include "activity_logging_face.h"
-#include "voltage_face.h"
-#include "set_time_face.h"
-#include "settings_face.h"
-#include "light_sensor_face.h"
-#include "irda_upload_face.h"
-#include "chirpy_demo_face.h"
-#include "finetune_face.h"
-#include "nanosec_face.h"
-#include "mars_time_face.h"
-#include "peek_memory_face.h"
-#include "squash_face.h"
-// New includes go above this line.
+#include "movement.h"
+
+/*
+ * Squash Scoring Face
+ *
+ * Keep track of scores in a squash match:
+ * - Light button: Increment player 1's score
+ * - Alarm button: Increment player 2's score
+ * - Mode button long press: Reset scores
+ * - Mode button: Switch to next watch face
+ */
+
+typedef struct {
+    uint8_t player1_score;
+    uint8_t player2_score;
+    uint8_t player1_games;
+    uint8_t player2_games;
+    bool is_game_over;
+} squash_state_t;
+
+void squash_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void squash_face_activate(void *context);
+bool squash_face_loop(movement_event_t event, void *context);
+void squash_face_resign(void *context);
+
+#define squash_face ((const watch_face_t){ \
+    squash_face_setup, \
+    squash_face_activate, \
+    squash_face_loop, \
+    squash_face_resign, \
+    NULL, \
+})
+
+#endif // SQUASH_FACE_H_
+
