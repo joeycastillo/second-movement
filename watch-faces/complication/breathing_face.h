@@ -33,7 +33,7 @@
  * concentration in stressful situations.
  *
  * Usage: Timed messages will cycle as long as this face is active.
- * Press ALARM to toggle sound.
+ * Press ALARM to toggle between sound and LED indication for phases.
  */
 
 #include "movement.h"
