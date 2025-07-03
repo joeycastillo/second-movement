@@ -784,11 +784,12 @@ void app_setup(void) {
             // Enable the interrupts...
             lis2dw_enable_interrupts();
 
-            // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
+            // At first boot, this next line sets the accelerometer's sampling rate to 0, which is LIS2DW_DATA_RATE_POWERDOWN.
+            // This means the interrupts we just configured won't fire.
             // Tap detection will ramp up sesing and make use of the A3 interrupt.
-            // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
-            movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
+            // If a watch face wants to check in on the A4 interrupt pin for motion status, it can call
+            // movement_set_accelerometer_background_rate with another rate like LIS2DW_DATA_RATE_LOWEST or LIS2DW_DATA_RATE_25_HZ.
+            lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
         }
 #endif
 
