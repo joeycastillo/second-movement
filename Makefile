@@ -27,23 +27,27 @@ endef
 
 # Only require BOARD and DISPLAY for non-clean targets
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
-ifndef BOARD
-  $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
-endif
-
-ifndef DISPLAY
-  $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
-else
-  ifeq ($(DISPLAY), custom)
-    DEFINES += -DFORCE_CUSTOM_LCD_TYPE
-  else ifeq ($(DISPLAY), classic)
-    DEFINES += -DFORCE_CLASSIC_LCD_TYPE
-  else ifeq ($(DISPLAY), autodetect)
-    $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
-  else
-    $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+  ifeq (,$(filter install,$(MAKECMDGOALS)))
+    ifndef BOARD
+      $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
+    endif
   endif
-endif
+
+  ifeq (,$(filter install,$(MAKECMDGOALS)))
+    ifndef DISPLAY
+      $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+    else
+      ifeq ($(DISPLAY), custom)
+        DEFINES += -DFORCE_CUSTOM_LCD_TYPE
+      else ifeq ($(DISPLAY), classic)
+        DEFINES += -DFORCE_CLASSIC_LCD_TYPE
+      else ifeq ($(DISPLAY), autodetect)
+        $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
+      else
+        $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+      endif
+    endif
+  endif
 endif
 
 ifdef NOSLEEP
