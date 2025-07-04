@@ -30,10 +30,17 @@
  *
  * The Beat Time face displays the current Swatch Internet Time, or .beat time.
  * This is a decimal time system that divides the day into 1000 beats.
+ * 0 beats = 00:00:00.000 UTC+1, also known as BMT time - Biel Mean Time.
+ *
+ * 1 beat of time equals 86.4 seconds.
  *
  * The three large digits in the bottom row indicate the current beat, and the
  * two smaller digits (normally the seconds in Simple Clock) indicate the
  * fractional beat; so for example you can read “67214” as “beat 672.14”.
+ *
+ * This implementation uses UTC time, adds one hour to get BMT, and does not
+ * observe daylight saving time or local time zones as Swatch Internet Time
+ * does not do that.
  */
 
 #include "movement.h"
@@ -43,7 +50,7 @@ typedef struct {
     uint32_t last_centibeat_displayed;
 } beats_face_state_t;
 
-uint32_t clock2beats(uint32_t hours, uint32_t minutes, uint32_t seconds, uint32_t subseconds, int16_t utc_offset);
+uint32_t clock2beats(uint32_t hours, uint32_t minutes, uint32_t seconds, uint32_t subseconds);
 void beats_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void beats_face_activate(void *context);
 bool beats_face_loop(movement_event_t event, void *context);
