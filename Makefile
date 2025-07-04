@@ -25,7 +25,7 @@ define n
 
 endef
 
-# Only require BOARD and DISPLAY for non-clean targets
+# Don't require BOARD or DISPLAY for `make clean` or `make install`
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
   ifeq (,$(filter install,$(MAKECMDGOALS)))
     ifndef BOARD
