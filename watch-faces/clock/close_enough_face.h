@@ -30,11 +30,10 @@
  * CLOSE ENOUGH CLOCK FACE
  *
  * Displays the current time; but only in periods of 5.
- * Just in the in the formats of:
- * - "10 past 5" displayed as "10 P 5"
- * - "15 to 7" displayed as "15 T 7"
- * - "6 o'clock" displayed as "6 OC"
- *
+ * Some examples:
+ * - 5:10 is "10 past 5" displayed as "10 P 5"
+ * - 5:45 is "15 to 6" displayed as "15 2 6"
+ * - 6:00 is "6 o'clock" displayed as "6 OC"
  */
 
 typedef struct {

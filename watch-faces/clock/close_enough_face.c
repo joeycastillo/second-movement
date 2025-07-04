@@ -36,7 +36,7 @@
 #define CLOCK_FACE_LOW_BATTERY_VOLTAGE_THRESHOLD 2400
 #endif
 
-const char *words[12] = {
+static const char *words[12] = {
     "  ",
     " 5",
     "10",
@@ -79,9 +79,7 @@ void close_enough_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(close_enough_state_t));
         memset(*context_ptr, 0, sizeof(close_enough_state_t));
-        // Do any one-time tasks in here; the inside of this conditional happens only at boot.
     }
-    // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
 void close_enough_face_activate(void *context) {
@@ -124,7 +122,6 @@ static void clock_check_battery_periodically(close_enough_state_t *state) {
 
 bool close_enough_face_loop(movement_event_t event, void *context) {
     close_enough_state_t *state = (close_enough_state_t *)context;
-    char buf[11];
     watch_date_time_t date_time;
     bool show_next_hour = false;
     int prev_five_minute_period;
@@ -153,7 +150,7 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
 
             // Move to next five minute period if we are above 50% through the current five minute period (we are only checking the remainder)
             if (fmodf(date_time.unit.minute / 5.0f, 1.0f) > 0.5f) {
-                // If we are on the last 5 interval and moving to the next period we need to display the next hour because we are wrapping around
+                // If we are on the last 5 interval and moving to the next period we need to display the next hour
                 if (five_minute_period == 11) {
                     show_next_hour = true;
                 }
