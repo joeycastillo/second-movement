@@ -62,6 +62,11 @@ INCLUDES += \
   -I./filesystem \
   -I./shell \
   -I./lib/sunriset \
+  -I./lib/sha1 \
+  -I./lib/sha256 \
+  -I./lib/sha512 \
+  -I./lib/base32 \
+  -I./lib/TOTP \
   -I./lib/chirpy_tx \
   -I./lib/base64 \
   -I./watch-library/shared/watch \
@@ -84,6 +89,11 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./lib/sunriset/sunriset.c \
+  ./lib/base32/base32.c \
+  ./lib/TOTP/sha1.c \
+  ./lib/TOTP/sha256.c \
+  ./lib/TOTP/sha512.c \
+  ./lib/TOTP/TOTP.c \
   ./lib/chirpy_tx/chirpy_tx.c \
   ./lib/base64/base64.c \
   ./watch-library/shared/driver/thermistor_driver.c \
