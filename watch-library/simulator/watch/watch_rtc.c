@@ -45,11 +45,19 @@ bool _watch_rtc_is_enabled(void) {
 }
 
 void _watch_rtc_init(void) {
+#ifdef MAKEFILE_TIMEZONE
+    int32_t time_zone_offset = MAKEFILE_TIMEZONE * 60;
+#else
     // Shifts the timezone so our local time is converted to UTC and set
     int32_t time_zone_offset = EM_ASM_INT({
         return -new Date().getTimezoneOffset() * 60;
     });
+#endif
+#ifdef MAKEFILE_CURR_YEAR
+    watch_date_time_t date_time = watch_get_init_date_time();
+#else
     watch_date_time_t date_time = watch_rtc_get_date_time();
+#endif
     watch_rtc_set_date_time(watch_utility_date_time_convert_zone(date_time, time_zone_offset, 0));
 }
 
@@ -78,6 +86,32 @@ watch_date_time_t watch_rtc_get_date_time(void) {
             ((date.getFullYear() - 2020) << 26);
     }, time_offset);
     return retval;
+}
+
+rtc_date_time_t watch_get_init_date_time(void) {
+    rtc_date_time_t date_time;
+#ifdef MAKEFILE_CURR_YEAR
+    date_time.unit.year = MAKEFILE_CURR_YEAR;
+#else
+    date_time.unit.year = 5;
+#endif
+#ifdef MAKEFILE_CURR_MONTH
+    date_time.unit.month = MAKEFILE_CURR_MONTH;
+#else
+    date_time.unit.month = 1;
+#endif
+#ifdef MAKEFILE_CURR_DAY
+    date_time.unit.day = MAKEFILE_CURR_DAY;
+#else
+    date_time.unit.day = 1;
+#endif
+#ifdef MAKEFILE_CURR_HOUR
+    date_time.unit.hour = MAKEFILE_CURR_HOUR;
+#endif
+#ifdef MAKEFILE_CURR_MINUTE
+    date_time.unit.minute = MAKEFILE_CURR_MINUTE;
+#endif
+    return date_time;
 }
 
 void watch_rtc_register_tick_callback(watch_cb_t callback) {
