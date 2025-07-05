@@ -203,6 +203,15 @@ static void _movement_handle_scheduled_tasks(void) {
     }
 }
 
+static void movement_set_location_to_filesystem(movement_location_t new_location) {
+    movement_location_t maybe_location = {0};
+
+    filesystem_read_file("location.u32", (char *) &maybe_location.reg, sizeof(movement_location_t));
+    if (new_location.reg != maybe_location.reg) {
+        filesystem_write_file("location.u32", (char *) &new_location.reg, sizeof(movement_location_t));
+    }
+}
+
 void movement_request_tick_frequency(uint8_t freq) {
     // Movement uses the 128 Hz tick internally
     if (freq == 128) return;
@@ -660,6 +669,13 @@ void app_init(void) {
         movement_state.settings.bit.le_interval = MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL;
 #endif
         movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
+
+#if defined(MOVEMENT_DEFAULT_LATITUDE) && defined(MOVEMENT_DEFAULT_LONGITUDE)
+    movement_set_location_to_filesystem((movement_location_t){
+        .bit.latitude = MOVEMENT_DEFAULT_LATITUDE,
+        .bit.longitude = MOVEMENT_DEFAULT_LONGITUDE
+    });
+#endif
 
         movement_store_settings();
     }
