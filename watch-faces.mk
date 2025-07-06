@@ -15,6 +15,7 @@ SRCS += \
   ./watch-faces/complication/breathing_face.c \
   ./watch-faces/complication/squash_face.c \
   ./watch-faces/complication/totp_face.c \
+  ./watch-faces/complication/tally_face.c \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \

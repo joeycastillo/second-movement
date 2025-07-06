@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Andrew Mike
+ * Copyright (c) 2022-2025 Andrew Mike and David Volovskiy
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 #include "watch.h"
 
 #define TALLY_FACE_MAX 9999
-#define TALLY_FACE_MIN -99
+#define TALLY_FACE_MIN -999
 
 static bool _init_val;
 static bool _quick_ticks_running;
@@ -104,7 +104,6 @@ static void tally_face_decrement(tally_state_t *state, bool sound_on) {
 }
 
 static bool tally_face_should_move_back(tally_state_t *state) {
-    if (TALLY_FACE_PRESETS_SIZE() <= 1) { return false; }
     return state->tally_idx == _tally_default[state->tally_default_idx];
 }
 
@@ -195,16 +194,14 @@ bool tally_face_loop(movement_event_t event, void *context) {
 
 // print tally index at the center of display.
 void print_tally(tally_state_t *state, bool sound_on) {
-    char buf[14];
+    char buf[6];
     if (sound_on)
         watch_set_indicator(WATCH_INDICATOR_BELL);
     else
         watch_clear_indicator(WATCH_INDICATOR_BELL);
-    if (state->tally_idx >= 0)
-        sprintf(buf, "TA  %4d  ", (int)(state->tally_idx)); // center of LCD display
-    else
-        sprintf(buf, "TA     %-3d", (int)(state->tally_idx)); // center of LCD display
-    watch_display_string(buf, 0);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TALLY", "TA");
+    sprintf(buf, "%4d", (int)(state->tally_idx));
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 void tally_face_resign(void *context) {
