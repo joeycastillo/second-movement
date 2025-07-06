@@ -664,19 +664,16 @@ void app_init(void) {
         movement_store_settings();
     }
 
-    // populate the DST offset cache
-    _movement_update_dst_offset_cache();
-
     watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.reg == 0) {
-        // at first boot, set year to 2025
-        date_time.unit.year = 2025 - WATCH_RTC_REFERENCE_YEAR;
-        date_time.unit.month = 1;
-        date_time.unit.day = 1;
+        date_time = watch_get_init_date_time();
         // but convert from local time to UTC
         date_time = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0);
         watch_rtc_set_date_time(date_time);
     }
+
+    // populate the DST offset cache
+    _movement_update_dst_offset_cache();
 
     if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
@@ -784,11 +781,12 @@ void app_setup(void) {
             // Enable the interrupts...
             lis2dw_enable_interrupts();
 
-            // ...and power down the accelerometer to save energy. This means the interrupts we just configured won't fire.
+            // At first boot, this next line sets the accelerometer's sampling rate to 0, which is LIS2DW_DATA_RATE_POWERDOWN.
+            // This means the interrupts we just configured won't fire.
             // Tap detection will ramp up sesing and make use of the A3 interrupt.
-            // If a watch face wants to check in on the A4 pin, it can call movement_set_accelerometer_background_rate
-            lis2dw_set_data_rate(LIS2DW_DATA_RATE_POWERDOWN);
-            movement_state.accelerometer_background_rate = LIS2DW_DATA_RATE_POWERDOWN;
+            // If a watch face wants to check in on the A4 interrupt pin for motion status, it can call
+            // movement_set_accelerometer_background_rate with another rate like LIS2DW_DATA_RATE_LOWEST or LIS2DW_DATA_RATE_25_HZ.
+            lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
         }
 #endif
 

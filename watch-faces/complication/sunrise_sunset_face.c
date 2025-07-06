@@ -127,6 +127,15 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
         if (seconds < 30) scratch_time.unit.minute = floor(minutes);
         else scratch_time.unit.minute = ceil(minutes);
 
+        // Handle hour overflow from timezone conversion
+        while (scratch_time.unit.hour >= 24) {
+            scratch_time.unit.hour -= 24;
+            // Increment day (this will be handled by the date arithmetic)
+            uint32_t timestamp = watch_utility_date_time_to_unix_time(scratch_time, 0);
+            timestamp += 86400;
+            scratch_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+        }
+
         if (scratch_time.unit.minute == 60) {
             scratch_time.unit.minute = 0;
             scratch_time.unit.hour = (scratch_time.unit.hour + 1) % 24;
@@ -143,7 +152,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                 watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIS", "rI");
                 sprintf(buf, "%2d", scratch_time.unit.day);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                sprintf(buf, "%2d%02d%s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
@@ -156,6 +165,15 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
         scratch_time.unit.hour = floor(set);
         if (seconds < 30) scratch_time.unit.minute = floor(minutes);
         else scratch_time.unit.minute = ceil(minutes);
+
+        // Handle hour overflow from timezone conversion
+        while (scratch_time.unit.hour >= 24) {
+            scratch_time.unit.hour -= 24;
+            // Increment day (this will be handled by the date arithmetic)
+            uint32_t timestamp = watch_utility_date_time_to_unix_time(scratch_time, 0);
+            timestamp += 86400;
+            scratch_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+        }
 
         if (scratch_time.unit.minute == 60) {
             scratch_time.unit.minute = 0;
@@ -173,7 +191,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                 watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SET", "SE");
                 sprintf(buf, "%2d", scratch_time.unit.day);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                sprintf(buf, "%2d%02d%s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
@@ -239,6 +257,7 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
         case 0:
             return;
         case 1:
+            // Latitude
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LAT", "LA");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
@@ -262,12 +281,13 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
             }
             break;
         case 2:
+            // Longitude
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LON", "LO");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
                 // Handle leading 1 for longitudes >99
-                if (state->working_longitude.tens > 9) watch_set_pixel(0, 22);
-                watch_display_character('0' + state->working_longitude.tens % 10, 4);
+                if (state->working_longitude.hundreds == 1) watch_set_pixel(0, 22);
+                watch_display_character('0' + state->working_longitude.tens, 4);
                 watch_display_character('0' + state->working_longitude.ones, 5);
                 watch_display_character('0' + state->working_longitude.tenths, 6);
                 watch_display_character('0' + state->working_longitude.hundredths, 7);
@@ -326,8 +346,17 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
             case 2: // longitude
                 switch (state->active_digit) {
                     case 0:
-                        state->working_longitude.tens = (state->working_longitude.tens + 1) % 18;
+                        // Increase tens and handle carry-over to hundreds
+                        state->working_longitude.tens++;
+                        if (state->working_longitude.tens >= 10) {
+                            state->working_longitude.tens = 0;
+                            state->working_longitude.hundreds++;
+                        }
+
+                        // Reset if we've gone over ±180
                         if (abs(_sunrise_sunset_face_latlon_from_struct(state->working_longitude)) > 18000) {
+                            state->working_longitude.hundreds = 0;
+                            state->working_longitude.tens = 0;
                             state->working_longitude.ones = 0;
                             state->working_longitude.tenths = 0;
                             state->working_longitude.hundredths = 0;
@@ -447,7 +476,6 @@ void sunrise_sunset_face_activate(void *context) {
         watch_store_backup_data(browser_loc.reg, 1);
     }
 #endif
-
 
     sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
     movement_location_t movement_location = load_location_from_filesystem();
