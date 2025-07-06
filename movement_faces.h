@@ -51,6 +51,7 @@
 #include "nanosec_face.h"
 #include "mars_time_face.h"
 #include "peek_memory_face.h"
+#include "ish_face.h"
 #include "breathing_face.h"
 #include "close_enough_face.h"
 #include "tarot_face.h"
