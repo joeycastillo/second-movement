@@ -56,6 +56,32 @@ rtc_date_time_t watch_rtc_get_date_time(void) {
     return rtc_get_date_time();
 }
 
+rtc_date_time_t watch_get_init_date_time(void) {
+    rtc_date_time_t date_time;
+#ifdef BUILD_YEAR
+    date_time.unit.year = BUILD_YEAR;
+#else
+    date_time.unit.year = 5;
+#endif
+#ifdef BUILD_MONTH
+    date_time.unit.month = BUILD_MONTH;
+#else
+    date_time.unit.month = 1;
+#endif
+#ifdef BUILD_DAY
+    date_time.unit.day = BUILD_DAY;
+#else
+    date_time.unit.day = 1;
+#endif
+#ifdef BUILD_HOUR
+    date_time.unit.hour = BUILD_HOUR;
+#endif
+#ifdef BUILD_MINUTE
+    date_time.unit.minute = BUILD_MINUTE;
+#endif
+    return date_time;
+}
+
 void watch_rtc_register_tick_callback(watch_cb_t callback) {
     watch_rtc_register_periodic_callback(callback, 1);
 }

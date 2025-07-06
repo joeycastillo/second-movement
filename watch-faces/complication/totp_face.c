@@ -11,6 +11,7 @@
  * Copyright © 2023 Jeremy O'Brien <neutral@fastmail.com>
  * Copyright © 2024 Matheus Afonso Martins Moreira <matheus.a.m.moreira@gmail.com> (https://www.matheusmoreira.com/)
  * Copyright © 2024 Max Zettlmeißl <max@zettlmeissl.de>
+ * Copyright © 2025 Emilien Court <emilien.court@telecomnancy.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -124,7 +125,7 @@ static void totp_display_error(totp_state_t *totp_state) {
     totp_t *totp = totp_current(totp_state);
 
     snprintf(buf, sizeof(buf), "%c%c  ERROR ", totp->labels[0], totp->labels[1]);
-    watch_display_string(buf, 0);
+    watch_display_text(0, buf);
 }
 
 static void totp_display_code(totp_state_t *totp_state) {
@@ -141,7 +142,7 @@ static void totp_display_code(totp_state_t *totp_state) {
     valid_for = totp->period - result.rem;
     sprintf(buf, "%c%c%2d%06lu", totp->labels[0], totp->labels[1], valid_for, totp_state->current_code);
 
-    watch_display_string(buf, 0);
+    watch_display_text(0, buf);
 }
 
 static void totp_display(totp_state_t *totp_state) {
@@ -158,7 +159,7 @@ static void totp_generate_and_display(totp_state_t *totp_state) {
 }
 
 static inline uint32_t totp_compute_base_timestamp() {
-    return watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), movement_get_current_timezone_offset());
+    return watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
 }
 
 void totp_face_setup(uint8_t watch_face_index, void ** context_ptr) {
