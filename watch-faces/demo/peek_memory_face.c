@@ -42,7 +42,7 @@ void peek_memory_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->location = &dummy_value;
         state->format = PEEK_MEMORY_FORMAT_HEX;
 #else
-        state->location = &(RTC->MODE2.TIMESTAMP.reg);
+        state->location = (void *)&(RTC->MODE2.TIMESTAMP.reg);
         state->format = PEEK_MEMORY_FORMAT_DATE;
 #endif
     }
@@ -64,7 +64,7 @@ bool peek_memory_face_loop(movement_event_t event, void *context) {
             memcpy(&value, state->location, 4);
             switch (state->format) {
                 case PEEK_MEMORY_FORMAT_HEX:
-                    sprintf(buf, "%08X", value);
+                    sprintf(buf, "%08lX", value);
                     watch_display_character('M', 0);
                     watch_display_character(buf[0], 1);
                     watch_display_character(buf[1], 10);

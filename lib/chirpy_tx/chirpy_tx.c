@@ -29,7 +29,7 @@
 #include "chirpy_tx.h"
 
 static const uint32_t chirpy_min_freq = 2500;
-static const uint32_t cirpy_freq_step = 250;
+static const uint32_t chirpy_freq_step = 250;
 
 // This many bytes are followed by a CRC and block separator
 // It's a multiple of 3 so no bits are wasted (a tone encodes 3 bits)
@@ -167,7 +167,7 @@ uint16_t chirpy_get_tone_period(uint8_t tone) {
     if (chirpy_tone_periods == NULL) {
       chirpy_tone_periods = malloc((chirpy_control_tone + 1) * sizeof(uint32_t));
       for (uint8_t i = 0; i < chirpy_control_tone + 1; ++i) {
-        uint32_t freq = chirpy_min_freq + i * cirpy_freq_step;
+        uint32_t freq = chirpy_min_freq + i * chirpy_freq_step;
         uint16_t period = 1000000 / freq;
         chirpy_tone_periods[i] = period;
       }
