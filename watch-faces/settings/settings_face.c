@@ -220,7 +220,7 @@ static void  git_hash_setting_display(uint8_t subsecond) {
     char buf[8];
     // BUILD_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
     sprintf(buf, "%.6s", BUILD_GIT_HASH);
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "GH ", "GH");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Bu{d ", "bU");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
