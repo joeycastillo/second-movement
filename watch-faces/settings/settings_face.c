@@ -216,8 +216,11 @@ static void blue_led_setting_advance(void) {
 }
 
 static void  git_hash_setting_display(uint8_t subsecond) {
+    char buf[8];
+    // MAKEFILE_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
+    sprintf(buf, "%.6s", MAKEFILE_GIT_HASH);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "GH ", "GH");
-    watch_display_text(WATCH_POSITION_BOTTOM, MAKEFILE_GIT_HASH);  // MAKEFILE_GIT_HASH must be at most 6 characters, which Makefile should truncate
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void git_hash_setting_advance(void) {
