@@ -72,7 +72,7 @@ void sunrise_sunset_face_resign(void *context);
 })
 
 typedef struct {
-    char name[2];
+    char name[3];
     int16_t latitude;
     int16_t longitude;
 } long_lat_presets_t;

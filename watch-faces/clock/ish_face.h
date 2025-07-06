@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Ruben Nic
+ * Copyright (c) 2025 Daniel Bergman
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,41 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef CLOSE_ENOUGH_CLOCK_FACE_H_
-#define CLOSE_ENOUGH_CLOCK_FACE_H_
-
-/*
- * CLOSE ENOUGH CLOCK FACE
- *
- * Displays the current time; but only in periods of 5.
- * Just in the in the formats of:
- * - "10 past 5"
- * - "15 to 7"
- * - "6 o'clock"
- *
- */
+#pragma once
 
 #include "movement.h"
 
+/*
+ * ISH FACE: A deliberately vague watch face that displays approximate time with 
+ * three configurable vagueness levels. Perfect for vacation mode when precise time isn't needed.
+ *
+ * Vagueness levels:
+ *   1: Hour (e.g., "09" or "14") - switches at the 30-minute mark
+ *   2: Half Hour (e.g., "13:3o", "14:0o") - switches at the 15-minute mark, o instead of 0 to signify vagueness
+ *   3: Quarter (e.g., "13:45") - rounds to nearest quarter hour
+ *
+ * Press ALARM to cycle levels. We honor the 24h clock mode setting but don't show the AM/PM indicator.
+ */
+
 typedef struct {
-    int prev_five_minute_period;
-    int prev_min_checked;
-    uint8_t last_battery_check;
-    bool battery_low;
-    bool alarm_enabled;
-} close_enough_clock_state_t;
+    uint8_t vagueness_level; // 1=hour, 2=half hour, 3=quarter
+    uint8_t last_displayed_minute; // Last minute when we updated the display
+} ish_face_state_t;
 
-void close_enough_clock_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void close_enough_clock_face_activate(void *context);
-bool close_enough_clock_face_loop(movement_event_t event, void *context);
-void close_enough_clock_face_resign(void *context);
+void ish_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void ish_face_activate(void *context);
+bool ish_face_loop(movement_event_t event, void *context);
+void ish_face_resign(void *context);
 
-#define close_enough_clock_face ((const watch_face_t){ \
-    close_enough_clock_face_setup, \
-    close_enough_clock_face_activate, \
-    close_enough_clock_face_loop, \
-    close_enough_clock_face_resign, \
+#define ish_face ((const watch_face_t){ \
+    ish_face_setup, \
+    ish_face_activate, \
+    ish_face_loop, \
+    ish_face_resign, \
     NULL, \
 })
-
-#endif // CLOSE_ENOUGH_CLOCK_FACE_H_

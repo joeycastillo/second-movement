@@ -664,19 +664,16 @@ void app_init(void) {
         movement_store_settings();
     }
 
-    // populate the DST offset cache
-    _movement_update_dst_offset_cache();
-
     watch_date_time_t date_time = watch_rtc_get_date_time();
     if (date_time.reg == 0) {
-        // at first boot, set year to 2025
-        date_time.unit.year = 2025 - WATCH_RTC_REFERENCE_YEAR;
-        date_time.unit.month = 1;
-        date_time.unit.day = 1;
+        date_time = watch_get_init_date_time();
         // but convert from local time to UTC
         date_time = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0);
         watch_rtc_set_date_time(date_time);
     }
+
+    // populate the DST offset cache
+    _movement_update_dst_offset_cache();
 
     if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 

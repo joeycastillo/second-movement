@@ -89,3 +89,8 @@ void watch_reset_to_bootloader(void);
  *  FIXME: find a better place for this, a couple of watch faces need it.
  */
 void watch_disable_TRNG(void);
+
+#ifndef arc4random_uniform
+// not sure why this definition is missing but let's put it here for now
+uint32_t arc4random_uniform(uint32_t upper_bound);
+#endif

@@ -29,6 +29,7 @@
 #endif
 
 #include <stdlib.h>
+
 #include <string.h>
 #include "tarot_face.h"
 
@@ -41,7 +42,7 @@
 // Custom methods
 // --------------
 
-static char major_arcana[][7] = {
+static char fallback_major_arcana[][7] = {
     " FOOL ",
     "Mgcian",
     "HPrsts",
@@ -55,9 +56,9 @@ static char major_arcana[][7] = {
     " Frtun",
     "Justce",
     "Hangn&", // Hangman
-    " Death",
+    " death",
     " tmprn",
-    " Devil",
+    " devil",
     " Tower",
     "  Star",
     "n&OON ", // Moon
@@ -65,7 +66,32 @@ static char major_arcana[][7] = {
     "Jdgmnt",
     " World",
 };
-#define NUM_MAJOR_ARCANA (sizeof(major_arcana) / sizeof(*major_arcana))
+#define NUM_MAJOR_ARCANA (sizeof(fallback_major_arcana) / sizeof(*fallback_major_arcana))
+
+static char custom_major_arcana[][7] = {
+    "Fool  ",
+    "Mgcian",
+    "HPrsts",
+    "Empres",
+    "Empror",
+    "Hiroph",
+    "Lovers",
+    "Chriot",
+    "Strgth",
+    "Hermit",
+    "Fortun",
+    "Justce",
+    "Hangmn",
+    " death",
+    "Tmprnc",
+    " devil",
+    " Tower",
+    "Star  ",
+    "  Moon",
+    " Sun  ",
+    "Jdgmnt",
+    " World",
+};
 
 static char suits[][7] = {
     " wands",
@@ -85,56 +111,77 @@ static void init_deck(tarot_state_t *state) {
 }
 
 static void tarot_display(tarot_state_t *state) {
-    char buf[12];
+    char smallbuf[4];
     char *start_end_string;
+    char *fallback_start_end_string;
     uint8_t card;
     bool flipped;
 
     // deck is initialized; show current draw mode and return
     if (state->drawn_cards[0] == 0xff) {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-        if (state->major_arcana_only) {
-            sprintf(buf, "TA%2dn&ajor", state->num_cards_to_draw);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
         } else {
-            sprintf(buf, "TA%2d   All", state->num_cards_to_draw);
+            watch_clear_indicator(WATCH_INDICATOR_ARROWS);
         }
-        watch_display_string(buf, 0);
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Tar", "TA");
+        sprintf(smallbuf, "%2d", state->num_cards_to_draw);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, smallbuf);
+
+        if (state->major_arcana_only) {
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " Major", "n&ajor");
+        } else {
+            watch_display_text(WATCH_POSITION_BOTTOM, "   All");
+        }
         return;
     }
 
     // show a special status if we're looking at the first or last card in the spread
     if (state->current_card == 0) {
-        start_end_string = "St";
+        start_end_string = "Str";
+        fallback_start_end_string = "St";
     } else if (state->current_card == state->num_cards_to_draw - 1) {
-        start_end_string = "En";
+        start_end_string = "End";
+        fallback_start_end_string = "En";
     } else {
-        start_end_string = "  ";
+        start_end_string = "   ";
+        fallback_start_end_string = "  ";
     }
 
     // figure out the card we're showing
     card = state->drawn_cards[state->current_card];
     flipped = (card & FLIPPED_MASK) ? true : false; // check flipped bit
     card &= ~FLIPPED_MASK; // remove the flipped bit
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, start_end_string, fallback_start_end_string);
     if (card < NUM_MAJOR_ARCANA) {
         // major arcana
 
-        // show start/end, no rank, card name
-        sprintf(buf, "%s  %s", start_end_string, major_arcana[card]);
+        // show no rank, card name
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, custom_major_arcana[card], fallback_major_arcana[card]);
     } else {
         // minor arcana
         uint8_t suit = (card - NUM_MAJOR_ARCANA) / NUM_CARDS_PER_SUIT;
         uint8_t rank = ((card - NUM_MAJOR_ARCANA) % NUM_CARDS_PER_SUIT) + 1;
 
         // show start/end, rank + suit
-        sprintf(buf, "%s%2d%s", start_end_string, rank, suits[suit]);
+        sprintf(smallbuf, "%2d", rank);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, smallbuf);
+        watch_display_text(WATCH_POSITION_BOTTOM, suits[suit]);
     }
 
-    watch_display_string(buf, 0);
-
     if (flipped) {
-        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+        } else {
+            watch_set_indicator(WATCH_INDICATOR_ARROWS);
+        }
     } else {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        } else {
+            watch_clear_indicator(WATCH_INDICATOR_ARROWS);
+        }
     }
 }
 
@@ -179,27 +226,47 @@ static void pick_cards(tarot_state_t *state) {
 }
 
 static void display_animation(tarot_state_t *state) {
+    watch_display_text(WATCH_POSITION_SECONDS, "  ");
+
     if (state->animation_frame == 0) {
-        watch_display_string("   ", 7);
-        watch_set_pixel(1, 4);
-        watch_set_pixel(1, 6);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_set_pixel(1, 4); // 9F
+            watch_set_pixel(1, 6); // 9C
+        } else {
+            watch_set_pixel(2, 6); // 9F
+            watch_set_pixel(2, 7); // 9C
+        }
         state->animation_frame = 1;
     } else if (state->animation_frame == 1) {
-        watch_clear_pixel(1, 4);
-        watch_clear_pixel(1, 6);
-        watch_set_pixel(2, 4);
-        watch_set_pixel(0, 6);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_clear_pixel(1, 4); // 9F
+            watch_clear_pixel(1, 6); // 9C
+            watch_set_pixel(2, 4); // 9A
+            watch_set_pixel(0, 6); // 9D
+        } else {
+            watch_clear_pixel(2, 6); // 9F
+            watch_clear_pixel(2, 7); // 9C
+            watch_set_pixel(3, 6); // 9A
+            watch_set_pixel(0, 7); // 9D
+        }
         state->animation_frame = 2;
     } else if (state->animation_frame == 2) {
-        watch_clear_pixel(2, 4);
-        watch_clear_pixel(0, 6);
-        watch_set_pixel(2, 5);
-        watch_set_pixel(0, 5);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+            watch_clear_pixel(2, 4); // 9A
+            watch_clear_pixel(0, 6); // 9D
+            watch_set_pixel(2, 5); // 9B
+            watch_set_pixel(0, 5); // 9E
+        } else {
+            watch_clear_pixel(3, 6); // 9A
+            watch_clear_pixel(0, 6); // 9D
+            watch_set_pixel(3, 7); // 9B
+            watch_set_pixel(0, 6); // 9E
+        }
         state->animation_frame = 3;
     } else if (state->animation_frame == 3) {
         state->animation_frame = 0;
-        state->is_picking = false;
         movement_request_tick_frequency(1);
+        state->is_picking = false;
         tarot_display(state);
     }
 }
@@ -215,15 +282,15 @@ void tarot_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         memset(*context_ptr, 0, sizeof(tarot_state_t));
     }
     // Emulator only: Seed random number generator
-    #if __EMSCRIPTEN__
+#if __EMSCRIPTEN__
     srand(time(NULL));
-    #endif
+#endif
 }
 
 void tarot_face_activate(void *context) {
     tarot_state_t *state = (tarot_state_t *)context;
 
-    watch_display_string("TA", 0);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Tarot", "TA");
     init_deck(state);
     state->num_cards_to_draw = 3;
     state->major_arcana_only = true;
@@ -238,6 +305,7 @@ bool tarot_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
             tarot_display(state);
             break;
         case EVENT_TICK:
@@ -270,16 +338,22 @@ bool tarot_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_BUTTON_UP:
             // Draw cards
-            watch_display_string("      ", 4);
-            watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+            watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+            if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
+                watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+            } else {
+                watch_clear_indicator(WATCH_INDICATOR_ARROWS);
+            }
             init_deck(state);
             pick_cards(state);
-            state->is_picking = true;
             // card picking animation begins on next tick and new cards will be displayed on completion
+            state->is_picking = true;
             movement_request_tick_frequency(TAROT_ANIMATION_TICK_FREQUENCY);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            watch_display_string("SLEEP ", 4);
+            if (!watch_sleep_animation_is_running()) {
+                watch_start_sleep_animation(1000);
+            }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit
