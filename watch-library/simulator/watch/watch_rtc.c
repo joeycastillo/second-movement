@@ -87,7 +87,8 @@ watch_date_time_t watch_rtc_get_date_time(void) {
 }
 
 rtc_date_time_t watch_get_init_date_time(void) {
-    rtc_date_time_t date_time;
+    rtc_date_time_t date_time = {0};
+
 #ifdef BUILD_YEAR
     date_time.unit.year = BUILD_YEAR;
 #else
@@ -109,6 +110,7 @@ rtc_date_time_t watch_get_init_date_time(void) {
 #ifdef BUILD_MINUTE
     date_time.unit.minute = BUILD_MINUTE;
 #endif
+
     return date_time;
 }
 
