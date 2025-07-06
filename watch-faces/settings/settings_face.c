@@ -264,11 +264,6 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].advance = low_energy_setting_advance;
         current_setting++;
 #endif
-#ifdef BUILD_GIT_HASH
-        state->settings_screens[current_setting].display = git_hash_setting_display;
-        state->settings_screens[current_setting].advance = git_hash_setting_advance;
-        current_setting++;
-#endif
         state->settings_screens[current_setting].display = led_duration_setting_display;
         state->settings_screens[current_setting].advance = led_duration_setting_advance;
         current_setting++;
@@ -296,6 +291,12 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 #else
         (void)blue_led_setting_display;
         (void)blue_led_setting_advance;
+#endif
+    state->led_color_end = current_setting;
+#ifdef BUILD_GIT_HASH
+        state->settings_screens[current_setting].display = git_hash_setting_display;
+        state->settings_screens[current_setting].advance = git_hash_setting_advance;
+        current_setting++;
 #endif
     }
 }
@@ -332,7 +333,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
             return movement_default_loop_handler(event);
     }
 
-    if (state->current_page >= state->led_color_start) {
+    if (state->current_page >= state->led_color_start && state->current_page < state->led_color_end) {
         movement_color_t color = movement_backlight_color();
         // this bitwise math turns #000 into #000000, #111 into #111111, etc.
         movement_force_led_on(color.red | color.red << 4,
