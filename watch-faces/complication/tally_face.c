@@ -195,16 +195,17 @@ bool tally_face_loop(movement_event_t event, void *context) {
 
 // print tally index at the center of display.
 void print_tally(tally_state_t *state, bool sound_on) {
-    char buf[14];
+    char buf[12];
     if (sound_on)
         watch_set_indicator(WATCH_INDICATOR_BELL);
     else
         watch_clear_indicator(WATCH_INDICATOR_BELL);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TALLY", "TA");
     if (state->tally_idx >= 0)
-        sprintf(buf, "TA  %4d  ", (int)(state->tally_idx)); // center of LCD display
+        sprintf(buf, "%4d  ", (int)(state->tally_idx)); // center of LCD display
     else
-        sprintf(buf, "TA     %-3d", (int)(state->tally_idx)); // center of LCD display
-    watch_display_string(buf, 0);
+        sprintf(buf, "   %-3d", (int)(state->tally_idx)); // center of LCD display
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 void tally_face_resign(void *context) {
