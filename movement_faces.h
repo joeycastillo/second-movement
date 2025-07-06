@@ -51,6 +51,7 @@
 #include "nanosec_face.h"
 #include "mars_time_face.h"
 #include "peek_memory_face.h"
+#include "kitchen_conversions_face.h"
 #include "periodic_table_face.h"
 #include "squash_face.h"
 #include "totp_face.h"
