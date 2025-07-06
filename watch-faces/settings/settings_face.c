@@ -217,8 +217,8 @@ static void blue_led_setting_advance(void) {
 
 static void  git_hash_setting_display(uint8_t subsecond) {
     char buf[8];
-    // MAKEFILE_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
-    sprintf(buf, "%.6s", MAKEFILE_GIT_HASH);
+    // BUILD_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
+    sprintf(buf, "%.6s", BUILD_GIT_HASH);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "GH ", "GH");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
@@ -235,7 +235,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         int8_t current_setting = 0;
 
         state->num_settings = 5; // baseline, without LED settings
-#ifdef MAKEFILE_GIT_HASH
+#ifdef BUILD_GIT_HASH
         state->num_settings++;
 #endif
 #ifdef WATCH_RED_TCC_CHANNEL
@@ -263,7 +263,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].advance = low_energy_setting_advance;
         current_setting++;
 #endif
-#ifdef MAKEFILE_GIT_HASH
+#ifdef BUILD_GIT_HASH
         state->settings_screens[current_setting].display = git_hash_setting_display;
         state->settings_screens[current_setting].advance = git_hash_setting_advance;
         current_setting++;
