@@ -68,7 +68,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
                 state->next_subsecond_update = (event.subsecond + 1 + (BEAT_REFRESH_FREQUENCY * 2 / 3)) % BEAT_REFRESH_FREQUENCY;
                 state->last_centibeat_displayed = centibeats;
             }
-            sprintf(buf, "%6lu", centibeats);
+            sprintf(buf, "%6u", (unsigned int)centibeats); // Cast to unsigned int to avoid compiler warnings, as centibeats is 0-100000
 
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
@@ -78,7 +78,7 @@ bool beats_face_loop(movement_event_t event, void *context) {
             date_time = movement_get_utc_date_time();
             bmt_hour = (date_time.unit.hour + 1) % 24;
             centibeats = clock2beats(bmt_hour, date_time.unit.minute, date_time.unit.second, event.subsecond);
-            sprintf(buf, "%4lu  ", centibeats / 100);
+            sprintf(buf, "%4u  ", (unsigned int)(centibeats / 100));
 
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
@@ -97,7 +97,7 @@ void beats_face_resign(void *context) {
 
 uint32_t clock2beats(uint32_t hours, uint32_t minutes, uint32_t seconds, uint32_t subseconds) {
     // Calculate total milliseconds since midnight
-    uint32_t ms = (hours * 3600 + minutes * 60 + seconds) * 1000 + (subseconds * 1000) / BEAT_REFRESH_FREQUENCY;
+    uint32_t ms = ((hours * 3600 + minutes * 60 + seconds) * 1000) + ((subseconds * 1000) / BEAT_REFRESH_FREQUENCY);
     // 1 beat = 86.4 seconds = 86400 ms, so 1 centibeat = 864 ms
     uint32_t centibeats = ms / 864;
     centibeats %= 100000;
