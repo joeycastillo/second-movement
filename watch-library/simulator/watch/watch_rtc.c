@@ -45,9 +45,7 @@ bool _watch_rtc_is_enabled(void) {
 }
 
 void _watch_rtc_init(void) {
-#ifdef MAKEFILE_TIMEZONE
-    int32_t time_zone_offset = MAKEFILE_TIMEZONE * 60;
-#else
+#if EMSCRIPTEN
     // Shifts the timezone so our local time is converted to UTC and set
     int32_t time_zone_offset = EM_ASM_INT({
         return -new Date().getTimezoneOffset() * 60;
