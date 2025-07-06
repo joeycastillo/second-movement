@@ -189,7 +189,7 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
             char second_word[3];
             char third_word[3];
             if (five_minute_period == 0) { // "  HH OC",
-                sprintf(first_word, "  ", 3);
+                sprintf(first_word, "  ");
                 sprintf(second_word, "%2d", close_enough_hour);
                 strncpy(third_word, oclock_word, 3);
             } else { // "MM P HH" or "MM 2 HH+1"

@@ -233,7 +233,7 @@ static void display(kitchen_conversions_state_t *state, uint8_t subsec)
     case input:
     {
         char buf[7];
-        sprintf(buf, "%06u", state->selection_value);
+        sprintf(buf, "%06lu", state->selection_value);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
         // Only allow ints for Gas Mk
@@ -278,7 +278,7 @@ static void display(kitchen_conversions_state_t *state, uint8_t subsec)
         {
             uint32_t rounded = conversion + .5;
             char buf[7];
-            sprintf(buf, "%6u", rounded);
+            sprintf(buf, "%6lu", rounded);
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
             // Make sure LSDs always filled

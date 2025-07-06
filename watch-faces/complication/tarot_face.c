@@ -33,8 +33,6 @@
 #include <string.h>
 #include "tarot_face.h"
 
-uint32_t arc4random_uniform(uint32_t upper_bound);
-
 #define TAROT_ANIMATION_TICK_FREQUENCY 8
 #define FLIPPED_BIT_POS 7
 #define FLIPPED_MASK ((uint8_t)(1 << FLIPPED_BIT_POS))
