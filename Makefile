@@ -25,25 +25,29 @@ define n
 
 endef
 
-# Only require BOARD and DISPLAY for non-clean targets
+# Don't require BOARD or DISPLAY for `make clean` or `make install`
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
-ifndef BOARD
-  $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
-endif
-
-ifndef DISPLAY
-  $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
-else
-  ifeq ($(DISPLAY), custom)
-    DEFINES += -DFORCE_CUSTOM_LCD_TYPE
-  else ifeq ($(DISPLAY), classic)
-    DEFINES += -DFORCE_CLASSIC_LCD_TYPE
-  else ifeq ($(DISPLAY), autodetect)
-    $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
-  else
-    $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+  ifeq (,$(filter install,$(MAKECMDGOALS)))
+    ifndef BOARD
+      $(error Build failed: BOARD not defined. Use one of the four options below, depending on your hardware:$n$n    make BOARD=sensorwatch_red DISPLAY=display_type$n    make BOARD=sensorwatch_blue DISPLAY=display_type$n    make BOARD=sensorwatch_pro DISPLAY=display_type$n$n)
+    endif
   endif
-endif
+
+  ifeq (,$(filter install,$(MAKECMDGOALS)))
+    ifndef DISPLAY
+      $(error Build failed: DISPLAY not defined. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+    else
+      ifeq ($(DISPLAY), custom)
+        DEFINES += -DFORCE_CUSTOM_LCD_TYPE
+      else ifeq ($(DISPLAY), classic)
+        DEFINES += -DFORCE_CLASSIC_LCD_TYPE
+      else ifeq ($(DISPLAY), autodetect)
+        $(warning WARNING: LCD autodetection is experimental and not reliable! We suggest specifying DISPLAY=classic or DISPLAY=custom for reliable operation.)
+      else
+        $(error Build failed: invalid DISPLAY type. Use one of the options below, depending on your hardware:$n$n    make BOARD=board_type DISPLAY=classic$n    make BOARD=board_type DISPLAY=custom$n$n)
+      endif
+    endif
+  endif
 endif
 
 ifdef NOSLEEP
@@ -62,6 +66,11 @@ INCLUDES += \
   -I./filesystem \
   -I./shell \
   -I./lib/sunriset \
+  -I./lib/sha1 \
+  -I./lib/sha256 \
+  -I./lib/sha512 \
+  -I./lib/base32 \
+  -I./lib/TOTP \
   -I./lib/chirpy_tx \
   -I./lib/base64 \
   -I./watch-library/shared/watch \
@@ -84,6 +93,11 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./lib/sunriset/sunriset.c \
+  ./lib/base32/base32.c \
+  ./lib/TOTP/sha1.c \
+  ./lib/TOTP/sha256.c \
+  ./lib/TOTP/sha512.c \
+  ./lib/TOTP/TOTP.c \
   ./lib/chirpy_tx/chirpy_tx.c \
   ./lib/base64/base64.c \
   ./watch-library/shared/driver/thermistor_driver.c \
