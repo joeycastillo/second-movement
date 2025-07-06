@@ -104,7 +104,7 @@ static void tally_face_decrement(tally_state_t *state, bool sound_on) {
 }
 
 static bool tally_face_should_move_back(tally_state_t *state) {
-    if (TALLY_FACE_PRESETS_SIZE() <= 1) { return false; }
+    if (TALLY_FACE_PRESETS_SIZE() <= 1) { return true; }
     return state->tally_idx == _tally_default[state->tally_default_idx];
 }
 
