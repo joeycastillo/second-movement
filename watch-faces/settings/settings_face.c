@@ -216,6 +216,7 @@ static void blue_led_setting_advance(void) {
 }
 
 static void  git_hash_setting_display(uint8_t subsecond) {
+    (void) subsecond;
     char buf[8];
     // BUILD_GIT_HASH will already be truncated to 6 characters in the makefile, but this is to be safe.
     sprintf(buf, "%.6s", BUILD_GIT_HASH);
