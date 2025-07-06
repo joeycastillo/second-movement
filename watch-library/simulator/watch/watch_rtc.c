@@ -45,11 +45,17 @@ bool _watch_rtc_is_enabled(void) {
 }
 
 void _watch_rtc_init(void) {
+#if EMSCRIPTEN
     // Shifts the timezone so our local time is converted to UTC and set
     int32_t time_zone_offset = EM_ASM_INT({
         return -new Date().getTimezoneOffset() * 60;
     });
+#endif
+#ifdef BUILD_YEAR
+    watch_date_time_t date_time = watch_get_init_date_time();
+#else
     watch_date_time_t date_time = watch_rtc_get_date_time();
+#endif
     watch_rtc_set_date_time(watch_utility_date_time_convert_zone(date_time, time_zone_offset, 0));
 }
 
@@ -78,6 +84,34 @@ watch_date_time_t watch_rtc_get_date_time(void) {
             ((date.getFullYear() - 2020) << 26);
     }, time_offset);
     return retval;
+}
+
+rtc_date_time_t watch_get_init_date_time(void) {
+    rtc_date_time_t date_time = {0};
+
+#ifdef BUILD_YEAR
+    date_time.unit.year = BUILD_YEAR;
+#else
+    date_time.unit.year = 5;
+#endif
+#ifdef BUILD_MONTH
+    date_time.unit.month = BUILD_MONTH;
+#else
+    date_time.unit.month = 1;
+#endif
+#ifdef BUILD_DAY
+    date_time.unit.day = BUILD_DAY;
+#else
+    date_time.unit.day = 1;
+#endif
+#ifdef BUILD_HOUR
+    date_time.unit.hour = BUILD_HOUR;
+#endif
+#ifdef BUILD_MINUTE
+    date_time.unit.minute = BUILD_MINUTE;
+#endif
+
+    return date_time;
 }
 
 void watch_rtc_register_tick_callback(watch_cb_t callback) {
