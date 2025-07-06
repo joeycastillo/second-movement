@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef PERIODIC_FACE_H_
-#define PERIODIC_FACE_H_
+#ifndef PERIODIC_TABLE_FACE_H_
+#define PERIODIC_TABLE_FACE_H_
 
 #include "movement.h"
 
@@ -32,7 +32,7 @@
  * Periodic Table Face
  * Allows for viewing data of the Periodic Table on your wrist.
  * When looking at an element, it'll show you the atomic number on the center of the screen,
- * symbol on the right, and it's group on the top-right.
+ * symbol on the right or top, and it's group on the top-right.
  * Pressing the mode button will cycle through the pages.
  *   Page 1: Atomic Mass
  *   Page 2: Year Discovered
@@ -45,8 +45,7 @@
  *        Else: Cycle through info of an element
  *    Mode Hold
  *        On Title: First Screen
- *        On Element Symbol Screen: Go to Title Screen
- *        Else: Go to Symbol Screen of current element
+ *        On Other Screens: Go to Title Screen
  *    If you are in a subscreen and just keep holding MODE, you will go through all of these menus without needing to depress.
  * 
  *    Light Press
@@ -55,7 +54,6 @@
  *    Light Hold
  *        On Title Screen or Element Symbol: Fast Cycle through Previous Elements
  *                                     Else: Activate LED backlight
- *
  *    Alarm Press
  *        On Title or Element Symbol Screen: Next Element
  *                                     Else: Display currenlt-selected element symbol page
@@ -70,20 +68,20 @@ typedef struct {
     uint8_t atomic_num;
     uint8_t mode;
     uint8_t selection_index;
-} periodic_state_t;
+} periodic_table_state_t;
 
-void periodic_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void periodic_face_activate(void *context);
-bool periodic_face_loop(movement_event_t event, void *context);
-void periodic_face_resign(void *context);
+void periodic_table_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void periodic_table_face_activate(void *context);
+bool periodic_table_face_loop(movement_event_t event, void *context);
+void periodic_table_face_resign(void *context);
 
-#define periodic_face ((const watch_face_t){ \
-    periodic_face_setup, \
-    periodic_face_activate, \
-    periodic_face_loop, \
-    periodic_face_resign, \
+#define periodic_table_face ((const watch_face_t){ \
+    periodic_table_face_setup, \
+    periodic_table_face_activate, \
+    periodic_table_face_loop, \
+    periodic_table_face_resign, \
     NULL, \
 })
 
-#endif // PERIODIC_FACE_H_
+#endif // PERIODIC_TABLE_FACE_H_
 
