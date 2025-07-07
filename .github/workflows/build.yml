@@ -35,7 +35,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.board }}-movement.uf2
+          name: ${{ matrix.board }}-display-${{ matrix.display }}-movement.uf2
           path: build/firmware.uf2
 
   build-simulator:
