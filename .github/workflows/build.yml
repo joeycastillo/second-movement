@@ -50,6 +50,7 @@ jobs:
           - "sensorwatch_pro"
         display:
           - "classic"
+          - "custom"
     env:
       BOARD: ${{ matrix.board }}
       DISPLAY: ${{ matrix.display }}
