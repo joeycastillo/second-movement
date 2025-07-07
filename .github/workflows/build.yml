@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Ensure workspace directory is defined as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Compile movement firmware
         run: make
         working-directory: '.'
@@ -38,6 +40,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Ensure workspace directory is defined as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Compile movement
         run: emmake make
         working-directory: '.'
