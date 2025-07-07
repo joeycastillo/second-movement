@@ -6,10 +6,6 @@ on:
     branches-ignore:
       - gh-pages
 
-env:
-  BOARD: sensorwatch_red
-  DISPLAY: classic
-
 jobs: 
   build:
     container:
@@ -22,8 +18,12 @@ jobs:
           - "sensorwatch_green"
           - "sensorwatch_blue"
           - "sensorwatch_pro"
+        display:
+          - "classic"
+          - "custom"
     env:
       BOARD: ${{ matrix.board }}
+      DISPLAY: ${{ matrix.display }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
