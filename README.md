@@ -55,4 +55,4 @@ emmake make BOARD=sensorwatch_red DISPLAY=classic
 python3 -m http.server -d build-sim
 ```
 
-Finally, visit [watch.html](http://localhost:8000/watch.html) to see your work.
+Finally, visit [firmware.html](http://localhost:8000/firmware.html) to see your work.
