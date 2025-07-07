@@ -53,7 +53,7 @@ jobs:
           - "custom"
     env:
       BOARD: ${{ matrix.board }}
-      DISPLAY: ${{ matrix.display }}
+      #DISPLAY: ${{ matrix.display }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
