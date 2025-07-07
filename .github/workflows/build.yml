@@ -15,6 +15,15 @@ jobs:
     container:
       image: ghcr.io/armmbed/mbed-os-env:latest
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board:
+          - "sensorwatch_red"
+          - "sensorwatch_lite"
+          - "sensorwatch_blue"
+          - "sensorwatch_pro"
+    env:
+      BOARD: ${{ matrix.board }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
