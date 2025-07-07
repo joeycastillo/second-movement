@@ -19,7 +19,7 @@ jobs:
       matrix:
         board:
           - "sensorwatch_red"
-          - "sensorwatch_lite"
+          - "sensorwatch_green"
           - "sensorwatch_blue"
           - "sensorwatch_pro"
     env:
