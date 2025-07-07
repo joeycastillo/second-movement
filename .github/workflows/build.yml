@@ -41,6 +41,19 @@ jobs:
   build-simulator:
     container:
       image: emscripten/emsdk
+    strategy:
+      matrix:
+        board:
+          - "sensorwatch_red"
+          - "sensorwatch_green"
+          - "sensorwatch_blue"
+          - "sensorwatch_pro"
+        display:
+          - "classic"
+          - "custom"
+    env:
+      BOARD: ${{ matrix.board }}
+      DISPLAY: ${{ matrix.display }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,5 +70,5 @@ jobs:
       - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
-          name: movement.tar.gz
+          name: ${{ matrix.board }}-display-${{ matrix.display }}-movement.tar.gz
           path: build-sim/movement.tar.gz
