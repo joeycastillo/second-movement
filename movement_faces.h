@@ -61,4 +61,5 @@
 #include "totp_face.h"
 #include "tally_face.h"
 #include "probability_face.h"
+#include "wordle_face.h"
 // New includes go above this line.
