@@ -26,6 +26,7 @@
 #include <string.h>
 #include "wordle_face.h"
 #include "watch_utility.h"
+#include "watch_common_display.h"
 
 static uint32_t get_random(uint32_t max) {
     #if __EMSCRIPTEN__
@@ -75,21 +76,21 @@ static void get_prev_letter(const uint8_t curr_pos, uint8_t *word_elements, cons
 }
 
 static void display_letter(wordle_state_t *state, bool display_dash) {
-    char buf[1 + 1];
+    char buf[3];
     if (state->word_elements[state->position] >= WORDLE_NUM_VALID_LETTERS) {
         if (display_dash)
-            watch_display_string("-", state->position + 5);
+            watch_display_character('-', state->position + 5);
         else
-            watch_display_string(" ", state->position + 5);
+            watch_display_character(' ', state->position + 5);
         return;
     }
     sprintf(buf, "%c", _valid_letters[state->word_elements[state->position]]);
-    watch_display_string(buf, state->position + 5);
+    watch_display_character(buf[0], state->position + 5);
 }
 
 static void display_all_letters(wordle_state_t *state) {
     uint8_t prev_pos = state->position;
-    watch_display_string(" ", 4);
+    watch_display_character(' ', 4);
     for (size_t i = 0; i < WORDLE_LENGTH; i++) {
         state->position = i;
         display_letter(state, false);
@@ -100,13 +101,13 @@ static void display_all_letters(wordle_state_t *state) {
 #if !WORDLE_ALLOW_NON_WORD_AND_REPEAT_GUESSES
 static void display_not_in_dict(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_NO_DICT;
-    watch_display_string("nodict", 4);
+    watch_display_text(WATCH_POSITION_BOTTOM, "nodict");
     state->ignore_btn_ticks = WORDLE_TICK_BAD_GUESS;
 }
 
 static void display_already_guessed(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_ALREADY_GUESSED;
-    watch_display_string("GUESSD", 4);
+    watch_display_text(WATCH_POSITION_BOTTOM, "GUESSD");
     state->ignore_btn_ticks = WORDLE_TICK_BAD_GUESS;
 }
 
@@ -169,9 +170,9 @@ static bool check_word(wordle_state_t *state) {
 static void show_skip_wrong_letter_indicator(bool skipping, wordle_screen curr_screen) {
     if (curr_screen >= WORDLE_SCREEN_PLAYING) return;
     if (skipping)
-        watch_display_string("H", 3);
+        watch_display_character('H', 3);
     else
-        watch_display_string(" ", 3);
+        watch_display_character(' ', 3);
 }
 
 static void update_known_wrong_letters(wordle_state_t *state) {
@@ -199,7 +200,7 @@ static void update_known_wrong_letters(wordle_state_t *state) {
 static void display_attempt(uint8_t attempt) {
     char buf[3];
     sprintf(buf, "%d", attempt+1);
-    watch_display_string(buf, 3);
+    watch_display_character(buf[0], 3);
 }
 
 static void display_playing(wordle_state_t *state) {
@@ -247,7 +248,7 @@ static void reset_board(wordle_state_t *state) {
     watch_clear_colon();
     state->position = get_first_pos(state->word_elements_result);
     display_playing(state);
-    watch_display_string(" -", 4);
+    watch_display_character('-', 5);
 #if __EMSCRIPTEN__
     printf("ANSWER: %s\r\n", _valid_words[state->curr_answer]);
 #endif
@@ -255,35 +256,39 @@ static void reset_board(wordle_state_t *state) {
 
 static void display_title(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_TITLE;
-    watch_display_string("WO  WordLE", 0);
+    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text(WATCH_POSITION_BOTTOM, "WordLE");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
 }
 
 #if WORDLE_USE_DAILY_STREAK != 2
 static void display_continue_result(bool continuing) {
-    watch_display_string(continuing ? "y" : "n", 9);
+    watch_display_character(continuing ? 'y' : 'n', 9);
 }
 
 static void display_continue(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_CONTINUE;
-    watch_display_string("Cont ", 4);
+    watch_display_text(WATCH_POSITION_BOTTOM, "Cont ");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
     display_continue_result(state->continuing);
 }
 #endif
 
 static void display_streak(wordle_state_t *state) {
-    char buf[12];
+    char buf[10];
     state->curr_screen = WORDLE_SCREEN_STREAK;
 #if WORDLE_USE_DAILY_STREAK == 2
     if (state->streak > 99)
-        sprintf(buf, "WO  St--dy");
+        sprintf(buf, "St--dy");
     else
-        sprintf(buf, "WO  St%2ddy", state->streak);
+        sprintf(buf, "St%2ddy", state->streak);
 #else
-    sprintf(buf, "WO  St%4d", state->streak);
+    sprintf(buf, "St%4d", state->streak);
 #endif
-    watch_display_string(buf, 0);
+    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
     watch_set_colon();
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
 }
@@ -292,13 +297,15 @@ static void display_streak(wordle_state_t *state) {
 static void display_wait(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_WAIT;
     if (state->streak < 40) {
-        char buf[13];
-        sprintf(buf,"WO%2d WaIt ", state->streak);
-        watch_display_string(buf, 0);
+        char buf[5];
+        sprintf(buf,"%2d", state->streak);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     }
     else {  // Streak too long to display in top-right
-        watch_display_string("WO   WaIt ", 0);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     }
+    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text(WATCH_POSITION_BOTTOM, " WaIt ");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
 }
 #endif
@@ -312,16 +319,18 @@ static uint32_t get_day_unix_time(void) {
 }
 
 static void display_lose(wordle_state_t *state, uint8_t subsecond) {
-    char buf[WORDLE_LENGTH + 6];
-    sprintf(buf,"L    %s", subsecond % 2 ? _valid_words[state->curr_answer] : "     ");
-    watch_display_string(buf, 0);
+    char buf[10];
+    sprintf(buf," %s", subsecond % 2 ? _valid_words[state->curr_answer] : "     ");
+    watch_display_text(WATCH_POSITION_TOP, "L   ");
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void display_win(wordle_state_t *state, uint8_t subsecond) {
     (void) state;
-    char buf[13];
-    sprintf(buf,"W    %s  ", subsecond % 2 ? "NICE" : "JOb ");
-    watch_display_string(buf, 0);
+    char buf[10];
+    sprintf(buf," %s  ", subsecond % 2 ? "NICE" : "JOb ");
+    watch_display_text(WATCH_POSITION_TOP, "W   ");
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static bool is_playing(const wordle_state_t *state) {
@@ -334,27 +343,28 @@ static bool is_playing(const wordle_state_t *state) {
 }
 
 static void display_result(wordle_state_t *state, uint8_t subsecond) {
-    char buf[WORDLE_LENGTH + 1];
+    char buf[10];
+    buf[0] = ' ';
     for (size_t i = 0; i < WORDLE_LENGTH; i++)
     {
         switch (state->word_elements_result[i])
         {
         case WORDLE_LETTER_WRONG:
-            buf[i] = '-';
+            buf[i+1] = '-';
             break;
         case WORDLE_LETTER_CORRECT:
-            buf[i] = _valid_letters[state->word_elements[i]];
+            buf[i+1] = _valid_letters[state->word_elements[i]];
             break;
         case WORDLE_LETTER_WRONG_LOC:
             if (subsecond % 2)
-                buf[i] = ' ';
+                buf[i+1] = ' ';
             else
-               buf[i] = _valid_letters[state->word_elements[i]]; 
+               buf[i+1] = _valid_letters[state->word_elements[i]]; 
         default:
             break;
         }
     }
-    watch_display_string(buf, 5);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static bool act_on_btn(wordle_state_t *state, const wordle_pin_enum pin) {
@@ -551,7 +561,7 @@ bool wordle_face_loop(movement_event_t event, void *context) {
                 if (event.subsecond % 2) {
                     display_letter(state, true);
                 } else {
-                    watch_display_string(" ", state->position + 5);
+                    watch_display_character(' ', state->position + 5);
                 }
                 break;
             case WORDLE_SCREEN_RESULT:
