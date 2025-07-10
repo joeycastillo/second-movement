@@ -30,6 +30,7 @@
 const watch_face_t watch_faces[] = {
     clock_face,
     fast_stopwatch_face,
+    beer_counter_face,
     advanced_alarm_face,
     counter_face,
     pulsometer_face,

@@ -39,4 +39,5 @@ SRCS += \
   ./watch-faces/clock/ke_decimal_time_face.c \
   ./watch-faces/complication/pulsometer_face.c \
   ./watch-faces/complication/counter_face.c \
+  ./watch-faces/complication/beer_counter_face.c \
 # New watch faces go above this line.
