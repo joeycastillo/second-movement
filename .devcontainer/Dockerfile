@@ -18,6 +18,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     # make is used as the build system
     make \
+    # cmake is needed for building tests
+    cmake \
+    # gcc/g++ for native compilation (tests)
+    gcc g++ \
     # git is used for fetching submodules & interactive development
     git \
     # bzip2 is required to extract the Arm toolchain
@@ -27,7 +31,9 @@ RUN apt-get update \
     # python is used to convert binaries to uf2 files
     python3 python-is-python3 \
     # emscripten for building simulator
-    emscripten
+    emscripten \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Download and verify both x86-64 and aarch64 toolchains. This is unfortunate and
 # slows down the build, but it's a clean-ish option until buildkit can be used.
