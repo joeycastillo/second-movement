@@ -62,4 +62,5 @@
 #include "tally_face.h"
 #include "probability_face.h"
 #include "ke_decimal_time_face.h"
+#include "world_clock2_face.h"
 // New includes go above this line.
