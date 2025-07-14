@@ -103,6 +103,13 @@
 #include "watch.h"
 #include "watch_utility.h"
 
+/* Beep types */
+typedef enum {
+    BEEP_BUTTON,
+    BEEP_ENABLE,
+    BEEP_DISABLE
+} beep_type_t;
+
 #define SETTINGS_NUM (5)
 const char settings_titles[SETTINGS_NUM][6] = { "Year ", "Month", "Day  ", "Hour ", "Minut" };
 const char settings_fallback_titles[SETTINGS_NUM][3] = { "YR", "MO", "DA", "HR", "M1" };

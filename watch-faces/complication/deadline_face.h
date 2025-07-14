@@ -34,13 +34,6 @@ typedef enum {
     DEADLINE_SETTINGS
 } deadline_mode_t;
 
-/* Beep types */
-typedef enum {
-    BEEP_BUTTON,
-    BEEP_ENABLE,
-    BEEP_DISABLE
-} beep_type_t;
-
 /* Number of deadline dates */
 #define DEADLINE_FACE_DATES (4)
 
