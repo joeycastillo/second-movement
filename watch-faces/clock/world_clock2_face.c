@@ -34,6 +34,13 @@
 static bool refresh_face;
 static bool show_offset;
 
+/* Beep types */
+typedef enum {
+    BEEP_BUTTON,
+    BEEP_ENABLE,
+    BEEP_DISABLE
+} beep_type_t;
+
 /* Simple macros for navigation */
 #define FORWARD             +1
 #define BACKWARD            -1

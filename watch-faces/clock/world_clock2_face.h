@@ -104,13 +104,6 @@
 #include "movement.h"
 #include "zones.h"
 
-/* Beep types */
-typedef enum {
-    BEEP_BUTTON,
-    BEEP_ENABLE,
-    BEEP_DISABLE
-} beep_type_t;
-
 typedef enum {
     WORLD_CLOCK2_MODE_CLOCK,
     WORLD_CLOCK2_MODE_SETTINGS
