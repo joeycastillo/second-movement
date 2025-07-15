@@ -32,7 +32,6 @@
 #include "zones.h"
 
 static bool refresh_face;
-static bool show_offset;
 
 /* Beep types */
 typedef enum {
@@ -47,6 +46,10 @@ typedef enum {
 
 /* Constants */
 #define UTC_ZONE_INDEX      15
+#define NAME_DISPLAY_TIME   2
+
+/* Pre-selected zones: Seattle, New York, UTC, Shanghai, Tokyo */
+#define SELECTED_ZONES      {3, 8, 15, 32, 36, -1}
 
 /* Modulo function */
 static inline unsigned int mod(int a, int b)
@@ -143,33 +146,12 @@ static void _get_zone_info(world_clock2_state_t *state, char *abbr, uoffset_t *o
     sprintf(abbr, zone_info.abrev_formatter, ds);
 }
 
-static void _clock_display(movement_event_t event, world_clock2_state_t *state)
+/* Efficient time display taken from world_clock_face.c */
+static void _efficient_time_display(movement_event_t event, watch_date_time_t date_time,
+                                    uint32_t previous_date_time, char *buf)
 {
-    char buf[11], zone_abbr[MAX_ZONE_NAME_LEN + 1];
-    watch_date_time_t date_time, utc_time;
-    uint32_t previous_date_time;
-    int32_t offset;
-    uoffset_t zone_offset;
-
-    /* Update indicators and colon on refresh */
-    if (refresh_face) {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-        watch_set_colon();
-        if (movement_clock_mode_24h())
-            watch_set_indicator(WATCH_INDICATOR_24H);
-        state->previous_date_time = 0xFFFFFFFF;
-        refresh_face = false;
-    }
-
-    /* Determine current time at time zone and store date/time */
-    utc_time = watch_rtc_get_date_time();
-    offset = movement_get_current_timezone_offset_for_zone(state->current_zone);
-    date_time = watch_utility_date_time_convert_zone(utc_time, 0, offset);
-    previous_date_time = state->previous_date_time;
-    state->previous_date_time = date_time.reg;
-
-    /* Energy-efficient display taken from world_clock_face.c */
-    if ((date_time.reg >> 6) == (previous_date_time >> 6) && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
+    if ((date_time.reg >> 6) == (previous_date_time >> 6)
+        && event.event_type != EVENT_LOW_ENERGY_UPDATE) {
         // everything before seconds is the same, don't waste cycles setting those segments.
         watch_display_character_lp_seconds('0' + date_time.unit.second / 10, 8);
         watch_display_character_lp_seconds('0' + date_time.unit.second % 10, 9);
@@ -193,6 +175,11 @@ static void _clock_display(movement_event_t event, world_clock2_state_t *state)
                 date_time.unit.hour = 12;
         }
 
+        /* Display colon and 24h indicator */
+        watch_set_colon();
+        if (movement_clock_mode_24h())
+            watch_set_indicator(WATCH_INDICATOR_24H);
+
         /* Display day and time */
         sprintf(buf, "%02d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
         watch_display_text(WATCH_POSITION_HOURS, buf + 0);
@@ -207,11 +194,51 @@ static void _clock_display(movement_event_t event, world_clock2_state_t *state)
         } else {
             watch_display_text(WATCH_POSITION_SECONDS, buf + 4);
         }
-
-        /* Get and display zone abbreviation */
-        _get_zone_info(state, zone_abbr, &zone_offset);
-        _display_zone_abbr(state, zone_abbr);
     }
+}
+
+static void _clock_display(movement_event_t event, world_clock2_state_t *state)
+{
+    char buf[11], zone_abbr[MAX_ZONE_NAME_LEN + 1], *zone_name;
+    watch_date_time_t date_time, utc_time;
+    uint32_t previous_date_time;
+    int32_t offset;
+    uoffset_t zone_offset;
+
+    /* Update indicators and reset previous date time */
+    if (refresh_face) {
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+        state->previous_date_time = 0xFFFFFFFF;
+        refresh_face = false;
+    }
+
+    /* Determine current time at time zone and store date/time */
+    utc_time = watch_rtc_get_date_time();
+    offset = movement_get_current_timezone_offset_for_zone(state->current_zone);
+    date_time = watch_utility_date_time_convert_zone(utc_time, 0, offset);
+    previous_date_time = state->previous_date_time;
+    state->previous_date_time = date_time.reg;
+
+    if (state->show_zone_name > 0) {
+        /* Check for first call to display zone name */
+        if (state->show_zone_name == NAME_DISPLAY_TIME) {
+            watch_clear_colon();
+            watch_clear_indicator(WATCH_INDICATOR_24H);
+            watch_clear_indicator(WATCH_INDICATOR_PM);
+            zone_name = watch_utility_time_zone_name_at_index(state->current_zone);
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, zone_name, zone_name);
+        }
+        state->show_zone_name--;
+        /* Check for last call to display zone name */
+        if (state->show_zone_name == 0) {
+            refresh_face = true;
+        }
+    } else {
+        _efficient_time_display(event, date_time, previous_date_time, buf);
+    }
+
+    _get_zone_info(state, zone_abbr, &zone_offset);
+    _display_zone_abbr(state, zone_abbr);
 }
 
 static void _settings_display(movement_event_t event, world_clock2_state_t *state)
@@ -242,12 +269,12 @@ static void _settings_display(movement_event_t event, world_clock2_state_t *stat
     _display_zone_abbr(state, zone_abbr);
 
     /* Display zone name or offset on bottom */
-    if (show_offset) {
-        sprintf(buf, " %3d%02d", zone_offset.hours, zone_offset.minutes);
-        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
-    } else {
+    if (state->show_zone_name > 0) {
         zone_name = watch_utility_time_zone_name_at_index(state->current_zone);
         watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, zone_name, zone_name);
+    } else {
+        sprintf(buf, " %3d%02d", zone_offset.hours, zone_offset.minutes);
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
     }
 }
 
@@ -264,6 +291,7 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_ALARM_BUTTON_UP:
             refresh_face = true;
             state->current_zone = _next_selected_zone(state, FORWARD);
+            state->show_zone_name = NAME_DISPLAY_TIME;
             _clock_display(event, state);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -272,6 +300,7 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_LIGHT_BUTTON_UP:
             refresh_face = true;
             state->current_zone = _next_selected_zone(state, BACKWARD);
+            state->show_zone_name = NAME_DISPLAY_TIME;
             _clock_display(event, state);
             break;
         case EVENT_LIGHT_LONG_PRESS:
@@ -280,6 +309,7 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
         case EVENT_ALARM_LONG_PRESS:
             /* Switch to settings mode */
             state->current_mode = WORLD_CLOCK2_MODE_SETTINGS;
+            state->show_zone_name = true;
             refresh_face = true;
             movement_request_tick_frequency(4);
             _settings_display(event, state);
@@ -336,7 +366,7 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
-            show_offset = !show_offset;
+            state->show_zone_name = !state->show_zone_name;
             _settings_display(event, state);
             break;
         case EVENT_MODE_BUTTON_UP:
@@ -346,6 +376,7 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
 
             /* Switch to display mode */
             state->current_mode = WORLD_CLOCK2_MODE_CLOCK;
+            state->show_zone_name = NAME_DISPLAY_TIME;
             refresh_face = true;
             movement_request_tick_frequency(1);
             _clock_display(event, state);
@@ -361,6 +392,7 @@ static bool _settings_loop(movement_event_t event, world_clock2_state_t *state)
 void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
     (void) watch_face_index;
+    int8_t selected_zones[] = SELECTED_ZONES, *selected_zones_ptr;
 
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(world_clock2_state_t));
@@ -368,8 +400,15 @@ void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr)
 
         /* Start in settings mode */
         world_clock2_state_t *state = (world_clock2_state_t *) * context_ptr;
-        state->current_mode = WORLD_CLOCK2_MODE_SETTINGS;
+        state->current_mode = WORLD_CLOCK2_MODE_CLOCK;
         state->current_zone = UTC_ZONE_INDEX;
+        state->show_zone_name = NAME_DISPLAY_TIME;
+
+        selected_zones_ptr = selected_zones;
+        while (*selected_zones_ptr != -1) {
+            state->zones[*selected_zones_ptr].selected = true;
+            selected_zones_ptr++;
+        }
     }
 }
 
@@ -390,7 +429,6 @@ void world_clock2_face_activate(void *context)
 
     /* Set initial state */
     refresh_face = true;
-    show_offset = false;
 }
 
 bool world_clock2_face_loop(movement_event_t event, void *context)

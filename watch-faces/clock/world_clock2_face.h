@@ -34,20 +34,56 @@
  * implementation by Joey Castillo. The face has two modes: clock mode
  * and settings mode.
  *
+ * Clock mode
+ *
+ * When the clock face is activated for the first time, it enters clock mode.
+ * The face displays the time of one of multiple selected time zones. It
+ * includes the following components:
+ *
+ *  - The top of the face displays the first letters of the time zone
+ *    abbreviation, such as "PS" for Pacific Standard Time on the classic
+ *    display and "PST" on the custom display.
+ *
+ *  - On the classic display, the upper-right corner additionally shows the
+ *    index number of the time zone. This helps avoid confusion when multiple
+ *    time zones have the same two-letter abbreviation.
+ *
+ *  - The bottom of the face shows the name of the current zone time, such as
+ *    "Tokyo" or "Berlin" for about a second when activating the face or cycling
+ *    between time zones.
+ *
+ *  - After displaying the zone name, the face displays the time of the time
+ *    zone. There is no timeout, allowing users to keep the chosen time zone
+ *    displayed for as long as they wish.
+ *
+ * The user can navigate through the selected time zones using the following
+ * buttons:
+ *
+ *  - The ALARM button moves to the next selected time zone, while the LIGHT
+ *    button moves to the previous zone.
+ *
+ *  - A long press on the ALARM button enters settings mode and enables the
+ *    user to re-configure the selected time zones.
+ *
+ *  - A long press on the LIGHT button activates the LED illumination of the
+ *    watch.
+ *
+ *  - Experimental: A single tap on the face displays the name of the selected
+ *    time zone for a short moment.
+ *
  * Settings mode
  *
- * When the clock face is activated for the first time, it enters settings
- * mode. Here, the user can select the time zones they want to display. The
- * face shows a summary of the current time zone:
+ * In settings mode, the user can select the time zones they want to display
+ * and cycle through. The face shows a summary of the current time zone:
  *
  *  - The top of the face displays the first letters of the time zone
  *    abbreviation, such as "PS" for Pacific Standard Time on the classic
  *    display and "PST" on the custom display. The letters blink.
- * 
+ *
  *  - On the classic display, the upper-right corner additionally shows the 
  *    index number of the time zone. This helps avoid confusion when multiple 
  *    time zones have the same two-letter abbreviation.
- * 
+ *
  *  - The bottom display shows either the name of the time zone or its 
  *    offset from UTC. For example, it either shows "Tokyo" or "9:00" 
  *    for Japanese Standard Time.
@@ -66,39 +102,6 @@
  * 
  *  - A press on the MODE button exits settings mode and returns to the
  *    clock mode.
- *
- * Clock mode
- *
- * In clock mode, the face shows the time of the currently selected time 
- * zone. The face includes the following components:
- * 
- *  - The top of the face displays the first letters of the time zone 
- *    abbreviation, such as "PS" for Pacific Standard Time on the classic 
- *    display and "PST" on the custom display.
- * 
- *  - On the classic display, the upper-right corner additionally shows the 
- *    index number of the time zone. This helps avoid confusion when multiple 
- *    time zones have the same two-letter abbreviation.
- *   
- *  - The main display shows the time in the selected time zone in either
- *    12-hour or 24-hour form. There is no timeout, allowing users to keep
- *    the chosen time zone displayed for as long as they wish.
- *
- * The user can navigate through the selected time zones using the following
- * buttons:
- * 
- *  - The ALARM button moves to the next selected time zone, while the LIGHT
- *    button moves to the previous zone. If no time zone is selected, the
- *    face simply shows UTC.
- * 
- *  - A long press on the ALARM button enters settings mode and enables the
- *    user to re-configure the selected time zones.
- * 
- *  - A long press on the LIGHT button activates the LED illumination of the
- *    watch.
- * 
- *  - Experimental: A single tap on the face displays the name of the selected
- *    time zone for a short moment.
  */
 
 #include "movement.h"
@@ -118,6 +121,7 @@ typedef struct {
     uint8_t current_zone;
     world_clock2_mode_t current_mode;
     uint32_t previous_date_time;
+    uint8_t show_zone_name;
 } world_clock2_state_t;
 
 void world_clock2_face_setup(uint8_t watch_face_index, void **context_ptr);
