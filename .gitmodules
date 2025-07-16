@@ -10,3 +10,6 @@
 [submodule "utz"]
 	path = utz
 	url = https://github.com/joeycastillo/utz.git
+[submodule "Adhan-C"]
+	path = Adhan-C
+	url = https://github.com/nimakalantar/Adhan-C.git
