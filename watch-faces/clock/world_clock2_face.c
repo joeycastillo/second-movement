@@ -280,8 +280,6 @@ static void _settings_display(movement_event_t event, world_clock2_state_t *stat
 
 static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
 {
-    char *zone_name;
-
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
@@ -322,8 +320,8 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
             break;
         case EVENT_SINGLE_TAP:
             /* Experimental: Display zone name on tap for a bit */
-            zone_name = watch_utility_time_zone_name_at_index(state->current_zone);
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, zone_name, zone_name);
+            state->show_zone_name = NAME_DISPLAY_TIME;
+            _clock_display(event, state);
             refresh_face = true;
             break;
         default:
@@ -429,6 +427,9 @@ void world_clock2_face_activate(void *context)
 
     /* Set initial state */
     refresh_face = true;
+
+    /* Enable tap detection */
+    movement_enable_tap_detection_if_available();
 }
 
 bool world_clock2_face_loop(movement_event_t event, void *context)
@@ -446,4 +447,7 @@ bool world_clock2_face_loop(movement_event_t event, void *context)
 void world_clock2_face_resign(void *context)
 {
     (void) context;
+
+    /* Return accelerometer to the state it was in before */
+    movement_disable_tap_detection_if_available();
 }
