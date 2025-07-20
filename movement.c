@@ -1035,7 +1035,7 @@ void cb_fast_tick(void) {
         if (movement_state.fast_ticks - movement_state.mode_down_timestamp == MOVEMENT_LONG_PRESS_TICKS + 1)
             event.event_type = EVENT_MODE_LONG_PRESS;
     if (movement_state.alarm_down_timestamp > 0) {
-        // easter egg: <2sec long alarm press display's "sensor watch"
+        // easter egg: <2sec long alarm press displays "sensor watch"
         if (movement_state.fast_ticks - movement_state.alarm_down_timestamp == MOVEMENT_LONG_PRESS_TICKS * 4 + 1) {
             watch_clear_display();
             watch_display_text(WATCH_POSITION_BOTTOM, "SENSOR");
