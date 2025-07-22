@@ -59,6 +59,7 @@
 #include "periodic_table_face.h"
 #include "squash_face.h"
 #include "totp_face.h"
+#include "totp_lfs_face.h"
 #include "tally_face.h"
 #include "probability_face.h"
 #include "ke_decimal_time_face.h"
