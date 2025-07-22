@@ -14,7 +14,7 @@ SRCS += \
   ./watch-faces/complication/days_since_face.c \
   ./watch-faces/complication/breathing_face.c \
   ./watch-faces/complication/squash_face.c \
-  ./watch-faces/complication/totp_face.c \
+  ./watch-faces/complication/totp_lfs_face.c \
   ./watch-faces/complication/tally_face.c \
   ./watch-faces/complication/wordle_face.c \
   ./watch-faces/demo/all_segments_face.c \
