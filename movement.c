@@ -945,10 +945,14 @@ bool app_loop(void) {
         }
     }
 
+#if __EMSCRIPTEN__
+    shell_task();
+#else
     // if we are plugged into USB, handle the serial shell
     if (usb_is_enabled()) {
         shell_task();
     }
+#endif
 
     event.subsecond = 0;
 
