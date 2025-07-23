@@ -43,7 +43,8 @@
 typedef enum {
     metWait,
     metRun,
-    setMenu
+    setMenu,
+    tapTempo
 } metronome_mode_t;
 
 typedef enum {
@@ -67,6 +68,15 @@ typedef struct {
     metronome_mode_t mode : 3;
     setting_cursor_t setCur : 4;
     bool soundOn;
+    // Tap tempo state
+    struct {
+        uint16_t detection_ticks;
+        uint8_t tap_count;
+        uint32_t last_tap_time;
+        uint32_t intervals[8];
+        uint8_t interval_index;
+        uint8_t subsecond;
+    } tap_tempo;
 } metronome_state_t;
 
 void metronome_face_setup(uint8_t watch_face_index, void ** context_ptr);
