@@ -93,15 +93,14 @@ static void _metronome_calculate_bpm_from_taps(metronome_state_t *state) {
     uint32_t total_interval = 0;
     uint8_t valid_intervals = 0;
 
-    // Calculate how many intervals we actually have stored
     uint8_t intervals_to_use = (state->tap_tempo.tap_count - 1) < 8 ? (state->tap_tempo.tap_count - 1) : 8;
 
     printf("calculating BPM from %d taps (%d intervals):\n", state->tap_tempo.tap_count, intervals_to_use);
 
-    // Sum the most recent intervals (they may wrap around in the circular buffer)
-    for (uint8_t i = 0; i < intervals_to_use; i++) {
-        uint8_t idx = (state->tap_tempo.interval_index - intervals_to_use + i + 8) % 8;
-        printf("  interval %d (idx %d): %u ms\n", i, idx, state->tap_tempo.intervals[idx]);
+    // Sum the most recent intervals, going backwards from the last one
+    for (uint8_t i = 1; i <= intervals_to_use; i++) {
+        uint8_t idx = (state->tap_tempo.interval_index - i + 8) % 8;
+        printf("  interval %d (idx %d): %u ms\n", i-1, idx, state->tap_tempo.intervals[idx]);
         total_interval += state->tap_tempo.intervals[idx];
         valid_intervals++;
     }
