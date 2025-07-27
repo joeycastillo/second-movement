@@ -37,4 +37,5 @@ SRCS += \
   ./watch-faces/complication/kitchen_conversions_face.c \
   ./watch-faces/complication/periodic_table_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
+  ./watch-faces/complication/interval_face.c \
 # New watch faces go above this line.
