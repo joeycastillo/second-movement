@@ -111,6 +111,9 @@ static void _timer_write_info(interval_face_state_t *state, char* bottom_row, ch
     case 0:
         // clear timer?
         sprintf(bottom_row, "CLEARn");
+        sprintf(state_str[0], "%2s", INTERVAL_FACE_STATE_DEFAULT);
+        sprintf(state_str[1], "%3s", INTERVAL_FACE_STATE_DEFAULT_CD);
+        sprintf(index_str, " %1d", state->timer_idx + 1);
         if (_erase_timer_flag) bottom_row[5] = 'y';
         watch_clear_colon();
         break;
@@ -164,7 +167,7 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
     char bottom_row[10];
     char int_state_str[2][4];
     char int_index_str[5];
-    bottom_row[0] = int_state_str[0][0] = int_index_str[0] = 0;
+    bottom_row[0] = 0;
     uint8_t tmp;
     if (state->face_state == interval_state_waiting && _ticks >= 0) {
         // play info slideshow for current timer
