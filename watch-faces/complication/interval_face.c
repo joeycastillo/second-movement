@@ -547,8 +547,10 @@ bool interval_face_loop(movement_event_t event, void *context) {
     case EVENT_ALARM_BUTTON_UP:
         switch (state->face_state) {
         case interval_state_waiting:
-            // cycle through timers
-            _inc_uint8(&state->timer_idx, 1, INTERVAL_TIMERS);
+            // cycle through timers, skipping empty ones
+            do {
+                _inc_uint8(&state->timer_idx, 1, INTERVAL_TIMERS);
+            } while (_is_timer_empty(&state->timer[state->timer_idx]) && state->timer_idx != 0);
             _ticks = 0;
             _face_draw(state, event.subsecond);
             break;
