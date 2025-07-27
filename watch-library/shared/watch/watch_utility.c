@@ -278,6 +278,10 @@ watch_date_time_t watch_utility_date_time_convert_zone(watch_date_time_t date_ti
     return watch_utility_date_time_from_unix_time(timestamp, destination_utc_offset);
 }
 
+uint32_t watch_utility_unix_time_convert_zone(uint32_t timestamp, uint32_t origin_utc_offset, uint32_t destination_utc_offset) {
+    return timestamp - origin_utc_offset + destination_utc_offset;
+}
+
 watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds) {
     watch_duration_t retval;
 

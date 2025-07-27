@@ -170,8 +170,6 @@ void watch_set_buzzer_off(void);
 /** @brief Plays the given note for a set duration at the loudest possible volume.
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.
-  * @note Note that this will block your UI for the duration of the note's play time, and it will
-  *       after this call, the buzzer period will be set to the period of this note.
   */
 void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 
@@ -179,8 +177,6 @@ void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.
   * @param volume either WATCH_BUZZER_VOLUME_SOFT or WATCH_BUZZER_VOLUME_LOUD
-  * @note This will block your UI for the duration of the note's play time, and after this call, the
-  *       buzzer will stop sounding, but the TCC period will remain set to the period of this note.
   */
 void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume);
 
@@ -202,9 +198,35 @@ extern const uint16_t NotePeriods[108];
   */
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void));
 
+/** @brief Plays the given sequence of notes in a non-blocking way.
+  * @param note_sequence A pointer to the sequence of buzzer note & duration tuples, ending with a zero. A simple
+  *        RLE logic is implemented: a negative number instead of a buzzer note means that the sequence
+  *        is rewound by the given number of notes. The byte following a negative number determines the number
+  *        of loops. I.e. if you want to repeat the last three notes of the sequence one time, you should provide 
+  *        the tuple -3, 1. The repeated notes must not contain any other repeat markers, or you will end up with 
+  *        an eternal loop.
+  * @param callback_on_end A pointer to a callback function to be invoked when the sequence has finished playing.
+  * @param volume either WATCH_BUZZER_VOLUME_SOFT or WATCH_BUZZER_VOLUME_LOUD
+  */
+void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callback_on_end)(void), watch_buzzer_volume_t volume);
+
 /** @brief Aborts a playing sequence.
   */
 void watch_buzzer_abort_sequence(void);
+
+void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop);
+
+/** @brief Enables the TCC peripheral, which drives the buzzer and the leds.
+*/
+void watch_enable_buzzer_and_leds(void);
+
+/** @brief Disables the TCC peripheral that drives the buzzer and the leds.
+ */
+void watch_disable_buzzer_and_leds(void);
+
+/** @brief Disables the TCC peripheral that drives the buzzer and the leds if neither is currently active
+ */
+void watch_maybe_disable_buzzer_and_leds(void);
 
 #ifndef __EMSCRIPTEN__
 void irq_handler_tc0(void);

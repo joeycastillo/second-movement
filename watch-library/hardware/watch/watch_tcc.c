@@ -32,9 +32,13 @@ void cb_watch_buzzer_seq(void);
 
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
-static bool _callback_running = false;
 static int8_t *_sequence;
+static uint8_t _volume;
 static void (*_cb_finished)(void);
+static watch_cb_t _cb_start_global = NULL;
+static watch_cb_t _cb_stop_global = NULL;
+static volatile bool _led_is_active = false;
+static volatile bool _buzzer_is_active = false;
 
 static void _tcc_write_RUNSTDBY(bool value) {
     // enables or disables RUNSTDBY of the tcc
@@ -46,13 +50,11 @@ static void _tcc_write_RUNSTDBY(bool value) {
 static inline void _tc0_start() {
     // start the TC0 timer
     tc_enable(0);
-    _callback_running = true;
 }
 
 static inline void _tc0_stop() {
     // stop the TC0 timer
     tc_disable(0);
-    _callback_running = false;
 }
 
 static void _tc0_initialize() {
@@ -68,19 +70,32 @@ static void _tc0_initialize() {
 }
 
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
-    if (_callback_running) _tc0_stop();
+    watch_buzzer_play_sequence_with_volume(note_sequence, callback_on_end, WATCH_BUZZER_VOLUME_LOUD);
+}
+
+void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callback_on_end)(void), watch_buzzer_volume_t volume) {
+    // Abort any previous sequence
+    watch_buzzer_abort_sequence();
+
+    _buzzer_is_active = true;
+
+    if (_cb_start_global) {
+        _cb_start_global();
+    }
+
+    watch_enable_buzzer_and_leds();
+
     watch_set_buzzer_off();
     _sequence = note_sequence;
     _cb_finished = callback_on_end;
+    _volume = volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25;
     _seq_position = 0;
     _tone_ticks = 0;
     _repeat_counter = -1;
     // prepare buzzer
-    watch_enable_buzzer();
+    
     // setup TC0 timer
     _tc0_initialize();
-    // TCC should run in standby mode
-    _tcc_write_RUNSTDBY(true);
     // start the timer (for the 64 hz callback)
     _tc0_start();
 }
@@ -110,7 +125,7 @@ void cb_watch_buzzer_seq(void) {
             // read note
             watch_buzzer_note_t note = _sequence[_seq_position];
             if (note != BUZZER_NOTE_REST) {
-                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
+                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], _volume);
                 watch_set_buzzer_on();
             } else watch_set_buzzer_off();
             // set duration ticks and move to next tone
@@ -119,17 +134,37 @@ void cb_watch_buzzer_seq(void) {
         } else {
             // end the sequence
             watch_buzzer_abort_sequence();
-            if (_cb_finished) _cb_finished();
         }
     } else _tone_ticks--;
 }
 
 void watch_buzzer_abort_sequence(void) {
     // ends/aborts the sequence
-    if (_callback_running) _tc0_stop();
+    if (!_buzzer_is_active) {
+        return;
+    }
+
+    _buzzer_is_active = false;
+
+    _tc0_stop();
+
     watch_set_buzzer_off();
-    // disable standby mode for TCC
-    _tcc_write_RUNSTDBY(false);
+
+    // disable TCC
+    watch_maybe_disable_buzzer_and_leds();
+
+    if (_cb_stop_global) {
+        _cb_stop_global();
+    }
+
+    if (_cb_finished) {
+        _cb_finished();
+    }
+}
+
+void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop) {
+    _cb_stop_global = cb_start;
+    _cb_stop_global = cb_stop;
 }
 
 void irq_handler_tc0(void) {
@@ -142,10 +177,32 @@ bool watch_is_buzzer_or_led_enabled(void){
     return tcc_is_enabled(0);
 }
 
-inline void watch_enable_buzzer(void) {
+void watch_enable_buzzer_and_leds(void) {
     if (!tcc_is_enabled(0)) {
+        // tcc_set_run_in_standby(0, true);
         _watch_enable_tcc();
+        // TCC should run in standby mode
+        _tcc_write_RUNSTDBY(true);
     }
+}
+
+void watch_disable_buzzer_and_leds(void) {
+    if (tcc_is_enabled(0)) {
+        _tcc_write_RUNSTDBY(false);
+        _watch_disable_tcc();
+    }
+}
+
+void watch_maybe_disable_buzzer_and_leds(void) {
+    if (_buzzer_is_active || _led_is_active) {
+        return;
+    }
+
+    watch_disable_buzzer_and_leds();
+}
+
+void watch_enable_buzzer(void) {
+    watch_enable_buzzer_and_leds();
 }
 
 void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty) {
@@ -154,7 +211,7 @@ void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty) {
 }
 
 void watch_disable_buzzer(void) {
-    _watch_disable_tcc();
+    watch_maybe_disable_buzzer_and_leds();
 }
 
 inline void watch_set_buzzer_on(void) {
@@ -172,14 +229,17 @@ void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
 }
 
 void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
-    if (note == BUZZER_NOTE_REST) {
-        watch_set_buzzer_off();
-    } else  {
-        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25);
-        watch_set_buzzer_on();
-    }
-    delay_ms(duration_ms);
-    watch_set_buzzer_off();
+    static int8_t single_note_sequence[3];
+
+    single_note_sequence[0] = note;
+    // 48 ticks per second for the tc0?
+    // Each tick is approximately 20ms
+    uint16_t duration = duration_ms / 20;
+    if (duration > 127) duration = 127;
+    single_note_sequence[1] = (int8_t)duration;
+    single_note_sequence[2] = 0;
+
+    watch_buzzer_play_sequence_with_volume(single_note_sequence, NULL, volume);
 }
 
 void _watch_enable_tcc(void) {
@@ -263,7 +323,7 @@ void watch_enable_leds(void) {
 }
 
 void watch_disable_leds(void) {
-    _watch_disable_tcc();
+    watch_maybe_disable_buzzer_and_leds();
 }
 
 void watch_set_led_color(uint8_t red, uint8_t green) {
@@ -275,6 +335,15 @@ void watch_set_led_color(uint8_t red, uint8_t green) {
 }
 
 void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
+    bool turning_on = (red | green | blue) != 0;
+
+    if (turning_on) {
+        _led_is_active = true;
+        watch_enable_buzzer_and_leds();
+    } else {
+        _led_is_active = false;
+    }
+
     if (tcc_is_enabled(0)) {
         uint32_t period = tcc_get_period(0);
         tcc_set_cc(0, (WATCH_RED_TCC_CHANNEL) % 4, ((period * (uint32_t)red * 1000ull) / 255000ull), true);
@@ -288,6 +357,10 @@ void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
 #else
         (void) blue; // silence warning
 #endif
+    }
+
+    if (!turning_on) {
+        watch_maybe_disable_buzzer_and_leds();
     }
 }
 
