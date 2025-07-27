@@ -72,7 +72,6 @@ static const int8_t _default_timers[6][5] = {{0, 40, 20, 0, 0},
 
 static const uint8_t _intro_segdata[4][2] = {{1, 8}, {0, 8}, {0, 7}, {1, 7}};
 static const uint8_t _intro_segdata_cd[4][2] = {{1, 8}, {1, 9}, {0, 9}, {0, 8}};
-static const uint8_t _blink_idx[] = {3, 9, 4, 6, 4, 6, 8, 4, 6, 8, 4, 6};
 static const uint8_t _setting_page_idx[] = {1, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4};
 static const int8_t _sound_seq_warmup[] = {BUZZER_NOTE_F6, 8, BUZZER_NOTE_REST, 1, -2, 3, 0};
 static const int8_t _sound_seq_work[] = {BUZZER_NOTE_F6, 8, BUZZER_NOTE_REST, 1, -2, 2, BUZZER_NOTE_C7, 24, 0};
@@ -106,18 +105,18 @@ static inline void _button_beep() {
     if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
 }
 
-static void _timer_write_info(interval_face_state_t *state, char* buf, char state_str[2][4], char* index_str, uint8_t timer_page) {
+static void _timer_write_info(interval_face_state_t *state, char* bottom_row, char state_str[2][4], char* index_str, uint8_t timer_page) {
     // fill display string with requested timer information
     switch (timer_page) {
     case 0:
         // clear timer?
-        sprintf(buf, "CLEARn");
-        if (_erase_timer_flag) buf[5] = 'y';
+        sprintf(bottom_row, "CLEARn");
+        if (_erase_timer_flag) bottom_row[5] = 'y';
         watch_clear_colon();
         break;
     case 1:
         // warmup time info
-        sprintf(buf, "%02d%02d  ", 
+        sprintf(bottom_row, "%02d%02d  ", 
             state->timer[state->timer_idx].warmup_minutes, 
             state->timer[state->timer_idx].warmup_seconds);
         sprintf(state_str[0], "%2s", INTERVAL_FACE_STATE_WARMUP);
@@ -126,7 +125,7 @@ static void _timer_write_info(interval_face_state_t *state, char* buf, char stat
         break;
     case 2:
         // work interval info
-        sprintf(buf, "%02d%02d%2d", 
+        sprintf(bottom_row, "%02d%02d%2d", 
             state->timer[state->timer_idx].work_minutes, 
             state->timer[state->timer_idx].work_seconds,
             state->timer[state->timer_idx].work_rounds);
@@ -136,18 +135,18 @@ static void _timer_write_info(interval_face_state_t *state, char* buf, char stat
         break;
     case 3:
         // break interval info
-        sprintf(buf, "%02d%02d%2d", 
+        sprintf(bottom_row, "%02d%02d%2d", 
             state->timer[state->timer_idx].break_minutes, 
             state->timer[state->timer_idx].break_seconds,
             state->timer[state->timer_idx].full_rounds);
-        if (!state->timer[state->timer_idx].full_rounds) buf[5] = '-';
+        if (!state->timer[state->timer_idx].full_rounds) bottom_row[5] = '-';
         sprintf(state_str[0], "%2s", INTERVAL_FACE_STATE_BREAK);
         sprintf(state_str[1], "%3s", INTERVAL_FACE_STATE_BREAK_CD);
         sprintf(index_str, " %1d", state->timer_idx + 1);
         break;
     case 4:
         // cooldown time info
-        sprintf(buf, "%02d%02d  ", 
+        sprintf(bottom_row, "%02d%02d  ", 
             state->timer[state->timer_idx].cooldown_minutes, 
             state->timer[state->timer_idx].cooldown_seconds);
         sprintf(state_str[0], "%2s", INTERVAL_FACE_STATE_COOLDOWN);
@@ -162,10 +161,10 @@ static void _timer_write_info(interval_face_state_t *state, char* buf, char stat
 static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
     // draws current face state
     if (!state->is_active) return;
-    char buf[10];
+    char bottom_row[10];
     char int_state_str[2][4];
-    char int_index_str[3];
-    buf[0] = 0;
+    char int_index_str[5];
+    bottom_row[0] = int_state_str[0][0] = int_index_str[0] = 0;
     uint8_t tmp;
     if (state->face_state == interval_state_waiting && _ticks >= 0) {
         // play info slideshow for current timer
@@ -178,9 +177,9 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
             }
         }
         tmp = ticks / 3 + 1;
-        _timer_write_info(state, buf, int_state_str, int_index_str, tmp);
+        _timer_write_info(state, bottom_row, int_state_str, int_index_str, tmp);
         // don't show '1 round' when displaying workout time to avoid detail overload
-        if (tmp == 2 && state->timer[state->timer_idx].work_rounds == 1) buf[5] = ' ';
+        if (tmp == 2 && state->timer[state->timer_idx].work_rounds == 1) bottom_row[5] = ' ';
         // blink colon
         if (subsecond % 2 == 0 && _ticks < 24) watch_clear_colon();
         else watch_set_colon();
@@ -193,7 +192,7 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
         } else {
             tmp = _setting_page_idx[_setting_idx];
         }
-        _timer_write_info(state, buf, int_state_str, int_index_str, tmp);
+        _timer_write_info(state, bottom_row, int_state_str, int_index_str, tmp);
         // blink at cursor position
         if (subsecond % 2 && _ticks != -2) {
             switch (_setting_idx) {
@@ -201,23 +200,23 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
                     int_index_str[0] = int_index_str[1] = ' ';
                     break;
                 case interval_setting_1_clear_yn:
-                    buf[5] = ' ';
+                    bottom_row[5] = ' ';
                     break;
                 case interval_setting_2_warmup_minutes:
                 case interval_setting_4_work_minutes:
                 case interval_setting_7_break_minutes:
                 case interval_setting_10_cooldown_minutes:
-                    buf[0] = buf[1] = ' ';
+                    bottom_row[0] = bottom_row[1] = ' ';
                     break;
                 case interval_setting_3_warmup_seconds:
                 case interval_setting_5_work_seconds:
                 case interval_setting_8_break_seconds:
                 case interval_setting_11_cooldown_seconds:
-                    buf[2] = buf[3] = ' ';
+                    bottom_row[2] = bottom_row[3] = ' ';
                     break;
                 case interval_setting_6_work_rounds:
                 case interval_setting_9_full_rounds:
-                    buf[4] = buf[5] = ' ';
+                    bottom_row[4] = bottom_row[5] = ' ';
                     break;
                 default:
                     break;
@@ -262,7 +261,7 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
         } else
             // running
             delta = div(_target_ts - _now_ts, 60);
-        sprintf(buf, "%02d%02d%2d", delta.quot, delta.rem, tmp + 1);
+        sprintf(bottom_row, "%02d%02d%2d", delta.quot, delta.rem, tmp + 1);
         sprintf(int_index_str, " %1d", state->timer_idx + 1);
     }
     // write out to lcd
@@ -276,7 +275,7 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
             watch_set_pixel(2, 10);
         }
         // display the rest of the string
-        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, bottom_row, bottom_row);
     }
 }
 
