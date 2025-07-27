@@ -106,7 +106,7 @@ static void finetune_adjust_subseconds(int delta) {
     watch_rtc_enable(false);
     delay_ms(delta);
     if (delta > 500) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_utc_date_time();
         date_time.unit.second = (date_time.unit.second + 1) % 60;
         if (date_time.unit.second == 0) { // Overflow
             date_time.unit.minute = (date_time.unit.minute + 1) % 60;
@@ -116,7 +116,7 @@ static void finetune_adjust_subseconds(int delta) {
                     date_time.unit.day++;
             }
         }
-        watch_rtc_set_date_time(date_time);
+        movement_set_utc_date_time(date_time);
     }
     watch_rtc_enable(true);
 }

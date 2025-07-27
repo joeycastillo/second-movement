@@ -64,6 +64,7 @@ watch_cb_t a4_callback;
 static void _watch_increase_counter(void *userData);
 static void _watch_process_periodic_callbacks(void);
 static void _watch_process_comp_callbacks(void);
+static void _watch_rtc_schedule_next_comp(void);
 
 bool _watch_rtc_is_enabled(void) {
     return counter_interval;
@@ -283,7 +284,7 @@ void watch_rtc_disable_comp_callback(uint8_t index) {
     _watch_rtc_schedule_next_comp();
 }
 
-void _watch_rtc_schedule_next_comp(void) {
+static void _watch_rtc_schedule_next_comp(void) {
     scheduled_comp_counter = 0;
 
     // The soonest we can schedule is the next tick
