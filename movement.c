@@ -55,7 +55,7 @@
 #include "watch_usb_cdc.h"
 #endif
 
-movement_state_t movement_state;
+volatile movement_state_t movement_state;
 void * watch_face_contexts[MOVEMENT_NUM_FACES];
 watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
@@ -616,7 +616,7 @@ void app_init(void) {
     }
     HAL_GPIO_VBUS_DET_off();
 
-    memset(&movement_state, 0, sizeof(movement_state));
+    memset((void *)&movement_state, 0, sizeof(movement_state));
 
     movement_state.has_thermistor = thermistor_driver_init();
 
@@ -972,7 +972,7 @@ bool app_loop(void) {
     return can_sleep;
 }
 
-static movement_event_type_t _figure_out_button_event(bool pin_level, movement_event_type_t button_down_event_type, uint16_t *down_timestamp) {
+static movement_event_type_t _figure_out_button_event(bool pin_level, movement_event_type_t button_down_event_type, volatile uint16_t *down_timestamp) {
     // force alarm off if the user pressed a button.
     if (movement_state.alarm_ticks) movement_state.alarm_ticks = 0;
 
