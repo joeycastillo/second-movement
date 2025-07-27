@@ -49,6 +49,7 @@
 #include "movement_config.h"
 
 #include "movement_custom_signal_tunes.h"
+#include "movement_custom_alarm_tunes.h"
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
@@ -110,20 +111,6 @@ movement_volatile_state_t movement_volatile_state;
 
 // The last sequence that we have been asked to play while the watch was in deep sleep
 static int8_t *_pending_sequence;
-
-// The note sequence of the default alarm
-int8_t alarm_tune[] = {
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 5,
-    BUZZER_NOTE_REST, 38,
-    -8, 9,
-    0
-};
 
 int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
 #define TIMEZONE_DOES_NOT_OBSERVE (-127)
@@ -604,8 +591,8 @@ void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
         uint8_t note_idx = i * 2;
         uint8_t duration_idx = note_idx + 1;
 
-        int8_t note = alarm_tune[note_idx];
-        int8_t duration = alarm_tune[duration_idx];
+        int8_t note = default_alarm_tune[note_idx];
+        int8_t duration = default_alarm_tune[duration_idx];
 
         if (note == BUZZER_NOTE_C8) {
             note = alarm_note;
@@ -1047,6 +1034,9 @@ void app_init(void) {
         date_time = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0);
         watch_rtc_set_date_time(date_time);
     }
+
+    movement_custom_signal_tunes_init();
+    movement_custom_alarm_tunes_init();
 
     // register callbacks to be notified when buzzer starts/stops playing.
     // this is so movement can be notified even when triggered by a face bypassing movement

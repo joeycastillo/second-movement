@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Jeremy O'Brien
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,14 +26,14 @@
 
 #include <stdint.h>
 
-void movement_custom_signal_tunes_init(void);
-uint8_t movement_custom_signal_tunes_get_active_tune_index();
-void movement_custom_signal_tunes_set_active_tune_index(uint8_t index);
+void movement_custom_alarm_tunes_init(void);
+uint8_t movement_custom_alarm_tunes_get_active_tune_index();
+void movement_custom_alarm_tunes_set_active_tune_index(uint8_t index);
 
-extern const int8_t default_signal_tune[];
-extern int8_t* signal_tune;
+extern const int8_t default_alarm_tune[];
+extern int8_t* alarm_tune;
 
-#define MOVEMENT_N_SIGNAL_TUNES 16
+#define MOVEMENT_N_ALARM_TUNES 16
 
-extern const int8_t* signal_tunes[MOVEMENT_N_SIGNAL_TUNES];
-extern const char* signal_tunes_names[MOVEMENT_N_SIGNAL_TUNES];
+extern const int8_t* alarm_tunes[MOVEMENT_N_ALARM_TUNES];
+extern const char* alarm_tunes_names[MOVEMENT_N_ALARM_TUNES];
