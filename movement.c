@@ -57,7 +57,7 @@ extern void _wake_up_simulator(void);
 #include "watch_usb_cdc.h"
 #endif
 
-movement_state_t movement_state;
+volatile movement_state_t movement_state;
 void * watch_face_contexts[MOVEMENT_NUM_FACES];
 watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
@@ -739,13 +739,14 @@ void app_init(void) {
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
+    delay_ms(10);
     if (HAL_GPIO_VBUS_DET_read()){
         /// if so, enable USB functionality.
         _watch_enable_usb();
     }
     HAL_GPIO_VBUS_DET_off();
 
-    memset(&movement_state, 0, sizeof(movement_state));
+    memset((void *)&movement_state, 0, sizeof(movement_state));
 
     movement_volatile_state.pending_events = 0;
     movement_volatile_state.turn_led_off = false;
