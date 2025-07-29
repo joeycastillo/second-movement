@@ -51,6 +51,7 @@
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
+void _wake_up_simulator(void);
 #else
 #include "watch_usb_cdc.h"
 #endif
@@ -1023,6 +1024,10 @@ void cb_alarm_btn_extwake(void) {
 }
 
 void cb_alarm_fired(void) {
+#if __EMSCRIPTEN__
+    _wake_up_simulator();
+#endif
+
     movement_state.woke_from_alarm_handler = true;
 }
 
