@@ -1141,11 +1141,15 @@ bool app_loop(void) {
     }
 #endif
 
+#if __EMSCRIPTEN__
+    shell_task();
+#else
     // if we are plugged into USB, we can't sleep because we need to keep the serial shell running.
     if (usb_is_enabled()) {
         yield();
         can_sleep = false;
     }
+#endif
 
     return can_sleep;
 }
