@@ -114,6 +114,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
                 stopwatch_state->start_time.reg = 0;
                 stopwatch_state->seconds_counted = 0;
                 watch_display_text(WATCH_POSITION_BOTTOM, "000000");
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
