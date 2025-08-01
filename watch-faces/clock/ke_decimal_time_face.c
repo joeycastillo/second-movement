@@ -69,6 +69,10 @@ void ke_decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void ke_decimal_time_face_activate(void *context) {
     ke_decimal_time_state_t *state = (ke_decimal_time_state_t *)context;
 
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+    }
+
     // force re-display of date and time in EVENT_ACTIVATE
     state->previous_day = 0xFF;
     state->previous_time = 0xFFFFFFFF;
