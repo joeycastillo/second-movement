@@ -100,7 +100,7 @@ bool watch_pin_service_loop(movement_event_t event, uint8_t face_index, char* fa
         case EVENT_TICK:
             watch_clear_display();
             watch_display_text_with_fallback(WATCH_POSITION_TOP, face_title, face_title_fallback);
-            watch_display_text(WATCH_POSITION_BOTTOM, " Unloc");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Unlock", " Unloc");
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             watch_pin_service_set_requesting_face(face_index);

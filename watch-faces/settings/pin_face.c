@@ -228,16 +228,16 @@ void _pin_face_menu_display(movement_event_t event, void* context) {
     switch (state->menu_page) {
         case PIN_MENU_UNLOCK:
             if (watch_pin_service_is_locked()) {
-                watch_display_text(WATCH_POSITION_BOTTOM, " Unloc");
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Unlock", " Unloc");
             } else {
-                watch_display_text(WATCH_POSITION_BOTTOM, " LOCK");
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Lock", " LOCK");
             }
             break;
         case PIN_MENU_CHANGE:
-            watch_display_text(WATCH_POSITION_BOTTOM, "Edit");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Change", "Edit");
             break;
         case PIN_MENU_TIMEOUT:
-            watch_display_text(WATCH_POSITION_BOTTOM, " TIMER");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "TiMER", " TIMER");
             break;
         default:
             break;
@@ -326,11 +326,11 @@ void _pin_face_entering_display(movement_event_t event, void* context) {
     
     if (state->animation_tick < 2) {
         if (state->entering_reason == PIN_ENTERING_OLD) {
-            watch_display_text(WATCH_POSITION_BOTTOM, " Old");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Old PN", " Old");
         } else if (state->entering_reason == PIN_ENTERING_NEW) {
-            watch_display_text(WATCH_POSITION_BOTTOM, " New");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "New PN", " New");
         } else if (state->entering_reason == PIN_ENTERING_NEW_CONFIRM) {
-            watch_display_text(WATCH_POSITION_BOTTOM, " Conf");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "CONFRM", " Conf");
         }
     } else {
         _display_pin(&state->scratch_pin);
@@ -430,12 +430,12 @@ void _pin_face_validating_display(movement_event_t event, void* context) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "Pin", "Pn");
 
     if (state->validating) {
-        watch_display_text(WATCH_POSITION_BOTTOM, " test ");
+        watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "testin", " test ");
     } else {
         if (state->validation_success) {
             watch_display_text(WATCH_POSITION_BOTTOM, "SUCCES");
         } else {
-            watch_display_text(WATCH_POSITION_BOTTOM, " ERROR");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "ERROR", " ERROR");
         }
     }
 }
