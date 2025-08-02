@@ -45,6 +45,7 @@
 #include "delay.h"
 #include "thermistor_driver.h"
 
+#define MOVEMENT_C_
 #include "movement_config.h"
 
 #include "movement_custom_signal_tunes.h"

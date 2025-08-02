@@ -27,6 +27,8 @@
 #include "tcc.h"
 #include "tc.h"
 
+#include "movement_config.h"
+
 void _watch_enable_tcc(void);
 void cb_watch_buzzer_seq(void);
 
@@ -85,6 +87,24 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
     _tc0_start();
 }
 
+inline watch_buzzer_volume_t watch_buzzer_volume() {
+    if (movement_button_should_sound()) {
+        return movement_button_volume();
+    }
+
+    return MOVEMENT_DEFAULT_BUTTON_VOLUME;
+}
+
+static inline uint8_t volume_to_duty(watch_buzzer_volume_t volume) {
+    _Static_assert(WATCH_BUZZER_VOLUME_COUNT == 2, "unaccounted for volume level");
+
+    switch (volume) {
+        case WATCH_BUZZER_VOLUME_SOFT: return 5;
+        case WATCH_BUZZER_VOLUME_LOUD: return 25;
+        default: return 0; /* unreachable */
+    }
+}
+
 void cb_watch_buzzer_seq(void) {
     // callback for reading the note sequence
     if (_tone_ticks == 0) {
@@ -110,7 +130,9 @@ void cb_watch_buzzer_seq(void) {
             // read note
             watch_buzzer_note_t note = _sequence[_seq_position];
             if (note != BUZZER_NOTE_REST) {
-                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
+                watch_buzzer_volume_t volume = watch_buzzer_volume();
+                uint8_t duty = volume_to_duty(volume);
+                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], duty);
                 watch_set_buzzer_on();
             } else watch_set_buzzer_off();
             // set duration ticks and move to next tone
@@ -168,14 +190,14 @@ inline void watch_set_buzzer_off(void) {
 }
 
 void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
-    watch_buzzer_play_note_with_volume(note, duration_ms, WATCH_BUZZER_VOLUME_LOUD);
+    watch_buzzer_play_note_with_volume(note, duration_ms, watch_buzzer_volume());
 }
 
 void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
     if (note == BUZZER_NOTE_REST) {
         watch_set_buzzer_off();
     } else  {
-        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25);
+        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume_to_duty(volume));
         watch_set_buzzer_on();
     }
     delay_ms(duration_ms);

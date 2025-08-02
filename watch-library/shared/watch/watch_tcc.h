@@ -31,7 +31,8 @@
 /// @brief An enum for controlling the volume of the buzzer.
 typedef enum {
     WATCH_BUZZER_VOLUME_SOFT = 0,
-    WATCH_BUZZER_VOLUME_LOUD
+    WATCH_BUZZER_VOLUME_LOUD,
+    WATCH_BUZZER_VOLUME_COUNT
 } watch_buzzer_volume_t;
 
 /// @brief 87 notes for use with watch_buzzer_play_note
@@ -167,11 +168,17 @@ void watch_set_buzzer_on(void);
   */
 void watch_set_buzzer_off(void);
 
-/** @brief Plays the given note for a set duration at the loudest possible volume.
+/** @brief Returns the volume at which the buzzer should sound.
+  * @return If button sounds are turned on, then the currently configured volume. Otherwise,
+  *         MOVEMENT_DEFAULT_BUTTON_VOLUME.
+  */
+watch_buzzer_volume_t watch_buzzer_volume(void);
+
+/** @brief Plays the given note for a set duration at the currently configured volume.
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.
-  * @note Note that this will block your UI for the duration of the note's play time, and it will
-  *       after this call, the buzzer period will be set to the period of this note.
+  * @note This will block your UI for the duration of the note's play time, and after this call, the
+  *       buzzer will stop sounding, but the TCC period will remain set to the period of this note.
   */
 void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 
@@ -187,7 +194,7 @@ void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t durat
 /// @brief An array of periods for all the notes on a piano, corresponding to the names in watch_buzzer_note_t.
 extern const uint16_t NotePeriods[108];
 
-/** @brief Plays the given sequence of notes in a non-blocking way.
+/** @brief Plays the given sequence of notes in a non-blocking way, at the currently configured volume.
   * @param note_sequence A pointer to the sequence of buzzer note & duration tuples, ending with a zero. A simple
   *        RLE logic is implemented: a negative number instead of a buzzer note means that the sequence
   *        is rewound by the given number of notes. The byte following a negative number determines the number
