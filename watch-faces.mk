@@ -16,6 +16,7 @@ SRCS += \
   ./watch-faces/complication/squash_face.c \
   ./watch-faces/complication/totp_face.c \
   ./watch-faces/complication/tally_face.c \
+  ./watch-faces/complication/wordle_face.c \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \
@@ -38,4 +39,6 @@ SRCS += \
   ./watch-faces/complication/periodic_table_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
+  ./watch-faces/complication/wareki_face.c \
+  ./watch-faces/complication/deadline_face.c \
 # New watch faces go above this line.
