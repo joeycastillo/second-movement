@@ -140,6 +140,7 @@ static void _set_pin_digit(watch_pin_t* pin, uint8_t digit_index, uint8_t digit_
 }
 
 static void _clear_pin(watch_pin_t* pin) {
+    pin->reg = 0;
     for (uint8_t i = 0; i < 6; i++) {
         _set_pin_digit(pin, i, PIN_EMPTY_DIGIT);
     }
