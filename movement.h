@@ -353,6 +353,11 @@ void movement_set_volume(watch_buzzer_volume_t value);
 watch_buzzer_volume_t movement_button_volume(void) __attribute__ ((deprecated("Use movement_volume().")));
 void movement_set_button_volume(watch_buzzer_volume_t value) __attribute__ ((deprecated("Use movement_set_volume().")));
 
+/** @brief Plays standard button sound, but only if beeps are turned on.
+  * @details The standard sound is BUZZER_NOTE_C7, played for 50 ms.
+  */
+void movement_play_button_sound_if_enabled(void);
+
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);
 

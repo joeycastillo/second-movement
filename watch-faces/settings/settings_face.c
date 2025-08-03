@@ -58,7 +58,7 @@ static void beep_setting_advance(void) {
         /* Was muted.  Unmute. */
         movement_set_button_should_sound(true);
         beep_setting_display(1);
-        watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+        movement_play_button_sound_if_enabled();
     }
 }
 
