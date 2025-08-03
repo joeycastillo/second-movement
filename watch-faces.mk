@@ -38,6 +38,7 @@ SRCS += \
   ./watch-faces/complication/kitchen_conversions_face.c \
   ./watch-faces/complication/periodic_table_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
+  ./watch-faces/complication/interval_face.c \
   ./watch-faces/complication/timer_face.c \
   ./watch-faces/complication/simple_coin_flip_face.c \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
