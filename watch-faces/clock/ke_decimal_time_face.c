@@ -36,14 +36,14 @@ static void _display_date(watch_date_time_t date_time) {
 }
 
 static void _display_time(ke_decimal_time_state_t *state, watch_date_time_t date_time, bool low_energy) {
-    char buf[7];
+    char buf[8];
     uint32_t value = date_time.unit.hour * 3600 + date_time.unit.minute * 60 + date_time.unit.second;
 
     if (value == state->previous_time) return;
 
     value = value * 100;
     value = value / 864;
-    snprintf(buf, sizeof(buf), "%04d#o", value);
+    snprintf(buf, sizeof(buf), "%04ld#o", value);
 
     // if under 10%, display 0.00 instead of 00.00
     if (value < 1000) buf[0] = ' ';
