@@ -24,7 +24,7 @@
 
 #include "pin_face.h"
 
-#include "watch_pin_service.h"
+#include "movement_pin_service.h"
 #include "watch_common_display.h"
 
 #include <stdlib.h>
@@ -171,7 +171,7 @@ static void _display_pin(watch_pin_t* pin) {
 void _pin_face_default_loop_handler(movement_event_t event) {
     switch (event.event_type) {
         case EVENT_MODE_BUTTON_UP: {
-            uint8_t requesting_face = watch_pin_service_get_requesting_face();
+            uint8_t requesting_face = movement_pin_service_get_requesting_face();
             if (requesting_face != PIN_EMPTY_FACE) {
                 movement_move_to_face(requesting_face);
             } else {
@@ -194,12 +194,12 @@ void _pin_face_menu_transition(movement_event_t event, void* context) {
         case EVENT_ALARM_BUTTON_DOWN:
             switch (state->menu_page) {
                 case PIN_MENU_UNLOCK:
-                    if (watch_pin_service_is_locked()) {
+                    if (movement_pin_service_is_locked()) {
                         state->ignore_next_up = true;
                         state->status = PIN_STATUS_ENTERING;
                         state->entering_reason = PIN_ENTERING_UNLOCK;
                     } else {
-                        watch_pin_service_lock();
+                        movement_pin_service_lock();
                     }
                     break;
                 case PIN_MENU_CHANGE:
@@ -228,7 +228,7 @@ void _pin_face_menu_display(movement_event_t event, void* context) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "Pin", "Pn");
     switch (state->menu_page) {
         case PIN_MENU_UNLOCK:
-            if (watch_pin_service_is_locked()) {
+            if (movement_pin_service_is_locked()) {
                 watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Unlock", " Unloc");
             } else {
                 watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Lock", " LOCK");
@@ -348,18 +348,18 @@ void _pin_face_validating_transition(movement_event_t event, void* context) {
                 state->validating = false;
                 switch (state->entering_reason) {
                     case PIN_ENTERING_UNLOCK:
-                        state->validation_success = watch_pin_service_unlock(state->current_pin);
+                        state->validation_success = movement_pin_service_unlock(state->current_pin);
                         if (state->validation_success) {
                             state->unlock_elapsed = 0;
                         }
                         break;
                     case PIN_ENTERING_OLD:
-                        state->validation_success = watch_pin_service_verify(state->current_pin);
+                        state->validation_success = movement_pin_service_verify(state->current_pin);
                         break;
                     case PIN_ENTERING_NEW_CONFIRM:
                         state->validation_success = state->new_pin.reg == state->new_pin_confirm.reg;
                         if (state->validation_success) {
-                            watch_pin_service_set_pin(state->current_pin, state->new_pin);
+                            movement_pin_service_set_pin(state->current_pin, state->new_pin);
                         }
                         break;
                     default:
@@ -369,7 +369,7 @@ void _pin_face_validating_transition(movement_event_t event, void* context) {
                 switch (state->entering_reason) {
                     case PIN_ENTERING_UNLOCK:
                         if (state->validation_success) {
-                            uint8_t requesting_face = watch_pin_service_get_requesting_face();
+                            uint8_t requesting_face = movement_pin_service_get_requesting_face();
                             if (requesting_face != PIN_EMPTY_FACE) {
                                 movement_move_to_face(requesting_face);
                             } else {
@@ -523,8 +523,8 @@ void pin_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->timeout_page = PIN_TIMEOUT_5MIN;
         state->lock_timeout = 5;
 
-        watch_pin_service_enable();
-        watch_pin_service_set_pin_face(watch_face_index);
+        movement_pin_service_enable();
+        movement_pin_service_set_pin_face(watch_face_index);
 
         state->screens[PIN_STATUS_MENU].transition = _pin_face_menu_transition;
         state->screens[PIN_STATUS_MENU].display = _pin_face_menu_display;
@@ -540,7 +540,7 @@ void pin_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void pin_face_activate(void *context) {
     pin_state_t *state = (pin_state_t *)context;
     _pin_face_reset_state(state);
-    if (watch_pin_service_get_requesting_face() == PIN_EMPTY_FACE) {
+    if (movement_pin_service_get_requesting_face() == PIN_EMPTY_FACE) {
         state->status = PIN_STATUS_MENU;
     } else {
         // If we got redirected by another page, go straight to unlocking screen
@@ -565,16 +565,16 @@ bool pin_face_loop(movement_event_t event, void *context) {
 
 void pin_face_resign(void *context) {
     (void) context;
-    watch_pin_service_set_requesting_face(PIN_EMPTY_FACE);
+    movement_pin_service_set_requesting_face(PIN_EMPTY_FACE);
 }
 
 movement_watch_face_advisory_t pin_face_advise(void *context) {
     movement_watch_face_advisory_t retval = { 0 };
     pin_state_t *state = (pin_state_t *)context;
 
-    if (!watch_pin_service_is_locked()) {
+    if (!movement_pin_service_is_locked()) {
         if (state->unlock_elapsed >= state->lock_timeout) {
-            watch_pin_service_lock();
+            movement_pin_service_lock();
         } else {
             state->unlock_elapsed += 1;
         }

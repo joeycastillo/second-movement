@@ -22,21 +22,21 @@
  * SOFTWARE.
  */
 
-#ifndef _WATCH_PIN_SERVICE_H_INCLUDED
-#define _WATCH_PIN_SERVICE_H_INCLUDED
-////< @file watch_pin_service.h
+#ifndef _MOVEMENT_PIN_SERVICE_H_INCLUDED
+#define _MOVEMENT_PIN_SERVICE_H_INCLUDED
+////< @file movement_pin_service.h
 
 /** @addtogroup PIN Service
   * @brief The PIN service provides a basic central API for faces to check if the service is LOCKED or UNLOCKED
   * 
   * The PIN service defaults to UNLOCKED, and is only enabled if the pin_face is added to the build.
   * 
-  * The only part of the API that is relevant for a regular face is watch_pin_service_is_locked() and watch_pin_service_loop().
+  * The only part of the API that is relevant for a regular face is movement_pin_service_is_locked() and movement_pin_service_loop().
   * If a face contains sensitive information that it should only display when the watch is unlocked, they can add the following
   * at the top of the face loop function:
   * 
-  * if (watch_pin_service_is_locked()) {
-  *     return watch_pin_service_loop(event, state->face_index, "totp", "2f");
+  * if (movement_pin_service_is_locked()) {
+  *     return movement_pin_service_loop(event, state->face_index, "totp", "2f");
   * }
   * 
   * Where the two strings are the title and fallback title for the face.
@@ -69,14 +69,14 @@
  */
 
 /** @brief Check whether the PIN service is in locked or unlocked state */
-bool watch_pin_service_is_locked(void);
+bool movement_pin_service_is_locked(void);
 
 /** @brief Default face loop that any sensitive face should delegate to while the PIN service is locked
   *
   * Place this snippet at the top of a face loop function to automatically protect the face:
   * 
-  * if (watch_pin_service_is_locked()) {
-  *     return watch_pin_service_loop(event, state->face_index, "totp", "2f");
+  * if (movement_pin_service_is_locked()) {
+  *     return movement_pin_service_loop(event, state->face_index, "totp", "2f");
   * }
   *
   * @param event The event coming from the face loop.
@@ -86,7 +86,7 @@ bool watch_pin_service_is_locked(void);
   * 
   * @returns Always returns true.
   */
-bool watch_pin_service_loop(movement_event_t event, uint8_t face_index, char* face_title, char* face_title_fallback);
+bool movement_pin_service_loop(movement_event_t event, uint8_t face_index, char* face_title, char* face_title_fallback);
 
 /*
  * PRIVATE API
@@ -113,51 +113,51 @@ typedef struct {
     watch_pin_t pin;                    // the current pin
     uint8_t pin_face_index;             // The watch face we need to redirect to in order to enter the pin
     uint8_t requesting_face_index;      // The watch face that initiate the request for a pin, which we'll redirect to after successful unlock.
-} watch_pin_service_state_t;
+} movement_pin_service_state_t;
 
 /** @brief Enables the PIN service with the default PIN 000000
   *
   * This function should only be called from the pin_face setup method.
   * Once the PIN service is enabled it can't be disabled.
   */
-void watch_pin_service_enable(void);
+void movement_pin_service_enable(void);
 
 /** @brief Lock the PIN service
   *
   * This function should only be called from the pin_face.
   */
-void watch_pin_service_lock(void);
+void movement_pin_service_lock(void);
 
 /** @brief Unlock the PIN service with the provided PIN
   *
   * This function should only be called from the pin_face.
   */
-bool watch_pin_service_unlock(watch_pin_t pin);
+bool movement_pin_service_unlock(watch_pin_t pin);
 
 /** @brief Test if the provided PIN is correct
   *
   * This function should only be called from the pin_face.
   */
-bool watch_pin_service_verify(watch_pin_t pin);
+bool movement_pin_service_verify(watch_pin_t pin);
 
 /** @brief Change the current PIN
   *
   * This function should only be called from the pin_face.
   */
-bool watch_pin_service_set_pin(watch_pin_t old_pin, watch_pin_t new_pin);
+bool movement_pin_service_set_pin(watch_pin_t old_pin, watch_pin_t new_pin);
 
 /** @brief Get/Set the index of the PIN face that we need to redirect to for unlocking.
   *
   * This function should only be called from the pin_face.
   */
-uint8_t watch_pin_service_get_pin_face(void);
-void watch_pin_service_set_pin_face(uint8_t face_index);
+uint8_t movement_pin_service_get_pin_face(void);
+void movement_pin_service_set_pin_face(uint8_t face_index);
 
 /** @brief Get/Set the index of the face we will redirect to after successful unlocking.
   *
   * This function should only be called from the pin_face.
   */
-uint8_t watch_pin_service_get_requesting_face(void);
-void watch_pin_service_set_requesting_face(uint8_t face_index);
+uint8_t movement_pin_service_get_requesting_face(void);
+void movement_pin_service_set_requesting_face(uint8_t face_index);
 
 #endif

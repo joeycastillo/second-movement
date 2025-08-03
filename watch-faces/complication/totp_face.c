@@ -37,7 +37,7 @@
 #include "totp_face.h"
 #include "watch.h"
 #include "watch_utility.h"
-#include "watch_pin_service.h"
+#include "movement_pin_service.h"
 #include "TOTP.h"
 #include "base32.h"
 
@@ -194,8 +194,8 @@ bool totp_face_loop(movement_event_t event, void *context) {
 
     totp_state_t *totp_state = (totp_state_t *) context;
 
-    if (watch_pin_service_is_locked()) {
-        return watch_pin_service_loop(event, totp_state->face_index, "totp", "2f");
+    if (movement_pin_service_is_locked()) {
+        return movement_pin_service_loop(event, totp_state->face_index, "totp", "2f");
     }
 
     switch (event.event_type) {
