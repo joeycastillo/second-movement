@@ -22,17 +22,17 @@
  * SOFTWARE.
  */
 
-#include "watch_pin_service.h"
+#include "movement_pin_service.h"
 
 const uint8_t PIN_EMPTY_DIGIT = 15;
 const uint8_t PIN_EMPTY_FACE = 255;
 
-watch_pin_service_state_t pin_service_state = {
+movement_pin_service_state_t pin_service_state = {
     .enabled = false,
     .locked = false,
 };
 
-void watch_pin_service_enable(void) {
+void movement_pin_service_enable(void) {
     if (pin_service_state.enabled) {
         return;
     }
@@ -44,7 +44,7 @@ void watch_pin_service_enable(void) {
     pin_service_state.requesting_face_index = PIN_EMPTY_FACE;
 }
 
-bool watch_pin_service_is_locked() {
+bool movement_pin_service_is_locked() {
     if (!pin_service_state.enabled) {
         return false;
     }
@@ -52,12 +52,12 @@ bool watch_pin_service_is_locked() {
     return pin_service_state.locked;
 }
 
-void watch_pin_service_lock(void) {
+void movement_pin_service_lock(void) {
     pin_service_state.locked = true;
 }
 
-bool watch_pin_service_unlock(watch_pin_t pin) {
-    if (watch_pin_service_verify(pin)) {
+bool movement_pin_service_unlock(watch_pin_t pin) {
+    if (movement_pin_service_verify(pin)) {
         pin_service_state.locked = false;
         return true;
     } else {
@@ -65,12 +65,12 @@ bool watch_pin_service_unlock(watch_pin_t pin) {
     }
 }
 
-bool watch_pin_service_verify(watch_pin_t pin) {
+bool movement_pin_service_verify(watch_pin_t pin) {
     return pin.reg == pin_service_state.pin.reg;
 }
 
-bool watch_pin_service_set_pin(watch_pin_t old_pin, watch_pin_t new_pin) {
-    if (watch_pin_service_verify(old_pin)) {
+bool movement_pin_service_set_pin(watch_pin_t old_pin, watch_pin_t new_pin) {
+    if (movement_pin_service_verify(old_pin)) {
         pin_service_state.pin.reg = new_pin.reg;
         return true;
     } else {
@@ -78,23 +78,23 @@ bool watch_pin_service_set_pin(watch_pin_t old_pin, watch_pin_t new_pin) {
     }
 }
 
-uint8_t watch_pin_service_get_pin_face(void) {
+uint8_t movement_pin_service_get_pin_face(void) {
     return pin_service_state.pin_face_index;
 }
 
-void watch_pin_service_set_pin_face(uint8_t face_index) {
+void movement_pin_service_set_pin_face(uint8_t face_index) {
     pin_service_state.pin_face_index = face_index;
 }
 
-uint8_t watch_pin_service_get_requesting_face(void) {
+uint8_t movement_pin_service_get_requesting_face(void) {
     return pin_service_state.requesting_face_index;
 }
 
-void watch_pin_service_set_requesting_face(uint8_t face_index) {
+void movement_pin_service_set_requesting_face(uint8_t face_index) {
     pin_service_state.requesting_face_index = face_index;
 }
 
-bool watch_pin_service_loop(movement_event_t event, uint8_t face_index, char* face_title, char* face_title_fallback) {
+bool movement_pin_service_loop(movement_event_t event, uint8_t face_index, char* face_title, char* face_title_fallback) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
         case EVENT_TICK:
@@ -103,8 +103,8 @@ bool watch_pin_service_loop(movement_event_t event, uint8_t face_index, char* fa
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Unlock", " Unloc");
             break;
         case EVENT_ALARM_BUTTON_DOWN:
-            watch_pin_service_set_requesting_face(face_index);
-            movement_move_to_face(watch_pin_service_get_pin_face());
+            movement_pin_service_set_requesting_face(face_index);
+            movement_move_to_face(movement_pin_service_get_pin_face());
             break;
         default:
             return movement_default_loop_handler(event);

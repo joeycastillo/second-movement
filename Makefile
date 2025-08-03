@@ -106,7 +106,6 @@ SRCS += \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \
-  ./watch-library/shared/watch/watch_pin_service.c \
 
 
 SRCS += ./watch-library/shared/driver/lis2dw.c
@@ -159,6 +158,7 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
+  ./movement_pin_service.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk
