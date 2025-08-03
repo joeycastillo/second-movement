@@ -168,12 +168,6 @@ void watch_set_buzzer_on(void);
   */
 void watch_set_buzzer_off(void);
 
-/** @brief Returns the volume at which the buzzer should sound.
-  * @return If button sounds are turned on, then the currently configured volume. Otherwise,
-  *         MOVEMENT_DEFAULT_BUTTON_VOLUME.
-  */
-watch_buzzer_volume_t watch_buzzer_volume(void);
-
 /** @brief Plays the given note for a set duration at the currently configured volume.
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.

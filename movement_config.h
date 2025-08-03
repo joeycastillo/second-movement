@@ -27,7 +27,6 @@
 
 #include "movement_faces.h"
 
-#ifdef MOVEMENT_C_
 const watch_face_t watch_faces[] = {
     clock_face,
     world_clock_face,
@@ -41,7 +40,6 @@ const watch_face_t watch_faces[] = {
     settings_face,
     set_time_face
 };
-#endif
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
 

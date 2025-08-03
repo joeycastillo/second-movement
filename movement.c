@@ -45,7 +45,6 @@
 #include "delay.h"
 #include "thermistor_driver.h"
 
-#define MOVEMENT_C_
 #include "movement_config.h"
 
 #include "movement_custom_signal_tunes.h"
@@ -434,12 +433,22 @@ void movement_set_button_should_sound(bool value) {
     movement_state.settings.bit.button_should_sound = value;
 }
 
-watch_buzzer_volume_t movement_button_volume(void) {
-    return movement_state.settings.bit.button_volume;
+watch_buzzer_volume_t movement_volume(void) {
+    return movement_state.settings.bit.volume;
 }
 
+void movement_set_volume(watch_buzzer_volume_t value) {
+    movement_state.settings.bit.volume = value;
+}
+
+/* Deprecated. */
+watch_buzzer_volume_t movement_button_volume(void) {
+    return movement_volume();
+}
+
+/* Deprecated. */
 void movement_set_button_volume(watch_buzzer_volume_t value) {
-    movement_state.settings.bit.button_volume = value;
+    movement_set_volume(value);
 }
 
 movement_clock_mode_t movement_clock_mode_24h(void) {
@@ -654,7 +663,7 @@ void app_init(void) {
         movement_state.settings.bit.led_blue_color = MOVEMENT_DEFAULT_BLUE_COLOR;
     #endif
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
-        movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
+        movement_state.settings.bit.volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
 #ifdef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         movement_state.settings.bit.le_interval = 0;
@@ -835,7 +844,7 @@ bool app_loop(void) {
     if (movement_state.watch_face_changed) {
         if (movement_state.settings.bit.button_should_sound) {
             // low note for nonzero case, high note for return to watch_face 0
-            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, movement_state.settings.bit.button_volume);
+            watch_buzzer_play_note_with_volume(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50, movement_state.settings.bit.volume);
         }
         wf->resign(watch_face_contexts[movement_state.current_face_idx]);
         movement_state.current_face_idx = movement_state.next_face_idx;

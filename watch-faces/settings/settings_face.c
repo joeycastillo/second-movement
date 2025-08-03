@@ -71,7 +71,7 @@ static void volume_setting_display(uint8_t subsecond) {
 
         _Static_assert(WATCH_BUZZER_VOLUME_COUNT == 2, "unaccounted for volume level");
 
-        switch (movement_button_volume()) {
+        switch (movement_volume()) {
             case WATCH_BUZZER_VOLUME_SOFT:
                 buf[1] = 'L';   /* Low */
                 break;
@@ -89,16 +89,16 @@ static void volume_setting_display(uint8_t subsecond) {
 static void volume_setting_advance(void) {
     _Static_assert(WATCH_BUZZER_VOLUME_COUNT == 2, "unaccounted for volume level");
 
-    switch (movement_button_volume()) {
+    switch (movement_volume()) {
         case WATCH_BUZZER_VOLUME_SOFT:
             /* Was soft. make it loud. */
-            movement_set_button_volume(WATCH_BUZZER_VOLUME_LOUD);
+            movement_set_volume(WATCH_BUZZER_VOLUME_LOUD);
             volume_setting_display(1);
             watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_LOUD);
             break;
         case WATCH_BUZZER_VOLUME_LOUD:
             /* Was loud, make it soft. */
-            movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
+            movement_set_volume(WATCH_BUZZER_VOLUME_SOFT);
             volume_setting_display(1);
             watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, WATCH_BUZZER_VOLUME_SOFT);
             break;
