@@ -155,17 +155,36 @@ static udatetime_t _movement_convert_date_time_to_udate(watch_date_time_t date_t
 
 static void _movement_set_top_of_minute_alarm() {
     uint32_t counter = watch_rtc_get_counter();
+    uint32_t next_minute_counter;
     watch_date_time_t date_time = watch_rtc_get_date_time();
     uint32_t freq = watch_rtc_get_frequency();
+    uint32_t half_freq = freq >> 1;
+    uint32_t subsecond_mask = freq - 1;
+    uint32_t ticks_per_minute = watch_rtc_get_ticks_per_minute();
 
-    // remove subsecond from counter
-    counter &= ~(freq - 1);
+    // get the counter at the last second tick
+    next_minute_counter = counter & (~subsecond_mask);
+    // add/subtract half second shift to sync up second tick with the 1Hz interrupt
+    next_minute_counter += (counter & subsecond_mask) >= half_freq ? half_freq : -half_freq;
     // counter at the next top of the minute
-    counter += (60 - date_time.unit.second) * freq;
+    next_minute_counter += (60 - date_time.unit.second) * freq;
 
-    movement_volatile_state.minute_counter = counter;
+    // Since the minute alarm is very important, double/triple check to make sure that it will fire.
+    // These are theoretical corner cases that probably can't even happen, but since we do a subtraction
+    // above I wanna be certain that we don't schedule the next alarm at a counter value just before the
+    // current counter, which would result in the alarm firing after more than one year.
+    // This should be robust to the counter overflow, and we should ever iterate once at most.
+    if (next_minute_counter == counter) {
+        next_minute_counter += ticks_per_minute;
+    }
 
-    watch_rtc_register_comp_callback(cb_minute_alarm_fired, counter, MINUTE_TIMEOUT);
+    while ((next_minute_counter - counter) > ticks_per_minute) {
+        next_minute_counter += ticks_per_minute;
+    }
+
+    movement_volatile_state.minute_counter = next_minute_counter;
+
+    watch_rtc_register_comp_callback(cb_minute_alarm_fired, next_minute_counter, MINUTE_TIMEOUT);
 }
 
 static bool _movement_update_dst_offset_cache(void) {
@@ -850,9 +869,6 @@ void app_init(void) {
         watch_rtc_set_date_time(date_time);
     }
 
-    // set up the 1 minute alarm (for background tasks and low power updates)
-    _movement_set_top_of_minute_alarm();
-
     // register callbacks to be notified when buzzer starts/stops playing.
     // this is so movement can be notified even when triggered by a face bypassing movement
     watch_buzzer_register_global_callbacks(cb_buzzer_start, cb_buzzer_stop);
@@ -865,6 +881,9 @@ void app_init(void) {
     movement_state.light_on = false;
     movement_state.next_available_backup_register = 2;
     _movement_reset_inactivity_countdown();
+
+    // set up the 1 minute alarm (for background tasks and low power updates)
+    _movement_set_top_of_minute_alarm();
 }
 
 void app_wake_from_backup(void) {
@@ -1069,21 +1088,6 @@ bool app_loop(void) {
             movement_volatile_state.turn_led_off = false;
             movement_force_led_off();
         }
-    } 
-
-    // actually play the note sequence we were asked to play while in deep sleep.
-    if (movement_volatile_state.has_pending_sequence) {
-        movement_volatile_state.has_pending_sequence = false;
-        watch_buzzer_play_sequence_with_volume(_pending_sequence, movement_request_sleep, movement_button_volume());
-        // When this sequence is done playing, movement_request_sleep is invoked and the watch will go,
-        // back to sleep (unless the user interacts with it in the meantime)
-        _pending_sequence = NULL;
-    }
-
-    // handle top-of-minute tasks, if the alarm handler told us we need to
-    if (movement_volatile_state.minute_alarm_fired) {
-        movement_volatile_state.minute_alarm_fired = false;
-        _movement_handle_top_of_minute();
     }
 
     // if we have a scheduled background task, handle that here:
@@ -1123,6 +1127,12 @@ bool app_loop(void) {
         event_type++;
     }
 
+    // handle top-of-minute tasks, if the alarm handler told us we need to
+    if (movement_volatile_state.minute_alarm_fired) {
+        movement_volatile_state.minute_alarm_fired = false;
+        _movement_handle_top_of_minute();
+    }
+
     // Now handle the EVENT_TIMEOUT
     if (resign_timeout && movement_state.current_face_idx != 0) {
         event.event_type = EVENT_TIMEOUT;
@@ -1153,6 +1163,15 @@ bool app_loop(void) {
         // // this is a hack tho: waking from sleep mode, app_setup does get called, but it happens before we have reset our ticks.
         // // need to figure out if there's a better heuristic for determining how we woke up.
         app_setup();
+
+        // If we woke up to play a note sequence, actually play the note sequence we were asked to play while in deep sleep.
+        if (movement_volatile_state.has_pending_sequence) {
+            movement_volatile_state.has_pending_sequence = false;
+            watch_buzzer_play_sequence_with_volume(_pending_sequence, movement_request_sleep, movement_button_volume());
+            // When this sequence is done playing, movement_request_sleep is invoked and the watch will go,
+            // back to sleep (unless the user interacts with it in the meantime)
+            _pending_sequence = NULL;
+        }
     }
 #endif
 
@@ -1300,9 +1319,10 @@ void cb_minute_alarm_fired(void) {
 void cb_tick(void) {
     rtc_counter_t counter = watch_rtc_get_counter();
     uint32_t freq = watch_rtc_get_frequency();
+    uint32_t half_freq = freq >> 1;
     uint32_t subsecond_mask = freq - 1;
     movement_volatile_state.pending_events |= 1 << EVENT_TICK;
-    movement_volatile_state.subsecond = (counter & subsecond_mask) >> movement_state.tick_pern;
+    movement_volatile_state.subsecond = ((counter + half_freq) & subsecond_mask) >> movement_state.tick_pern;
 }
 
 void cb_accelerometer_event(void) {

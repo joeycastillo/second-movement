@@ -34,6 +34,7 @@ static const uint32_t RTC_OSC_DIV = 10;
 static const uint32_t RTC_OSC_HZ = 1 << RTC_OSC_DIV; // 2^10 = 1024
 static const uint32_t RTC_PRESCALER_DIV = 3;
 static const uint32_t RTC_CNT_HZ = RTC_OSC_HZ >> RTC_PRESCALER_DIV; // 1024 / 2^3 = 128
+static const uint32_t RTC_CNT_SUBSECOND_MASK = RTC_CNT_HZ - 1;
 static const uint32_t RTC_CNT_DIV = RTC_OSC_DIV - RTC_PRESCALER_DIV; // 7
 static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
 static const uint32_t RTC_CNT_TICKS_PER_HOUR = RTC_CNT_TICKS_PER_MINUTE * 60;
@@ -88,17 +89,31 @@ rtc_date_time_t watch_rtc_get_date_time(void) {
 }
 
 void watch_rtc_set_unix_time(unix_timestamp_t unix_time) {
-    //  time_backup + counter / RTC_CNT_HZ = unix_time
+    /* unix_time = time_backup + counter / RTC_CNT_HZ - 0.5
+     *
+     * Because of the way the hardware is designed, the periodic interrupts fire at the subsecond tick values
+     * according to the table below (for a 128Hz counter).
+     * since the 1Hz periodic interrupt is the most important, we shift the conversion from counter to timestamp by 64 ticks,
+     * so that the second changes at the top of the 1Hz interrupt. Hence the 0.5 factor in the equation above.
+     * 1Hz:   64
+     * 2Hz:   32, 96
+     * 4Hz:   16, 48, 80, 112
+     * 8Hz:   8, 24, 40, 56, 72, 88, 104, 120
+     * 16Hz:  4, 12, 20, ..., 124
+     * 32Hz:  2, 6, 10, ..., 126
+     * 64Hz:  1, 3, 5, ..., 127
+     * 128Hz: 0, 1, 2, ..., 127
+    */
     rtc_counter_t counter = rtc_get_counter();
-    unix_timestamp_t tb = unix_time - (counter >> RTC_CNT_DIV);
+    unix_timestamp_t tb = unix_time - (counter >> RTC_CNT_DIV) - ((counter & RTC_CNT_SUBSECOND_MASK) >> (RTC_CNT_DIV - 1)) + 1;
     watch_store_backup_data(tb, TB_BKUP_REG);
 }
 
 unix_timestamp_t watch_rtc_get_unix_time(void) {
-    //  time_backup + counter / RTC_CNT_HZ = unix_time
+    // unix_time = time_backup + counter / RTC_CNT_HZ - 0.5
     rtc_counter_t counter = rtc_get_counter();
     unix_timestamp_t tb = watch_get_backup_data(TB_BKUP_REG);
-    return tb + (counter >> RTC_CNT_DIV);
+    return tb + (counter >> RTC_CNT_DIV) + ((counter & RTC_CNT_SUBSECOND_MASK) >> (RTC_CNT_DIV - 1)) - 1;
 }
 
 rtc_counter_t watch_rtc_get_counter(void) {

@@ -31,6 +31,7 @@
 #include <emscripten/html5.h>
 
 static const uint32_t RTC_CNT_HZ = 128;
+static const uint32_t RTC_CNT_SUBSECOND_MASK = RTC_CNT_HZ - 1;
 static const uint32_t RTC_CNT_DIV = 7;
 static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
 static const uint32_t RTC_CNT_TICKS_PER_HOUR = RTC_CNT_TICKS_PER_MINUTE * 60;
@@ -98,15 +99,15 @@ rtc_date_time_t watch_rtc_get_date_time(void) {
 }
 
 void watch_rtc_set_unix_time(unix_timestamp_t unix_time) {
-    //  time_backup + counter / RTC_CNT_HZ = unix_time
+    // unix_time = time_backup + counter / RTC_CNT_HZ - 0.5
     rtc_counter_t counter = watch_rtc_get_counter();
-    reference_timestamp = unix_time - (counter >> RTC_CNT_DIV);
+    reference_timestamp = unix_time - (counter >> RTC_CNT_DIV) - ((counter & RTC_CNT_SUBSECOND_MASK) >> (RTC_CNT_DIV - 1)) + 1;
 }
 
 unix_timestamp_t watch_rtc_get_unix_time(void) {
-    //  time_backup + counter / RTC_CNT_HZ = unix_time
+    // unix_time = time_backup + counter / RTC_CNT_HZ - 0.5
     rtc_counter_t counter = watch_rtc_get_counter();
-    return reference_timestamp + (counter >> RTC_CNT_DIV);
+    return reference_timestamp + (counter >> RTC_CNT_DIV) + ((counter & RTC_CNT_SUBSECOND_MASK) >> (RTC_CNT_DIV - 1)) - 1;
 }
 
 rtc_counter_t watch_rtc_get_counter(void) {
