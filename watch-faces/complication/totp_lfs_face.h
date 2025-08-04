@@ -61,16 +61,16 @@ typedef struct {
     uint8_t current_index;
 } totp_lfs_state_t;
 
-void totp_face_lfs_setup(uint8_t watch_face_index, void ** context_ptr);
-void totp_face_lfs_activate(void *context);
-bool totp_face_lfs_loop(movement_event_t event, void *context);
-void totp_face_lfs_resign(void *context);
+void totp_lfs_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void totp_lfs_face_activate(void *context);
+bool totp_lfs_face_loop(movement_event_t event, void *context);
+void totp_lfs_face_resign(void *context);
 
-#define totp_face_lfs ((const watch_face_t){ \
-    totp_face_lfs_setup, \
-    totp_face_lfs_activate, \
-    totp_face_lfs_loop, \
-    totp_face_lfs_resign, \
+#define totp_lfs_face ((const watch_face_t){ \
+    totp_lfs_face_setup, \
+    totp_lfs_face_activate, \
+    totp_lfs_face_loop, \
+    totp_lfs_face_resign, \
     NULL, \
 })
 

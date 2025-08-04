@@ -3,9 +3,10 @@
 
 #include "movement.h"
 
-#define REIWA_LIMIT 2018 + 31
+#define REIWA_LIMIT 2018 + 99
 #define REIWA_GANNEN  2019
 #define HEISEI_GANNEN 1989
+#define SHOWA_GANNEN 1926
 
 typedef struct {
     bool active;
@@ -14,11 +15,11 @@ typedef struct {
     uint32_t real_year;     //The actual current year     
 } wareki_state_t;
 
-
 void wareki_setup(uint8_t watch_face_index, void ** context_ptr);
 void wareki_activate(void *context);
 bool wareki_loop(movement_event_t event, void *context);
 void wareki_resign(void *context);
+
 void addYear(wareki_state_t* state,int count);
 void subYear(wareki_state_t* state,int count);
 
