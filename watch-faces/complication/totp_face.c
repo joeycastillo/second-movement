@@ -37,6 +37,7 @@
 #include "totp_face.h"
 #include "watch.h"
 #include "watch_utility.h"
+#include "watch_pin_service.h"
 #include "TOTP.h"
 #include "base32.h"
 
@@ -170,6 +171,7 @@ void totp_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         totp_state_t *totp = malloc(sizeof(totp_state_t));
         totp->current_decoded_key = malloc(TOTP_FACE_MAX_KEY_LENGTH);
+        totp->face_index = watch_face_index;
         *context_ptr = totp;
     }
 }
@@ -191,6 +193,10 @@ void totp_face_activate(void *context) {
 bool totp_face_loop(movement_event_t event, void *context) {
 
     totp_state_t *totp_state = (totp_state_t *) context;
+
+    if (watch_pin_service_is_locked()) {
+        return watch_pin_service_loop(event, totp_state->face_index, "totp", "2f");
+    }
 
     switch (event.event_type) {
         case EVENT_TICK:

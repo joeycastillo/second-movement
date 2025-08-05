@@ -76,6 +76,7 @@ typedef struct {
     uint8_t current_index;
     uint8_t *current_decoded_key;
     size_t current_decoded_key_length;
+    uint8_t face_index;
 } totp_state_t;
 
 void totp_face_setup(uint8_t watch_face_index, void ** context_ptr);
