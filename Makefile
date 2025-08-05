@@ -106,6 +106,7 @@ SRCS += \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \
+  ./watch-library/shared/watch/watch_pin_service.c \
 
 
 SRCS += ./watch-library/shared/driver/lis2dw.c
