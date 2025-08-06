@@ -317,9 +317,7 @@ void _watch_disable_tcc(void) {
 }
 
 void watch_enable_leds(void) {
-    if (!tcc_is_enabled(0)) {
-        _watch_enable_tcc();
-    }
+    watch_enable_buzzer_and_leds();
 }
 
 void watch_disable_leds(void) {

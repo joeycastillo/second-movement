@@ -960,9 +960,6 @@ void app_setup(void) {
         }
 #endif
 
-        watch_enable_buzzer();
-        watch_enable_leds();
-
         movement_request_tick_frequency(1);
 
         for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
