@@ -67,6 +67,9 @@ typedef struct {
     movement_timeout_index_t timeout_index;
     volatile bool is_down;
     volatile rtc_counter_t down_timestamp;
+#if MOVEMENT_DEBOUNCE_TICKS
+    volatile rtc_counter_t up_timestamp;
+#endif
 } movement_button_t;
 
 /* Pieces of state that can be modified by the various interrupt callbacks.
@@ -1270,12 +1273,24 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
 
     uint32_t counter = watch_rtc_get_counter();
 
+#if MOVEMENT_DEBOUNCE_TICKS
+    if (
+        (counter - button->up_timestamp) <= MOVEMENT_DEBOUNCE_TICKS &&
+        (counter - button->down_timestamp) <= MOVEMENT_DEBOUNCE_TICKS
+    ) {
+        return event_type;
+    }
+#endif
+
     button->is_down = pin_level;
 
     if (pin_level) {
         button->down_timestamp = counter;
         event_type = button->down_event;
     } else {
+#if MOVEMENT_DEBOUNCE_TICKS
+        button->up_timestamp = counter;
+#endif
         if ((counter - button->down_timestamp) >= MOVEMENT_LONG_PRESS_TICKS) {
             event_type = button->down_event + 3;
         } else {
