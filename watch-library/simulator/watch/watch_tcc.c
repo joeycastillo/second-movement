@@ -28,16 +28,20 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
-static bool buzzer_enabled = false;
+static volatile bool buzzer_enabled = false;
 static uint32_t buzzer_period;
 
 void cb_watch_buzzer_seq(void *userData);
 
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
-static long _em_interval_id = 0;
+static volatile long _em_interval_id = 0;
 static int8_t *_sequence;
+static uint8_t _volume;
 static void (*_cb_finished)(void);
+static watch_cb_t _cb_start_global = NULL;
+static watch_cb_t _cb_stop_global = NULL;
+static volatile bool _buzzer_is_active = false;
 
 void _watch_enable_tcc(void) {}
 
@@ -47,15 +51,27 @@ static inline void _em_interval_stop() {
 }
 
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
-    if (_em_interval_id) _em_interval_stop();
-    watch_set_buzzer_off();
+    watch_buzzer_play_sequence_with_volume(note_sequence, callback_on_end, WATCH_BUZZER_VOLUME_LOUD);
+}
+
+void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callback_on_end)(void), watch_buzzer_volume_t volume) {
+    watch_buzzer_abort_sequence();
+
+    _buzzer_is_active = true;
+
+    if (_cb_start_global) {
+        _cb_start_global();
+    }
+
     _sequence = note_sequence;
     _cb_finished = callback_on_end;
+    _volume = volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25;
     _seq_position = 0;
     _tone_ticks = 0;
     _repeat_counter = -1;
     // prepare buzzer
     watch_enable_buzzer();
+    watch_set_buzzer_off();
     // initiate 64 hz callback
     _em_interval_id = emscripten_set_interval(cb_watch_buzzer_seq, (double)(1000/64), (void *)NULL);
 }
@@ -88,7 +104,7 @@ void cb_watch_buzzer_seq(void *userData) {
             if (note == BUZZER_NOTE_REST) {
                 watch_set_buzzer_off();
             } else {
-                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], 25);
+                watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], _volume);
                 watch_set_buzzer_on();
             }
             // set duration ticks and move to next tone
@@ -97,7 +113,6 @@ void cb_watch_buzzer_seq(void *userData) {
         } else {
             // end the sequence
             watch_buzzer_abort_sequence();
-            if (_cb_finished) _cb_finished();
         }
     } else _tone_ticks--;
 }
@@ -105,10 +120,32 @@ void cb_watch_buzzer_seq(void *userData) {
 void watch_buzzer_abort_sequence(void) {
     // ends/aborts the sequence
     if (_em_interval_id) _em_interval_stop();
+
     watch_set_buzzer_off();
+    watch_disable_buzzer();
+
+    if (!_buzzer_is_active) {
+        return;
+    }
+
+    _buzzer_is_active = false;
+
+    if (_cb_stop_global) {
+        _cb_stop_global();
+    }
+
+    if (_cb_finished) {
+        _cb_finished();
+    }
+}
+
+void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop) {
+    _cb_stop_global = cb_start;
+    _cb_stop_global = cb_stop;
 }
 
 void watch_enable_buzzer(void) {
+    watch_buzzer_abort_sequence();
     buzzer_enabled = true;
     buzzer_period = NotePeriods[BUZZER_NOTE_A4];
 
@@ -175,15 +212,17 @@ void watch_buzzer_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
 }
 
 void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t duration_ms, watch_buzzer_volume_t volume) {
-    if (note == BUZZER_NOTE_REST) {
-        watch_set_buzzer_off();
-    } else {
-        watch_set_buzzer_period_and_duty_cycle(NotePeriods[note], volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25);
-        watch_set_buzzer_on();
-    }
+    static int8_t single_note_sequence[3];
 
-    main_loop_sleep(duration_ms);
-    watch_set_buzzer_off();
+    single_note_sequence[0] = note;
+    // 64 ticks per second for the tc0?
+    // Each tick is approximately 15ms
+    uint16_t duration = duration_ms / 15;
+    if (duration > 127) duration = 127;
+    single_note_sequence[1] = (int8_t)duration;
+    single_note_sequence[2] = 0;
+
+    watch_buzzer_play_sequence_with_volume(single_note_sequence, NULL, volume);
 }
 
 void watch_enable_leds(void) {}
