@@ -198,7 +198,7 @@ void watch_rtc_disable_all_periodic_callbacks(void) {
     watch_rtc_disable_matching_periodic_callbacks(0xFF);
 }
 
-static void _watch_rtc_schedule_next_comp(void) {
+void watch_rtc_schedule_next_comp(void) {
     rtc_counter_t curr_counter = watch_rtc_get_counter();
     // If there is already a pending comp interrupt for this very tick, let it fire
     // And this function will be called again as soon as the interrupt fires.
@@ -245,7 +245,17 @@ void watch_rtc_register_comp_callback(watch_cb_t callback, rtc_counter_t counter
     comp_callbacks[index].callback = callback;
     comp_callbacks[index].enabled = true;
 
-    _watch_rtc_schedule_next_comp();
+    watch_rtc_schedule_next_comp();
+}
+
+void watch_rtc_register_comp_callback_no_schedule(watch_cb_t callback, rtc_counter_t counter, uint8_t index) {
+    if (index >= WATCH_RTC_N_COMP_CB) {
+        return;
+    }
+
+    comp_callbacks[index].counter = counter;
+    comp_callbacks[index].callback = callback;
+    comp_callbacks[index].enabled = true;
 }
 
 void watch_rtc_disable_comp_callback(uint8_t index) {
@@ -255,13 +265,21 @@ void watch_rtc_disable_comp_callback(uint8_t index) {
 
     comp_callbacks[index].enabled = false;
 
-    _watch_rtc_schedule_next_comp();
+    watch_rtc_schedule_next_comp();
+}
+
+void watch_rtc_disable_comp_callback_no_schedule(uint8_t index) {
+    if (index >= WATCH_RTC_N_COMP_CB) {
+        return;
+    }
+
+    comp_callbacks[index].enabled = false;
 }
 
 void watch_rtc_callback(uint16_t interrupt_cause) {
     // First read all relevant registers, to ensure no changes occurr during the callbacks
     uint16_t interrupt_enabled = RTC->MODE0.INTENSET.reg;
-    rtc_counter_t comp_counter = RTC->MODE0.COMP[0].reg;
+    rtc_counter_t counter = watch_rtc_get_counter();
 
 
     if ((interrupt_cause & interrupt_enabled) & RTC_MODE0_INTFLAG_PER_Msk) {
@@ -291,15 +309,18 @@ void watch_rtc_callback(uint16_t interrupt_cause) {
 
     if ((interrupt_cause & interrupt_enabled) & RTC_MODE0_INTFLAG_CMP0) {
         // The comp interrupt is generated one tick after the matched counter
-        // rtc_counter_t comp_counter = watch_rtc_get_counter() - 1;
+        rtc_counter_t comp_counter = counter - 1;
 
         for (uint8_t index = 0; index < WATCH_RTC_N_COMP_CB; ++index) {
-            if (comp_callbacks[index].enabled && comp_counter == comp_callbacks[index].counter) {
+            // Give it a little bit of wiggle room, if a comp callback is enabled and is just passed
+            if (comp_callbacks[index].enabled &&
+                (comp_counter - comp_callbacks[index].counter) <= RTC_CNT_HZ
+            ) {
                 comp_callbacks[index].enabled = false;
                 comp_callbacks[index].callback();
             }
         }
-        _watch_rtc_schedule_next_comp();
+        watch_rtc_schedule_next_comp();
     }
 
     if ((interrupt_cause & interrupt_enabled) & RTC_MODE0_INTFLAG_OVF) {

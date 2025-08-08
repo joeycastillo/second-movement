@@ -220,7 +220,7 @@ static inline void _movement_reset_inactivity_countdown(void) {
     rtc_counter_t counter = watch_rtc_get_counter();
     uint32_t freq = watch_rtc_get_frequency();
 
-    watch_rtc_register_comp_callback(
+    watch_rtc_register_comp_callback_no_schedule(
         cb_resign_timeout_interrupt,
         counter + movement_timeout_inactivity_deadlines[movement_state.settings.bit.to_interval] * freq,
         RESIGN_TIMEOUT
@@ -228,16 +228,19 @@ static inline void _movement_reset_inactivity_countdown(void) {
 
     movement_volatile_state.enter_sleep_mode = false;
 
-    watch_rtc_register_comp_callback(
+    watch_rtc_register_comp_callback_no_schedule(
         cb_sleep_timeout_interrupt,
         counter + movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval] * freq,
         SLEEP_TIMEOUT
     );
+
+    watch_rtc_schedule_next_comp();
 }
 
 static inline void _movement_disable_inactivity_countdown(void) {
-    watch_rtc_disable_comp_callback(RESIGN_TIMEOUT);
-    watch_rtc_disable_comp_callback(SLEEP_TIMEOUT);
+    watch_rtc_disable_comp_callback_no_schedule(RESIGN_TIMEOUT);
+    watch_rtc_disable_comp_callback_no_schedule(SLEEP_TIMEOUT);
+    watch_rtc_schedule_next_comp();
 }
 
 static void _movement_handle_top_of_minute(void) {
@@ -1194,9 +1197,11 @@ bool app_loop(void) {
 }
 
 static movement_event_type_t _process_button_event(bool pin_level, movement_button_t* button) {
+    movement_event_type_t event_type = EVENT_NONE;
+
     // This shouldn't happen normally
     if (pin_level == button->is_down) {
-        return EVENT_NONE;
+        return event_type;
     }
 
     uint32_t counter = watch_rtc_get_counter();
@@ -1206,43 +1211,42 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
     if (pin_level) {
         // We schedule a timeout to fire the longpress event
         button->down_timestamp = counter;
-        watch_rtc_register_comp_callback(button->cb_longpress, counter + MOVEMENT_LONG_PRESS_TICKS, button->timeout_index);
+        watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, counter + MOVEMENT_LONG_PRESS_TICKS, button->timeout_index);
         // force alarm off if the user pressed a button.
         watch_buzzer_abort_sequence();
-        return button->down_event;
+        event_type = button->down_event;
     } else {
         // We cancel the timeout if it hasn't fired yet
-        watch_rtc_disable_comp_callback(button->timeout_index);
+        watch_rtc_disable_comp_callback_no_schedule(button->timeout_index);
         if ((counter - button->down_timestamp) >= MOVEMENT_LONG_PRESS_TICKS) {
-            return button->down_event + 3;
+            event_type = button->down_event + 3;
         } else {
-            return button->down_event + 1;
+            event_type = button->down_event + 1;
         }
     }
+
+    // This will also schedule the comp callbacks above
+    _movement_reset_inactivity_countdown();
+
+    return event_type;
 }
 
 void cb_light_btn_interrupt(void) {
     bool pin_level = HAL_GPIO_BTN_LIGHT_read();
 
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.light_button);
-
-    _movement_reset_inactivity_countdown();
 }
 
 void cb_mode_btn_interrupt(void) {
     bool pin_level = HAL_GPIO_BTN_MODE_read();
 
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.mode_button);
-
-    _movement_reset_inactivity_countdown();
 }
 
 void cb_alarm_btn_interrupt(void) {
     bool pin_level = HAL_GPIO_BTN_ALARM_read();
 
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.alarm_button);
-
-    _movement_reset_inactivity_countdown();
 }
 
 static movement_event_type_t _process_button_longpress_timeout(movement_button_t* button) {

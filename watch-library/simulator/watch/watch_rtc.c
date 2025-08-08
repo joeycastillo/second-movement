@@ -65,7 +65,6 @@ watch_cb_t a4_callback;
 static void _watch_increase_counter(void *userData);
 static void _watch_process_periodic_callbacks(void);
 static void _watch_process_comp_callbacks(void);
-static void _watch_rtc_schedule_next_comp(void);
 
 bool _watch_rtc_is_enabled(void) {
     return counter_interval;
@@ -228,7 +227,7 @@ static void _watch_process_comp_callbacks(void) {
             }
         }
 
-        _watch_rtc_schedule_next_comp();
+        watch_rtc_schedule_next_comp();
     }
 }
 
@@ -272,7 +271,17 @@ void watch_rtc_register_comp_callback(watch_cb_t callback, rtc_counter_t counter
     comp_callbacks[index].callback = callback;
     comp_callbacks[index].enabled = true;
 
-    _watch_rtc_schedule_next_comp();
+    watch_rtc_schedule_next_comp();
+}
+
+void watch_rtc_register_comp_callback_no_schedule(watch_cb_t callback, rtc_counter_t counter, uint8_t index) {
+    if (index >= WATCH_RTC_N_COMP_CB) {
+        return;
+    }
+
+    comp_callbacks[index].counter = counter;
+    comp_callbacks[index].callback = callback;
+    comp_callbacks[index].enabled = true;
 }
 
 void watch_rtc_disable_comp_callback(uint8_t index) {
@@ -282,10 +291,18 @@ void watch_rtc_disable_comp_callback(uint8_t index) {
 
     comp_callbacks[index].enabled = false;
 
-    _watch_rtc_schedule_next_comp();
+    watch_rtc_schedule_next_comp();
 }
 
-static void _watch_rtc_schedule_next_comp(void) {
+void watch_rtc_disable_comp_callback_no_schedule(uint8_t index) {
+    if (index >= WATCH_RTC_N_COMP_CB) {
+        return;
+    }
+
+    comp_callbacks[index].enabled = false;
+}
+
+void watch_rtc_schedule_next_comp(void) {
     rtc_counter_t curr_counter = watch_rtc_get_counter();
     // If there is already a pending comp interrupt for this very tick, let it fire
     // And this function will be called again as soon as the interrupt fires.

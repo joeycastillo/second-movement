@@ -114,9 +114,37 @@ uint32_t watch_rtc_get_ticks_per_minute(void);
   */
 void watch_rtc_register_comp_callback(watch_cb_t callback, rtc_counter_t counter, uint8_t index);
 
+/** @brief Just like watch_rtc_register_comp_callback but doesn't actually schedule the callback
+  *
+  *  Useful if you need register multiple callbacks at once, avoids multiple calls to the expensive watch_rtc_schedule_next_comp:
+  *  Usage:
+  *  watch_rtc_register_comp_callback_no_schedule(cb0, counter0, index0);
+  *  watch_rtc_register_comp_callback_no_schedule(cb1, counter1, index1);
+  *  watch_rtc_schedule_next_comp();
+  */
+void watch_rtc_register_comp_callback_no_schedule(watch_cb_t callback, rtc_counter_t counter, uint8_t index);
+
 /** @brief Disables the specified comp callback.
   */
 void watch_rtc_disable_comp_callback(uint8_t index);
+
+/** @brief Just like watch_rtc_disable_comp_callback but doesn't actually schedule the callback
+  *
+  *  Useful if you need disable multiple callbacks at once, avoids multiple calls to the expensive watch_rtc_schedule_next_comp:
+  *  Usage:
+  *  watch_rtc_disable_comp_callback_no_schedule(index0);
+  *  watch_rtc_disable_comp_callback_no_schedule(index1);
+  *  watch_rtc_schedule_next_comp();
+  */
+/** @brief Disables the specified comp callback.
+  */
+void watch_rtc_disable_comp_callback_no_schedule(uint8_t index);
+
+/** @brief Determines the first comp callback that should fire and schedule it with the RTC
+  *
+  * You would never need to call this manually, unless you used the 'no_schedule' functions above.
+  */
+void watch_rtc_schedule_next_comp(void);
 
 /** @brief Disables the alarm callback.
   */
