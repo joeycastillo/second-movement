@@ -286,10 +286,15 @@ void watch_rtc_disable_comp_callback(uint8_t index) {
 }
 
 static void _watch_rtc_schedule_next_comp(void) {
-    scheduled_comp_counter = 0;
+    rtc_counter_t curr_counter = watch_rtc_get_counter();
+    // If there is already a pending comp interrupt for this very tick, let it fire
+    // And this function will be called again as soon as the interrupt fires.
+    if (curr_counter == scheduled_comp_counter) {
+        return;
+    }
 
     // The soonest we can schedule is the next tick
-    rtc_counter_t curr_counter = watch_rtc_get_counter() + 1;
+    curr_counter +=1;
 
     bool schedule_any = false;
     rtc_counter_t comp_counter;
@@ -309,6 +314,8 @@ static void _watch_rtc_schedule_next_comp(void) {
 
     if (schedule_any) {
         scheduled_comp_counter = comp_counter;
+    } else {
+        scheduled_comp_counter = curr_counter - 2;
     }
 }
 

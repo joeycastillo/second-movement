@@ -49,6 +49,8 @@ typedef struct {
     volatile bool enabled;
 } comp_cb_t;
 
+volatile uint32_t scheduled_comp_counter;
+
 watch_cb_t tick_callbacks[8];
 comp_cb_t comp_callbacks[WATCH_RTC_N_COMP_CB];
 watch_cb_t alarm_callback;
@@ -75,6 +77,8 @@ void _watch_rtc_init(void) {
         comp_callbacks[index].callback = NULL;
         comp_callbacks[index].enabled = false;
     }
+
+    scheduled_comp_counter = 0;
 
     NVIC_ClearPendingIRQ(RTC_IRQn);
     NVIC_EnableIRQ(RTC_IRQn);
@@ -195,10 +199,15 @@ void watch_rtc_disable_all_periodic_callbacks(void) {
 }
 
 static void _watch_rtc_schedule_next_comp(void) {
-    rtc_disable_compare_interrupt();
+    rtc_counter_t curr_counter = watch_rtc_get_counter();
+    // If there is already a pending comp interrupt for this very tick, let it fire
+    // And this function will be called again as soon as the interrupt fires.
+    if (curr_counter == scheduled_comp_counter) {
+        return;
+    }
 
-    // The soonest we can schedule is the next tick
-    rtc_counter_t curr_counter = watch_rtc_get_counter() + 1;
+    // Because of the hardware, the soonest we can schedule is the next tick
+    curr_counter +=1;
 
     bool schedule_any = false;
     rtc_counter_t comp_counter;
@@ -216,7 +225,14 @@ static void _watch_rtc_schedule_next_comp(void) {
     }
 
     if (schedule_any) {
-        rtc_enable_compare_interrupt(comp_counter);
+        // If we are changing the comp counter at the front of the line
+        if (comp_counter != scheduled_comp_counter) {
+            scheduled_comp_counter = comp_counter;
+            rtc_enable_compare_interrupt(comp_counter);
+        }
+    } else {
+        scheduled_comp_counter = curr_counter - 2;
+        rtc_disable_compare_interrupt();
     }
 }
 
@@ -224,8 +240,6 @@ void watch_rtc_register_comp_callback(watch_cb_t callback, rtc_counter_t counter
     if (index >= WATCH_RTC_N_COMP_CB) {
         return;
     }
-
-    rtc_disable_compare_interrupt();
 
     comp_callbacks[index].counter = counter;
     comp_callbacks[index].callback = callback;
@@ -238,8 +252,6 @@ void watch_rtc_disable_comp_callback(uint8_t index) {
     if (index >= WATCH_RTC_N_COMP_CB) {
         return;
     }
-
-    rtc_disable_compare_interrupt();
 
     comp_callbacks[index].enabled = false;
 
