@@ -51,7 +51,7 @@
               };
           in
           {
-            default = mkFW "sensorwatch_pro" "custom";
+            sensorwatch_pro_custom = mkFW "sensorwatch_pro" "custom";
             sensorwatch_pro_classic = mkFW "sensorwatch_pro" "classic";
             sensorwatch_green_classic = mkFW "sensorwatch_green" "classic";
             sensorwatch_red_classic = mkFW "sensorwatch_red" "classic";
