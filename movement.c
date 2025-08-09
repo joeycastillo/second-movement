@@ -84,6 +84,7 @@ typedef struct {
     volatile bool minute_alarm_fired;
     volatile bool is_buzzing;
     volatile uint8_t pending_sequence_priority;
+    volatile bool schedule_next_comp;
 
     // button tracking for long press
     movement_button_t mode_button;
@@ -184,7 +185,8 @@ static void _movement_set_top_of_minute_alarm() {
 
     movement_volatile_state.minute_counter = next_minute_counter;
 
-    watch_rtc_register_comp_callback(cb_minute_alarm_fired, next_minute_counter, MINUTE_TIMEOUT);
+    watch_rtc_register_comp_callback_no_schedule(cb_minute_alarm_fired, next_minute_counter, MINUTE_TIMEOUT);
+    movement_volatile_state.schedule_next_comp = true;
 }
 
 static bool _movement_update_dst_offset_cache(void) {
@@ -234,13 +236,66 @@ static inline void _movement_reset_inactivity_countdown(void) {
         SLEEP_TIMEOUT
     );
 
-    watch_rtc_schedule_next_comp();
+    movement_volatile_state.schedule_next_comp = true;
 }
 
 static inline void _movement_disable_inactivity_countdown(void) {
     watch_rtc_disable_comp_callback_no_schedule(RESIGN_TIMEOUT);
     watch_rtc_disable_comp_callback_no_schedule(SLEEP_TIMEOUT);
-    watch_rtc_schedule_next_comp();
+    movement_volatile_state.schedule_next_comp = true;
+}
+
+static void _movement_renew_top_of_minute_alarm(void) {
+    // Renew the alarm for a minute from the previous one (ensures no drift)
+    movement_volatile_state.minute_counter += watch_rtc_get_ticks_per_minute();
+    watch_rtc_register_comp_callback_no_schedule(cb_minute_alarm_fired, movement_volatile_state.minute_counter, MINUTE_TIMEOUT);
+    movement_volatile_state.schedule_next_comp = true;
+}
+
+static void _movement_handle_button_presses(uint32_t pending_events) {
+    bool any_up = false;
+    bool any_down = false;
+
+    movement_button_t* buttons[3] = {
+        &movement_volatile_state.mode_button,
+        &movement_volatile_state.light_button,
+        &movement_volatile_state.alarm_button
+    };
+
+    for (uint8_t i = 0; i < 3; i++) {
+        movement_button_t* button = buttons[i];
+
+        // If a button down occurred
+        if (pending_events & (1 << button->down_event)) {
+            watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, button->down_timestamp + MOVEMENT_LONG_PRESS_TICKS, button->timeout_index);
+            any_down = true;
+        }
+
+        // If a button up or button long up occurred
+        if (pending_events & (
+            (1 << (button->down_event + 1)) |
+            (1 << (button->down_event + 3))
+        )) {
+            // We cancel the timeout if it hasn't fired yet
+            watch_rtc_disable_comp_callback_no_schedule(button->timeout_index);
+            any_up = true;
+        }
+    }
+
+    if (any_down) {
+        // force alarm off if the user pressed a button.
+        watch_buzzer_abort_sequence();
+
+        // Delay auto light off if the user is still interacting with the watch.
+        if (movement_state.light_on) {
+            movement_illuminate_led();
+        }
+    }
+
+    if (any_down || any_up) {
+        _movement_reset_inactivity_countdown();
+        movement_volatile_state.schedule_next_comp = true;
+    }
 }
 
 static void _movement_handle_top_of_minute(void) {
@@ -328,11 +383,12 @@ void movement_illuminate_led(void) {
             // Set a timeout to turn off the light
             rtc_counter_t counter = watch_rtc_get_counter();
             uint32_t freq = watch_rtc_get_frequency();
-            watch_rtc_register_comp_callback(
+            watch_rtc_register_comp_callback_no_schedule(
                 cb_led_timeout_interrupt,
                 counter + (movement_state.settings.bit.led_duration * 2 - 1) * freq,
                 LED_TIMEOUT
             );
+            movement_volatile_state.schedule_next_comp = true;
         }
     }
 }
@@ -342,13 +398,15 @@ void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue) {
     movement_state.light_on = true;
     watch_set_led_color_rgb(red, green, blue);
     rtc_counter_t counter = watch_rtc_get_counter();
-    watch_rtc_register_comp_callback(cb_led_timeout_interrupt, counter + 32767, LED_TIMEOUT);
+    watch_rtc_register_comp_callback_no_schedule(cb_led_timeout_interrupt, counter + 32767, LED_TIMEOUT);
+    movement_volatile_state.schedule_next_comp = true;
 }
 
 void movement_force_led_off(void) {
     movement_state.light_on = false;
     // The led timeout probably already triggered, but still disable just in case we are switching off the light by other means
-    watch_rtc_disable_comp_callback(LED_TIMEOUT);
+    watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
+    movement_volatile_state.schedule_next_comp = true;
     watch_set_led_off();
 }
 
@@ -1018,6 +1076,7 @@ static void _sleep_mode_app_loop(void) {
         // we also have to handle top-of-the-minute tasks here in the mini-runloop
         if (movement_volatile_state.minute_alarm_fired) {
             movement_volatile_state.minute_alarm_fired = false;
+            _movement_renew_top_of_minute_alarm();
             _movement_handle_top_of_minute();
         }
 
@@ -1032,6 +1091,12 @@ static void _sleep_mode_app_loop(void) {
             movement_volatile_state.is_sleeping = false;
 
             return;
+        }
+
+        // If we have made changes to any of the RTC comp timers, schedule the next one in the queue
+        if (movement_volatile_state.schedule_next_comp) {
+            movement_volatile_state.schedule_next_comp = false;
+            watch_rtc_schedule_next_comp();
         }
 
         // otherwise enter sleep mode, until either the top of the minute interrupt or extwake wakes us up.
@@ -1093,6 +1158,9 @@ bool app_loop(void) {
         }
     }
 
+    // handle any button up/down events that occurred, e.g. schedule longpress timeouts, reset inactivity, etc.
+    _movement_handle_button_presses(pending_events);
+
     // if we have a scheduled background task, handle that here:
     if (
         (pending_events & (1 << EVENT_TICK))
@@ -1100,17 +1168,6 @@ bool app_loop(void) {
         && movement_state.has_scheduled_background_task
     ) {
         _movement_handle_scheduled_tasks();
-    }
-
-    // Delay auto light off if the user is still interacting with the watch.
-    if (movement_state.light_on) {
-        if (pending_events & (
-            (1 << EVENT_LIGHT_BUTTON_DOWN) |
-            (1 << EVENT_MODE_BUTTON_DOWN) |
-            (1 << EVENT_ALARM_BUTTON_DOWN)
-        )) {
-            movement_illuminate_led();
-        }
     }
 
     // Pop the EVENT_TIMEOUT out of the pending_events so it can be handled separately
@@ -1133,6 +1190,7 @@ bool app_loop(void) {
     // handle top-of-minute tasks, if the alarm handler told us we need to
     if (movement_volatile_state.minute_alarm_fired) {
         movement_volatile_state.minute_alarm_fired = false;
+        _movement_renew_top_of_minute_alarm();
         _movement_handle_top_of_minute();
     }
 
@@ -1178,6 +1236,12 @@ bool app_loop(void) {
     }
 #endif
 
+    // If we have made changes to any of the RTC comp timers, schedule the next one in the queue
+    if (movement_volatile_state.schedule_next_comp) {
+        movement_volatile_state.schedule_next_comp = false;
+        watch_rtc_schedule_next_comp();
+    }
+
 #if __EMSCRIPTEN__
     shell_task();
 #else
@@ -1209,24 +1273,15 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
     button->is_down = pin_level;
 
     if (pin_level) {
-        // We schedule a timeout to fire the longpress event
         button->down_timestamp = counter;
-        watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, counter + MOVEMENT_LONG_PRESS_TICKS, button->timeout_index);
-        // force alarm off if the user pressed a button.
-        watch_buzzer_abort_sequence();
         event_type = button->down_event;
     } else {
-        // We cancel the timeout if it hasn't fired yet
-        watch_rtc_disable_comp_callback_no_schedule(button->timeout_index);
         if ((counter - button->down_timestamp) >= MOVEMENT_LONG_PRESS_TICKS) {
             event_type = button->down_event + 3;
         } else {
             event_type = button->down_event + 1;
         }
     }
-
-    // This will also schedule the comp callbacks above
-    _movement_reset_inactivity_countdown();
 
     return event_type;
 }
@@ -1314,10 +1369,6 @@ void cb_minute_alarm_fired(void) {
 #if __EMSCRIPTEN__
     _wake_up_simulator();
 #endif
-
-    // Renew the alarm for a minute from the previous one (ensures no drift)
-    movement_volatile_state.minute_counter += watch_rtc_get_ticks_per_minute();
-    watch_rtc_register_comp_callback(cb_minute_alarm_fired, movement_volatile_state.minute_counter, MINUTE_TIMEOUT);
 }
 
 void cb_tick(void) {
