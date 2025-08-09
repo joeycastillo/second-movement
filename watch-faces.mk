@@ -13,6 +13,7 @@ SRCS += \
   ./watch-faces/complication/moon_phase_face.c \
   ./watch-faces/complication/days_since_face.c \
   ./watch-faces/complication/breathing_face.c \
+  ./watch-faces/complication/prayer_times_face.c \
   ./watch-faces/complication/squash_face.c \
   ./watch-faces/complication/totp_face.c \
   ./watch-faces/complication/totp_lfs_face.c \
@@ -29,6 +30,7 @@ SRCS += \
   ./watch-faces/sensor/voltage_face.c \
   ./watch-faces/settings/set_time_face.c \
   ./watch-faces/settings/settings_face.c \
+  ./watch-faces/settings/set_location_face.c \
   ./watch-faces/settings/finetune_face.c \
   ./watch-faces/settings/nanosec_face.c \
   ./watch-faces/io/chirpy_demo_face.c \
