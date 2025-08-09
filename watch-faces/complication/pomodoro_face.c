@@ -23,14 +23,64 @@
  */
 
 #include "pomodoro_face.h"
+#include "watch.h"
+#include "watch_utility.h"
 #include <stdlib.h>
 #include <string.h>
+
+static const uint8_t settings[2][3] = {{1, 1, 2}, {25, 5, 15}};
+
+static void _pomodoro_face_pause_timer(pomodoro_state_t *state) {
+  movement_cancel_background_task_for_face(state->watch_face_index);
+}
+
+static void _pomodoro_face_start_timer(pomodoro_state_t *state) {
+  uint32_t now = watch_utility_date_time_to_unix_time(
+      movement_get_utc_date_time(), movement_get_current_timezone_offset());
+  state->target_ts =
+      watch_utility_offset_timestamp(now, 0, state->min, state->sec);
+  state->now_ts = now;
+  watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(
+      state->target_ts, movement_get_current_timezone_offset());
+  movement_schedule_background_task_for_face(state->watch_face_index,
+                                             target_dt);
+}
+
+static void _pomodoro_face_update_lcd(pomodoro_state_t *state) {
+  char buf[9];
+  uint32_t delta;
+  div_t res;
+  char mode[6];
+  if (state->status != pomodoro_status_ready) {
+    if (state->mode == pomodoro_mode_focus) {
+      strcpy(mode, "focus");
+    } else if (state->mode == pomodoro_mode_break ||
+               state->mode == pomodoro_mode_long_break) {
+      strcpy(mode, "break");
+    }
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, mode, mode);
+  } else {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "POM", "PO");
+  }
+
+  delta = state->target_ts - state->now_ts;
+  res = div(delta, 60);
+  state->sec = res.rem;
+  state->min = res.quot;
+  sprintf(buf, "00%02d%02d", state->min, state->sec);
+
+  watch_display_text(WATCH_POSITION_BOTTOM, buf);
+}
 
 void pomodoro_face_setup(uint8_t watch_face_index, void **context_ptr) {
   (void)watch_face_index;
   if (*context_ptr == NULL) {
     *context_ptr = malloc(sizeof(pomodoro_state_t));
     memset(*context_ptr, 0, sizeof(pomodoro_state_t));
+    pomodoro_state_t *state = (pomodoro_state_t *)*context_ptr;
+    state->watch_face_index = watch_face_index;
+    state->status = pomodoro_status_ready;
+    state->setting = 0;
     // Do any one-time tasks in here; the inside of this conditional happens
     // only at boot.
   }
@@ -40,7 +90,13 @@ void pomodoro_face_setup(uint8_t watch_face_index, void **context_ptr) {
 
 void pomodoro_face_activate(void *context) {
   pomodoro_state_t *state = (pomodoro_state_t *)context;
-
+  if (state->status == pomodoro_status_running) {
+    watch_date_time_t now = movement_get_utc_date_time();
+    state->now_ts = watch_utility_date_time_to_unix_time(
+        now, movement_get_current_timezone_offset());
+  }
+  watch_set_colon();
+  movement_request_tick_frequency(1);
   // Handle any tasks related to your watch face coming on screen.
 }
 
@@ -50,9 +106,14 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
   switch (event.event_type) {
   case EVENT_ACTIVATE:
     // Show your initial UI here.
+    _pomodoro_face_update_lcd(state);
     break;
   case EVENT_TICK:
     // If needed, update your display here.
+    if (state->status == pomodoro_status_running) {
+      state->now_ts++;
+    }
+    _pomodoro_face_update_lcd(state);
     break;
   case EVENT_LIGHT_BUTTON_UP:
     // You can use the Light button for your own purposes. Note that by default,
@@ -62,6 +123,43 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     break;
   case EVENT_ALARM_BUTTON_UP:
     // Just in case you have need for another button.
+    if (state->status == pomodoro_status_ready) {
+      state->status = pomodoro_status_running;
+      state->min = settings[state->setting][0];
+      state->mode = pomodoro_mode_focus;
+      _pomodoro_face_start_timer(state);
+    } else if (state->status == pomodoro_status_running) {
+      state->status = pomodoro_status_pause;
+      _pomodoro_face_pause_timer(state);
+    } else if (state->status == pomodoro_status_pause) {
+      state->status = pomodoro_status_running;
+      _pomodoro_face_start_timer(state);
+    }
+    _pomodoro_face_update_lcd(state);
+    break;
+  case EVENT_BACKGROUND_TASK:
+    movement_play_alarm();
+    if (state->mode == pomodoro_mode_focus) {
+      state->count++;
+      if (state->count == 4) {
+        state->count = 0;
+        state->mode = pomodoro_mode_long_break;
+        state->min = settings[state->setting][2];
+        _pomodoro_face_start_timer(state);
+      } else {
+        state->mode = pomodoro_mode_break;
+        state->min = settings[state->setting][1];
+        _pomodoro_face_start_timer(state);
+      }
+    } else if (state->mode == pomodoro_mode_break) {
+      state->mode = pomodoro_mode_focus;
+      state->min = settings[state->setting][0];
+      _pomodoro_face_start_timer(state);
+    } else if (state->mode == pomodoro_mode_long_break) {
+      state->mode = pomodoro_mode_focus;
+      state->min = settings[state->setting][1];
+      _pomodoro_face_start_timer(state);
+    }
     break;
   case EVENT_TIMEOUT:
     // Your watch face will receive this event after a period of inactivity. If

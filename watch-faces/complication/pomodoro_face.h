@@ -33,9 +33,28 @@
  *
  */
 
+typedef enum {
+  pomodoro_status_ready,
+  pomodoro_status_running,
+  pomodoro_status_pause
+} pomodoro_status_t;
+
+typedef enum {
+  pomodoro_mode_focus,
+  pomodoro_mode_break,
+  pomodoro_mode_long_break
+} pomodoro_mode_t;
+
 typedef struct {
-  // Anything you need to keep track of, put it here!
-  uint8_t unused;
+  pomodoro_status_t status;
+  pomodoro_mode_t mode;
+  uint8_t watch_face_index;
+  uint8_t setting;
+  uint32_t now_ts;
+  uint32_t target_ts;
+  uint8_t sec;
+  uint8_t min;
+  uint8_t count;
 } pomodoro_state_t;
 
 void pomodoro_face_setup(uint8_t watch_face_index, void **context_ptr);
