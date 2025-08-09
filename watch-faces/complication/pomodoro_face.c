@@ -30,6 +30,11 @@
 
 static const uint8_t settings[2][3] = {{1, 1, 2}, {25, 5, 15}};
 
+static void _pomodoro_face_reset_timer(pomodoro_state_t *state) {
+  state->status = pomodoro_status_ready;
+  watch_clear_display();
+}
+
 static void _pomodoro_face_pause_timer(pomodoro_state_t *state) {
   movement_cancel_background_task_for_face(state->watch_face_index);
 }
@@ -126,6 +131,9 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     // Movement will also illuminate the LED in response to
     // EVENT_LIGHT_BUTTON_DOWN; to suppress that behavior, add an empty case for
     // EVENT_LIGHT_BUTTON_DOWN.
+    if (state->status == pomodoro_status_pause) {
+      _pomodoro_face_reset_timer(state);
+    }
     break;
   case EVENT_ALARM_BUTTON_UP:
     // Just in case you have need for another button.
