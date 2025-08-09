@@ -59,17 +59,23 @@ static void _pomodoro_face_update_lcd(pomodoro_state_t *state) {
       strcpy(mode, "break");
     }
     watch_display_text_with_fallback(WATCH_POSITION_TOP, mode, mode);
+
+    delta = state->target_ts - state->now_ts;
+    res = div(delta, 60);
+    state->sec = res.rem;
+    state->min = res.quot;
+    sprintf(buf, "00%02d%02d", state->min, state->sec);
+
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
   } else {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "POM", "PO");
+    char times[7];
+
+    sprintf(times, "%02d%02d%02d", settings[state->setting][0],
+            settings[state->setting][1], settings[state->setting][2]);
+
+    watch_display_text(WATCH_POSITION_BOTTOM, times);
   }
-
-  delta = state->target_ts - state->now_ts;
-  res = div(delta, 60);
-  state->sec = res.rem;
-  state->min = res.quot;
-  sprintf(buf, "00%02d%02d", state->min, state->sec);
-
-  watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 void pomodoro_face_setup(uint8_t watch_face_index, void **context_ptr) {
