@@ -156,7 +156,7 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     _pomodoro_face_update_lcd(state);
     break;
   case EVENT_BACKGROUND_TASK:
-    movement_play_alarm();
+    watch_buzzer_play_note(BUZZER_NOTE_C5, 100);
     if (state->mode == pomodoro_mode_focus) {
       state->count++;
       if (state->count == 4) {
