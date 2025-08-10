@@ -27,9 +27,27 @@
 #include "movement.h"
 
 /*
- * A DESCRIPTION OF YOUR WATCH FACE
+ * POMODORO TIMER face
  *
- * and a description of how use it
+ * Heavily based on the COUNTDOWN face, this faces uses the same base to setup a
+ * infinite cycle of a Pomodoro Timer for studying or concentration time.
+ *
+ * The Initial UI shows the letters POM (or PO in the classic screen) and the
+ * numbers of the selected times for the pomodoro session. In the hours section
+ * it shows the focus minutes, in the minutes shows the time for the breaks and
+ * in the seconds it shows the time for the long break after 4 pomodoros.
+ *
+ * Buttons:
+ * - A long press on the alarm button in this screen changes the minutes for the
+ * session.
+ * - Pressing the alarm button will initiate the timer with the chosen settings.
+ * The words "focus" and "break" (or "FO" and "BR" in the classic screen) will
+ * be shown in the screen to know which mode the timer is.
+ * - When the timer is running a press in the alarm button will stop the timer.
+ * - The light button will reset the face when the timer is stopped.
+ *
+ * Every time the timer finishes a beep will sound and the next timer will start
+ * inmediatly.
  *
  */
 
