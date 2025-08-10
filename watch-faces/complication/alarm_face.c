@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2022 Josh Berson, building on Wesley Ellis’ countdown_face.c
  * Copyright (c) 2025 Joey Castillo
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,6 +76,7 @@ void alarm_face_setup(uint8_t watch_face_index, void **context_ptr) {
 void alarm_face_activate(void *context) {
     alarm_face_state_t *state = (alarm_face_state_t *)context;
     state->setting_mode = ALARM_FACE_SETTING_MODE_NONE;
+    state->quick_increase = 0;
 }
 void alarm_face_resign(void *context) {
     (void) context;
@@ -91,14 +93,39 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             _alarm_face_display_alarm_time(state);
             break;
         case EVENT_TICK:
-            // No action needed for tick events in normal mode; we displayed our stuff in EVENT_ACTIVATE.
-            if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE)
-                break;
+            switch (state->setting_mode) {
+                // No action needed for tick events in normal mode; we displayed our stuff in EVENT_ACTIVATE.
+                case ALARM_FACE_SETTING_MODE_NONE:
+                    break;
 
-            // but in settings mode, we need to blink up the parameter we're setting.
-            _alarm_face_display_alarm_time(state);
-            if (event.subsecond % 2 == 0) 
-                watch_display_text((state->setting_mode == ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
+                // in settings mode, we need to either quick increase or blink up the parameter we're setting.
+                case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                    if (state->quick_increase) {
+                        // increment hour, wrap around to 0 at 23.
+                        state->hour = (state->hour + 1) % 24;
+                        _alarm_face_display_alarm_time(state);
+                    } else {
+                        _alarm_face_display_alarm_time(state);
+                        if (event.subsecond % 2 == 0) {
+                            watch_display_text(WATCH_POSITION_HOURS, "  ");
+                        }
+                    }
+                    break;
+
+                case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                    if (state->quick_increase) {
+                        // increment minute, wrap around to 0 at 59.
+                        state->minute = (state->minute + 1) % 60;
+                        _alarm_face_display_alarm_time(state);
+                    } else {
+                        _alarm_face_display_alarm_time(state);
+                        if (event.subsecond % 2 == 0) {
+                            watch_display_text(WATCH_POSITION_MINUTES, "  ");
+                        }
+                    }
+                    break;
+            }
+
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             switch (state->setting_mode) {
@@ -124,23 +151,25 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     break;
             }
             break;
-        case EVENT_ALARM_BUTTON_UP:
+        case EVENT_LIGHT_LONG_PRESS:
             if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
-                // in normal mode, toggle alarm on/off.
-                state->alarm_is_on ^= 1;
-                if ( state->alarm_is_on ) {
-                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(true);
-                } else {
-                    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-                    movement_set_alarm_enabled(false);
-                }
+                // long press in normal mode: move to hour setting mode, request fast tick.
+                state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;
+                movement_request_tick_frequency(4);
+                button_beep();
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             switch (state->setting_mode) {
                 case ALARM_FACE_SETTING_MODE_NONE:
-                    // nothing to do here, alarm toggle is handled in EVENT_ALARM_BUTTON_UP.
+                    state->alarm_is_on ^= 1;
+                    if ( state->alarm_is_on ) {
+                        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                    } else {
+                        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+                    }
+
+                    movement_set_alarm_enabled(state->alarm_is_on);
                     break;
                 case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                     // increment hour, wrap around to 0 at 23.
@@ -154,11 +183,25 @@ bool alarm_face_loop(movement_event_t event, void *context) {
             _alarm_face_display_alarm_time(state);
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (state->setting_mode == ALARM_FACE_SETTING_MODE_NONE) {
-                // long press in normal mode: move to hour setting mode, request fast tick.
-                state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;
-                movement_request_tick_frequency(4);
-                button_beep();
+            switch (state->setting_mode) {
+                case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                    state->quick_increase = 1;
+                    movement_request_tick_frequency(8);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case EVENT_ALARM_LONG_UP:
+            switch (state->setting_mode) {
+                case ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                case ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                    state->quick_increase = 0;
+                    movement_request_tick_frequency(4);
+                    break;
+                default:
+                    break;
             }
             break;
         case EVENT_BACKGROUND_TASK:
