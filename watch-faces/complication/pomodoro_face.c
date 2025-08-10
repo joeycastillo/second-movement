@@ -158,6 +158,17 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     }
     _pomodoro_face_update_lcd(state);
     break;
+  case EVENT_ALARM_LONG_PRESS:
+    if (state->status == pomodoro_status_ready) {
+      if (state->status == pomodoro_status_ready) {
+        if (state->setting == (sizeof(settings) / sizeof(settings[0])) - 1) {
+          state->setting = 0;
+        } else {
+          state->setting++;
+        }
+      }
+    }
+    break;
   case EVENT_BACKGROUND_TASK:
     watch_buzzer_play_note(BUZZER_NOTE_C5, 100);
     if (state->mode == pomodoro_mode_focus) {
