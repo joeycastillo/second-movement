@@ -32,6 +32,8 @@ static const uint8_t settings[2][3] = {{1, 1, 2}, {25, 5, 15}};
 
 static void _pomodoro_face_reset_timer(pomodoro_state_t *state) {
   state->status = pomodoro_status_ready;
+  state->min = 0;
+  state->sec = 0;
   watch_clear_display();
 }
 
