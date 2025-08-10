@@ -28,7 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const uint8_t settings[2][3] = {{1, 1, 2}, {25, 5, 15}};
+static const uint8_t settings[4][3] = {
+    {15, 5, 15}, {25, 5, 15}, {30, 5, 20}, {50, 10, 30}};
 
 static void _pomodoro_face_reset_timer(pomodoro_state_t *state) {
   state->status = pomodoro_status_ready;
