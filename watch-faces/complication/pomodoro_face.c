@@ -133,7 +133,11 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     // EVENT_LIGHT_BUTTON_DOWN.
     if (state->status == pomodoro_status_pause) {
       _pomodoro_face_reset_timer(state);
+    } else {
+      movement_illuminate_led();
     }
+    break;
+  case EVENT_LIGHT_BUTTON_DOWN:
     break;
   case EVENT_ALARM_BUTTON_UP:
     // Just in case you have need for another button.
