@@ -101,8 +101,10 @@ static void _alarm_face_update_indicators(alarm_face_state_t *state) {
 
     if ( chime_is_on(state) ) {
         watch_set_indicator(WATCH_INDICATOR_BELL);
+        movement_set_signal_enabled(true);
     } else {
         watch_clear_indicator(WATCH_INDICATOR_BELL);
+        movement_set_signal_enabled(false);
     }
 }
 
