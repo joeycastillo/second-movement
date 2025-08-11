@@ -512,6 +512,14 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
 }
 
+bool movement_signal_enabled(void) {
+    return movement_state.signal_enabled;
+}
+
+void movement_set_signal_enabled(bool value) {
+    movement_state.signal_enabled = value;
+}
+
 bool movement_enable_tap_detection_if_available(void) {
     if (movement_state.has_lis2dw) {
         // configure tap duration threshold and enable Z axis
