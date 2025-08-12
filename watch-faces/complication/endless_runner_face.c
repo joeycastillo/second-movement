@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "endless_runner_face.h"
+#include "delay.h"
 
 typedef enum {
     JUMPING_FINAL_FRAME = 0,
