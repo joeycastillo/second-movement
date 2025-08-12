@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "higher_lower_game_face.h"
-#include "watch_private_display.h"
+#include "watch_common_display.h"
 
 #define TITLE_TEXT "Hi-Lo"
 #define GAME_BOARD_SIZE 6
@@ -151,9 +151,14 @@ static void init_game(void) {
 }
 
 static void set_segment_at_position(segment_t segment, uint8_t position) {
-    const uint64_t position_segment_data = (Segment_Map[position] >> (8 * (uint8_t) segment)) & 0xFF;
-    const uint8_t com_pin = position_segment_data >> 6;
-    const uint8_t seg = position_segment_data & 0x3F;
+    digit_mapping_t segmap;
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        segmap = Custom_LCD_Display_Mapping[position];
+    } else {
+        segmap = Classic_LCD_Display_Mapping[position];
+    }
+    const uint8_t com_pin = segmap.segment[segment].address.com;
+    const uint8_t seg = segmap.segment[segment].address.seg;
     watch_set_pixel(com_pin, seg);
 }
 
