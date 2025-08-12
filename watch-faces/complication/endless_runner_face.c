@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "endless_runner_face.h"
+#include "delay.h"
 
 typedef enum {
     JUMPING_FINAL_FRAME = 0,
@@ -77,6 +78,23 @@ typedef struct {
     uint8_t fuel;
 } game_state_t;
 
+// always-on, left, right, bottom, jump-top, jump-left, jump-right
+int8_t classic_ball_arr_com[] = {1, 0, 1, 0, 2, 1, 2};
+int8_t classic_ball_arr_seg[] = {20, 20, 21, 21, 20, 17, 21};
+int8_t custom_ball_arr_com[] = {2, 1, 1, 0, 3, 3, 2};
+int8_t custom_ball_arr_seg[] = {15, 15, 14, 15, 14, 15, 14};
+
+// obstacle 0-11
+int8_t classic_obstacle_arr_com[] = {0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0};
+int8_t classic_obstacle_arr_seg[] = {18, 19, 20, 21, 22, 23, 0, 1, 2, 4, 5, 6};
+int8_t custom_obstacle_arr_com[] = {1, 1, 1, 1, 1, 0, 1, 0, 3, 0, 0, 2};
+int8_t custom_obstacle_arr_seg[] = {22, 16, 15, 14, 1, 2, 3, 4, 4, 5, 6, 7};
+
+int8_t *ball_arr_com;
+int8_t *ball_arr_seg;
+int8_t *obstacle_arr_com;
+int8_t *obstacle_arr_seg;
+
 static game_state_t game_state;
 static const uint8_t _num_bits_obst_pattern = sizeof(game_state.obst_pattern) * 8;
 
@@ -84,7 +102,7 @@ static void print_binary(uint32_t value, int bits) {
 #if __EMSCRIPTEN__
     for (int i = bits - 1; i >= 0; i--) {
         // Print each bit
-        printf("%lu", (value >> i) & 1);
+        printf("%u", (value >> i) & 1);
         // Optional: add a space every 4 bits for readability
         if (i % 4 == 0 && i != 0) {
             printf(" ");
@@ -188,22 +206,22 @@ static uint32_t get_random_legal(uint32_t prev_val, uint16_t difficulty) {
 
 static void display_ball(bool jumping) {
     if (!jumping) {
-        watch_set_pixel(0, 21);
-        watch_set_pixel(1, 21);
-        watch_set_pixel(0, 20);
-        watch_set_pixel(1, 20);
-        watch_clear_pixel(1, 17);
-        watch_clear_pixel(2, 20);
-        watch_clear_pixel(2, 21);     
+        watch_set_pixel(ball_arr_com[3], ball_arr_seg[3]);
+        watch_set_pixel(ball_arr_com[2], ball_arr_seg[2]);
+        watch_set_pixel(ball_arr_com[1], ball_arr_seg[1]);
+        watch_set_pixel(ball_arr_com[0], ball_arr_seg[0]);
+        watch_clear_pixel(ball_arr_com[6], ball_arr_seg[6]);
+        watch_clear_pixel(ball_arr_com[5], ball_arr_seg[5]);
+        watch_clear_pixel(ball_arr_com[4], ball_arr_seg[4]);
     }
     else {
-        watch_clear_pixel(0, 21);
-        watch_clear_pixel(1, 21);
-        watch_clear_pixel(0, 20);
-        watch_set_pixel(1, 20);
-        watch_set_pixel(1, 17);
-        watch_set_pixel(2, 20);
-        watch_set_pixel(2, 21);
+        watch_clear_pixel(ball_arr_com[3], ball_arr_seg[3]);
+        watch_clear_pixel(ball_arr_com[2], ball_arr_seg[2]);
+        watch_clear_pixel(ball_arr_com[1], ball_arr_seg[1]);
+        watch_set_pixel(ball_arr_com[0], ball_arr_seg[0]);
+        watch_set_pixel(ball_arr_com[6], ball_arr_seg[6]);
+        watch_set_pixel(ball_arr_com[5], ball_arr_seg[5]);
+        watch_set_pixel(ball_arr_com[4], ball_arr_seg[4]);
     }
 }
 
@@ -212,12 +230,12 @@ static void display_score(uint8_t score) {
     if (game_state.fuel_mode) {
         score %= (MAX_DISP_SCORE_FUEL + 1);
         sprintf(buf, "%1d", score);
-        watch_display_string(buf, 0);
+        watch_display_text(WATCH_POSITION_TOP_LEFT, buf);
     }
     else {
         score %= (MAX_DISP_SCORE + 1);
         sprintf(buf, "%2d", score);
-        watch_display_string(buf, 2);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     }
 }
 
@@ -234,11 +252,11 @@ static void add_to_score(endless_runner_state_t *state) {
 static void display_fuel(uint8_t subsecond, uint8_t difficulty) {
     char buf[4];
     if (difficulty == DIFF_FUEL_1 && game_state.fuel == 0 && subsecond % (FREQ/2) == 0) {
-        watch_display_string("  ", 2);  // Blink the 0 fuel to show it cannot be refilled.
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");  // Blink the 0 fuel to show it cannot be refilled.
         return;
     }
     sprintf(buf, "%2d", game_state.fuel);
-    watch_display_string(buf, 2);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 }
 
 static void check_and_reset_hi_score(endless_runner_state_t *state) {
@@ -255,28 +273,15 @@ static void check_and_reset_hi_score(endless_runner_state_t *state) {
 }
 
 static void display_difficulty(uint16_t difficulty) {
-    switch (difficulty)
-    {
-    case DIFF_BABY:
-        watch_display_string(" b", 2);
-        break;
-    case DIFF_EASY:
-        watch_display_string(" E", 2);
-        break;
-    case DIFF_HARD:
-        watch_display_string(" H", 2);
-        break;
-    case DIFF_FUEL:
-        watch_display_string(" F", 2);
-        break;
-    case DIFF_FUEL_1:
-        watch_display_string("1F", 2);
-        break;
-    case DIFF_NORM:
-    default:
-        watch_display_string(" N", 2);
-        break;
-    }
+    static const char *labels[] = {
+        [DIFF_BABY]   = " b",
+        [DIFF_EASY]   = " E",
+        [DIFF_HARD]   = " H",
+        [DIFF_FUEL]   = " F",
+        [DIFF_FUEL_1] = "1F",
+        [DIFF_NORM]   = " N"
+    };
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, labels[difficulty]);
     game_state.fuel_mode = difficulty >= DIFF_FUEL && difficulty <= DIFF_FUEL_1;
 }
 
@@ -309,13 +314,15 @@ static void display_title(endless_runner_state_t *state) {
     game_state.sec_before_moves = 1; // The first obstacles will all be 0s, which is about an extra second of delay.
     if (sound_on) game_state.sec_before_moves--; // Start chime is about 1 second
     watch_set_colon();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "RUN", "ER");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     if (hi_score > MAX_HI_SCORE) {
-        watch_display_string("ER  HS  --", 0);
+        watch_display_text(WATCH_POSITION_BOTTOM, "HS  --");
     }
     else {
-        char buf[14];
-        sprintf(buf, "ER  HS%4d", hi_score);
-        watch_display_string(buf, 0);
+        char buf[10];
+        sprintf(buf, "HS%4d", hi_score);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
     display_difficulty(difficulty);
 }
@@ -337,17 +344,12 @@ static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
         }
         watch_set_colon();
         sprintf( buf, "%2d%02d  ", hour, date_time.unit.minute);
-        watch_display_string(buf, 4);
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
-    // If both digits of the minute need updating
-    else if ((date_time.unit.minute / 10) != (previous_date_time.unit.minute / 10)) {
-        sprintf( buf, "%02d  ", date_time.unit.minute);
-        watch_display_string(buf, 6);
-    }
-    // If only the ones-place of the minute needs updating.
-    else if (date_time.unit.minute != previous_date_time.unit.minute) {
-        sprintf( buf, "%d  ", date_time.unit.minute % 10);
-        watch_display_string(buf, 7);
+    // If only the minute need updating
+    else {
+        sprintf( buf, "%02d", date_time.unit.minute);
+        watch_display_text(WATCH_POSITION_MINUTES, buf);
     }
     previous_date_time.reg = date_time.reg;
 }
@@ -358,14 +360,15 @@ static void begin_playing(endless_runner_state_t *state) {
     watch_clear_colon();
     movement_request_tick_frequency((state -> difficulty == DIFF_BABY) ? FREQ_SLOW : FREQ);
     if (game_state.fuel_mode) {
-        watch_display_string("           ", 0);
+        watch_clear_display();
         game_state.obst_pattern = get_random_fuel(0);
         if ((16 * JUMP_FRAMES_FUEL_RECHARGE) < JUMP_FRAMES_FUEL) // 16 frames of zeros at the start of a level
             game_state.fuel = JUMP_FRAMES_FUEL - (16 * JUMP_FRAMES_FUEL_RECHARGE); // Have it below its max to show it counting up when starting.
         if (game_state.fuel < JUMP_FRAMES_FUEL_RECHARGE) game_state.fuel = JUMP_FRAMES_FUEL_RECHARGE;
     }
     else {
-        watch_display_string("         ", 2);
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
         game_state.obst_pattern = get_random_legal(0, difficulty);
     }
     game_state.jump_state = NOT_JUMPING;
@@ -381,7 +384,8 @@ static void begin_playing(endless_runner_state_t *state) {
 static void display_lose_screen(endless_runner_state_t *state) {
     game_state.curr_screen = SCREEN_LOSE;
     game_state.curr_score = 0;
-    watch_display_string("     LOSE ", 0);
+    watch_clear_display();
+    watch_display_text(WATCH_POSITION_BOTTOM, " LOSE ");
     if (state -> soundOn)
         watch_buzzer_play_note(BUZZER_NOTE_A1, 600);
     else
@@ -395,9 +399,9 @@ static void display_obstacle(bool obstacle, int grid_loc, endless_runner_state_t
     case 2:
         game_state.loc_2_on = obstacle;
         if (obstacle)
-            watch_set_pixel(0, 20);
+            watch_set_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
         else if (game_state.jump_state != NOT_JUMPING) {
-            watch_clear_pixel(0, 20);
+            watch_clear_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
             if (game_state.fuel_mode && prev_obst_pos_two)
                 add_to_score(state);
         }
@@ -406,55 +410,20 @@ static void display_obstacle(bool obstacle, int grid_loc, endless_runner_state_t
     case 3:
         game_state.loc_3_on = obstacle;
         if (obstacle)
-            watch_set_pixel(1, 21);
+            watch_set_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
         else if (game_state.jump_state != NOT_JUMPING)
-            watch_clear_pixel(1, 21);
+            watch_clear_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
         break;
     
     case 1:
         if (!game_state.fuel_mode && obstacle)  // If an obstacle is here, it means the ball cleared it
             add_to_score(state);
         //fall through
-    case 0:
-    case 5:
-        if (obstacle)
-            watch_set_pixel(0, 18 + grid_loc);
-        else
-            watch_clear_pixel(0, 18 + grid_loc);
-        break;
-    case 4:
-        if (obstacle)
-            watch_set_pixel(1, 22);
-        else
-            watch_clear_pixel(1, 22);
-        break;
-    case 6:
-        if (obstacle)
-            watch_set_pixel(1, 0);
-        else
-            watch_clear_pixel(1, 0);
-        break;
-    case 7:
-    case 8:
-        if (obstacle)
-            watch_set_pixel(0, grid_loc - 6);
-        else
-            watch_clear_pixel(0, grid_loc - 6);
-        break;
-    case 9:
-    case 10:
-        if (obstacle)
-            watch_set_pixel(0, grid_loc - 5);
-        else
-            watch_clear_pixel(0, grid_loc - 5);
-        break;
-    case 11:
-        if (obstacle)
-            watch_set_pixel(1, 6);
-        else
-            watch_clear_pixel(1, 6);
-        break;
     default:
+        if (obstacle)
+            watch_set_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
+        else
+            watch_clear_pixel(obstacle_arr_com[grid_loc], obstacle_arr_seg[grid_loc]);
         break;
     }
 }
@@ -551,6 +520,11 @@ void endless_runner_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void endless_runner_face_activate(void *context) {
     (void) context;
+    bool is_custom_lcd = watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM;
+    ball_arr_com = is_custom_lcd ? custom_ball_arr_com : classic_ball_arr_com;
+    ball_arr_seg = is_custom_lcd ? custom_ball_arr_seg : classic_ball_arr_seg;
+    obstacle_arr_com = is_custom_lcd ? custom_obstacle_arr_com : classic_obstacle_arr_com;
+    obstacle_arr_seg = is_custom_lcd ? custom_obstacle_arr_seg : classic_obstacle_arr_seg;
 }
 
 bool endless_runner_face_loop(movement_event_t event, void *context) {
@@ -600,7 +574,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
                 display_title(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            display_time(watch_rtc_get_date_time(), movement_clock_mode_24h());
+            display_time(movement_get_local_date_time(), movement_clock_mode_24h());
             break;
         default:
             return movement_default_loop_handler(event);
