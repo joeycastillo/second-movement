@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Default set of times, feel free to add your favourites
 static const uint8_t settings[4][3] = {
     {15, 5, 15}, {25, 5, 15}, {30, 5, 20}, {50, 10, 30}};
 
@@ -76,7 +77,7 @@ static void _pomodoro_face_update_lcd(pomodoro_state_t *state) {
     sprintf(buf, "00%02d%02d", state->min, state->sec);
 
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
-  } else {
+  } else { // Ready display
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "POM", "PO");
     char times[7];
 
@@ -93,14 +94,11 @@ void pomodoro_face_setup(uint8_t watch_face_index, void **context_ptr) {
     *context_ptr = malloc(sizeof(pomodoro_state_t));
     memset(*context_ptr, 0, sizeof(pomodoro_state_t));
     pomodoro_state_t *state = (pomodoro_state_t *)*context_ptr;
+    // Initial settings
     state->watch_face_index = watch_face_index;
     state->status = pomodoro_status_ready;
     state->setting = 0;
-    // Do any one-time tasks in here; the inside of this conditional happens
-    // only at boot.
   }
-  // Do any pin or peripheral setup here; this will be called whenever the watch
-  // wakes from deep sleep.
 }
 
 void pomodoro_face_activate(void *context) {
@@ -111,8 +109,6 @@ void pomodoro_face_activate(void *context) {
         now, movement_get_current_timezone_offset());
   }
   watch_set_colon();
-  movement_request_tick_frequency(1);
-  // Handle any tasks related to your watch face coming on screen.
 }
 
 bool pomodoro_face_loop(movement_event_t event, void *context) {
@@ -120,21 +116,16 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
 
   switch (event.event_type) {
   case EVENT_ACTIVATE:
-    // Show your initial UI here.
     _pomodoro_face_update_lcd(state);
     break;
   case EVENT_TICK:
-    // If needed, update your display here.
     if (state->status == pomodoro_status_running) {
       state->now_ts++;
     }
     _pomodoro_face_update_lcd(state);
     break;
   case EVENT_LIGHT_BUTTON_UP:
-    // You can use the Light button for your own purposes. Note that by default,
-    // Movement will also illuminate the LED in response to
-    // EVENT_LIGHT_BUTTON_DOWN; to suppress that behavior, add an empty case for
-    // EVENT_LIGHT_BUTTON_DOWN.
+    // Only reset when timer is paused
     if (state->status == pomodoro_status_pause) {
       _pomodoro_face_reset_timer(state);
     } else {
@@ -144,16 +135,16 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
   case EVENT_LIGHT_BUTTON_DOWN:
     break;
   case EVENT_ALARM_BUTTON_UP:
-    // Just in case you have need for another button.
-    if (state->status == pomodoro_status_ready) {
+    if (state->status ==
+        pomodoro_status_ready) { // Always start with a focus timer
       state->status = pomodoro_status_running;
       state->min = settings[state->setting][0];
       state->mode = pomodoro_mode_focus;
       _pomodoro_face_start_timer(state);
-    } else if (state->status == pomodoro_status_running) {
+    } else if (state->status == pomodoro_status_running) { // Pause
       state->status = pomodoro_status_pause;
       _pomodoro_face_pause_timer(state);
-    } else if (state->status == pomodoro_status_pause) {
+    } else if (state->status == pomodoro_status_pause) { // Resume
       state->status = pomodoro_status_running;
       _pomodoro_face_start_timer(state);
     }
@@ -200,30 +191,15 @@ bool pomodoro_face_loop(movement_event_t event, void *context) {
     }
     break;
   case EVENT_LOW_ENERGY_UPDATE:
-    // If you did not resign in EVENT_TIMEOUT, you can use this event to update
-    // the display once a minute. Avoid displaying fast-updating values like
-    // seconds, since the display won't update again for 60 seconds. You should
-    // also consider starting the tick animation, to show the wearer that this
-    // is sleep mode: watch_start_sleep_animation(500);
+    if (!watch_sleep_animation_is_running()) {
+      watch_start_sleep_animation(500);
+    }
+    watch_display_text(WATCH_POSITION_BOTTOM, "------");
     break;
   default:
-    // Movement's default loop handler will step in for any cases you don't
-    // handle above:
-    // * EVENT_LIGHT_BUTTON_DOWN lights the LED
-    // * EVENT_MODE_BUTTON_UP moves to the next watch face in the list
-    // * EVENT_MODE_LONG_PRESS returns to the first watch face (or skips to the
-    // secondary watch face, if configured) You can override any of these
-    // behaviors by adding a case for these events to this switch statement.
     return movement_default_loop_handler(event);
   }
-
-  // return true if the watch can enter standby mode. Generally speaking, you
-  // should always return true.
   return true;
 }
 
-void pomodoro_face_resign(void *context) {
-  (void)context;
-
-  // handle any cleanup before your watch face goes off-screen.
-}
+void pomodoro_face_resign(void *context) { (void)context; }
