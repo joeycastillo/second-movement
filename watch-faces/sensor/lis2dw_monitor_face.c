@@ -336,14 +336,6 @@ static void _settings_low_noise_advance(void *context)
     state->ds.low_noise = !state->ds.low_noise;
 }
 
-/* Play beep sound */
-static inline void _beep()
-{
-    if (!movement_button_should_sound())
-        return;
-    watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
-}
-
 /* Print lis2dw status to console. */
 static void _lis2dw_print_state(lis2dw_device_state_t *ds)
 {
@@ -482,7 +474,7 @@ static bool _monitor_loop(movement_event_t event, void *context)
             break;
         case EVENT_LIGHT_LONG_PRESS:
             _switch_to_settings(state);
-            _beep();
+            movement_play_button_sound_if_enabled();
             break;
         default:
             movement_default_loop_handler(event);
@@ -509,7 +501,7 @@ static bool _settings_loop(movement_event_t event, void *context)
             _lis2dw_set_state(&state->ds);
             _lis2dw_print_state(&state->ds);
             _switch_to_monitor(state);
-            _beep();
+            movement_play_button_sound_if_enabled();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             /* Do nothing. */
