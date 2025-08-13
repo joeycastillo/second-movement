@@ -31,6 +31,7 @@
 #include <string.h>
 #include <math.h>
 #include "lander_face.h"
+#include "watch_common_display.h"
 
 #ifndef max
 #define max(x, y) ((y) > (x) ? (y) : (x))
@@ -179,13 +180,13 @@ void lander_face_activate(void *context) {
     state->difficulty_level = state->hero_counter / PROMOTION_INTERVAL;
     state->difficulty_level = min ( state->difficulty_level, DIFFICULTY_LEVELS - 1 );	// Upper limit
     // Fancy intro
-    if ( state->legend_counter == 0 ) watch_display_string("LA", 0);
-    else watch_display_string("LE", 0);
-    if ( ( state->hero_counter == 0 ) || ( state->hero_counter >= 40 ) ) watch_display_string ( "  ", 2);
+    if ( state->legend_counter == 0 ) watch_display_text(WATCH_POSITION_TOP_LEFT, "LA");
+    else watch_display_text(WATCH_POSITION_TOP_LEFT, "LE");
+    if ( ( state->hero_counter == 0 ) || ( state->hero_counter >= 40 ) ) watch_display_text ( WATCH_POSITION_TOP_RIGHT, "  ");
     else
     {
         sprintf ( buf, "%2d", state->hero_counter );
-        watch_display_string(buf, 2);
+        watch_display_text ( WATCH_POSITION_TOP_RIGHT, buf);
     }
     if ( state->hero_counter >= 100 ) sprintf ( buf, "Str%3d", state->hero_counter );
     else if ( state->hero_counter >= 40 ) sprintf ( buf, "Strb%2d", state->hero_counter );
@@ -193,7 +194,7 @@ void lander_face_activate(void *context) {
     else if ( state->hero_counter >= LEVEL_ACE ) sprintf ( buf, " ACE  " ); // This human is good
     else if ( state->difficulty_level == 0 ) sprintf ( buf, "     " );
     else sprintf ( buf, "%s", lander_difficulty_names[state->difficulty_level] );
-    watch_display_string ( buf, 4);
+    watch_display_text ( WATCH_POSITION_BOTTOM, buf);
     if (state->led_enabled) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
@@ -230,7 +231,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
                 state->height += state->speed;
                 if ( state->height > 971 * 80 ) {  // Escape height
                     watch_clear_all_indicators ();
-                    watch_display_string ( "ESCAPE", 4 );
+                    watch_display_text( WATCH_POSITION_BOTTOM, "ESCAPE" );
                     state->tick_counter = 0;
                     state->mode = MODE_WAITING_TO_START;
                 }
@@ -241,14 +242,14 @@ bool lander_face_loop(movement_event_t event, void *context) {
                 else {
                     // Update height display
                     sprintf ( buf, "%4d", (int) ( state->height / GRANUL ) );
-                    watch_display_string ( buf, 4 );
+                    watch_display_text( WATCH_POSITION_BOTTOM, buf );
                 }
             }
             else if ( state->mode == MODE_TOUCHDOWN_BLANK ) {
                 // Blank display on touchdown
                 if ( state->tick_counter == 1 ) {
                     watch_clear_all_indicators ();
-                    watch_display_string ( "      ", 4 );
+                    watch_display_text( WATCH_POSITION_BOTTOM, "      " );
                     
                     // Also calc fuel score now.
                     float fuel_score_float;
@@ -264,7 +265,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
                             state->hero_counter = 0;
                             state->difficulty_level = 0;
                             if ( state->reset_counter >= 6 ) state->legend_counter = 0;
-                                watch_display_string ( "rESET ", 4 );
+                                watch_display_text(WATCH_POSITION_BOTTOM, "rESET ");
                                 write_to_lander_EEPROM(state);
                             }
                         }
@@ -359,8 +360,8 @@ bool lander_face_loop(movement_event_t event, void *context) {
                                     if ( my_odds > 0 ) {
                                         char buff3 [ 5 ];
                                         sprintf ( buff3, "%2d", my_odds );
-                                        watch_display_string ( buff3, 2 );
-                                    } else watch_display_string ( "  ", 2 );
+                                        watch_display_text( WATCH_POSITION_TOP_RIGHT, buff3 );
+                                    } else watch_display_text( WATCH_POSITION_TOP_RIGHT, "  " );
                                     if ( my_odds >= gen_random_int ( 1, 200 ) ) {  // EARTH!!!!  The final objective.
                                         sprintf ( buf, "EArTH " );	// 17% within 8, 50% by 16, 79% by 24, 94% by 32 <- easy mode
                                         state->hero_counter = 0;
@@ -396,7 +397,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
                                 }
                             }
                             // Display final status.
-                            watch_display_string ( buf, 4 );
+                            watch_display_text(WATCH_POSITION_BOTTOM, buf );
                         } // End if tick_counter == 1
 
                         // Major crash - ship burning with red LED.
@@ -427,8 +428,10 @@ bool lander_face_loop(movement_event_t event, void *context) {
                     else if ( state->mode == MODE_DISPLAY_SKILL_LEVEL ) {
                         // Display skill level
                         if ( state->tick_counter == 1 ) {
-                            sprintf ( buf, " %d  %d   ", state->skill_level, state->skill_level );
-                            watch_display_string ( buf, 2 );
+                            sprintf ( buf, " %d", state->skill_level );
+                            watch_display_text ( WATCH_POSITION_TOP_RIGHT, buf );
+                            sprintf ( buf, "  %d   ", state->skill_level );
+                            watch_display_text ( WATCH_POSITION_BOTTOM, buf );
                         }
                         // Wait long enough, then start game.
                         if ( state->tick_counter >= ( 2.0 * LANDER_TICK_FREQUENCY ) ) {
@@ -440,12 +443,14 @@ bool lander_face_loop(movement_event_t event, void *context) {
                     else if ( state->mode == MODE_FIND_EARTH_MESSAGE ) {
                         // Display "Find" then "Earth"
                         if ( state->tick_counter == 1 ) {
-                            sprintf ( buf, "   FInd " );
-                            watch_display_string ( buf, 2 );
+                            sprintf ( buf, " FInd " );
+                            watch_display_text ( WATCH_POSITION_TOP_RIGHT, "  " );
+                            watch_display_text ( WATCH_POSITION_BOTTOM, buf );
                         }
                         if ( state->tick_counter == (int) ( 1.5 * LANDER_TICK_FREQUENCY + 1 ) ) {
-                            sprintf ( buf, "  EArTH " );
-                            watch_display_string ( buf, 2 );
+                            sprintf ( buf, "EArTH " );
+                            watch_display_text ( WATCH_POSITION_TOP_RIGHT, "  " );
+                            watch_display_text ( WATCH_POSITION_BOTTOM, buf );
                         }
                         // Wait long enough, then display skill level.
                         if ( state->tick_counter >= ( 3 * LANDER_TICK_FREQUENCY ) ) {
@@ -454,22 +459,22 @@ bool lander_face_loop(movement_event_t event, void *context) {
                         }
                     }
                     else if ( state->mode == MODE_MONSTER ) {
-                        if ( state->tick_counter == 1 ) watch_display_string ( lander_monster_names[state->monster_type], 4 );
+                        if ( state->tick_counter == 1 ) watch_display_text ( WATCH_POSITION_BOTTOM, lander_monster_names[state->monster_type] );
                         else if ( state->tick_counter == MONSTER_DISPLAY_TICKS + 1 ) {
                             uint8_t my_rand;
                             my_rand = gen_random_int ( 0 , MONSTER_ACTIONS - 1 );
-                            watch_display_string ( lander_monster_actions[my_rand], 4 );
+                            watch_display_text ( WATCH_POSITION_BOTTOM, lander_monster_actions[my_rand] );
                         }
                         else if ( state->tick_counter == MONSTER_DISPLAY_TICKS * 2 ) {  // Display 1st monster character
                             sprintf ( buf, "%s", lander_monster_names[state->monster_type] );
                             buf [1] = 0;
-                            watch_display_string(buf,4);
+                            watch_display_text(WATCH_POSITION_BOTTOM, buf);
                         }
                         else if ( state->tick_counter == MONSTER_DISPLAY_TICKS * 2 + 1 ) {  // Display current population, close mouth
-                            sprintf ( buf, "c%2d%2d", state->uninjured, state->injured );
-                            watch_display_string ( buf, 5 );
+                            sprintf ( buf, " c%2d%2d", state->uninjured, state->injured );
+                            watch_display_text ( WATCH_POSITION_BOTTOM, buf );
                         }
-                        else if ( state->tick_counter == MONSTER_DISPLAY_TICKS * 2 + 3 ) watch_display_string ( "C", 5 );	// Open mouth
+                        else if ( state->tick_counter == MONSTER_DISPLAY_TICKS * 2 + 3 ) watch_display_character ( 'C', 5 );	// Open mouth
                         else if ( state->tick_counter == MONSTER_DISPLAY_TICKS * 2 + 5 ) {
                             // Decision to: continue loop, end loop or eat astronaut
                             uint8_t survivors = state->injured + state->uninjured;
@@ -477,7 +482,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
                             if ( survivors == 0 ) state->mode = MODE_WAITING_TO_START;
                             else if ( myRand <= 1 ) { // Leave loop with survivors
                                 sprintf ( buf, "%d %2d%2d", state->ships_health, state->uninjured, state->injured );
-                                watch_display_string ( buf, 4 );
+                                watch_display_text ( WATCH_POSITION_BOTTOM, buf);
                                 state->mode = MODE_WAITING_TO_START;
                             } else if ( myRand <= 11 ) state->tick_counter = MONSTER_DISPLAY_TICKS * 2;	// Do nothing, loop continues
                             else { // Eat an astronaut - welcome to the space program!
@@ -540,7 +545,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             if ( state->mode == MODE_WAITING_TO_START ) {
                 // Display difficulty level
-                watch_display_string ( lander_difficulty_names [state->difficulty_level], 4 );
+                watch_display_text(WATCH_POSITION_BOTTOM, lander_difficulty_names [state->difficulty_level]);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
@@ -554,7 +559,7 @@ bool lander_face_loop(movement_event_t event, void *context) {
                 if ( state->legend_counter > 9 ) sprintf (buf,"EArt%2d", state->legend_counter );
                 else sprintf (buf,"EArth%d", state->legend_counter );
                 // Display legend counter
-                watch_display_string ( buf, 4 );
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
             }
             break;
         
