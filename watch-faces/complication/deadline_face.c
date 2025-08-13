@@ -490,8 +490,8 @@ static void _deadline_settings_init(deadline_state_t *state)
         _reset_deadline(state);
     }
 
-    /* Ensure 1Hz updates only */
-    _change_tick_freq(1, state);
+    /* Ensure 4Hz updates to support blinking */
+    _change_tick_freq(4, state);
 }
 
 /* Loop of setting mode */
