@@ -118,9 +118,7 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
-            if (movement_button_should_sound()) {
-                watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-            }
+            movement_play_button_sound_if_enabled();
             stopwatch_state->running = !stopwatch_state->running;
             if (stopwatch_state->running) {
                 // we're running now, so we need to set the start_time.
