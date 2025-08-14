@@ -276,6 +276,7 @@ int8_t signal_tune[] = {
     BUZZER_NOTE_REST, 3,
     BUZZER_NOTE_F5, 3,
     BUZZER_NOTE_REST, 3,
-    BUZ
+    BUZZER_NOTE_G5, 3,
+    0,
 };
 #endif // SIGNAL_TUNE_MEGALOVANIA
