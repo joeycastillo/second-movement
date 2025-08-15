@@ -32,11 +32,14 @@ static volatile bool buzzer_enabled = false;
 static uint32_t buzzer_period;
 
 void cb_watch_buzzer_seq(void *userData);
+void cb_watch_buzzer_raw_source(void *userData);
 
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
 static volatile long _em_interval_id = 0;
 static int8_t *_sequence;
+static watch_buzzer_raw_source_t _raw_source;
+static void* _userdata;
 static uint8_t _volume;
 static void (*_cb_finished)(void);
 static watch_cb_t _cb_start_global = NULL;
@@ -57,6 +60,10 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
 void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callback_on_end)(void), watch_buzzer_volume_t volume) {
     watch_buzzer_abort_sequence();
 
+    // prepare buzzer
+    watch_enable_buzzer();
+    watch_set_buzzer_off();
+
     _buzzer_is_active = true;
 
     if (_cb_start_global) {
@@ -69,9 +76,6 @@ void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callba
     _seq_position = 0;
     _tone_ticks = 0;
     _repeat_counter = -1;
-    // prepare buzzer
-    watch_enable_buzzer();
-    watch_set_buzzer_off();
     // initiate 64 hz callback
     _em_interval_id = emscripten_set_interval(cb_watch_buzzer_seq, (double)(1000/64), (void *)NULL);
 }
@@ -115,6 +119,64 @@ void cb_watch_buzzer_seq(void *userData) {
             watch_buzzer_abort_sequence();
         }
     } else _tone_ticks--;
+}
+
+void watch_buzzer_play_raw_source(watch_buzzer_raw_source_t raw_source, void* userdata, watch_cb_t callback_on_end) {
+    watch_buzzer_play_raw_source_with_volume(raw_source, userdata, callback_on_end, WATCH_BUZZER_VOLUME_LOUD);
+}
+
+void watch_buzzer_play_raw_source_with_volume(watch_buzzer_raw_source_t raw_source, void* userdata, watch_cb_t callback_on_end, watch_buzzer_volume_t volume) {
+    watch_buzzer_abort_sequence();
+
+    // prepare buzzer
+    watch_enable_buzzer();
+    watch_set_buzzer_off();
+
+    _buzzer_is_active = true;
+
+    if (_cb_start_global) {
+        _cb_start_global();
+    }
+
+    _raw_source = raw_source;
+    _userdata = userdata;
+    _cb_finished = callback_on_end;
+    _volume = volume == WATCH_BUZZER_VOLUME_SOFT ? 5 : 25;
+    _seq_position = 0;
+    _tone_ticks = 0;
+
+    // initiate 64 hz callback
+    _em_interval_id = emscripten_set_interval(cb_watch_buzzer_raw_source, (double)(1000/64), (void *)NULL);
+}
+
+void cb_watch_buzzer_raw_source(void *userData) {
+    // callback for reading the note sequence
+    (void) userData;
+    uint16_t period;
+    uint16_t duration;
+    bool done;
+
+    if (_tone_ticks == 0) {
+        done = _raw_source(_seq_position, _userdata, &period, &duration);
+
+        if (done) {
+            // end the sequence
+            watch_buzzer_abort_sequence();
+        } else {
+            if (period == WATCH_BUZZER_PERIOD_REST) {
+                watch_set_buzzer_off();
+            } else {
+                watch_set_buzzer_period_and_duty_cycle(period, _volume);
+                watch_set_buzzer_on();
+            }
+
+            // set duration ticks and move to next tone
+            _tone_ticks = duration;
+            _seq_position += 1;
+        }
+    } else {
+        _tone_ticks--;
+    }
 }
 
 void watch_buzzer_abort_sequence(void) {
