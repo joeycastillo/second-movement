@@ -150,7 +150,11 @@ void watch_enable_buzzer(void) {
     buzzer_period = NotePeriods[BUZZER_NOTE_A4];
 
     EM_ASM({
-        Module['audioContext'] = new (window.AudioContext || window.webkitAudioContext)();
+        // "It's recommended to create one AudioContext and reuse it instead of initializing a new one each time."
+        // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
+        if (!Module['audioContext']) {
+            Module['audioContext'] = new (window.AudioContext || window.webkitAudioContext)();
+        }
     });
 }
 
@@ -163,13 +167,6 @@ void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty_cycle)
 void watch_disable_buzzer(void) {
     buzzer_enabled = false;
     buzzer_period = NotePeriods[BUZZER_NOTE_A4];
-
-    EM_ASM({
-        if (Module['audioContext']) {
-            Module['audioContext'].close();
-            Module['audioContext'] = null;
-        }
-    });
 }
 
 void watch_set_buzzer_on(void) {
