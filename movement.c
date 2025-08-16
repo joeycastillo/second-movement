@@ -400,8 +400,8 @@ void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue) {
     // this is hacky, we need a way for watch faces to set an arbitrary color and prevent Movement from turning it right back off.
     movement_state.light_on = true;
     watch_set_led_color_rgb(red, green, blue);
-    rtc_counter_t counter = watch_rtc_get_counter();
-    watch_rtc_register_comp_callback_no_schedule(cb_led_timeout_interrupt, counter + 32767, LED_TIMEOUT);
+    // The led will stay on until movement_force_led_off is called, so disable the led timeout in case we were in the middle of it.
+    watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
     movement_volatile_state.schedule_next_comp = true;
 }
 
