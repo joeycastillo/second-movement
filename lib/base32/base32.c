@@ -79,6 +79,8 @@ static int decode_char(unsigned char c)
 {
 	int retval = -1;
 
+	if (c >= 'a' && c <= 'z')
+		retval = c - 'a';
 	if (c >= 'A' && c <= 'Z')
 		retval = c - 'A';
 	if (c >= '2' && c <= '7')
