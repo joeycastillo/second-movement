@@ -27,7 +27,6 @@
 #include <math.h>
 #include "finetune_face.h"
 #include "nanosec_face.h"
-#include "watch_utility.h"
 #include "delay.h"
 
 extern nanosec_state_t nanosec_state;
@@ -51,7 +50,7 @@ void finetune_face_activate(void *context) {
 }
 
 static float finetune_get_hours_passed(void) {
-    uint32_t current_time = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+    uint32_t current_time = movement_get_utc_timestamp();
     return (current_time - nanosec_state.last_correction_time) / 3600.0f;
 }
 
@@ -64,7 +63,7 @@ static void finetune_update_display(void) {
 
     if (finetune_page == 0) {
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "FTU", "FT");
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_utc_date_time();
         sprintf(buf, "%04d%02d", abs(total_adjustment), date_time.unit.second);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
@@ -106,17 +105,9 @@ static void finetune_adjust_subseconds(int delta) {
     watch_rtc_enable(false);
     delay_ms(delta);
     if (delta > 500) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
-        date_time.unit.second = (date_time.unit.second + 1) % 60;
-        if (date_time.unit.second == 0) { // Overflow
-            date_time.unit.minute = (date_time.unit.minute + 1) % 60;
-            if (date_time.unit.minute == 0) { // Overflow
-                date_time.unit.hour = (date_time.unit.hour + 1) % 24;
-                if (date_time.unit.hour == 0) // Overflow
-                    date_time.unit.day++;
-            }
-        }
-        watch_rtc_set_date_time(date_time);
+        uint32_t timestamp = movement_get_utc_timestamp();
+        timestamp += 1;
+        movement_set_utc_timestamp(timestamp);
     }
     watch_rtc_enable(true);
 }
@@ -126,7 +117,7 @@ static void finetune_update_correction_time(void) {
     nanosec_state.freq_correction += roundf(nanosec_get_aging() * 100);
 
     // Remember when we last corrected time
-    nanosec_state.last_correction_time = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
+    nanosec_state.last_correction_time = movement_get_utc_timestamp();
     nanosec_save();
     movement_move_to_face(0); // Go to main face after saving settings
 }
@@ -146,7 +137,7 @@ bool finetune_face_loop(movement_event_t event, void *context) {
             // We flash green LED once per minute to measure clock error, when we are not on first screen
             if (finetune_page!=0) {
                 watch_date_time_t date_time;
-                date_time = watch_rtc_get_date_time();
+                date_time = movement_get_utc_date_time();
                 if (date_time.unit.second == 0) {
                     watch_set_led_green();
                     #ifndef __EMSCRIPTEN__
