@@ -64,6 +64,11 @@ const watch_face_t watch_faces[] = {
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE false
 
+/* Set to true to keep the lighting on while scrolling
+ * trough watch faces other than the first one
+ */
+#define MOVEMENT_KEEP_LIGHT_IN_FACES false
+
 /* Enable or disable the sound on mode button press */
 #define MOVEMENT_DEFAULT_BUTTON_SOUND true
 
