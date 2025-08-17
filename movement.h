@@ -85,6 +85,8 @@ typedef union {
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
+
+        bool keep_lighting_on : 1;          //boolean to keep lighting on in other faces
     } bit;
     uint32_t reg;
 } movement_settings_t;
