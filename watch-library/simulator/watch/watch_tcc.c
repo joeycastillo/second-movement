@@ -46,8 +46,6 @@ static watch_cb_t _cb_start_global = NULL;
 static watch_cb_t _cb_stop_global = NULL;
 static volatile bool _buzzer_is_active = false;
 
-void _watch_enable_tcc(void) {}
-
 static inline void _em_interval_stop() {
     emscripten_clear_interval(_em_interval_id);
     _em_interval_id = 0;

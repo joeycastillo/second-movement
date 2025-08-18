@@ -151,7 +151,8 @@ static void _watch_disable_all_pins_except_rtc(void) {
 }
 
 static void _watch_disable_all_peripherals_except_slcd(void) {
-    _watch_disable_tcc();
+    watch_disable_leds();
+    watch_disable_buzzer();
     watch_disable_adc();
     watch_disable_external_interrupts();
 

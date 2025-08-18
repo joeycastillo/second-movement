@@ -130,13 +130,6 @@ typedef enum {
 
 typedef bool (*watch_buzzer_raw_source_t)(uint16_t position, void* userdata, uint16_t* period, uint16_t* duration);
 
-/** @brief Returns true if either the buzzer or the LED driver is enabled.
-  * @details Both the buzzer and the LED use the TCC peripheral to drive their behavior. This function returns true if that
-  *          peripheral is enabled. You can use this function to determine whether you need to call the watch_enable_leds or
-  *          or watch_enable_buzzer functions before using these peripherals.
-  */
-bool watch_is_buzzer_or_led_enabled(void);
-
 /** @addtogroup tcc Buzzer and LED Control (via the TCC peripheral)
   * @brief This section covers functions related to Timer Counter for Control peripheral, which drives the piezo buzzer
   *        embedded in the F-91W's back plate as well as the LED that backlights the display.
@@ -155,15 +148,13 @@ void watch_enable_buzzer(void);
   */
 void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty);
 
-/** @brief Disables the TCC peripheral that drives the buzzer.
-  * @note If you are using PWM to set custom LED colors, this method will also disable the LED PWM driver,
-  *       since the buzzer and LED both make use of the same peripheral to drive their PWM behavior.
+/** @brief Disables the TCC peripheral that drives the buzzer (if LED not active).
   */
 void watch_disable_buzzer(void);
 
 /** @brief Turns the buzzer output on. It will emit a continuous sound at the given frequency.
-  * @note The TCC peripheral that drives the buzzer does not run in standby mode; if you wish for buzzer
-  *       output to continue, you should prevent your app from going to sleep.
+  * @note The TCC peripheral that drives the buzzer does run in standby mode; if you wish for buzzer
+  *       output to continue, you don't need to prevent your app from going to sleep.
   */
 void watch_set_buzzer_on(void);
 
@@ -265,18 +256,6 @@ void watch_buzzer_abort_sequence(void);
 
 void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop);
 
-/** @brief Enables the TCC peripheral, which drives the buzzer and the leds.
-*/
-void watch_enable_buzzer_and_leds(void);
-
-/** @brief Disables the TCC peripheral that drives the buzzer and the leds.
- */
-void watch_disable_buzzer_and_leds(void);
-
-/** @brief Disables the TCC peripheral that drives the buzzer and the leds if neither is currently active
- */
-void watch_maybe_disable_buzzer_and_leds(void);
-
 #ifndef __EMSCRIPTEN__
 void irq_handler_tc0(void);
 #endif
@@ -294,26 +273,17 @@ void irq_handler_tc0(void);
   *       so that watch_set_led_red sets the red LED, and watch_set_led_green sets the blue one.
   */
 /// @{
-/** @brief Enables the bi-color LED.
-  * @note The TCC peripheral that drives the LEDs does not run in STANDBY mode — but the outputs do! This
-  *       means that if you set either red, green or both LEDs to full power, they will shine even when
-  *       your app is asleep. If, however, you set a custom color using watch_set_led_color, the color will
-  *       not display correctly in STANDBY mode. You will need to keep your app running while the LED is on.
+/** @brief Enables the TCC peripheral, which drives the LEDs.
   */
 void watch_enable_leds(void);
 
-/** @brief Disables the LEDs.
-  * @note This method will also disable the buzzer, since the buzzer and LED both make use of the same
-  *       peripheral to drive their PWM behavior.
+/** @brief Disables the TCC peripheral that drives the LEDs (if buzzer not active).
   */
 void watch_disable_leds(void);
 
 /** @brief Sets the LED to a custom color by modulating each output's duty cycle.
   * @param red The red value from 0-255.
   * @param green The green value from 0-255. If your watch has a red/blue LED, this will be the blue value.
-  * @note If you are displaying a custom color, you will need to prevent your app from going to sleep
-  *       while the LED is on; otherwise, the color will not display correctly. You can do this by
-  *       returning false in your app_loop method.
   */
 void watch_set_led_color(uint8_t red, uint8_t green);
 
@@ -321,9 +291,6 @@ void watch_set_led_color(uint8_t red, uint8_t green);
   * @param red The red value from 0-255.
   * @param green The green value from 0-255.
   * @param blue The blue value from 0-255.
-  * @note If you are displaying a custom color, you will need to prevent your app from going to sleep
-  *       while the LED is on; otherwise, the color will not display correctly. You can do this by
-  *       returning false in your app_loop method.
   */
 void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue);
 
@@ -347,9 +314,6 @@ void watch_set_led_yellow(void);
 
 /** @brief Turns both the red and the green LEDs off. */
 void watch_set_led_off(void);
-
-/** @brief Disables the TCC peripheral. Should only be called internally. */
-void _watch_disable_tcc(void);
 
 /// @brief An array of periods for all the notes on a piano, corresponding to the names in watch_buzzer_note_t.
 extern const uint16_t NotePeriods[108];

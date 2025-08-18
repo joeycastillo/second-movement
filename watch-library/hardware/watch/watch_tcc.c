@@ -27,10 +27,15 @@
 #include "tcc.h"
 #include "tc.h"
 
-void _watch_enable_tcc(void);
+static void _watch_enable_tcc(void);
+static void _watch_disable_tcc(void);
+static void _watch_maybe_enable_tcc(void);
+static void _watch_maybe_disable_tcc(void);
+static void _watch_enable_led_pins(void);
+static void _watch_disable_led_pins(void);
 static void (*_cb_tc0)(void) = NULL;
-void cb_watch_buzzer_seq(void);
-void cb_watch_buzzer_raw_source(void);
+static void cb_watch_buzzer_seq(void);
+static void cb_watch_buzzer_raw_source(void);
 
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
@@ -84,14 +89,11 @@ void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callba
     // Abort any previous sequence
     watch_buzzer_abort_sequence();
 
-    _buzzer_is_active = true;
-
     if (_cb_start_global) {
         _cb_start_global();
     }
 
-    watch_enable_buzzer_and_leds();
-
+    watch_enable_buzzer();
     watch_set_buzzer_off();
     _sequence = note_sequence;
     _cb_finished = callback_on_end;
@@ -154,13 +156,11 @@ void watch_buzzer_play_raw_source_with_volume(watch_buzzer_raw_source_t raw_sour
     // Abort any previous sequence
     watch_buzzer_abort_sequence();
 
-    _buzzer_is_active = true;
-
     if (_cb_start_global) {
         _cb_start_global();
     }
 
-    watch_enable_buzzer_and_leds();
+    watch_enable_buzzer();
 
     watch_set_buzzer_off();
     _raw_source = raw_source;
@@ -213,14 +213,12 @@ void watch_buzzer_abort_sequence(void) {
         return;
     }
 
-    _buzzer_is_active = false;
-
     _tc0_stop();
 
     watch_set_buzzer_off();
 
     // disable TCC
-    watch_maybe_disable_buzzer_and_leds();
+    watch_disable_buzzer();
 
     if (_cb_stop_global) {
         _cb_stop_global();
@@ -244,11 +242,11 @@ void irq_handler_tc0(void) {
     TC0->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
 }
 
-bool watch_is_buzzer_or_led_enabled(void){
-    return tcc_is_enabled(0);
-}
+void _watch_maybe_enable_tcc(void) {
+    if (!_buzzer_is_active && !_led_is_active) {
+        return;
+    }
 
-void watch_enable_buzzer_and_leds(void) {
     if (!tcc_is_enabled(0)) {
         // tcc_set_run_in_standby(0, true);
         _watch_enable_tcc();
@@ -257,23 +255,26 @@ void watch_enable_buzzer_and_leds(void) {
     }
 }
 
-void watch_disable_buzzer_and_leds(void) {
+void _watch_maybe_disable_tcc(void) {
+    if (_buzzer_is_active || _led_is_active) {
+        return;
+    }
+
     if (tcc_is_enabled(0)) {
         _tcc_write_RUNSTDBY(false);
         _watch_disable_tcc();
     }
 }
 
-void watch_maybe_disable_buzzer_and_leds(void) {
-    if (_buzzer_is_active || _led_is_active) {
-        return;
-    }
-
-    watch_disable_buzzer_and_leds();
+void watch_enable_buzzer(void) {
+    _buzzer_is_active = true;
+    _watch_maybe_enable_tcc();
 }
 
-void watch_enable_buzzer(void) {
-    watch_enable_buzzer_and_leds();
+void watch_disable_buzzer(void) {
+    _buzzer_is_active = false;
+    watch_set_buzzer_off();
+    _watch_maybe_disable_tcc();
 }
 
 void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty) {
@@ -284,10 +285,6 @@ void watch_set_buzzer_period_and_duty_cycle(uint32_t period, uint8_t duty) {
     if (_led_is_active) {
         _watch_set_led_duty_cycle(period, _current_led_color[0], _current_led_color[1], _current_led_color[2]);
     }
-}
-
-void watch_disable_buzzer(void) {
-    watch_maybe_disable_buzzer_and_leds();
 }
 
 inline void watch_set_buzzer_on(void) {
@@ -356,21 +353,6 @@ void _watch_enable_tcc(void) {
     tcc_set_cc(0, (WATCH_BLUE_TCC_CHANNEL) % 4, 0, false);
 #endif
 
-    // enable LED PWM pins (the LED driver assumes if the TCC is on, the pins are enabled)
-    HAL_GPIO_RED_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
-    HAL_GPIO_RED_drvstr(1);
-    HAL_GPIO_RED_out();
-#ifdef WATCH_GREEN_TCC_CHANNEL
-    HAL_GPIO_GREEN_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
-    HAL_GPIO_GREEN_drvstr(1);
-    HAL_GPIO_GREEN_out();
-#endif
-#ifdef WATCH_BLUE_TCC_CHANNEL
-    HAL_GPIO_BLUE_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
-    HAL_GPIO_BLUE_drvstr(1);
-    HAL_GPIO_BLUE_out();
-#endif
-
     // Enable the TCC
     tcc_enable(0);
 }
@@ -393,11 +375,45 @@ void _watch_disable_tcc(void) {
 }
 
 void watch_enable_leds(void) {
-    watch_enable_buzzer_and_leds();
+    _led_is_active = true;
+    _watch_enable_led_pins();
+    _watch_maybe_enable_tcc();
 }
 
 void watch_disable_leds(void) {
-    watch_maybe_disable_buzzer_and_leds();
+    _led_is_active = false;
+    _watch_disable_led_pins();
+    _watch_maybe_disable_tcc();
+}
+
+void _watch_enable_led_pins(void) {
+    // enable LED PWM pins (the LED driver assumes if the TCC is on, the pins are enabled)
+    HAL_GPIO_RED_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_RED_drvstr(1);
+    HAL_GPIO_RED_out();
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    HAL_GPIO_GREEN_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_GREEN_drvstr(1);
+    HAL_GPIO_GREEN_out();
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    HAL_GPIO_BLUE_pmuxen(HAL_GPIO_PMUX_TCC_ALT);
+    HAL_GPIO_BLUE_drvstr(1);
+    HAL_GPIO_BLUE_out();
+#endif
+}
+
+void _watch_disable_led_pins(void) {
+    HAL_GPIO_RED_pmuxdis();
+    HAL_GPIO_RED_off();
+#ifdef WATCH_GREEN_TCC_CHANNEL
+    HAL_GPIO_GREEN_pmuxdis();
+    HAL_GPIO_GREEN_off();
+#endif
+#ifdef WATCH_BLUE_TCC_CHANNEL
+    HAL_GPIO_BLUE_pmuxdis();
+    HAL_GPIO_BLUE_off();
+#endif
 }
 
 void watch_set_led_color(uint8_t red, uint8_t green) {
@@ -429,19 +445,14 @@ void watch_set_led_color_rgb(uint8_t red, uint8_t green, uint8_t blue) {
         _current_led_color[0] = red;
         _current_led_color[1] = green;
         _current_led_color[2] = blue;
-        _led_is_active = true;
-        watch_enable_buzzer_and_leds();
-    } else {
-        _led_is_active = false;
-    }
-
-    if (tcc_is_enabled(0)) {
+        watch_enable_leds();
         uint32_t period = tcc_get_period(0);
         _watch_set_led_duty_cycle(period, red, green, blue);
-    }
-
-    if (!turning_on) {
-        watch_maybe_disable_buzzer_and_leds();
+    } else {
+        if (tcc_is_enabled(0)) {
+            _watch_set_led_duty_cycle(1, red, green, blue);
+        }
+        watch_disable_leds();
     }
 }
 
