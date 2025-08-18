@@ -82,11 +82,13 @@ static inline bool lcd_is_custom(void) {
 
 static void save_timestamp(cpr_helper_state_t *state) {
     if (state->timestamp_count < CPR_MAX_TIMESTAMPS) {
-        watch_date_time_t now = watch_rtc_get_date_time();
+        watch_date_time_t now = movement_get_local_date_time();
         state->timestamps[state->timestamp_count] = now;
 
-        uint32_t now_unix = watch_utility_date_time_to_unix_time(now, 0);
-        uint32_t start_unix = watch_utility_date_time_to_unix_time(state->start_time, 0);
+        int32_t tz_offset = movement_get_current_timezone_offset();
+        uint32_t now_unix = watch_utility_date_time_to_unix_time(now, tz_offset);
+        uint32_t start_unix = watch_utility_date_time_to_unix_time(state->start_time, tz_offset);
+
         state->timestamp_elapsed[state->timestamp_count] = now_unix - start_unix;
 
         state->adrenaline_counts[state->timestamp_count] = state->adrenaline_count;
@@ -165,7 +167,7 @@ static void timer_start(cpr_helper_state_t *state) {
             }
         state->running = true;
         state->in_timestamp_view = false;
-        state->start_time = watch_rtc_get_date_time();
+        state->start_time = movement_get_local_date_time();
         save_timestamp(state);
         movement_schedule_background_task(distant_future);
     }
@@ -173,9 +175,10 @@ static void timer_start(cpr_helper_state_t *state) {
 
 static void timer_screen(cpr_helper_state_t *state) {
     if (state->running) {
-        watch_date_time_t now = watch_rtc_get_date_time();
-        uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, 0);
-        uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, 0);
+        watch_date_time_t now = movement_get_local_date_time();
+        int32_t tz_offset = movement_get_current_timezone_offset();
+        uint32_t now_timestamp = watch_utility_date_time_to_unix_time(now, tz_offset);
+        uint32_t start_timestamp = watch_utility_date_time_to_unix_time(state->start_time, tz_offset);
         state->seconds_counted = now_timestamp - start_timestamp;
     }
 
