@@ -587,6 +587,9 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
 }
 
 float movement_get_temperature(void) {
+#if __EMSCRIPTEN__
+    return 25;
+#endif
     float temperature_c = (float)0xFFFFFFFF;
 
     if (movement_state.has_thermistor) {
