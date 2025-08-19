@@ -57,7 +57,7 @@ static void _simon_clear_display(simon_state_t *state) {
 static void _simon_not_playing_display(simon_state_t *state) {
     _simon_clear_display(state);
 
-    watch_display_text(WATCH_POSITION_TOP, "SI");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "SIMON", "SI");
     sprintf(_simon_display_buf, "%d", state->best_score);
     watch_display_text(WATCH_POSITION_BOTTOM, _simon_display_buf);
     if (!state->soundOff)
@@ -106,7 +106,7 @@ static void _simon_display_note(SimonNote note, simon_state_t *state) {
             watch_display_text(WATCH_POSITION_SECONDS, "AL");
             break;
         case SIMON_MODE_NOTE:
-            watch_display_text(WATCH_POSITION_HOURS, DE");
+            watch_display_text_with_fallback(WATCH_POSITION_HOURS, "Md", "DE");
             break;
         default:
             break;
