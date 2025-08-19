@@ -36,6 +36,28 @@
  * Note that the Simple Clock watch face includes a low battery warning, so you
  * don’t technically need to this watch face unless you want to track the
  * battery level.
+ *
+ * You can scroll through past voltage readings by using the "Alarm" button to go to
+ * a previous reading. At the top right, it displays the index of the reading;
+ * 0 represents the most recent reading taken, 1 represents one hour earlier, etc.
+ * The bottom line in this mode displays the logged voltage.
+ *
+ * A short press of the “Alarm” button advances to the next oldest reading;
+ * you will see the number at the top right advance from 0 to 1 to 2, all
+ * the way to 35, the oldest reading available.
+ *
+ * A short press of the "Light" button advances to the next newest reading.
+ * Whena t the current reading, it'll advance to the oldest one.
+ *
+ * A long press of the “Alarm” button will briefly display the timestamp
+ * of the reading. The letters at the top left will display the word “At”,
+ * and the main line will display the timestamp of the currently displayed
+ * data point. The number in the top right will display the day of the month
+ * for the given data point; for example, you can read “At 22 3:00 PM” as
+ * ”At 3:00 PM on the 22nd”.
+ *
+ * If you need to illuminate the LED to read the data point, long press the
+ * Light button and release it.
  */
 
 #include "movement.h"
