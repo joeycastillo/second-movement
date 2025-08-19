@@ -184,10 +184,19 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
             state->offset += 86400;
             _update(state, state->offset);
             break;
-	case EVENT_ALARM_LONG_PRESS:
-	    state->offset = 0;
+	    case EVENT_ALARM_LONG_PRESS:
+	        state->offset = 0;
             _update(state, state->offset);
-	    break;
+	        break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            state->offset -= 86400;
+            _update(state, state->offset);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            movement_illuminate_led();
+            break;
         case EVENT_TIMEOUT:
             // QUESTION: Should timeout reset offset to 0?
             break;
