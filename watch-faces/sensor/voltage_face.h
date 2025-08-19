@@ -25,6 +25,8 @@
 #ifndef VOLTAGE_FACE_H_
 #define VOLTAGE_FACE_H_
 
+#define VOLTAGE_NUM_DATA_POINTS (36)
+
 /*
  * VOLTAGE face
  *
@@ -38,17 +40,30 @@
 
 #include "movement.h"
 
+typedef struct {
+    watch_date_time_t timestamp;
+    float voltage;
+} voltage_face_data_point_t;
+
+typedef struct {
+    uint8_t display_index;  // the index we are displaying on screen
+    uint8_t ts_ticks;       // when the user taps the LIGHT button, we show the timestamp for a few ticks.
+    int32_t data_points;    // the absolute number of data points logged
+    voltage_face_data_point_t data[VOLTAGE_NUM_DATA_POINTS];
+} voltage_face_state_t;
+
 void voltage_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void voltage_face_activate(void *context);
 bool voltage_face_loop(movement_event_t event, void *context);
 void voltage_face_resign(void *context);
+movement_watch_face_advisory_t voltage_face_advise(void *context);
 
 #define voltage_face ((const watch_face_t){ \
     voltage_face_setup, \
     voltage_face_activate, \
     voltage_face_loop, \
     voltage_face_resign, \
-    NULL, \
+    voltage_face_advise, \
 })
 
 #endif // VOLTAGE_FACE_H_
