@@ -28,6 +28,7 @@
 #include "watch.h"
 
 #define VOLTAGE_LOGGING_CYC (VOLTAGE_NUM_DATA_POINTS + 1)
+static bool ignoring_btn_up_on_wake;
 
 static void _voltage_face_update_display(void) {
     float voltage = (float)watch_get_vcc_voltage() / 1000.0;
@@ -91,7 +92,7 @@ static void _voltage_face_logging_update_display(voltage_face_state_t *logger_st
             date_time.unit.hour %= 12;
             if (date_time.unit.hour == 0) date_time.unit.hour = 12;
         }
-        watch_display_text(WATCH_POSITION_TOP_LEFT, "AT");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "AT ", "AT");
         sprintf(buf, "%2d", date_time.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
@@ -115,7 +116,6 @@ void voltage_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void voltage_face_activate(void *context) {
     voltage_face_state_t *logger_state = (voltage_face_state_t *)context;
-    logger_state->display_index = VOLTAGE_NUM_DATA_POINTS;
     logger_state->ts_ticks = 0;
 }
 
@@ -135,6 +135,10 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), true);
             break;
         case EVENT_ALARM_BUTTON_UP:
+            if (ignoring_btn_up_on_wake) {
+                ignoring_btn_up_on_wake = false;
+                break;
+            }
             logger_state->display_index = (logger_state->display_index + 1) % VOLTAGE_LOGGING_CYC;
             logger_state->ts_ticks = 0;
             _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), true);
@@ -145,7 +149,14 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), true);
             break;
         case EVENT_ACTIVATE:
-            if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
+            ignoring_btn_up_on_wake = false;
+            if (watch_sleep_animation_is_running()) {
+                ignoring_btn_up_on_wake = true;
+                watch_stop_sleep_animation();
+            }
+            else {
+                logger_state->display_index = VOLTAGE_NUM_DATA_POINTS;
+            }
             _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), true);
             break;
         case EVENT_TICK:
@@ -161,7 +172,7 @@ bool voltage_face_loop(movement_event_t event, void *context) {
                 watch_start_sleep_animation(1000);
             }
             // update once an hour
-            if (date_time.unit.minute == 0 && displaying_curr_volt) {
+            if (displaying_curr_volt && movement_get_local_date_time().unit.minute == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
                 _voltage_face_update_display();
                 watch_display_text_with_fallback(WATCH_POSITION_SECONDS, " V", "  ");

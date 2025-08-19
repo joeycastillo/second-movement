@@ -30,6 +30,7 @@
 #define THERMISTOR_LOGGING_CYC (TEMPERATURE_LOGGING_NUM_DATA_POINTS + 1)
 
 static bool skip = false;
+static bool ignoring_btn_up_on_wake;
 
 static void _temperature_display_face_update_display(bool in_fahrenheit) {
     float temperature_c = movement_get_temperature();
@@ -97,7 +98,7 @@ static void _temperature_logging_face_update_display(temperature_logging_state_t
             date_time.unit.hour %= 12;
             if (date_time.unit.hour == 0) date_time.unit.hour = 12;
         }
-        watch_display_text(WATCH_POSITION_TOP_LEFT, "AT");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "AT ", "AT");
         sprintf(buf, "%2d", date_time.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         sprintf(buf, "%2d%02d%02d", date_time.unit.hour, date_time.unit.minute, date_time.unit.second);
@@ -129,7 +130,6 @@ void temperature_logging_face_setup(uint8_t watch_face_index, void ** context_pt
 
 void temperature_logging_face_activate(void *context) {
     temperature_logging_state_t *logger_state = (temperature_logging_state_t *)context;
-    logger_state->display_index = TEMPERATURE_LOGGING_NUM_DATA_POINTS;
     logger_state->ts_ticks = 0;
 }
 
@@ -152,6 +152,10 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h(), true);
             break;
         case EVENT_ALARM_BUTTON_UP:
+            if (ignoring_btn_up_on_wake) {
+                ignoring_btn_up_on_wake = false;
+                break;
+            }
             logger_state->display_index = (logger_state->display_index + 1) % THERMISTOR_LOGGING_CYC;
             logger_state->ts_ticks = 0;
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h(), true);
@@ -166,6 +170,14 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
                 movement_move_to_next_face();
                 return false;
             }
+            ignoring_btn_up_on_wake = false;
+            if (watch_sleep_animation_is_running()) {
+                ignoring_btn_up_on_wake = true;
+                watch_stop_sleep_animation();
+            }
+            else {
+                logger_state->display_index = TEMPERATURE_LOGGING_NUM_DATA_POINTS;
+            }
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h(), true);
             break;
         case EVENT_TICK:
@@ -175,6 +187,10 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
+            // clear seconds area and start tick animation if necessary
+            if (!watch_sleep_animation_is_running()) {
+                watch_start_sleep_animation(1000);
+            }
             // update every 5 minutes
             if (displaying_curr_temp && movement_get_local_date_time().unit.minute % 5 == 0) {
                 watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
