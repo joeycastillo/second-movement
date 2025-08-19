@@ -110,7 +110,7 @@ void cb_watch_buzzer_seq(void *userData) {
                 watch_set_buzzer_on();
             }
             // set duration ticks and move to next tone
-            _tone_ticks = _sequence[_seq_position + 1];
+            _tone_ticks = _sequence[_seq_position + 1] - 1;
             _seq_position += 2;
         } else {
             // end the sequence
@@ -157,7 +157,7 @@ void cb_watch_buzzer_raw_source(void *userData) {
     if (_tone_ticks == 0) {
         done = _raw_source(_seq_position, _userdata, &period, &duration);
 
-        if (done) {
+        if (done || duration == 0) {
             // end the sequence
             watch_buzzer_abort_sequence();
         } else {
@@ -169,7 +169,7 @@ void cb_watch_buzzer_raw_source(void *userData) {
             }
 
             // set duration ticks and move to next tone
-            _tone_ticks = duration;
+            _tone_ticks = duration - 1;
             _seq_position += 1;
         }
     } else {
@@ -272,7 +272,7 @@ void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t durat
     static int8_t single_note_sequence[3];
 
     single_note_sequence[0] = note;
-    // 64 ticks per second for the tc0?
+    // 64 ticks per second for the tc0
     // Each tick is approximately 15ms
     uint16_t duration = duration_ms / 15;
     if (duration > 127) duration = 127;
