@@ -23,8 +23,8 @@
  */
 
 #define MOVEMENT_LONG_PRESS_TICKS 64
-#define DEBOUNCE_TICKS_DOWN  3
-#define DEBOUNCE_TICKS_UP   20
+#define DEBOUNCE_TICKS_DOWN  0
+#define DEBOUNCE_TICKS_UP   0
 /*
 DEBOUNCE_TICKS_DOWN and DEBOUNCE_TICKS_UP are in terms of fast_cb ticks after a button is pressed.
 The logic is that pressed of a button are ignored until the cb_fast_tick function runs this variable amount of times.
