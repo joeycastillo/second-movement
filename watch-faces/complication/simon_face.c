@@ -23,6 +23,7 @@
  */
 
 #include "simon_face.h"
+#include "delay.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
