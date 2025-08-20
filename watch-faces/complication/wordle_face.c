@@ -256,7 +256,7 @@ static void reset_board(wordle_state_t *state) {
 
 static void display_title(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_TITLE;
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WO ", "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text(WATCH_POSITION_BOTTOM, "WordLE");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
@@ -286,7 +286,7 @@ static void display_streak(wordle_state_t *state) {
 #else
     sprintf(buf, "St%4d", state->streak);
 #endif
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WO ", "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     watch_set_colon();
@@ -304,7 +304,7 @@ static void display_wait(wordle_state_t *state) {
     else {  // Streak too long to display in top-right
         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     }
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WO ", "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_BOTTOM, " WaIt ");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
 }
