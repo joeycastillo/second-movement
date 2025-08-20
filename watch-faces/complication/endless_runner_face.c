@@ -547,6 +547,10 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
                 break;
             }
             break;
+        case EVENT_SINGLE_TAP:
+        case EVENT_DOUBLE_TAP:
+            if (state->difficulty > DIFF_HARD) break; // Don't do this on fuel modes
+            //fall through
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_ALARM_BUTTON_UP:
             if (game_state.curr_screen == SCREEN_TITLE)
