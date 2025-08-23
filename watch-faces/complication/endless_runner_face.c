@@ -261,7 +261,7 @@ static void display_fuel(uint8_t subsecond, uint8_t difficulty) {
 
 static void check_and_reset_hi_score(endless_runner_state_t *state) {
     // Resets the hi score at the beginning of each month.
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     if ((state -> year_last_hi_score != date_time.unit.year) || 
         (state -> month_last_hi_score != date_time.unit.month))
     {
@@ -536,6 +536,7 @@ void endless_runner_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         memset(*context_ptr, 0, sizeof(endless_runner_state_t));
         endless_runner_state_t *state = (endless_runner_state_t *)*context_ptr;
         state->difficulty = DIFF_NORM;
+        state->tap_control_on = false;
     }
 }
 
@@ -576,7 +577,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             }
             else if (game_state.curr_screen == SCREEN_LOSE) {
                 display_title(state);
-            } 
+            }
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (game_state.curr_screen == SCREEN_TITLE)
@@ -625,4 +626,3 @@ void endless_runner_face_resign(void *context) {
     endless_runner_state_t *state = (endless_runner_state_t *)context;
     disable_tap_control(state);
 }
-
