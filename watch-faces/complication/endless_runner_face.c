@@ -305,6 +305,20 @@ static void toggle_sound(endless_runner_state_t *state) {
     }
 }
 
+static void enable_tap_control(endless_runner_state_t *state) {
+    if (!state->tap_control_on) {
+        movement_enable_tap_detection_if_available();
+        state->tap_control_on = true;
+    }
+}
+
+static void disable_tap_control(endless_runner_state_t *state) {
+    if (state->tap_control_on) {
+        movement_disable_tap_detection_if_available();
+        state->tap_control_on = false;
+    }
+}
+
 static void display_title(endless_runner_state_t *state) {
     uint16_t hi_score = state -> hi_score;
     uint8_t difficulty = state -> difficulty;
@@ -325,6 +339,7 @@ static void display_title(endless_runner_state_t *state) {
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
     display_difficulty(difficulty);
+    if (state -> soundOn) watch_set_indicator(WATCH_INDICATOR_BELL);
 }
 
 static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
@@ -532,8 +547,8 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
     endless_runner_state_t *state = (endless_runner_state_t *)context;
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            disable_tap_control(state);
             check_and_reset_hi_score(state);
-            if (state -> soundOn) watch_set_indicator(WATCH_INDICATOR_BELL);
             display_title(state);
             break;
         case EVENT_TICK:
@@ -549,10 +564,13 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_ALARM_BUTTON_UP:
-            if (game_state.curr_screen == SCREEN_TITLE)
+            if (game_state.curr_screen == SCREEN_TITLE) {
+                enable_tap_control(state);
                 begin_playing(state);
-            else if (game_state.curr_screen == SCREEN_LOSE)
+            }
+            else if (game_state.curr_screen == SCREEN_LOSE) {
                 display_title(state);
+            } 
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (game_state.curr_screen == SCREEN_TITLE)
@@ -580,10 +598,11 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (game_state.curr_screen != SCREEN_PLAYING)
+            if (game_state.curr_screen == SCREEN_TITLE)
                 toggle_sound(state);
             break;
         case EVENT_TIMEOUT:
+            disable_tap_control(state);
             if (game_state.curr_screen != SCREEN_TITLE)
                 display_title(state);
             break;
@@ -597,7 +616,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
 }
 
 void endless_runner_face_resign(void *context) {
-    (void) context;
-    movement_disable_tap_detection_if_available();
+    endless_runner_state_t *state = (endless_runner_state_t *)context;
+    disable_tap_control(state);
 }
 
