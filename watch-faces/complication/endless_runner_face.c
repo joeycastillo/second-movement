@@ -369,10 +369,18 @@ static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
     previous_date_time.reg = date_time.reg;
 }
 
+int8_t start_tune[] = {
+    BUZZER_NOTE_C5, 15,
+    BUZZER_NOTE_E5, 15,
+    BUZZER_NOTE_G5, 15,
+    0
+};
+
 static void begin_playing(endless_runner_state_t *state) {
     uint8_t difficulty = state -> difficulty;
     game_state.curr_screen = SCREEN_PLAYING;
     watch_clear_colon();
+    watch_clear_indicator(WATCH_INDICATOR_BELL);
     movement_request_tick_frequency((state -> difficulty == DIFF_BABY) ? FREQ_SLOW : FREQ);
     if (game_state.fuel_mode) {
         watch_clear_display();
@@ -390,9 +398,7 @@ static void begin_playing(endless_runner_state_t *state) {
     display_ball(game_state.jump_state != NOT_JUMPING);
     display_score( game_state.curr_score);
     if (state -> soundOn){
-        watch_buzzer_play_note(BUZZER_NOTE_C5, 200);
-        watch_buzzer_play_note(BUZZER_NOTE_E5, 200);
-        watch_buzzer_play_note(BUZZER_NOTE_G5, 200);
+        watch_buzzer_play_sequence(start_tune, NULL);
     }
 }
 
