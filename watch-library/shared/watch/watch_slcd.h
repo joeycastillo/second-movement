@@ -98,6 +98,10 @@ typedef enum {
   */
 void watch_enable_display(void);
 
+/** @brief Disables the Segment LCD display.
+  */
+void watch_disable_display(void);
+
 /** @brief Sets a pixel. Use this to manually set a pixel with a given common and segment number.
   *        See <a href="segmap.html">segmap.html</a>.
   * @param com the common pin, numbered from 0-2.
