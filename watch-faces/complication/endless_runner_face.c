@@ -85,7 +85,7 @@ int8_t custom_ball_arr_com[] = {2, 1, 1, 0, 3, 3, 2};
 int8_t custom_ball_arr_seg[] = {15, 15, 14, 15, 14, 15, 14};
 
 // obstacle 0-11
-int8_t classic_obstacle_arr_com[] = {0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0};
+int8_t classic_obstacle_arr_com[] = {0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1};
 int8_t classic_obstacle_arr_seg[] = {18, 19, 20, 21, 22, 23, 0, 1, 2, 4, 5, 6};
 int8_t custom_obstacle_arr_com[] = {1, 1, 1, 1, 1, 0, 1, 0, 3, 0, 0, 2};
 int8_t custom_obstacle_arr_seg[] = {22, 16, 15, 14, 1, 2, 3, 4, 4, 5, 6, 7};
