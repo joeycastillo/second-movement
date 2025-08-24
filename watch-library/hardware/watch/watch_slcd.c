@@ -260,6 +260,10 @@ void watch_enable_display(void) {
     slcd_enable();
 }
 
+void watch_disable_display(void) {
+    slcd_disable();
+}
+
 inline void watch_set_pixel(uint8_t com, uint8_t seg) {
     slcd_set_segment(com, seg);
 }
