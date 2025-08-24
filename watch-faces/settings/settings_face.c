@@ -322,7 +322,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
         case EVENT_MODE_BUTTON_UP:
             movement_force_led_off();
             movement_move_to_next_face();
-            return false;
+            return true;
         case EVENT_ALARM_BUTTON_UP:
             state->settings_screens[state->current_page].advance();
             break;
@@ -339,7 +339,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
         movement_force_led_on(color.red | color.red << 4,
                               color.green | color.green << 4,
                               color.blue | color.blue << 4);
-        return false;
+        return true;
     } else {
         movement_force_led_off();
         return true;
