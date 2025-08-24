@@ -252,7 +252,7 @@ void watch_enable_display(void) {
     slcd_clear();
 
     if (_installed_display == WATCH_LCD_TYPE_CUSTOM) {
-        slcd_set_contrast(4);
+        slcd_set_contrast(0);
     } else {
         slcd_set_contrast(9);
     }
