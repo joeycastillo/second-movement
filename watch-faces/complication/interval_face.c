@@ -100,11 +100,6 @@ static uint32_t _get_now_ts() {
     return watch_utility_date_time_to_unix_time(now, 0);
 }
 
-static inline void _button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
-}
-
 static void _timer_write_info(interval_face_state_t *state, char* bottom_row, char state_str[2][4], char* index_str, uint8_t timer_page) {
     // fill display string with requested timer information
     switch (timer_page) {
@@ -536,7 +531,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
         }
         break;
     case EVENT_LIGHT_LONG_PRESS:
-        _button_beep();
+        movement_play_button_sound_if_enabled();
         if (state->face_state == interval_state_setting) {
             _resume_setting(state, event.subsecond);
         } else {
@@ -561,7 +556,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
             break;
         case interval_state_running:
             // pause timer
-            _button_beep();
+            movement_play_button_sound_if_enabled();
             _paused_ts = _get_now_ts();
             state->face_state = interval_state_pausing;
             movement_cancel_background_task();
@@ -569,7 +564,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
             break;
         case interval_state_pausing:
             // resume paused timer
-            _button_beep();
+            movement_play_button_sound_if_enabled();
             _resume_paused_timer(state);
             _face_draw(state, event.subsecond);
             break;
@@ -586,7 +581,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
         } else if (state->face_state <= interval_state_waiting) {
             if (_is_timer_empty(timer)) {
                 // jump back to timer #1
-                _button_beep();
+                movement_play_button_sound_if_enabled();
                 state->timer_idx = 0;
                 _init_timer_info(state);
             } else {
@@ -610,7 +605,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
             _init_timer_info(state);
         } else if (state->face_state == interval_state_pausing) {
             // resume paused timer
-            _button_beep();
+            movement_play_button_sound_if_enabled();
             _resume_paused_timer(state);
         }
         _face_draw(state, event.subsecond);
