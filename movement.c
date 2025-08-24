@@ -610,7 +610,7 @@ void app_init(void) {
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
-    delay_ms(10);
+    delay_ms(100);
     if (HAL_GPIO_VBUS_DET_read()){
         /// if so, enable USB functionality.
         _watch_enable_usb();
