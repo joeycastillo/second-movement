@@ -23,6 +23,7 @@
  */
 
 #include "simon_face.h"
+#include "delay.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,18 +48,19 @@ static inline uint8_t _simon_get_rand_num(uint8_t num_values) {
 }
 
 static void _simon_clear_display(simon_state_t *state) {
-    if (state->playing_state == SIMON_NOT_PLAYING) {
-        watch_display_string("          ", 0);
-    } else {
-        sprintf(_simon_display_buf, "  %2d      ", state->sequence_length);
-        watch_display_string(_simon_display_buf, 0);
+    watch_clear_display();
+    if (state->playing_state != SIMON_NOT_PLAYING) {
+        sprintf(_simon_display_buf, "%2d", state->sequence_length);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, _simon_display_buf);
     }
 }
 
 static void _simon_not_playing_display(simon_state_t *state) {
     _simon_clear_display(state);
 
-    sprintf(_simon_display_buf, "SI  %d", state->best_score);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "SIMON", "SI");
+    sprintf(_simon_display_buf, "%d", state->best_score);
+    watch_display_text(WATCH_POSITION_BOTTOM, _simon_display_buf);
     if (!state->soundOff)
         watch_set_indicator(WATCH_INDICATOR_BELL);
     else
@@ -67,14 +69,13 @@ static void _simon_not_playing_display(simon_state_t *state) {
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     else
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
-    watch_display_string(_simon_display_buf, 0);
     switch (state->mode)
     {
     case SIMON_MODE_EASY:
-        watch_display_string("E", 9);
+        watch_display_text(WATCH_POSITION_SECONDS, " E");
         break;
     case SIMON_MODE_HARD:
-        watch_display_string("H", 9);
+        watch_display_text(WATCH_POSITION_SECONDS, " H");
         break;
     default:
         break;
@@ -90,24 +91,27 @@ static void _simon_reset(simon_state_t *state) {
 
 
 static void _simon_display_note(SimonNote note, simon_state_t *state) {
-    char *ndtemplate = NULL;
-
+    watch_clear_display();
+    if (note == SIMON_WRONG_NOTE) {
+        watch_display_text(WATCH_POSITION_TOP_LEFT, "OH");
+        watch_display_text(WATCH_POSITION_BOTTOM, "NOOOOO");
+        return;
+    }
+    sprintf(_simon_display_buf, "%2d", state->sequence_length);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, _simon_display_buf);
     switch (note) {
         case SIMON_LED_NOTE:
-            ndtemplate = "LI%2d      ";
+            watch_display_text(WATCH_POSITION_TOP_LEFT, "LI");
             break;
         case SIMON_ALARM_NOTE:
-            ndtemplate = "  %2d    AL";
+            watch_display_text(WATCH_POSITION_SECONDS, "AL");
             break;
         case SIMON_MODE_NOTE:
-            ndtemplate = "  %2dDE    ";
+            watch_display_text_with_fallback(WATCH_POSITION_HOURS, "Md", "DE");
             break;
-        case SIMON_WRONG_NOTE:
-            ndtemplate = "OH  NOOOOO";
+        default:
+            break;
     }
-
-    sprintf(_simon_display_buf, ndtemplate, state->sequence_length);
-    watch_display_string(_simon_display_buf, 0);
 }
 
 static void _simon_play_note(SimonNote note, simon_state_t *state, bool skip_rest) {
@@ -220,7 +224,6 @@ void simon_face_setup(uint8_t watch_face_index,
 }
 
 void simon_face_activate(void *context) {
-  (void) settings;
   (void) context;
   simon_state_t *state = (simon_state_t *)context;
   _simon_change_speed(state);
