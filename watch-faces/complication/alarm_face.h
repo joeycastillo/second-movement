@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2022 Josh Berson
  * Copyright (c) 2025 Joey Castillo
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,18 +27,20 @@
 #pragma once
 
 /*
- * Daily ALARM face (formerly WAKE Face)
+ * Alarm Face modeled after the module in the GW-M5610U.
+ *
+ * This face is a port of the alarm face that can be found on more advanced Casios,
+ * with minor tweaks to make the UI work with 3 buttons instead of the typical 4.
+ * 
+ * In this face you can configure:
+ * - 4 daily alarms
+ * - 1 daily snooze alarm (will repeat 7 times at 5 minutes interval, unless the user enters the face)
+ * - 1 hourly chime
+ * 
+ * Bonus feature unique to this implementation, the hourly chime can be set for minutes other than :00.
  *
  * Basic daily alarm clock face. Seems useful if nothing else in the interest
  * of feature parity with the F-91W’s OEM module, 593.
- *
- * Also experiments with caret-free UI: One button cycles hours, the other
- * minutes, so there’s no toggling between display and adjust modes and no
- * cycling the caret through the UI.
- *   º LIGHT advances hour by 1
- *   º LIGHT long press advances hour by 6
- *   º ALARM advances minute by 10
- *   º ALARM long press cycles through signal modes (just one at the moment)
  */
 
 #include "movement.h"
@@ -49,11 +52,27 @@ typedef enum {
     ALARM_FACE_SETTING_MODE_SETTING_MINUTE
 } alarm_face_setting_mode_t;
 
+#define ALARM_FACE_NUM_ALARMS 6
+#define ALARM_FACE_SNOOZE_ALARM_INDEX (ALARM_FACE_NUM_ALARMS - 2)
+#define ALARM_FACE_CHIME_INDEX (ALARM_FACE_NUM_ALARMS - 1)
+#define ALARM_FACE_SNOOZE_DELAY 5
+#define ALARM_FACE_SNOOZE_REPETITIONS 7
+
 typedef struct {
     uint32_t hour : 5;
     uint32_t minute : 6;
-    uint32_t alarm_is_on : 1;
+    uint32_t enabled : 1;
+} alarm_face_alarm_t;
+
+typedef struct {
+    uint8_t alarm_index;
+    alarm_face_alarm_t alarms[ALARM_FACE_NUM_ALARMS];
+    alarm_face_alarm_t next_snooze_alarm;
+    uint8_t remaining_snooze_repetitions;
+    uint32_t quick_increase: 1;
     alarm_face_setting_mode_t setting_mode : 2;
+    uint32_t play_alarm: 1;
+    uint32_t play_signal: 1;
 } alarm_face_state_t;
 
 void alarm_face_setup(uint8_t watch_face_index, void **context_ptr);
