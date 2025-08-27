@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "fast_stopwatch_face.h"
 #include "watch.h"
 #include "watch_common_display.h"
@@ -59,27 +60,52 @@ static inline void _button_beep() {
 // This is just for looks, timekeeping is always accurate to 128Hz
 static const uint8_t DISPLAY_RUNNING_RATE = 32;
 
-static const uint32_t TWENTY_FOUR_HOURS = 24 * 60 * 60 * 128;
-
 /// @brief Display minutes, seconds and fractions derived from 128 Hz tick counter
 ///        on the lcd.
 /// @param ticks
-static void _display_elapsed(uint32_t ticks) {
-    ticks = ticks % TWENTY_FOUR_HOURS;
-    char buf[14];
+static void _display_elapsed(fast_stopwatch_state_t *state, uint32_t ticks) {
+    char buf[3];
     uint8_t sec_100 = (ticks & 0x7F) * 100 / 128;
+
+    watch_display_character_lp_seconds('0' + sec_100 / 10, 8);
+    watch_display_character_lp_seconds('0' + sec_100 % 10, 9);
+
     uint32_t seconds = ticks >> 7;
+
+    if (seconds == state->old_display.seconds) {
+        return;
+    }
+
+    state->old_display.seconds = seconds;
+
+    sprintf(buf, "%02lu", seconds % 60);
+    watch_display_text(WATCH_POSITION_MINUTES, buf);
+
     uint32_t minutes = seconds / 60;
-    uint32_t hours = minutes / 60;
+
+    if (minutes == state->old_display.minutes) {
+        return;
+    }
+
+    state->old_display.minutes = minutes;
+
+    sprintf(buf, "%02lu", minutes % 60);
+    watch_display_text(WATCH_POSITION_HOURS, buf);
+
+    uint32_t hours = (minutes / 60) % 24;
+
+    if (hours == state->old_display.hours) {
+        return;
+    }
+
+    state->old_display.hours = hours;
+
     if (hours) {
-        sprintf(buf, "%2u", hours);
+        sprintf(buf, "%2lu", hours);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     } else {
         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     }
-
-    sprintf(buf, "%02lu%02lu%02u", (minutes % 60), (seconds % 60), sec_100);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void _draw_indicators(fast_stopwatch_state_t *state, movement_event_t event, uint32_t elapsed) {
@@ -255,6 +281,10 @@ void fast_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void fast_stopwatch_face_activate(void *context) {
     fast_stopwatch_state_t *state = (fast_stopwatch_state_t *) context;
+    // force full re-draw
+    state->old_display.seconds = UINT_MAX;
+    state->old_display.minutes = UINT_MAX;
+    state->old_display.hours = UINT_MAX;
     movement_request_tick_frequency(get_refresh_rate(state));
 }
 
@@ -270,7 +300,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "STW", "ST");
             _draw_indicators(state, event, elapsed);
-            _display_elapsed(elapsed);
+            _display_elapsed(state, elapsed);
             break;
         case EVENT_ALARM_BUTTON_DOWN:
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -278,7 +308,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
             // Fall into the case below;
         case EVENT_TICK:
             _draw_indicators(state, event, elapsed);
-            _display_elapsed(elapsed);
+            _display_elapsed(state, elapsed);
             break;
         default:
             movement_default_loop_handler(event);
