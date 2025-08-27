@@ -91,7 +91,19 @@ void watch_rtc_set_date_time(rtc_date_time_t date_time) {
 }
 
 rtc_date_time_t watch_rtc_get_date_time(void) {
-    return watch_utility_date_time_from_unix_time(watch_rtc_get_unix_time(), 0);
+    static struct {
+        unix_timestamp_t timestamp;
+        rtc_date_time_t datetime;
+    } cached_date_time = {.datetime.reg=0, .timestamp=0};
+
+    unix_timestamp_t timestamp = watch_rtc_get_unix_time();
+
+    if (timestamp != cached_date_time.timestamp) {
+        cached_date_time.timestamp = timestamp;
+        cached_date_time.datetime = watch_utility_date_time_from_unix_time(timestamp, 0);
+    }
+
+    return cached_date_time.datetime;
 }
 
 void watch_rtc_set_unix_time(unix_timestamp_t unix_time) {
