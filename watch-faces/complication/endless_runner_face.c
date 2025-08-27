@@ -551,7 +551,6 @@ void endless_runner_face_activate(void *context) {
     ball_arr_seg = is_custom_lcd ? custom_ball_arr_seg : classic_ball_arr_seg;
     obstacle_arr_com = is_custom_lcd ? custom_obstacle_arr_com : classic_obstacle_arr_com;
     obstacle_arr_seg = is_custom_lcd ? custom_obstacle_arr_seg : classic_obstacle_arr_seg;
-    movement_enable_tap_detection_if_available();
 }
 
 bool endless_runner_face_loop(movement_event_t event, void *context) {
@@ -559,6 +558,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             disable_tap_control(state);
+            clock_stop_tick_tock_animation();
             check_and_reset_hi_score(state);
             display_title(state);
             break;
