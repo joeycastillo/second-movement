@@ -558,7 +558,9 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             disable_tap_control(state);
-            clock_stop_tick_tock_animation();
+            if (watch_sleep_animation_is_running()) {
+                watch_stop_blink();
+            }
             check_and_reset_hi_score(state);
             display_title(state);
             break;
