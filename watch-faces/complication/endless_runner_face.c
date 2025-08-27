@@ -342,26 +342,27 @@ static void display_title(endless_runner_state_t *state) {
     if (state -> soundOn) watch_set_indicator(WATCH_INDICATOR_BELL);
 }
 
-static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
+static void display_time(void) {
     static watch_date_time_t previous_date_time;
+    watch_date_time_t date_time = movement_get_local_date_time();
+    movement_clock_mode_t clock_mode_24h = movement_clock_mode_24h();
     char buf[6 + 1];
 
-    if (!watch_sleep_animation_is_running()) {
-        watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
-    }
     // If the hour needs updating or it's the first time displaying the time
     if ((game_state.curr_screen != SCREEN_TIME) || (date_time.unit.hour != previous_date_time.unit.hour)) {
         uint8_t hour = date_time.unit.hour;
         game_state.curr_screen = SCREEN_TIME;
-
-        if (clock_mode_24h) watch_set_indicator(WATCH_INDICATOR_24H);
+        if (!watch_sleep_animation_is_running()) {
+            watch_set_colon();
+            watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
+        }
+        if (clock_mode_24h != MOVEMENT_CLOCK_MODE_12H) watch_set_indicator(WATCH_INDICATOR_24H);
         else {
             if (hour >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
             hour %= 12;
             if (hour == 0) hour = 12;
         }
-        watch_set_colon();
-        sprintf( buf, movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d  " : "%2d%02d  ", hour, date_time.unit.minute);
+        sprintf( buf, clock_mode_24h == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d  " : "%2d%02d  ", hour, date_time.unit.minute);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
     // If only the minute need updating
@@ -617,7 +618,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
                 display_title(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            display_time(movement_get_local_date_time(), movement_clock_mode_24h());
+            display_time();
             break;
         default:
             return movement_default_loop_handler(event);
