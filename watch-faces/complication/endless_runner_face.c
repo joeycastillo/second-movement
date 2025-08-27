@@ -346,6 +346,9 @@ static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
     static watch_date_time_t previous_date_time;
     char buf[6 + 1];
 
+    if (!watch_sleep_animation_is_running()) {
+        watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
+    }
     // If the hour needs updating or it's the first time displaying the time
     if ((game_state.curr_screen != SCREEN_TIME) || (date_time.unit.hour != previous_date_time.unit.hour)) {
         uint8_t hour = date_time.unit.hour;
@@ -358,7 +361,7 @@ static void display_time(watch_date_time_t date_time, bool clock_mode_24h) {
             if (hour == 0) hour = 12;
         }
         watch_set_colon();
-        sprintf( buf, "%2d%02d  ", hour, date_time.unit.minute);
+        sprintf( buf, movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d  " : "%2d%02d  ", hour, date_time.unit.minute);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
     // If only the minute need updating
