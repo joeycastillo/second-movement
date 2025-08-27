@@ -31,6 +31,7 @@
 #include "watch_common_display.h"
 #include "watch_utility.h"
 #include "watch_rtc.h"
+#include "slcd.h"
 
 /*
     This watch face implements the original F-91W stopwatch functionality
@@ -59,16 +60,23 @@ static inline void _button_beep() {
 // How quickly should the elapsing time be displayed?
 // This is just for looks, timekeeping is always accurate to 128Hz
 static const uint8_t DISPLAY_RUNNING_RATE = 32;
+static const uint8_t DISPLAY_RUNNING_RATE_SLOW = 2;
 
 /// @brief Display minutes, seconds and fractions derived from 128 Hz tick counter
 ///        on the lcd.
 /// @param ticks
 static void _display_elapsed(fast_stopwatch_state_t *state, uint32_t ticks) {
     char buf[3];
-    uint8_t sec_100 = (ticks & 0x7F) * 100 / 128;
 
-    watch_display_character_lp_seconds('0' + sec_100 / 10, 8);
-    watch_display_character_lp_seconds('0' + sec_100 % 10, 9);
+    if (state->slow_refresh && (state->status == SW_STATUS_RUNNING || state->status == SW_STATUS_IDLE)) {
+        watch_display_character_lp_seconds(' ', 8);
+        watch_display_character_lp_seconds(' ', 9);
+    } else {
+        uint8_t sec_100 = (ticks & 0x7F) * 100 / 128;
+
+        watch_display_character_lp_seconds('0' + sec_100 / 10, 8);
+        watch_display_character_lp_seconds('0' + sec_100 % 10, 9);
+    }
 
     uint32_t seconds = ticks >> 7;
 
@@ -157,7 +165,11 @@ static void _draw_indicators(fast_stopwatch_state_t *state, movement_event_t eve
 static uint8_t get_refresh_rate(fast_stopwatch_state_t *state) {
     switch (state->status) {
         case SW_STATUS_RUNNING:
-            return DISPLAY_RUNNING_RATE;
+            if (state->slow_refresh) {
+                return DISPLAY_RUNNING_RATE_SLOW;
+            } else {
+                return DISPLAY_RUNNING_RATE;
+            }
         case SW_STATUS_RUNNING_LAPPING:
             return 2;
         case SW_STATUS_STOPPED:
@@ -174,7 +186,10 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                 case EVENT_ALARM_BUTTON_DOWN:
                     state->status = SW_STATUS_RUNNING;
                     state->start_counter = counter;
-                    movement_request_tick_frequency(DISPLAY_RUNNING_RATE);
+                    movement_request_tick_frequency(get_refresh_rate(state));
+                    return;
+                case EVENT_LIGHT_LONG_PRESS:
+                    state->slow_refresh = !state->slow_refresh;
                     return;
                 default:
                     return;
@@ -185,12 +200,12 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                 case EVENT_ALARM_BUTTON_DOWN:
                     state->status = SW_STATUS_STOPPED;
                     state->stop_counter = counter;
-                    movement_request_tick_frequency(1);
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 case EVENT_LIGHT_BUTTON_DOWN:
                     state->status = SW_STATUS_RUNNING_LAPPING;
                     state->lap_counter = counter;
-                    movement_request_tick_frequency(2);
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 default:
                     return;
@@ -201,12 +216,17 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                 case EVENT_ALARM_BUTTON_DOWN:
                     state->status = SW_STATUS_STOPPED_LAPPING;
                     state->stop_counter = counter;
-                    movement_request_tick_frequency(1);
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 case EVENT_LIGHT_BUTTON_DOWN:
                     state->status = SW_STATUS_RUNNING;
                     state->lap_counter = counter;
-                    movement_request_tick_frequency(DISPLAY_RUNNING_RATE);
+                    movement_request_tick_frequency(get_refresh_rate(state));
+                    return;
+                case EVENT_LIGHT_LONG_PRESS:
+                    state->status = SW_STATUS_RUNNING;
+                    state->slow_refresh = !state->slow_refresh;
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 default:
                     return;
@@ -218,7 +238,7 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                     state->status = SW_STATUS_RUNNING_LAPPING;
                     state->start_counter = counter - state->stop_counter + state->start_counter;
                     state->lap_counter = counter - state->stop_counter + state->lap_counter;
-                    movement_request_tick_frequency(2);
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 case EVENT_LIGHT_BUTTON_DOWN:
                     state->status = SW_STATUS_STOPPED;
@@ -232,7 +252,7 @@ static void state_transition(fast_stopwatch_state_t *state, rtc_counter_t counte
                 case EVENT_ALARM_BUTTON_DOWN:
                     state->status = SW_STATUS_RUNNING;
                     state->start_counter = counter - state->stop_counter + state->start_counter;
-                    movement_request_tick_frequency(DISPLAY_RUNNING_RATE);
+                    movement_request_tick_frequency(get_refresh_rate(state));
                     return;
                 case EVENT_LIGHT_BUTTON_DOWN:
                     state->status = SW_STATUS_IDLE;
@@ -304,6 +324,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_BUTTON_DOWN:
         case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_LIGHT_LONG_PRESS:
             _button_beep();
             // Fall into the case below;
         case EVENT_TICK:
