@@ -105,9 +105,7 @@ bool ke_decimal_time_face_loop(movement_event_t event, void *context) {
             // Just in case you have need for another button.
             break;
         case EVENT_TIMEOUT:
-            // Your watch face will receive this event after a period of inactivity. If it makes sense to resign,
-            // you may uncomment this line to move back to the first watch face in the list:
-            // movement_move_to_face(0);
+            // we never resign this clock face.
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // If you did not resign in EVENT_TIMEOUT, you can use this event to update the display once a minute.
@@ -138,4 +136,3 @@ void ke_decimal_time_face_resign(void *context) {
 
     // handle any cleanup before your watch face goes off-screen.
 }
-

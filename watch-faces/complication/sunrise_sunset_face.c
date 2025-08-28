@@ -582,6 +582,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                 state->rise_index = 0;
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);
+                // Finally, we defer the timeout behavior to the default handler
+                // that may resign this watch face.
+                return movement_default_loop_handler(event);
             }
             break;
         default:
