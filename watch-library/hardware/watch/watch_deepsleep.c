@@ -41,7 +41,7 @@ void sleep(const uint8_t mode) {
 }
 
 void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool level) {
-    uint32_t config = RTC->MODE2.TAMPCTRL.reg;
+    uint32_t config = RTC->MODE0.TAMPCTRL.reg;
 
     if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         HAL_GPIO_BTN_ALARM_in();
@@ -71,22 +71,22 @@ void watch_register_extwake_callback(uint8_t pin, watch_cb_t callback, bool leve
     }
 
     // disable the RTC
-    RTC->MODE2.CTRLA.bit.ENABLE = 0;
-    while (RTC->MODE2.SYNCBUSY.bit.ENABLE); // wait for RTC to be disabled
+    RTC->MODE0.CTRLA.bit.ENABLE = 0;
+    while (RTC->MODE0.SYNCBUSY.bit.ENABLE); // wait for RTC to be disabled
 
     // update the configuration
-    RTC->MODE2.TAMPCTRL.reg = config;
+    RTC->MODE0.TAMPCTRL.reg = config;
 
     // re-enable the RTC
-    RTC->MODE2.CTRLA.bit.ENABLE = 1;
+    RTC->MODE0.CTRLA.bit.ENABLE = 1;
 
     NVIC_ClearPendingIRQ(RTC_IRQn);
     NVIC_EnableIRQ(RTC_IRQn);
-    RTC->MODE2.INTENSET.reg = RTC_MODE2_INTENSET_TAMPER;
+    RTC->MODE0.INTENSET.reg = RTC_MODE0_INTENSET_TAMPER;
 }
 
 void watch_disable_extwake_interrupt(uint8_t pin) {
-    uint32_t config = RTC->MODE2.TAMPCTRL.reg;
+    uint32_t config = RTC->MODE0.TAMPCTRL.reg;
 
     if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         btn_alarm_callback = NULL;
@@ -101,14 +101,14 @@ void watch_disable_extwake_interrupt(uint8_t pin) {
     }
 
     // disable the RTC
-    RTC->MODE2.CTRLA.bit.ENABLE = 0;
-    while (RTC->MODE2.SYNCBUSY.bit.ENABLE); // wait for RTC to be disabled
+    RTC->MODE0.CTRLA.bit.ENABLE = 0;
+    while (RTC->MODE0.SYNCBUSY.bit.ENABLE); // wait for RTC to be disabled
 
     // update the configuration
-    RTC->MODE2.TAMPCTRL.reg = config;
+    RTC->MODE0.TAMPCTRL.reg = config;
 
     // re-enable the RTC
-    RTC->MODE2.CTRLA.bit.ENABLE = 1;
+    RTC->MODE0.CTRLA.bit.ENABLE = 1;
 }
 
 void watch_store_backup_data(uint32_t data, uint8_t reg) {
@@ -151,7 +151,8 @@ static void _watch_disable_all_pins_except_rtc(void) {
 }
 
 static void _watch_disable_all_peripherals_except_slcd(void) {
-    _watch_disable_tcc();
+    watch_disable_leds();
+    watch_disable_buzzer();
     watch_disable_adc();
     watch_disable_external_interrupts();
 

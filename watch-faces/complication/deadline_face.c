@@ -156,26 +156,36 @@ static inline int _days_in_month(int16_t month, int16_t year)
 /* Play beep sound based on type */
 static inline void _beep(beep_type_t beep_type)
 {
+    static int8_t beep_sequence[] = {
+        0, 4,
+        0, 6,
+        0, 6,
+        0
+    };
+
     if (!movement_button_should_sound())
         return;
 
     switch (beep_type) {
         case BEEP_BUTTON:
-            watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+            beep_sequence[0] = BUZZER_NOTE_C7;
+            beep_sequence[2] = 0;
             break;
 
         case BEEP_ENABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 75);
+            beep_sequence[0] = BUZZER_NOTE_G7;
+            beep_sequence[2] = BUZZER_NOTE_REST;
+            beep_sequence[4] = BUZZER_NOTE_C8;
             break;
 
         case BEEP_DISABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 75);
+            beep_sequence[0] = BUZZER_NOTE_C8;
+            beep_sequence[2] = BUZZER_NOTE_REST;
+            beep_sequence[4] = BUZZER_NOTE_G7;
             break;
     }
+
+    movement_play_sequence(beep_sequence, 0);
 }
 
 /* Change tick frequency */

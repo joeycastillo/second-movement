@@ -20,6 +20,9 @@ TINYUSB_CDC=1
 # Now we're all set to include gossamer's make rules.
 include $(GOSSAMER_PATH)/make.mk
 
+# Don't add gossamer's rtc.c since we are using our own rtc32.c
+SRCS := $(filter-out $(GOSSAMER_PATH)/peripherals/rtc.c,$(SRCS))
+
 CFLAGS+=-D_POSIX_C_SOURCE=200112L
 
 define n
@@ -136,6 +139,7 @@ INCLUDES += \
   -I./watch-library/hardware/watch \
 
 SRCS += \
+  ./watch-library/hardware/watch/rtc32.c \
   ./watch-library/hardware/watch/watch.c \
   ./watch-library/hardware/watch/watch_adc.c \
   ./watch-library/hardware/watch/watch_deepsleep.c \
