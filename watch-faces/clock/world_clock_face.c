@@ -224,6 +224,9 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             return movement_default_loop_handler(event);
     }

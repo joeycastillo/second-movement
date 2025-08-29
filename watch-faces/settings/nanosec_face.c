@@ -316,10 +316,8 @@ bool nanosec_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
-            // Your watch face will receive this event after a period of inactivity. If it makes sense to resign,
-            // you may uncomment this line to move back to the first watch face in the list:
-            // movement_move_to_face(0);
-            break;
+            // Defer to the timeout behavior to the default handler.
+            return movement_default_loop_handler(event);
         case EVENT_LOW_ENERGY_UPDATE:
             // If you did not resign in EVENT_TIMEOUT, you can use this event to update the display once a minute.
             // Avoid displaying fast-updating values like seconds, since the display won't update again for 60 seconds.

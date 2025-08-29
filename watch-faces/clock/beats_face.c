@@ -83,6 +83,9 @@ bool beats_face_loop(movement_event_t event, void *context) {
             watch_display_text_with_fallback(WATCH_POSITION_TOP, "beat", "bt");
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             movement_default_loop_handler(event);
             break;

@@ -156,6 +156,7 @@ bool squash_face_loop(movement_event_t event, void *context) {
         break;
 
     case EVENT_TIMEOUT:
+        // We never resign this watch face on timeout.
         break;
 
     case EVENT_LOW_ENERGY_UPDATE:

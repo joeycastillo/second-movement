@@ -78,6 +78,21 @@ const watch_face_t watch_faces[] = {
  */
 #define MOVEMENT_DEFAULT_TIMEOUT_INTERVAL 0
 
+/* When the timeout value is reached a given watch face can do the following:
+ *  - Ignore the timeout if it actively displays a varying information or it
+ *    expects the user to continue to want to interact with that watch face.
+ *  - Always go back to the main watch face (assumed to be the clock) if it does
+ *    not display any interesting information.
+ *  - Cancel a setting screen if one was open.
+ *  - Or, if it display some useful but static information it should defer its
+ *    behavior to the default handler behavior which will depend on this
+ *    setting.
+ * You should set this value to true if you want such watch face to resign and
+ * have the watch go back to the main watch face on timeout. Or set it to false
+ * to keep these watch face active.
+ */
+#define MOVEMENT_TIMEOUT_GOES_TO_CLOCK false
+
 /* Set the timeout before switching to low energy mode
  * Valid values are:
  * 0: Never
