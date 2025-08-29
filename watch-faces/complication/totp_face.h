@@ -61,6 +61,10 @@
  *      o `algorithm` is one of the supported hashing algorithms listed above.
  *      o `timestep` is how often the TOTP refreshes in seconds. This is usually
  *        30 seconds.
+ *  o Alternatively, place the `credentials` variable as-is in a file named
+ *    `totp_face.secrets.h` in this directory, and it will be included instead.
+ *    This lowers the risk of commiting your OTP secrets to GitHub as that file
+ *    is listed in the .gitignore file.
  *
  * If you have more than one secret key, press ALARM to cycle through them.
  * Press LIGHT to cycle in the other direction or keep it pressed longer to
