@@ -98,6 +98,20 @@ int8_t *obstacle_arr_seg;
 static game_state_t game_state;
 static const uint8_t _num_bits_obst_pattern = sizeof(game_state.obst_pattern) * 8;
 
+int8_t start_tune[] = {
+    BUZZER_NOTE_C5, 15,
+    BUZZER_NOTE_E5, 15,
+    BUZZER_NOTE_G5, 15,
+    0
+};
+
+int8_t lose_tune[] = {
+    BUZZER_NOTE_D3, 10,
+    BUZZER_NOTE_C3SHARP_D3FLAT, 10,
+    BUZZER_NOTE_C3, 10,
+    0
+};
+
 static void print_binary(uint32_t value, int bits) {
 #if __EMSCRIPTEN__
     for (int i = bits - 1; i >= 0; i--) {
@@ -373,13 +387,6 @@ static void display_time(void) {
     previous_date_time.reg = date_time.reg;
 }
 
-int8_t start_tune[] = {
-    BUZZER_NOTE_C5, 15,
-    BUZZER_NOTE_E5, 15,
-    BUZZER_NOTE_G5, 15,
-    0
-};
-
 static void begin_playing(endless_runner_state_t *state) {
     uint8_t difficulty = state -> difficulty;
     game_state.curr_screen = SCREEN_PLAYING;
@@ -412,7 +419,7 @@ static void display_lose_screen(endless_runner_state_t *state) {
     watch_clear_display();
     watch_display_text(WATCH_POSITION_BOTTOM, " LOSE ");
     if (state -> soundOn)
-        watch_buzzer_play_note(BUZZER_NOTE_A1, 600);
+        watch_buzzer_play_sequence(lose_tune, NULL);
     else
         delay_ms(600);
 }
