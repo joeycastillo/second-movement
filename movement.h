@@ -145,6 +145,12 @@ typedef enum {
     MINUTE_TIMEOUT,             // Top of the Minute timeout
 } movement_timeout_index_t;
 
+typedef enum {
+    BUZZER_PRIORITY_BUTTON = 0, // Buzzer priority for button beeps (lowest priority).
+    BUZZER_PRIORITY_SIGNAL,     // Buzzer priority for hourly chime (medium priority).
+    BUZZER_PRIORITY_ALARM,      // Buzzer priority for hourly chime (highest priority).
+} movement_buzzer_priority_t;
+
 typedef struct {
     uint8_t event_type;
     uint8_t subsecond;
@@ -286,6 +292,10 @@ typedef struct {
     lis2dw_data_rate_t accelerometer_background_rate;
     // threshold for considering the wearer is in motion
     uint8_t accelerometer_motion_threshold;
+
+    // signal and alarm volumes
+    watch_buzzer_volume_t signal_volume;
+    watch_buzzer_volume_t alarm_volume;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -318,7 +328,7 @@ void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
 void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
-void movement_play_sequence(int8_t *note_sequence, uint8_t priority);
+void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority);
 
 uint8_t movement_claim_backup_register(void);
 
@@ -342,6 +352,12 @@ void movement_set_button_should_sound(bool value);
 
 watch_buzzer_volume_t movement_button_volume(void);
 void movement_set_button_volume(watch_buzzer_volume_t value);
+
+watch_buzzer_volume_t movement_signal_volume(void);
+void movement_set_signal_volume(watch_buzzer_volume_t value);
+
+watch_buzzer_volume_t movement_alarm_volume(void);
+void movement_set_alarm_volume(watch_buzzer_volume_t value);
 
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);

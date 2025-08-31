@@ -44,6 +44,12 @@
  *      This setting allows you to choose whether the Mode button should emit
  *      a beep when pressed, and if so, how loud it should be. Options are
  *      "Y" for yes and "N" for no.
+ * 
+ *  SI / SIG - Signal beep.
+ *      This setting allows you to choose the hourly chime buzzer volume.
+ * 
+ *  AL / ALM - Alarm beep.
+ *      This setting allows you to choose the hourly chime buzzer volume.
  *
  *  TO / Tmout - Timeout.
  *      Sets the time until screens that time out (like Settings and Time Set)

@@ -69,6 +69,8 @@ const watch_face_t watch_faces[] = {
 #define MOVEMENT_DEFAULT_BUTTON_SOUND true
 
 #define MOVEMENT_DEFAULT_BUTTON_VOLUME WATCH_BUZZER_VOLUME_SOFT
+#define MOVEMENT_DEFAULT_SIGNAL_VOLUME WATCH_BUZZER_VOLUME_LOUD
+#define MOVEMENT_DEFAULT_ALARM_VOLUME WATCH_BUZZER_VOLUME_LOUD
 
 /* Set the timeout before switching back to the main watch face
  * Valid values are:

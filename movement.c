@@ -157,6 +157,19 @@ static udatetime_t _movement_convert_date_time_to_udate(watch_date_time_t date_t
     };
 }
 
+static watch_buzzer_volume_t _movement_get_buzzer_volume(movement_buzzer_priority_t priority) {
+    switch (priority) {
+        case BUZZER_PRIORITY_BUTTON:
+            return movement_button_volume();
+        case BUZZER_PRIORITY_SIGNAL:
+            return movement_signal_volume();
+        case BUZZER_PRIORITY_ALARM:
+            return movement_alarm_volume();
+        default:
+            return WATCH_BUZZER_VOLUME_LOUD;
+    }
+}
+
 static void _movement_set_top_of_minute_alarm() {
     uint32_t counter = watch_rtc_get_counter();
     uint32_t next_minute_counter;
@@ -512,15 +525,15 @@ void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
     single_note_sequence[1] = (int8_t)duration;
     single_note_sequence[2] = 0;
 
-    movement_play_sequence(single_note_sequence, 0);
+    movement_play_sequence(single_note_sequence, BUZZER_PRIORITY_BUTTON);
 }
 
 void movement_play_signal(void) {
-    movement_play_sequence(signal_tune, 1);
+    movement_play_sequence(signal_tune, BUZZER_PRIORITY_SIGNAL);
 }
 
 void movement_play_alarm(void) {
-    movement_play_sequence(alarm_tune, 2);
+    movement_play_sequence(alarm_tune, BUZZER_PRIORITY_ALARM);
 }
 
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
@@ -550,10 +563,10 @@ void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
 
     custom_alarm_tune[18] = 0;
 
-    movement_play_sequence(custom_alarm_tune, 2);
+    movement_play_sequence(custom_alarm_tune, BUZZER_PRIORITY_ALARM);
 }
 
-void movement_play_sequence(int8_t *note_sequence, uint8_t priority) {
+void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority) {
     // Priority is used to ensure that lower priority sequences don't cancel higher priority ones
     // Priotity order: alarm(2) > signal(1) > note(0)
     if (priority < movement_volatile_state.pending_sequence_priority) {
@@ -569,7 +582,7 @@ void movement_play_sequence(int8_t *note_sequence, uint8_t priority) {
         movement_volatile_state.has_pending_sequence = true;
         movement_volatile_state.exit_sleep_mode = true;
     } else {
-        watch_buzzer_play_sequence_with_volume(note_sequence, NULL, movement_button_volume());
+        watch_buzzer_play_sequence_with_volume(note_sequence, NULL, _movement_get_buzzer_volume(priority));
     }
 }
 
@@ -669,6 +682,21 @@ watch_buzzer_volume_t movement_button_volume(void) {
 
 void movement_set_button_volume(watch_buzzer_volume_t value) {
     movement_state.settings.bit.button_volume = value;
+}
+
+watch_buzzer_volume_t movement_signal_volume(void) {
+    return movement_state.signal_volume;
+}
+void movement_set_signal_volume(watch_buzzer_volume_t value) {
+    movement_state.signal_volume = value;
+}
+
+watch_buzzer_volume_t movement_alarm_volume(void) {
+    return movement_state.alarm_volume;
+}
+
+void movement_set_alarm_volume(watch_buzzer_volume_t value) {
+    movement_state.alarm_volume = value;
 }
 
 movement_clock_mode_t movement_clock_mode_24h(void) {
@@ -952,6 +980,8 @@ void app_init(void) {
 
     if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
+    movement_state.signal_volume = MOVEMENT_DEFAULT_SIGNAL_VOLUME;
+    movement_state.alarm_volume = MOVEMENT_DEFAULT_ALARM_VOLUME;
     movement_state.light_on = false;
     movement_state.next_available_backup_register = 2;
     _movement_reset_inactivity_countdown();
@@ -1241,7 +1271,7 @@ bool app_loop(void) {
         // If we woke up to play a note sequence, actually play the note sequence we were asked to play while in deep sleep.
         if (movement_volatile_state.has_pending_sequence) {
             movement_volatile_state.has_pending_sequence = false;
-            watch_buzzer_play_sequence_with_volume(_pending_sequence, movement_request_sleep, movement_button_volume());
+            watch_buzzer_play_sequence_with_volume(_pending_sequence, movement_request_sleep, _movement_get_buzzer_volume(movement_volatile_state.pending_sequence_priority));
             // When this sequence is done playing, movement_request_sleep is invoked and the watch will go,
             // back to sleep (unless the user interacts with it in the meantime)
             _pending_sequence = NULL;
