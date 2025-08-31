@@ -431,10 +431,10 @@ static void display_lose_screen(endless_runner_state_t *state) {
     game_state.curr_score = 0;
     watch_clear_display();
     watch_display_text(WATCH_POSITION_BOTTOM, " LOSE ");
-    if (state -> soundOn)
+    if (state -> soundOn) {
         watch_buzzer_play_sequence(lose_tune, NULL);
-    else
         delay_ms(600);
+    }
 }
 
 static void display_obstacle(bool obstacle, int grid_loc, endless_runner_state_t *state) {
