@@ -599,12 +599,18 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_ALARM_BUTTON_UP:
-            if (game_state.curr_screen == SCREEN_SCORE) {
-                enable_tap_control(state);
-                begin_playing(state);
-            }
-            else if (game_state.curr_screen == SCREEN_TITLE || game_state.curr_screen == SCREEN_LOSE) {
-                display_score_screen(state);
+            switch (game_state.curr_screen) {
+                case SCREEN_SCORE:
+                    enable_tap_control(state);
+                    begin_playing(state);
+                    break;
+                case SCREEN_TITLE:
+                    enable_tap_control(state);
+                    // fall through
+                case SCREEN_TIME:
+                case SCREEN_LOSE:
+                    watch_clear_display();
+                    display_score_screen(state);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
