@@ -309,14 +309,19 @@ static void change_difficulty(endless_runner_state_t *state) {
     }
 }
 
+static void display_sound_indicator(bool soundOn) {
+    if (soundOn){
+        watch_set_indicator(WATCH_INDICATOR_BELL);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_BELL);
+    }
+}
+
 static void toggle_sound(endless_runner_state_t *state) {
     state -> soundOn = !state -> soundOn;
+    display_sound_indicator(state -> soundOn);
     if (state -> soundOn){
         watch_buzzer_play_note(BUZZER_NOTE_C5, 30);
-        watch_set_indicator(WATCH_INDICATOR_BELL);
-    }
-    else {
-        watch_clear_indicator(WATCH_INDICATOR_BELL);
     }
 }
 
@@ -339,7 +344,7 @@ static void display_title(endless_runner_state_t *state) {
     watch_clear_colon();
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "ENdLS", "ER  ");
     watch_display_text(WATCH_POSITION_BOTTOM, "RUNNER");
-    if (state -> soundOn) watch_set_indicator(WATCH_INDICATOR_BELL);
+    display_sound_indicator(state -> soundOn);
 }
 
 static void display_score_screen(endless_runner_state_t *state) {
@@ -351,8 +356,7 @@ static void display_score_screen(endless_runner_state_t *state) {
     game_state.sec_before_moves = 1; // The first obstacles will all be 0s, which is about an extra second of delay.
     if (sound_on) game_state.sec_before_moves--; // Start chime is about 1 second
     watch_set_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "RUN", "ER");
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "RUN  ", "ER  ");
     if (hi_score > MAX_HI_SCORE) {
         watch_display_text(WATCH_POSITION_BOTTOM, "HS  --");
     }
@@ -362,7 +366,7 @@ static void display_score_screen(endless_runner_state_t *state) {
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
     display_difficulty(difficulty);
-    if (sound_on) watch_set_indicator(WATCH_INDICATOR_BELL);
+    display_sound_indicator(sound_on);
 }
 
 static void display_time(void) {
@@ -400,7 +404,7 @@ static void begin_playing(endless_runner_state_t *state) {
     uint8_t difficulty = state -> difficulty;
     game_state.curr_screen = SCREEN_PLAYING;
     watch_clear_colon();
-    watch_clear_indicator(WATCH_INDICATOR_BELL);
+    display_sound_indicator(state -> soundOn);
     movement_request_tick_frequency((state -> difficulty == DIFF_BABY) ? FREQ_SLOW : FREQ);
     if (game_state.fuel_mode) {
         watch_clear_display();
@@ -586,6 +590,7 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
             case SCREEN_TITLE:
             case SCREEN_SCORE:
             case SCREEN_LOSE:
+            case SCREEN_TIME:
                 break;
             default:
                 update_game(state, event.subsecond);
@@ -637,6 +642,11 @@ bool endless_runner_face_loop(movement_event_t event, void *context) {
                 display_score_screen(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
+            if (game_state.curr_screen != SCREEN_TIME) {
+                watch_display_text_with_fallback(WATCH_POSITION_TOP, "RUN  ", "ER  ");
+                display_sound_indicator(state -> soundOn);
+                display_difficulty(state->difficulty);
+            }
             display_time();
             break;
         default:
