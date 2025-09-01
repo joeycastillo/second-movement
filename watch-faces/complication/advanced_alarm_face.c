@@ -67,6 +67,10 @@ static void _alarm_set_signal(alarm_state_t *state) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
+static void _alarm_show_alarm_on_text(alarm_state_t *state) {
+    watch_display_text(WATCH_POSITION_SECONDS, state->alarm[state->alarm_idx].enabled ? "on" : "--");
+}
+
 static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
     char buf[12];
     bool set_leading_zero = movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H;
@@ -136,7 +140,7 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
         }
     }
     else {
-        watch_display_text(WATCH_POSITION_SECONDS, state->alarm[state->alarm_idx].enabled ? "on" : "--");
+        _alarm_show_alarm_on_text(state);
     }
 
     // set alarm indicator
@@ -322,6 +326,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
                     // revert change of enabled flag and show it briefly
                     state->alarm[state->alarm_idx].enabled ^= 1;
                     _alarm_set_signal(state);
+                    _alarm_show_alarm_on_text(state);
                     delay_ms(275);
                     state->alarm_idx = 0;
                 }
