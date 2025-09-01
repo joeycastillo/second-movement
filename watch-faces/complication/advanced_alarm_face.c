@@ -136,6 +136,9 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
             }
         }
     }
+    else {
+        watch_display_text(WATCH_POSITION_SECONDS, state->alarm[state->alarm_idx].enabled ? "on" : "--");
+    }
 
     // set alarm indicator
     _alarm_set_signal(state);
