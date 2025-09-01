@@ -40,7 +40,8 @@ typedef enum {
     alarm_setting_idx_beeps
 } alarm_setting_idx_t;
 
-static const char _dow_strings[ALARM_DAY_STATES + 1][2] ={"AL", "MO", "TU", "WE", "TH", "FR", "SA", "SU", "ED", "1t", "MF", "WN"};
+static const char _dow_strings_classic[ALARM_DAY_STATES + 1][2] ={"AL",  "MO",  "TU",  "WE",  "TH",  "FR",  "SA",  "SU",  "ED",  "1t",  "MF",  "WN"};
+static const char _dow_strings_custom[ALARM_DAY_STATES + 1][3] ={ "AL ", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "DAY", "1t ", "M-F", "WKD"};
 static const uint8_t _blink_idx[ALARM_SETTING_STATES] = {2, 0, 4, 6, 8, 9};
 static const uint8_t _blink_idx2[ALARM_SETTING_STATES] = {3, 1, 5, 7, 8, 9};
 static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE_C8, BUZZER_NOTE_A8};
@@ -90,18 +91,34 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
         watch_set_indicator(WATCH_INDICATOR_24H);
     }
 
-    sprintf(buf, set_leading_zero? "%c%c%2d%02d%02d  " : "%c%c%2d%2d%02d  ",
-        _dow_strings[i][0], _dow_strings[i][1],
-        (state->alarm_idx + 1),
-        h,
-        state->alarm[state->alarm_idx].minute);
     // blink items if in settings mode
-    if (state->is_setting && subsecond % 2 && state->setting_state < alarm_setting_idx_pitch && !state->alarm_quick_ticks) {
-        buf[_blink_idx[state->setting_state]] = buf[_blink_idx2[state->setting_state]] = ' ';
+    bool blinking = state->is_setting && subsecond % 2 && state->setting_state < alarm_setting_idx_pitch && !state->alarm_quick_ticks;
+    if (state->setting_state == alarm_setting_idx_alarm && blinking) {
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    } else {
+        sprintf(buf, "%2d", (state->alarm_idx + 1));
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     }
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    if (state->setting_state == alarm_setting_idx_day && blinking) {
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
+    } else {
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, _dow_strings_custom[i], _dow_strings_classic[i]);
+    }
+    if (state->setting_state == alarm_setting_idx_hour && blinking) {
+        watch_display_text(WATCH_POSITION_HOURS, "  ");
+    } else {
+        sprintf(buf, set_leading_zero? "%02d" : "%2d", h);
+        watch_display_text(WATCH_POSITION_HOURS, buf);
+    }
+    if (state->setting_state == alarm_setting_idx_minute && blinking) {
+        watch_display_text(WATCH_POSITION_MINUTES, "  ");
+    } else {
+        sprintf(buf, "%02d", state->alarm[state->alarm_idx].minute);
+        watch_display_text(WATCH_POSITION_MINUTES, buf);
+    }
 
     if (state->is_setting) {
+        watch_display_text(WATCH_POSITION_SECONDS, "  ");
     // draw pitch level indicator
         if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_pitch)) {
         for (i = 0; i <= state->alarm[state->alarm_idx].pitch && i < 3; i++)
