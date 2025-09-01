@@ -42,8 +42,7 @@ typedef enum {
 
 static const char _dow_strings_classic[ALARM_DAY_STATES + 1][2] ={"AL",  "MO",  "TU",  "WE",  "TH",  "FR",  "SA",  "SU",  "ED",  "1t",  "MF",  "WN"};
 static const char _dow_strings_custom[ALARM_DAY_STATES + 1][3] ={ "AL ", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "DAY", "1t ", "M-F", "WKD"};
-static const uint8_t _blink_idx[ALARM_SETTING_STATES] = {2, 0, 4, 6, 8, 9};
-static const uint8_t _blink_idx2[ALARM_SETTING_STATES] = {3, 1, 5, 7, 8, 9};
+static const uint8_t _beeps_blink_idx = 9;
 static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE_C8, BUZZER_NOTE_A8};
 
 // Volume is indicated by the three segments 5D, 5G and 5A
@@ -127,12 +126,12 @@ static void _advanced_alarm_face_draw(alarm_state_t *state, uint8_t subsecond) {
         // draw beep rounds indicator
         if ((subsecond % 2) == 0 || (state->setting_state != alarm_setting_idx_beeps)) {
             if (state->alarm[state->alarm_idx].beeps == ALARM_MAX_BEEP_ROUNDS - 1)
-                watch_display_character('L', _blink_idx[alarm_setting_idx_beeps]);
+                watch_display_character('L', _beeps_blink_idx);
             else {
                 if (state->alarm[state->alarm_idx].beeps == 0)
-                    watch_display_character('o', _blink_idx[alarm_setting_idx_beeps]);
+                    watch_display_character('o', _beeps_blink_idx);
                 else
-                    watch_display_character(state->alarm[state->alarm_idx].beeps + 48, _blink_idx[alarm_setting_idx_beeps]);
+                    watch_display_character(state->alarm[state->alarm_idx].beeps + 48, _beeps_blink_idx);
             }
         }
     }
