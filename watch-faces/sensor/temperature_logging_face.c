@@ -181,7 +181,7 @@ bool temperature_logging_face_loop(movement_event_t event, void *context) {
             _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h(), true);
             break;
         case EVENT_TICK:
-            if(displaying_curr_temp) _temperature_display_face_update_display(movement_use_imperial_units());
+            if(displaying_curr_temp) _temperature_logging_face_blink_display(movement_use_imperial_units(), false);
             else if (logger_state->ts_ticks && --logger_state->ts_ticks == 0) {
                 _temperature_logging_face_update_display(logger_state, movement_use_imperial_units(), movement_clock_mode_24h(), false);
             }

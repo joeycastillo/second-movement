@@ -160,7 +160,7 @@ bool voltage_face_loop(movement_event_t event, void *context) {
             _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), true);
             break;
         case EVENT_TICK:
-            if(displaying_curr_volt) _voltage_face_update_display();
+            if(displaying_curr_volt) _voltage_face_blink_display(false);
             else if (logger_state->ts_ticks && --logger_state->ts_ticks == 0) {
                 _voltage_face_logging_update_display(logger_state, movement_clock_mode_24h(), false);
             }
