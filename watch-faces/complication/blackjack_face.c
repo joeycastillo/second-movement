@@ -58,6 +58,7 @@ typedef enum {
     BJ_TITLE_SCREEN,
     BJ_PLAYING,
     BJ_DEALER_PLAYING,
+    BJ_BUST,
     BJ_RESULT,
 } game_state_t;
 
@@ -206,7 +207,7 @@ static void display_dealer_hand(void) {
     display_card_at_position(card, 0);
 }
 
-display_score(uint8_t score, watch_position_t pos) {
+static void display_score(uint8_t score, watch_position_t pos) {
     char buf[4];
     sprintf(buf, "%2d", score);
     watch_display_text(pos, buf);
@@ -235,7 +236,6 @@ static void display_tie(void) {
 static void display_bust(void) {
     game_state = BJ_RESULT;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST ", " BUST");
-    display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void display_title(void) {
@@ -264,11 +264,10 @@ static void perform_hit(void) {
     }
     give_card(&player);
     if (player.score > 21) {
-        display_bust();
-    } else {
-        display_player_hand();
-        display_score(player.score, WATCH_POSITION_SECONDS);
+        game_state = BJ_BUST;
     }
+    display_player_hand();
+    display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void perform_stand(void) {
@@ -320,6 +319,8 @@ static void handle_button_presses(bool hit) {
     case BJ_DEALER_PLAYING:
         see_if_dealer_hits();
         break;
+    case BJ_BUST:
+        display_bust();
     case BJ_RESULT:
         display_title();
         break;
@@ -368,6 +369,9 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             if (game_state == BJ_DEALER_PLAYING) {
                 see_if_dealer_hits();
+            }
+            else if (game_state == BJ_BUST) {
+                display_bust();
             }
             break;
         case EVENT_LIGHT_BUTTON_UP:
