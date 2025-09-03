@@ -31,6 +31,35 @@
  * Blackjack face
  * ======================
  *
+ * Simple blackjack game.
+ *
+ * Aces are 11 unless you'd but, and if so, they become 1.
+ * King, Queen, and jack are all 10 points.
+ * Dealer deals to themselves until they get at least 17.
+ * The game plays with one shuffled deck that gets reshuffled with every game.
+ * 
+ * Press either ALARM or LIGHT to begin playing.
+ * Your score is in the Seconds position.
+ * The dealer's score is in the Top-Right position.
+ * The dealer's last-shown card is in the Top-Left position.
+ * Your cards are in the Bottom row. From left to right, they are oldest to newest. Up to four cards will be dislayed.
+ * 
+ * To hit, press the ALARM button.
+ * To stand, press the LIGHT button.
+ * If you're at 21, you cannoy hit, since we just assume it's a mispress on the button.
+ * 
+ * Once you stand, the dealer will deal out to themselves once per second (or immidietly when you press the LIGHT or ALARM buttons).
+ * The game results are:
+ * WIN: You have a higher score than the dealer, but no more than 21. Or the dealer's score is over 21.
+ * LOSE: Your score is lower than the dealer's.
+ * BUST: Your score is above 21.
+ * TIE: Your score matches the dealer's final score
+ * 
+ * | Cards   |                          |
+ * |---------|--------------------------|
+ * | Value   |2|3|4|5|6|7|8|9|10|J|Q|K|A|
+ * | Display |2|3|4|5|6|7|8|9| 0|-|=|≡|a|
+ * If you're using a custom display, Ace will display as 'A', not 'a'
  */
 
 

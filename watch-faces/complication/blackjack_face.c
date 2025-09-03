@@ -32,10 +32,10 @@
 #include "blackjack_face.h"
 #include "watch_common_display.h"
 
-#define ACE    13
-#define KING   12
-#define QUEEN  11
-#define JACK   10
+#define ACE    14
+#define KING   13
+#define QUEEN  12
+#define JACK   11
 
 #define MIN_CARD_VALUE 2
 #define MAX_CARD_VALUE ACE
@@ -180,7 +180,10 @@ static void display_card_at_position(uint8_t card, uint8_t display_position) {
             watch_display_character('-', display_position);
             break;
         case ACE:
-            watch_display_character('A', display_position);
+            watch_display_character(watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM ? 'A' : 'a', display_position);
+            break;
+        case 10:
+            watch_display_character('0', display_position);
             break;
         default: {
             const char display_char = card + '0';
