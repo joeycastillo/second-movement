@@ -32,12 +32,13 @@
 #include "blackjack_face.h"
 #include "watch_common_display.h"
 
+#define ACE    13
 #define KING   12
 #define QUEEN  11
 #define JACK   10
 
-#define MIN_CARD_VALUE 1
-#define MAX_CARD_VALUE KING
+#define MIN_CARD_VALUE 2
+#define MAX_CARD_VALUE ACE
 #define CARD_RANK_COUNT (MAX_CARD_VALUE - MIN_CARD_VALUE + 1)
 #define CARD_SUIT_COUNT 4
 #define DECK_SIZE (CARD_SUIT_COUNT * CARD_RANK_COUNT)
@@ -49,6 +50,7 @@
 typedef struct {
     uint8_t score;
     uint8_t idx_hand;
+    int8_t high_aces_in_hand;
     uint8_t hand[BLACKJACK_MAX_HAND_SIZE];
 } hand_info_t;
 
@@ -101,12 +103,32 @@ static void reset_deck(void) {
     shuffle_deck();
 }
 
-static uint8_t get_next_card(void) {
+static uint8_t get_next_card(hand_info_t *hand_info) {
     if (current_card >= DECK_SIZE)
         reset_deck();
     uint8_t card = deck[current_card++];
-    if (card > 10) return 10;
+    switch (card)
+    {
+    case ACE:
+        card = 11;
+        hand_info->high_aces_in_hand++;
+        break;
+    case KING:
+    case QUEEN:
+    case JACK:
+        card = 10;
+    
+    default:
+        break;
+    }
     return card;
+}
+
+static void modify_score_from_aces(hand_info_t *hand_info) {
+    while (hand_info->score > 21 && hand_info->high_aces_in_hand > 0) {
+        hand_info->score -= 10;
+        hand_info->high_aces_in_hand--;
+    }
 }
 
 static void reset_hands(void) {
@@ -115,16 +137,11 @@ static void reset_hands(void) {
     reset_deck();
 }
 
-static void give_player_card(void) {
-    uint8_t card = get_next_card();
-    player.hand[player.idx_hand++] = card;
-    player.score += card;
-}
-
-static void give_dealer_card(void) {
-    uint8_t card = get_next_card();
-    dealer.hand[dealer.idx_hand++] = card;
-    dealer.score += card;
+static void give_card(hand_info_t *hand_info) {
+    uint8_t card = get_next_card(hand_info);
+    hand_info->hand[hand_info->idx_hand++] = card;
+    hand_info->score += card;
+    modify_score_from_aces(hand_info);
 }
 
 static void display_player_hand(void) { 
@@ -193,11 +210,11 @@ static void begin_playing(void) {
     game_state = BJ_PLAYING;
     reset_hands();
     // Give player their first 2 cards
-    give_player_card();
-    give_player_card();
+    give_card(&player);
+    give_card(&player);
     display_player_hand();
     display_player_score();
-    give_dealer_card();
+    give_card(&dealer);
     display_dealer_hand();
     display_dealer_score();
 }
@@ -206,7 +223,7 @@ static void perform_hit(void) {
     if (player.score == 21) {
         return; // Assume hitting on 21 is a mistake and ignore
     }
-    give_player_card();
+    give_card(&player);
     if (player.score > 21) {
         display_bust();
     } else {
@@ -222,7 +239,7 @@ static void perform_stand(void) {
 }
 
 static void dealer_performs_hits(void) {
-    give_dealer_card();
+    give_card(&dealer);
     display_dealer_hand();
     if (dealer.score > 21) {
         display_win();
