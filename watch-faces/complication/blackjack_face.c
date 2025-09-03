@@ -46,12 +46,11 @@
 #define MAX_PLAYER_CARDS_DISPLAY 4
 #define BOARD_DISPLAY_START 4
 
-uint8_t score_player = 0;
-uint8_t score_dealer = 0;
-uint8_t hand_player[BLACKJACK_MAX_HAND_SIZE] = {0xFF};
-uint8_t hand_dealer[BLACKJACK_MAX_HAND_SIZE] = {0xFF};
-uint8_t idx_player = 0;
-uint8_t idx_dealer = 0;
+typedef struct {
+    uint8_t score;
+    uint8_t idx_hand;
+    uint8_t hand[BLACKJACK_MAX_HAND_SIZE];
+} hand_info_t;
 
 typedef enum {
     BJ_TITLE_SCREEN,
@@ -63,6 +62,8 @@ typedef enum {
 static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
+hand_info_t player;
+hand_info_t dealer;
 
 static uint8_t generate_random_number(uint8_t num_values) {
     // Emulator: use rand. Hardware: use arc4random.
@@ -109,31 +110,27 @@ static uint8_t get_next_card(void) {
 }
 
 static void reset_hands(void) {
-    score_player = 0;
-    score_dealer = 0;
-    idx_player = 0;
-    idx_dealer = 0;
-    memset(hand_player, 0xFF, sizeof(hand_player));
-    memset(hand_dealer, 0xFF, sizeof(hand_dealer));
+    memset(&player, 0, sizeof(player));
+    memset(&dealer, 0, sizeof(dealer));
     reset_deck();
 }
 
 static void give_player_card(void) {
     uint8_t card = get_next_card();
-    hand_player[idx_player++] = card;
-    score_player += card;
+    player.hand[player.idx_hand++] = card;
+    player.score += card;
 }
 
 static void give_dealer_card(void) {
     uint8_t card = get_next_card();
-    hand_dealer[idx_dealer++] = card;
-    score_dealer += card;
+    dealer.hand[dealer.idx_hand++] = card;
+    dealer.score += card;
 }
 
 static void display_player_hand(void) { 
-    uint8_t cards_to_display = idx_player > MAX_PLAYER_CARDS_DISPLAY ? MAX_PLAYER_CARDS_DISPLAY : idx_player;
+    uint8_t cards_to_display = player.idx_hand > MAX_PLAYER_CARDS_DISPLAY ? MAX_PLAYER_CARDS_DISPLAY : player.idx_hand;
     for (uint8_t i=cards_to_display; i>0; i--) {
-        uint8_t card = hand_player[idx_player-i];
+        uint8_t card = player.hand[player.idx_hand-i];
         if (card == 10) card = 0;
         const char display_char = card + '0';
         watch_display_character(display_char, BOARD_DISPLAY_START + cards_to_display - i);
@@ -141,7 +138,7 @@ static void display_player_hand(void) {
 }
 
 static void display_dealer_hand(void) {
-    uint8_t card = hand_dealer[idx_dealer - 1];
+    uint8_t card = dealer.hand[dealer.idx_hand - 1];
     if (card == 10) card = 0;
     const char display_char = card + '0';
     watch_display_character(display_char, 0);
@@ -149,13 +146,13 @@ static void display_dealer_hand(void) {
 
 static void display_player_score(void) {
     char buf[4];
-    sprintf(buf, "%2d", score_player);
+    sprintf(buf, "%2d", player.score);
     watch_display_text(WATCH_POSITION_SECONDS, buf);
 }
 
 static void display_dealer_score(void) {
     char buf[4];
-    sprintf(buf, "%2d", score_dealer);
+    sprintf(buf, "%2d", dealer.score);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 }
 
@@ -206,11 +203,11 @@ static void begin_playing(void) {
 }
 
 static void perform_hit(void) {
-    if (score_player == 21) {
+    if (player.score == 21) {
         return; // Assume hitting on 21 is a mistake and ignore
     }
     give_player_card();
-    if (score_player > 21) {
+    if (player.score > 21) {
         display_bust();
     } else {
         display_player_hand();
@@ -227,9 +224,9 @@ static void perform_stand(void) {
 static void dealer_performs_hits(void) {
     give_dealer_card();
     display_dealer_hand();
-    if (score_dealer > 21) {
+    if (dealer.score > 21) {
         display_win();
-    } else if (score_dealer > score_player) {
+    } else if (dealer.score > player.score) {
         display_lose();
     } else {
         display_dealer_hand();
@@ -238,10 +235,10 @@ static void dealer_performs_hits(void) {
 }
 
 static void see_if_dealer_hits(void) {
-    if (score_dealer > 16) {
-        if (score_dealer > score_player) {
+    if (dealer.score > 16) {
+        if (dealer.score > player.score) {
             display_lose();
-        } else if (score_dealer < score_player) {
+        } else if (dealer.score < player.score) {
             display_win();
         } else {
             display_tie();
