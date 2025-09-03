@@ -148,13 +148,13 @@ static void display_dealer_hand(void) {
 }
 
 static void display_player_score(void) {
-    char buf[3];
+    char buf[4];
     sprintf(buf, "%2d", score_player);
     watch_display_text(WATCH_POSITION_SECONDS, buf);
 }
 
 static void display_dealer_score(void) {
-    char buf[3];
+    char buf[4];
     sprintf(buf, "%2d", score_dealer);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 }
@@ -251,7 +251,7 @@ static void see_if_dealer_hits(void) {
     }
 }
 
-void handle_button_presses(bool hit) {
+static void handle_button_presses(bool hit) {
     switch (game_state)
     {
     case BJ_TITLE_SCREEN:
