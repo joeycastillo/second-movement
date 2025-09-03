@@ -54,19 +54,13 @@ uint8_t idx_player = 0;
 uint8_t idx_dealer = 0;
 
 typedef enum {
-    BJ_HIT,
-    BJ_STAND,
-    BJ_BUST,
-} guess_t;
-
-typedef enum {
     BJ_TITLE_SCREEN,
     BJ_PLAYING,
     BJ_DEALER_PLAYING,
     BJ_RESULT,
 } game_state_t;
 
-static game_state_t game_state = BJ_TITLE_SCREEN;
+static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
 
@@ -138,11 +132,11 @@ static void give_dealer_card(void) {
 
 static void display_player_hand(void) { 
     uint8_t cards_to_display = idx_player > MAX_PLAYER_CARDS_DISPLAY ? MAX_PLAYER_CARDS_DISPLAY : idx_player;
-    for (uint8_t i=0; i<cards_to_display; i++) {
-        uint8_t card = hand_player[i];
+    for (uint8_t i=cards_to_display; i>0; i--) {
+        uint8_t card = hand_player[idx_player-i];
         if (card == 10) card = 0;
         const char display_char = card + '0';
-        watch_display_character(display_char, BOARD_DISPLAY_START + i);
+        watch_display_character(display_char, BOARD_DISPLAY_START + cards_to_display - i);
     }
 }
 
@@ -167,7 +161,7 @@ static void display_dealer_score(void) {
 
 static void display_win(void) {
     game_state = BJ_RESULT;
-    watch_display_text(WATCH_POSITION_BOTTOM, " WIN");
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "WlN ", " WIN");
     display_player_score();
     display_dealer_score();
 }
@@ -181,13 +175,13 @@ static void display_lose(void) {
 
 static void display_tie(void) {
     game_state = BJ_RESULT;
-    watch_display_text(WATCH_POSITION_BOTTOM, " TIE");
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "TlE ", " TIE");
     display_player_score();
 }
 
 static void display_bust(void) {
     game_state = BJ_RESULT;
-    watch_display_text(WATCH_POSITION_BOTTOM, "BUST");
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST ", " BUST");
     display_player_score();
 }
 
