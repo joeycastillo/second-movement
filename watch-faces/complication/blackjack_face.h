@@ -55,6 +55,11 @@
  * BUST: Your score is above 21.
  * TIE: Your score matches the dealer's final score
  * 
+ * On a watch that has the accelerometer, long-pressing the ALARM button will turn on the ability to play by tapping.
+ * The SIGNAL indicator will display when tapping is enabled.
+ * Tapping once will behave like the ALARM button and hit.
+ * Tapping twice behave like the LIGHT button and stand.
+ * 
  * | Cards   |                          |
  * |---------|--------------------------|
  * | Value   |2|3|4|5|6|7|8|9|10|J|Q|K|A|

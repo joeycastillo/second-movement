@@ -242,8 +242,11 @@ static void display_title(void) {
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " JACK ", "BLaKJK");
 }
 
-static void begin_playing(void) {
+static void begin_playing(bool tap_control_on) {
     watch_clear_display();
+    if (tap_control_on) {
+        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    }
     game_state = BJ_PLAYING;
     reset_hands();
     // Give player their first 2 cards
@@ -301,11 +304,11 @@ static void see_if_dealer_hits(void) {
     }
 }
 
-static void handle_button_presses(bool hit) {
+static void handle_button_presses(bool tap_control_on, bool hit) {
     switch (game_state)
     {
     case BJ_TITLE_SCREEN:
-        begin_playing();
+        begin_playing(tap_control_on);
         break;
     case BJ_PLAYING:
         if (hit) {
@@ -362,7 +365,12 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             if (state->tap_control_on) {
-                movement_enable_tap_detection_if_available();
+                bool tap_could_enable = movement_enable_tap_detection_if_available();
+                if (tap_could_enable) {
+                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+                } else {
+                    state->tap_control_on = false;
+                }
             }
             break;
         case EVENT_TICK:
@@ -375,12 +383,12 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_DOUBLE_TAP:
-            handle_button_presses(false);
+            handle_button_presses(state->tap_control_on, false);
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_ALARM_BUTTON_UP:
         case EVENT_SINGLE_TAP:
-            handle_button_presses(true);
+            handle_button_presses(state->tap_control_on, true);
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (game_state == BJ_TITLE_SCREEN) {
