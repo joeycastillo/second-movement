@@ -36,7 +36,7 @@
 
 
 typedef struct {
-    // Anything you need to keep track of, put it here!
+    bool tap_control_on;
 } blackjack_face_state_t;
 
 void blackjack_face_setup(uint8_t watch_face_index, void ** context_ptr);

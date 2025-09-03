@@ -273,12 +273,28 @@ void handle_button_presses(bool hit) {
     }
 }
 
+static void toggle_tap_control(blackjack_face_state_t *state) {
+    if (state->tap_control_on) {
+        movement_disable_tap_detection_if_available();
+        state->tap_control_on = false;
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    } else {
+        bool tap_could_enable = movement_enable_tap_detection_if_available();
+        if (tap_could_enable) {
+            state->tap_control_on = true;
+            watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+        }
+    }
+}
+
 void blackjack_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void) watch_face_index;
 
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(blackjack_face_state_t));
         memset(*context_ptr, 0, sizeof(blackjack_face_state_t));
+        blackjack_face_state_t *state = (blackjack_face_state_t *)*context_ptr;
+        state->tap_control_on = false;
     }
 }
 
@@ -290,10 +306,11 @@ void blackjack_face_activate(void *context) {
 
 bool blackjack_face_loop(movement_event_t event, void *context) {
     blackjack_face_state_t *state = (blackjack_face_state_t *) context;
-    (void) state;
-
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (state->tap_control_on) {
+                movement_enable_tap_detection_if_available();
+            }
             break;
         case EVENT_TICK:
             if (game_state == BJ_DEALER_PLAYING) {
@@ -301,11 +318,18 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_DOUBLE_TAP:
             handle_button_presses(false);
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_ALARM_BUTTON_UP:
+        case EVENT_SINGLE_TAP:
             handle_button_presses(true);
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            if (game_state == BJ_TITLE_SCREEN) {
+                toggle_tap_control(state);
+            }
             break;
         case EVENT_TIMEOUT:
             break;
