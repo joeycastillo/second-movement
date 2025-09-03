@@ -60,6 +60,7 @@ typedef enum {
     BJ_DEALER_PLAYING,
     BJ_BUST,
     BJ_RESULT,
+    BJ_WIN_RATIO,
 } game_state_t;
 
 typedef enum {
@@ -69,6 +70,8 @@ typedef enum {
 static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
+static bool add_to_games_played = false;
+static bool add_to_games_won = false;
 hand_info_t player;
 hand_info_t dealer;
 
@@ -193,10 +196,15 @@ static void display_card_at_position(uint8_t card, uint8_t display_position) {
 }
 
 static void display_player_hand(void) { 
-    uint8_t cards_to_display = player.idx_hand > MAX_PLAYER_CARDS_DISPLAY ? MAX_PLAYER_CARDS_DISPLAY : player.idx_hand;
-    for (uint8_t i=cards_to_display; i>0; i--) {
-        uint8_t card = player.hand[player.idx_hand-i];
-        display_card_at_position(card, BOARD_DISPLAY_START + cards_to_display - i);
+    uint8_t card;
+    if (player.idx_hand <= MAX_PLAYER_CARDS_DISPLAY) {
+        card = player.hand[player.idx_hand - 1];
+        display_card_at_position(card, BOARD_DISPLAY_START + player.idx_hand - 1);
+    } else {
+        for (uint8_t i=0; i<MAX_PLAYER_CARDS_DISPLAY; i++) {
+            card = player.hand[player.idx_hand - MAX_PLAYER_CARDS_DISPLAY + i];
+            display_card_at_position(card, BOARD_DISPLAY_START + i);
+        }
     }
 }
 
@@ -213,6 +221,8 @@ static void display_score(uint8_t score, watch_position_t pos) {
 
 static void display_win(void) {
     game_state = BJ_RESULT;
+    add_to_games_played = true;
+    add_to_games_won = true;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "WlN ", " WIN");
     display_score(player.score, WATCH_POSITION_SECONDS);
     display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
@@ -220,6 +230,7 @@ static void display_win(void) {
 
 static void display_lose(void) {
     game_state = BJ_RESULT;
+    add_to_games_played = true;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "LOSE", "lOSE");
     display_score(player.score, WATCH_POSITION_SECONDS);
     display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
@@ -227,12 +238,14 @@ static void display_lose(void) {
 
 static void display_tie(void) {
     game_state = BJ_RESULT;
+    // Don't record ties to the win ratio
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "TlE ", " TIE");
     display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void display_bust(void) {
     game_state = BJ_RESULT;
+    add_to_games_played = true;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST ", " BUST");
 }
 
@@ -240,6 +253,18 @@ static void display_title(void) {
     game_state = BJ_TITLE_SCREEN;
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "BLACK ", "21  ");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, " JACK ", "BLaKJK");
+}
+
+static void display_win_ratio(blackjack_face_state_t *state) {
+    char buf[7];
+    game_state = BJ_WIN_RATIO;
+    uint8_t win_ratio = 0;
+    if (state->games_played > 0) {  // Avoid dividing by zero
+        win_ratio = (uint8_t)(100 * state->games_won) / state->games_played;
+    }
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "WINS  ", "WR  ");
+    sprintf(buf, "%3dPct", win_ratio);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void begin_playing(bool tap_control_on) {
@@ -251,6 +276,7 @@ static void begin_playing(bool tap_control_on) {
     reset_hands();
     // Give player their first 2 cards
     give_card(&player);
+    display_player_hand();
     give_card(&player);
     display_player_hand();
     display_score(player.score, WATCH_POSITION_SECONDS);
@@ -304,6 +330,25 @@ static void see_if_dealer_hits(void) {
     }
 }
 
+static void add_to_game_scores(blackjack_face_state_t *state) {
+    if (add_to_games_played) {
+        add_to_games_played = false;
+        state->games_played++;
+        if (state->games_played == 0) {
+            // Overflow
+            state->games_won = 0;
+        }
+    }
+    if (add_to_games_won) {
+        add_to_games_won = false;
+        state->games_won++;
+        if (state->games_won == 0) {
+            // Overflow
+            state->games_played = 0;
+        }
+    }
+}
+
 static void handle_button_presses(bool tap_control_on, bool hit) {
     switch (game_state)
     {
@@ -324,6 +369,7 @@ static void handle_button_presses(bool tap_control_on, bool hit) {
         display_bust();
         break;
     case BJ_RESULT:
+    case BJ_WIN_RATIO:
         display_title();
         break;
     }
@@ -362,6 +408,9 @@ void blackjack_face_activate(void *context) {
 
 bool blackjack_face_loop(movement_event_t event, void *context) {
     blackjack_face_state_t *state = (blackjack_face_state_t *) context;
+    if (game_state == BJ_RESULT) {
+        add_to_game_scores(state);
+    }
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             if (state->tap_control_on) {
@@ -389,6 +438,11 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_BUTTON_UP:
         case EVENT_SINGLE_TAP:
             handle_button_presses(state->tap_control_on, true);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (game_state == BJ_TITLE_SCREEN) {
+                display_win_ratio(state);
+            }
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (game_state == BJ_TITLE_SCREEN) {

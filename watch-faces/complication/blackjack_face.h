@@ -71,6 +71,8 @@
 
 typedef struct {
     bool tap_control_on;
+    uint16_t games_played;
+    uint16_t games_won;
 } blackjack_face_state_t;
 
 void blackjack_face_setup(uint8_t watch_face_index, void ** context_ptr);
