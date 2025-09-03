@@ -108,23 +108,21 @@ static void reset_deck(void) {
     shuffle_deck();
 }
 
-static uint8_t get_next_card(hand_info_t *hand_info) {
+static uint8_t get_next_card(void) {
     if (current_card >= DECK_SIZE)
         reset_deck();
     return deck[current_card++];
 }
 
 static uint8_t get_card_value(uint8_t card) {
-    uint8_t card_value;
     switch (card)
     {
     case ACE:
         return 11;
-        break;
     case KING:
     case QUEEN:
     case JACK:
-        card = 10;
+        return 10;
     default:
         return card;
     }
@@ -144,7 +142,7 @@ static void reset_hands(void) {
 }
 
 static void give_card(hand_info_t *hand_info) {
-    uint8_t card = get_next_card(hand_info);
+    uint8_t card = get_next_card();
     if (card == ACE) hand_info->high_aces_in_hand++;
     hand_info->hand[hand_info->idx_hand++] = card;
     uint8_t card_value = get_card_value(card);
@@ -321,6 +319,7 @@ static void handle_button_presses(bool hit) {
         break;
     case BJ_BUST:
         display_bust();
+        break;
     case BJ_RESULT:
         display_title();
         break;
