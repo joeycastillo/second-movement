@@ -61,6 +61,10 @@ typedef enum {
     BJ_RESULT,
 } game_state_t;
 
+typedef enum {
+    A, B, C, D, E, F, G
+} segment_t;
+
 static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
@@ -106,22 +110,23 @@ static void reset_deck(void) {
 static uint8_t get_next_card(hand_info_t *hand_info) {
     if (current_card >= DECK_SIZE)
         reset_deck();
-    uint8_t card = deck[current_card++];
+    return deck[current_card++];
+}
+
+static uint8_t get_card_value(uint8_t card) {
+    uint8_t card_value;
     switch (card)
     {
     case ACE:
-        card = 11;
-        hand_info->high_aces_in_hand++;
+        return 11;
         break;
     case KING:
     case QUEEN:
     case JACK:
         card = 10;
-    
     default:
-        break;
+        return card;
     }
-    return card;
 }
 
 static void modify_score_from_aces(hand_info_t *hand_info) {
@@ -139,64 +144,95 @@ static void reset_hands(void) {
 
 static void give_card(hand_info_t *hand_info) {
     uint8_t card = get_next_card(hand_info);
+    if (card == ACE) hand_info->high_aces_in_hand++;
     hand_info->hand[hand_info->idx_hand++] = card;
-    hand_info->score += card;
+    uint8_t card_value = get_card_value(card);
+    hand_info->score += card_value;
     modify_score_from_aces(hand_info);
+}
+
+static void set_segment_at_position(segment_t segment, uint8_t position) {
+    digit_mapping_t segmap;
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        segmap = Custom_LCD_Display_Mapping[position];
+    } else {
+        segmap = Classic_LCD_Display_Mapping[position];
+    }
+    const uint8_t com_pin = segmap.segment[segment].address.com;
+    const uint8_t seg = segmap.segment[segment].address.seg;
+    watch_set_pixel(com_pin, seg);
+}
+
+static void display_card_at_position(uint8_t card, uint8_t display_position) {
+    switch (card) {
+        case KING:
+            watch_display_character(' ', display_position);
+            set_segment_at_position(A, display_position);
+            set_segment_at_position(D, display_position);
+            set_segment_at_position(G, display_position);
+            break;
+        case QUEEN:
+            watch_display_character(' ', display_position);
+            set_segment_at_position(A, display_position);
+            set_segment_at_position(D, display_position);
+            break;
+        case JACK:
+            watch_display_character('-', display_position);
+            break;
+        case ACE:
+            watch_display_character('A', display_position);
+            break;
+        default: {
+            const char display_char = card + '0';
+            watch_display_character(display_char, display_position);
+            break;
+        }
+    }
 }
 
 static void display_player_hand(void) { 
     uint8_t cards_to_display = player.idx_hand > MAX_PLAYER_CARDS_DISPLAY ? MAX_PLAYER_CARDS_DISPLAY : player.idx_hand;
     for (uint8_t i=cards_to_display; i>0; i--) {
         uint8_t card = player.hand[player.idx_hand-i];
-        if (card == 10) card = 0;
-        const char display_char = card + '0';
-        watch_display_character(display_char, BOARD_DISPLAY_START + cards_to_display - i);
+        display_card_at_position(card, BOARD_DISPLAY_START + cards_to_display - i);
     }
 }
 
 static void display_dealer_hand(void) {
     uint8_t card = dealer.hand[dealer.idx_hand - 1];
-    if (card == 10) card = 0;
-    const char display_char = card + '0';
-    watch_display_character(display_char, 0);
+    display_card_at_position(card, 0);
 }
 
-static void display_player_score(void) {
+display_score(uint8_t score, watch_position_t pos) {
     char buf[4];
-    sprintf(buf, "%2d", player.score);
-    watch_display_text(WATCH_POSITION_SECONDS, buf);
-}
-
-static void display_dealer_score(void) {
-    char buf[4];
-    sprintf(buf, "%2d", dealer.score);
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+    sprintf(buf, "%2d", score);
+    watch_display_text(pos, buf);
 }
 
 static void display_win(void) {
     game_state = BJ_RESULT;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "WlN ", " WIN");
-    display_player_score();
-    display_dealer_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
+    display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
 }
 
 static void display_lose(void) {
     game_state = BJ_RESULT;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "LOSE", "lOSE");
-    display_player_score();
-    display_dealer_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
+    display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
 }
 
 static void display_tie(void) {
     game_state = BJ_RESULT;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "TlE ", " TIE");
-    display_player_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void display_bust(void) {
     game_state = BJ_RESULT;
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST ", " BUST");
-    display_player_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void display_title(void) {
@@ -213,10 +249,10 @@ static void begin_playing(void) {
     give_card(&player);
     give_card(&player);
     display_player_hand();
-    display_player_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
     give_card(&dealer);
     display_dealer_hand();
-    display_dealer_score();
+    display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
 }
 
 static void perform_hit(void) {
@@ -228,14 +264,14 @@ static void perform_hit(void) {
         display_bust();
     } else {
         display_player_hand();
-        display_player_score();
+        display_score(player.score, WATCH_POSITION_SECONDS);
     }
 }
 
 static void perform_stand(void) {
     game_state = BJ_DEALER_PLAYING;
     watch_display_text(WATCH_POSITION_BOTTOM, "Stnd");
-    display_player_score();
+    display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
 static void dealer_performs_hits(void) {
@@ -247,7 +283,7 @@ static void dealer_performs_hits(void) {
         display_lose();
     } else {
         display_dealer_hand();
-        display_dealer_score();
+        display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
     } 
 }
 
