@@ -246,7 +246,7 @@ static void display_tie(void) {
 static void display_bust(void) {
     game_state = BJ_RESULT;
     add_to_games_played = true;
-    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST ", " BUST");
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST", " BUST");
 }
 
 static void display_title(void) {
