@@ -40,4 +40,5 @@ SRCS += \
   ./watch-faces/clock/ke_decimal_time_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
+  ./watch-faces/complication/school_face.c \
 # New watch faces go above this line.
