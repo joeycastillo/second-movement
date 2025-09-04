@@ -15,6 +15,7 @@ SRCS += \
   ./watch-faces/complication/breathing_face.c \
   ./watch-faces/complication/squash_face.c \
   ./watch-faces/complication/totp_face.c \
+  ./watch-faces/complication/totp_lfs_face.c \
   ./watch-faces/complication/tally_face.c \
   ./watch-faces/complication/wordle_face.c \
   ./watch-faces/demo/all_segments_face.c \
@@ -38,7 +39,13 @@ SRCS += \
   ./watch-faces/complication/kitchen_conversions_face.c \
   ./watch-faces/complication/periodic_table_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
+  ./watch-faces/complication/baby_kicks_face.c \
+  ./watch-faces/complication/counter_face.c \
+  ./watch-faces/complication/pulsometer_face.c \
+  ./watch-faces/complication/interval_face.c \
+  ./watch-faces/complication/timer_face.c \
+  ./watch-faces/complication/simple_coin_flip_face.c \
+  ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
-  ./watch-faces/complication/school_face.c \
 # New watch faces go above this line.

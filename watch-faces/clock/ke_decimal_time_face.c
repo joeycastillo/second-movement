@@ -69,6 +69,10 @@ void ke_decimal_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void ke_decimal_time_face_activate(void *context) {
     ke_decimal_time_state_t *state = (ke_decimal_time_state_t *)context;
 
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+    }
+
     // force re-display of date and time in EVENT_ACTIVATE
     state->previous_day = 0xFF;
     state->previous_time = 0xFFFFFFFF;
@@ -126,11 +130,6 @@ bool ke_decimal_time_face_loop(movement_event_t event, void *context) {
     }
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
-    // Exceptions:
-    //  * If you are displaying a color using the low-level watch_set_led_color function, you should return false.
-    //  * If you are sounding the buzzer using the low-level watch_set_buzzer_on function, you should return false.
-    // Note that if you are driving the LED or buzzer using Movement functions like movement_illuminate_led or
-    // movement_play_alarm, you can still return true. This guidance only applies to the low-level watch_ functions.
     return true;
 }
 
