@@ -496,6 +496,14 @@ void movement_set_backlight_dwell(uint8_t value) {
     movement_state.settings.bit.led_duration = value;
 }
 
+bool movement_get_keep_led_on(void) {
+    return movement_state.settings.bit.keep_lighting_on;
+}
+
+void movement_set_keep_led_on(bool value) {
+    movement_state.settings.bit.keep_lighting_on = value;
+}
+
 void movement_store_settings(void) {
     movement_settings_t old_settings;
     filesystem_read_file("settings.u32", (char *)&old_settings, sizeof(movement_settings_t));

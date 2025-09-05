@@ -365,6 +365,9 @@ void movement_set_low_energy_timeout(uint8_t value);
 movement_color_t movement_backlight_color(void);
 void movement_set_backlight_color(movement_color_t color);
 
+bool movement_get_keep_led_on(void);
+void movement_set_keep_led_on(bool value);
+
 uint8_t movement_get_backlight_dwell(void);
 void movement_set_backlight_dwell(uint8_t value);
 
