@@ -326,7 +326,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
         case EVENT_LIGHT_LONG_PRESS:
             _button_beep();
-            // Fall into the case below;
+            // fall through
         case EVENT_TICK:
             _draw_indicators(state, event, elapsed);
             _display_elapsed(state, elapsed);
