@@ -444,6 +444,8 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_LONG_PRESS:
             if (game_state == BJ_TITLE_SCREEN) {
                 display_win_ratio(state);
+            } else {
+                movement_illuminate_led();
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
