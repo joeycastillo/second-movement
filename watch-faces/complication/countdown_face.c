@@ -338,10 +338,11 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                 // Toggle auto-repeat
                 button_beep();
                 state->repeat = !state->repeat;
+                watch_indicator_t repeat = watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC ? WATCH_INDICATOR_BELL : WATCH_INDICATOR_LAP;
                 if(state->repeat)
-                    watch_set_indicator(WATCH_INDICATOR_BELL);
+                    watch_set_indicator(repeat);
                 else
-                    watch_clear_indicator(WATCH_INDICATOR_BELL);
+                    watch_clear_indicator(repeat);
             }
             break;
         case EVENT_ALARM_LONG_UP:
