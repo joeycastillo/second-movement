@@ -49,7 +49,7 @@
  *      This setting allows you to choose the hourly chime buzzer volume.
  * 
  *  AL / ALM - Alarm beep.
- *      This setting allows you to choose the hourly chime buzzer volume.
+ *      This setting allows you to choose the alarm buzzer volume.
  *
  *  TO / Tmout - Timeout.
  *      Sets the time until screens that time out (like Settings and Time Set)
