@@ -114,7 +114,6 @@ static void shuffle_deck(void) {
 
 static void reset_deck(void) {
     current_card = 0;
-    stack_deck();
     shuffle_deck();
 }
 
@@ -358,6 +357,7 @@ void higher_lower_game_face_activate(void *context) {
     (void) state;
     // Handle any tasks related to your watch face coming on screen.
     game_state = HL_GS_TITLE_SCREEN;
+    stack_deck();
 }
 
 bool higher_lower_game_face_loop(movement_event_t event, void *context) {
