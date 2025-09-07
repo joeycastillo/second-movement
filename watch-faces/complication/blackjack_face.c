@@ -107,7 +107,6 @@ static void shuffle_deck(void) {
 
 static void reset_deck(void) {
     current_card = 0;
-    stack_deck();
     shuffle_deck();
 }
 
@@ -406,6 +405,7 @@ void blackjack_face_activate(void *context) {
     blackjack_face_state_t *state = (blackjack_face_state_t *) context;
     (void) state;
     display_title();
+    stack_deck();
 }
 
 bool blackjack_face_loop(movement_event_t event, void *context) {
