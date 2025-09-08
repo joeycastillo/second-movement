@@ -67,6 +67,7 @@ typedef enum {
     A, B, C, D, E, F, G
 } segment_t;
 
+static bool tap_turned_on = false;
 static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
@@ -354,6 +355,9 @@ static void handle_button_presses(bool tap_control_on, bool hit) {
     switch (game_state)
     {
     case BJ_TITLE_SCREEN:
+        if (!tap_turned_on && tap_control_on) {
+            if (movement_enable_tap_detection_if_available()) tap_turned_on = true;
+        }
         begin_playing(tap_control_on);
         break;
     case BJ_PLAYING:
@@ -415,14 +419,7 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
     }
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            if (state->tap_control_on) {
-                bool tap_could_enable = movement_enable_tap_detection_if_available();
-                if (tap_could_enable) {
-                    watch_set_indicator(WATCH_INDICATOR_SIGNAL);
-                } else {
-                    state->tap_control_on = false;
-                }
-            }
+            if (state->tap_control_on) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
             break;
         case EVENT_TICK:
             if (game_state == BJ_DEALER_PLAYING) {
@@ -454,6 +451,10 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
+        case EVENT_LOW_ENERGY_UPDATE:
+            if (tap_turned_on) {
+                movement_disable_tap_detection_if_available();
+            }
             break;
         default:
             return movement_default_loop_handler(event);
@@ -463,4 +464,8 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
 
 void blackjack_face_resign(void *context) {
     (void) context;
+    if (tap_turned_on) {
+        tap_turned_on = false;
+        movement_disable_tap_detection_if_available();
+    }
 }
