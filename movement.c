@@ -1223,12 +1223,11 @@ bool app_loop(void) {
     // Consume all the pending events
     movement_event_type_t event_type = 0;
     while (pending_events) {
-        if (pending_events & 1) {
-            event.event_type = event_type;
-            can_sleep = wf->loop(event, watch_face_contexts[movement_state.current_face_idx]) && can_sleep;
-        }
-        pending_events = pending_events >> 1;
-        event_type++;
+        uint8_t next_event = __builtin_ctz(pending_events);
+        event.event_type = event_type + next_event;
+        can_sleep = wf->loop(event, watch_face_contexts[movement_state.current_face_idx]) && can_sleep;
+        pending_events = pending_events >> (next_event + 1);
+        event_type = event_type + next_event + 1;
     }
 
     // handle top-of-minute tasks, if the alarm handler told us we need to
