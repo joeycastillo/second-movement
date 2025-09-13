@@ -1277,6 +1277,10 @@ bool app_loop(void) {
             // back to sleep (unless the user interacts with it in the meantime)
             _pending_sequence = NULL;
         }
+
+        // don't let the watch sleep when exiting deep sleep mode,
+        // so that app_loop will run again and process the events that may have fired.
+        can_sleep = false;
     }
 #endif
 
