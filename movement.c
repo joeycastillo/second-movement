@@ -435,6 +435,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             movement_illuminate_led();
             break;
         case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_LIGHT_LONG_UP:
             if (movement_state.settings.bit.led_duration == 0) {
                 movement_force_led_off();
             }
