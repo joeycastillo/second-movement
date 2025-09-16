@@ -272,6 +272,11 @@ static void fn_swap(calculator_state_t *s) {
     PUSH(b);
 }
 
+static void fn_over(calculator_state_t *s) {
+    double a = s->stack[s->stack_size - 2];
+    PUSH(a);
+}
+
 static void fn_duplicate(calculator_state_t *s) {
     double a = POP();
     PUSH(a);
@@ -310,13 +315,14 @@ struct {
     // Stack operations. Accessible via secondary_fn_index (i.e. alarm long press).
     {{'P', 'O'}, 1, 0, fn_pop},  // This ends up displaying the same as 'POW'. But at least it's in a different place.
     {{'S', 'W'}, 2, 2, fn_swap},
+    {{'O', 'v'}, 2, 1, fn_over},
     {{'d', 'u'}, 1, 1, fn_duplicate},  // Uppercase 'D' is a bit too 'O' for me.
     {{'C', 'L'}, 1, 0, fn_clear},  // Operation lie - takes _everything_ off the stack, but a check of 1 is sufficient.
     {{'L', 'E'}, 1, 0, fn_size},
 };
 
 #define FUNCTIONS_LEN (sizeof(functions) / sizeof(functions[0]))
-#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 5)
+#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 6)
 
 // Show the function name (using day display)
 static void show_fn(calculator_state_t *s, uint8_t subsecond) {
