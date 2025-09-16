@@ -28,6 +28,14 @@
 
 #include "rpn_calculator_alt_face.h"
 
+#ifndef M_PI
+#define M_PI 3.14159
+#endif
+
+#ifndef M_E
+#define M_E 2.71828
+#endif
+
 static void show_fn(calculator_state_t *state, uint8_t subsecond);
 
 void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -39,6 +47,12 @@ void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr
         // Do any one-time tasks in here; the inside of this conditional happens only at boot.
     }
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
+}
+
+static void show_stack_size(calculator_state_t *state) {
+    char buf[2];
+    sprintf(buf, " %d", state->stack_size);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 }
 
 static void show_number(double num) {
@@ -302,7 +316,7 @@ struct {
 };
 
 #define FUNCTIONS_LEN (sizeof(functions) / sizeof(functions[0]))
-#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 4)
+#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 5)
 
 // Show the function name (using day display)
 static void show_fn(calculator_state_t *s, uint8_t subsecond) {
@@ -355,6 +369,11 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
             if (s->mode == CALC_OPERATION) {
                 show_fn(s, event.subsecond);
+                if (s->fn_index == 0) {
+                    show_stack_top(s);
+                } else if (s->fn_index >= SECONDARY_FN_INDEX) {
+                    show_stack_size(s);
+                }
             }
             break;
         case EVENT_MODE_BUTTON_UP:
