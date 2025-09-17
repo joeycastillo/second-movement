@@ -66,6 +66,7 @@
 enum calculator_mode {
     CALC_OPERATION = 0,
     CALC_NUMBER,
+    CALC_PEEK,
 };
 
 typedef struct {
@@ -77,6 +78,7 @@ typedef struct {
     double max;
 
     enum calculator_mode mode;
+    uint8_t peek_index;  // index for stack viewing in peek mode
 } calculator_state_t;
 
 void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -93,4 +95,3 @@ void rpn_calculator_alt_face_resign(void *context);
 })
 
 #endif // CALCULATOR_FACE_H_
-

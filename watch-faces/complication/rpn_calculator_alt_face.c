@@ -49,10 +49,14 @@ void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
 }
 
-static void show_stack_size(calculator_state_t *state) {
+static void show_stack_index(uint8_t index) {
     char buf[2];
-    sprintf(buf, " %d", state->stack_size);
+    sprintf(buf, "%2d", index);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+}
+
+static void show_stack_size(calculator_state_t *state) {
+    show_stack_index(state->stack_size);
 }
 
 static void show_number(double num) {
@@ -146,6 +150,9 @@ void rpn_calculator_alt_face_activate(void *context) {
 static void change_mode(calculator_state_t *s, enum calculator_mode mode) {
     s->mode = mode;
     s->fn_index = 0;
+    if (mode == CALC_PEEK) {
+        s->peek_index = s->stack_size > 0 ? s->stack_size - 1 : 0;
+    }
     show_fn(s, 0);
     // Faster tick in operation mode so we can blink.
     movement_request_tick_frequency(mode == CALC_OPERATION ? 4 : 1);
@@ -362,6 +369,20 @@ static void show_stack_top(calculator_state_t *s) {
     }
 }
 
+// Show peek mode indicator and stack position
+static void show_peek_mode(calculator_state_t *s) {
+    watch_display_string("ST", 0);
+    show_peek_value(s);
+}
+
+// Show the stack value at peek_index
+static void show_peek_value(calculator_state_t *s) {
+    if (s->stack_size > 0 && s->peek_index < s->stack_size) {
+        show_number(s->stack[s->peek_index]);
+        show_stack_index(s->peek_index + 1);
+    }
+}
+
 bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
     calculator_state_t *s = (calculator_state_t *)context;
 
@@ -380,18 +401,37 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
                 } else if (s->fn_index >= SECONDARY_FN_INDEX) {
                     show_stack_size(s);
                 }
+            } else if (s->mode == CALC_PEEK) {
+                show_peek_mode(s);
+                show_peek_value(s);
             }
             break;
         case EVENT_MODE_BUTTON_UP:
             if (s->mode == CALC_NUMBER) {
                 adjust_number(s, -1);
                 show_stack_top(s);
+            } else if (s->mode == CALC_PEEK) {
+                // Navigate down the stack (towards index 0)
+                if (s->peek_index > 0) {
+                    s->peek_index--;
+                    show_peek_mode(s);
+                    show_peek_value(s);
+                }
             } else {
                 movement_move_to_next_face();
                 return false;
             }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            if (s->mode == CALC_PEEK) {
+                // Exit peek mode and return to operation mode
+                change_mode(s, CALC_OPERATION);
+                show_stack_top(s);
+                break;
+            }
+
             proposed_stack_size = s->stack_size - functions[s->fn_index].input;
 
             if (s->mode == CALC_NUMBER) {
@@ -411,9 +451,24 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
             if (s->mode == CALC_NUMBER) {
                 adjust_number(s, 1);
                 show_stack_top(s);
+            } else if (s->mode == CALC_PEEK) {
+                // Navigate up the stack (towards stack top)
+                if (s->peek_index < s->stack_size - 1) {
+                    s->peek_index++;
+                    show_peek_mode(s);
+                    show_peek_value(s);
+                }
             } else {
                 s->fn_index = (s->fn_index + 1) % FUNCTIONS_LEN;
                 show_fn(s, 0);
+            }
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (s->stack_size > 0) {
+                // Enter peek mode to view the stack
+                change_mode(s, CALC_PEEK);
+                show_peek_mode(s);
+                show_peek_value(s);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
@@ -446,4 +501,3 @@ void rpn_calculator_alt_face_resign(void *context) {
 
     // handle any cleanup before your watch face goes off-screen.
 }
-
