@@ -369,12 +369,6 @@ static void show_stack_top(calculator_state_t *s) {
     }
 }
 
-// Show peek mode indicator and stack position
-static void show_peek_mode(calculator_state_t *s) {
-    watch_display_string("ST", 0);
-    show_peek_value(s);
-}
-
 // Show the stack value at peek_index
 static void show_peek_value(calculator_state_t *s) {
     if (s->stack_size > 0 && s->peek_index < s->stack_size) {
@@ -383,60 +377,31 @@ static void show_peek_value(calculator_state_t *s) {
     }
 }
 
-bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
-    calculator_state_t *s = (calculator_state_t *)context;
+// Show peek mode indicator and stack position
+static void show_peek_mode(calculator_state_t *s) {
+    watch_display_string("ST", 0);
+    show_peek_value(s);
+}
 
+// Handle events in operation mode
+static bool handle_operation_mode(movement_event_t event, calculator_state_t *s) {
     int proposed_stack_size;
 
     switch (event.event_type) {
-        case EVENT_ACTIVATE:
-            change_mode(s, CALC_OPERATION);
-            show_stack_top(s);
-            break;
         case EVENT_TICK:
-            if (s->mode == CALC_OPERATION) {
-                show_fn(s, event.subsecond);
-                if (s->fn_index == 0) {
-                    show_stack_top(s);
-                } else if (s->fn_index >= SECONDARY_FN_INDEX) {
-                    show_stack_size(s);
-                }
-            } else if (s->mode == CALC_PEEK) {
-                show_peek_mode(s);
-                show_peek_value(s);
+            show_fn(s, event.subsecond);
+            if (s->fn_index == 0) {
+                show_stack_top(s);
+            } else if (s->fn_index >= SECONDARY_FN_INDEX) {
+                show_stack_size(s);
             }
             break;
         case EVENT_MODE_BUTTON_UP:
-            if (s->mode == CALC_NUMBER) {
-                adjust_number(s, -1);
-                show_stack_top(s);
-            } else if (s->mode == CALC_PEEK) {
-                // Navigate down the stack (towards index 0)
-                if (s->peek_index > 0) {
-                    s->peek_index--;
-                    show_peek_mode(s);
-                    show_peek_value(s);
-                }
-            } else {
-                movement_move_to_next_face();
-                return false;
-            }
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            break;
+            movement_move_to_next_face();
+            return false;
         case EVENT_LIGHT_BUTTON_UP:
-            if (s->mode == CALC_PEEK) {
-                // Exit peek mode and return to operation mode
-                change_mode(s, CALC_OPERATION);
-                show_stack_top(s);
-                break;
-            }
-
             proposed_stack_size = s->stack_size - functions[s->fn_index].input;
-
-            if (s->mode == CALC_NUMBER) {
-                change_mode(s, CALC_OPERATION);
-            } else if (proposed_stack_size < 0 || proposed_stack_size + functions[s->fn_index].output > CALC_MAX_STACK_SIZE) {
+            if (proposed_stack_size < 0 || proposed_stack_size + functions[s->fn_index].output > CALC_MAX_STACK_SIZE) {
                 movement_play_signal();
                 break;
             } else {
@@ -445,55 +410,107 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
                 s->fn_index = 0;
                 show_fn(s, 0);
             }
-
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (s->mode == CALC_NUMBER) {
-                adjust_number(s, 1);
-                show_stack_top(s);
-            } else if (s->mode == CALC_PEEK) {
-                // Navigate up the stack (towards stack top)
-                if (s->peek_index < s->stack_size - 1) {
-                    s->peek_index++;
-                    show_peek_mode(s);
-                    show_peek_value(s);
-                }
-            } else {
-                s->fn_index = (s->fn_index + 1) % FUNCTIONS_LEN;
-                show_fn(s, 0);
-            }
+            s->fn_index = (s->fn_index + 1) % FUNCTIONS_LEN;
+            show_fn(s, 0);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (s->stack_size > 0) {
-                // Enter peek mode to view the stack
                 change_mode(s, CALC_PEEK);
                 show_peek_mode(s);
                 show_peek_value(s);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (s->mode == CALC_OPERATION) {
-                if (s->fn_index == 0) {
-                    s->fn_index = SECONDARY_FN_INDEX;
-                } else {
-                    s->fn_index = 0;
-                }
-                show_fn(s, 0);
+            if (s->fn_index == 0) {
+                s->fn_index = SECONDARY_FN_INDEX;
+            } else {
+                s->fn_index = 0;
+            }
+            show_fn(s, 0);
+            break;
+    }
+    return true;
+}
+
+// Handle events in number entry mode
+static bool handle_number_mode(movement_event_t event, calculator_state_t *s) {
+    switch (event.event_type) {
+        case EVENT_MODE_BUTTON_UP:
+            adjust_number(s, -1);
+            show_stack_top(s);
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            change_mode(s, CALC_OPERATION);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            adjust_number(s, 1);
+            show_stack_top(s);
+            break;
+    }
+    return true;
+}
+
+// Handle events in peek mode
+static bool handle_peek_mode(movement_event_t event, calculator_state_t *s) {
+    switch (event.event_type) {
+        case EVENT_TICK:
+            show_peek_mode(s);
+            show_peek_value(s);
+            break;
+        case EVENT_MODE_BUTTON_UP:
+            if (s->peek_index > 0) {
+                s->peek_index--;
+                show_peek_mode(s);
+                show_peek_value(s);
             }
             break;
+        case EVENT_LIGHT_BUTTON_UP:
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            if (s->peek_index < s->stack_size - 1) {
+                s->peek_index++;
+                show_peek_mode(s);
+                show_peek_value(s);
+            }
+            break;
+    }
+    return true;
+}
+
+bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
+    calculator_state_t *s = (calculator_state_t *)context;
+
+    // Handle common events first
+    switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            return true;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
-            break;
+            return true;
         case EVENT_LOW_ENERGY_UPDATE:
-            break;
+            return true;
         default:
-            movement_default_loop_handler(event);
             break;
     }
 
-    // return true if the watch can enter standby mode. If you are PWM'ing an LED or buzzing the buzzer here,
-    // you should return false since the PWM driver does not operate in standby mode.
-    return true;
+    // Delegate to mode-specific handlers
+    switch (s->mode) {
+        case CALC_OPERATION:
+            return handle_operation_mode(event, s);
+        case CALC_NUMBER:
+            return handle_number_mode(event, s);
+        case CALC_PEEK:
+            return handle_peek_mode(event, s);
+        default:
+            movement_default_loop_handler(event);
+            return true;
+    }
 }
 
 void rpn_calculator_alt_face_resign(void *context) {
