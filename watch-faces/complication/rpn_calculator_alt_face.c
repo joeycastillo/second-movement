@@ -470,6 +470,12 @@ static bool handle_peek_mode(movement_event_t event, calculator_state_t *s) {
             change_mode(s, CALC_OPERATION);
             show_stack_top(s);
             break;
+        case EVENT_LIGHT_LONG_PRESS:
+            // Clear the stack
+            s->stack_size = 0;
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            break;
         case EVENT_ALARM_BUTTON_UP:
             if (s->peek_index < s->stack_size - 1) {
                 s->peek_index++;

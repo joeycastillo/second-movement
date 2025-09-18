@@ -56,6 +56,16 @@
  * manipulation (pop, swap, dupe, clear, size (le)). If you're _not_ on NO, a long
  * hold will take you back to it.
  *
+ * PEEK MODE:
+ * A new peek mode allows you to browse through the entire calculator stack:
+ *  - Long press LIGHT in operation mode (when stack has items) to enter peek mode
+ *  - In peek mode, "ST" appears in the day section and the stack position (1-based) 
+ *    appears in the top right
+ *  - MODE button navigates down the stack (towards index 0, older items)
+ *  - ALARM button navigates up the stack (towards stack top, newer items)
+ *  - LIGHT button exits peek mode and returns to operation mode
+ *  - Long press LIGHT in peek mode clears the entire stack and returns to operation mode
+ *
  * See 'functions' in "rpn_calculator_alt_face.c" for names of all operations.
  */
 
