@@ -33,7 +33,7 @@ static char _activity_logging_get_mood_face(uint16_t active_minutes) {
     if (active_minutes >= 150) {
         return ')';  // happy: 150+ minutes
     } else if (active_minutes >= 30) {
-        return '|';  // neutral: 30-149 minutes
+        return '1';  // neutral: 30-149 minutes
     } else {
         return '(';  // sad: 0-29 minutes
     }
@@ -124,7 +124,7 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
                 // Handle emoticon display timing using tick counter
                 if (state->show_emoticon) {
                     state->emoticon_tick_count++;
-                    if (state->emoticon_tick_count >= 1) {
+                    if (state->emoticon_tick_count > 1) {
                         state->show_emoticon = false;
                         watch_clear_colon();
                         _activity_logging_face_update_display(state);
