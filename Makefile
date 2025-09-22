@@ -83,6 +83,7 @@ INCLUDES += \
   -I./watch-faces/sensor \
   -I./watch-faces/settings \
   -I./watch-faces/io \
+  -I./location \
 
 # Add your source files here.
 SRCS += \
@@ -106,6 +107,7 @@ SRCS += \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
   ./watch-library/shared/watch/watch_utility.c \
+  ./location/location.c \
 
 
 SRCS += ./watch-library/shared/driver/lis2dw.c

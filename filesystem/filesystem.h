@@ -109,3 +109,8 @@ int filesystem_cmd_echo(int argc, char *argv[]);
   * @return The movement_location_t structure containing the location data.
   */
 movement_location_t load_location_from_filesystem();
+
+/** @brief Persists the location to the filesystem.
+  * @param new_location The movement_location_t structure containing the new location data.
+  */
+void persist_location_to_filesystem(movement_location_t new_location);
