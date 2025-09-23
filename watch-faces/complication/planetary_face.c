@@ -138,6 +138,39 @@ bool planetary_face_loop(movement_event_t event, void *context) {
             calculate_astrological_sign(state); // Recalculate zodiac sign on activation
             printf("[DEBUG] Recalculated planetary hour: %d, Zodiac sign: %d\n", state->current_planetary_hour, state->current_zodiac_sign);
             break;
+
+        case EVENT_ALARM_LONG_PRESS:
+            if (state->page == 0) {
+            if (state->longLatToUse != 0) {
+                state->longLatToUse = 0;
+                _sunrise_sunset_face_update(state);
+                break;
+            }
+                state->page++;
+                state->active_digit = 0;
+                watch_clear_display();
+                movement_request_tick_frequency(4);
+                _update_location_settings_display(event, context);
+            }
+            else {
+                state->active_digit = 0;
+                state->page = 0;
+                _update_location_register(state);
+                _sunrise_sunset_face_update(state);
+            }
+            break;
+        case EVENT_TIMEOUT:
+            if (load_location_from_filesystem().reg == 0) {
+                // if no location set, return home
+                movement_move_to_face(0);
+            } else if (state->page || state->rise_index) {
+                // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
+                state->page = 0;
+                state->rise_index = 0;
+                movement_request_tick_frequency(1);
+                _sunrise_sunset_face_update(state);
+            }
+            break;
         case EVENT_TICK:
             calculate_planetary_hour(state); // Update planetary hour on each tick
             printf("[DEBUG] Updated planetary hour: %d\n", state->current_planetary_hour);

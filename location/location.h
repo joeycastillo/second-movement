@@ -15,13 +15,10 @@ typedef struct {
 
 typedef struct {
     uint8_t page;
-    uint8_t rise_index;
     uint8_t active_digit;
     bool location_changed;
-    watch_date_time_t rise_set_expires;
     lat_lon_settings_t working_latitude;
     lat_lon_settings_t working_longitude;
-    uint8_t longLatToUse;
 } location_state_t;
 
 

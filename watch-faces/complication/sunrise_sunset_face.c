@@ -41,12 +41,12 @@
 
 static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
 
-static void _sunrise_sunset_set_expiration(location_state_t *state, watch_date_time_t next_rise_set) {
+static void _sunrise_sunset_set_expiration(sunrise_sunset_face_state_t *state, watch_date_time_t next_rise_set) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(next_rise_set, 0);
     state->rise_set_expires = watch_utility_date_time_from_unix_time(timestamp + 60, 0);
 }
 
-static void _sunrise_sunset_face_update(location_state_t *state) {
+static void _sunrise_sunset_face_update(sunrise_sunset_face_state_t *state) {
     char buf[14];
     double rise, set, minutes, seconds;
     bool show_next_match = false;
@@ -208,140 +208,140 @@ static lat_lon_settings_t _sunrise_sunset_face_struct_from_latlon(int16_t val) {
     return retval;
 }
 
-static void _sunrise_sunset_face_advance_digit(location_state_t *state) {
-    state->location_changed = true;
+static void _sunrise_sunset_face_advance_digit(sunrise_sunset_face_state_t *state) {
+    state->location_state.location_changed = true;
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-        switch (state->page) {
+        switch (state->location_state.page) {
             case 1: // latitude
-                switch (state->active_digit) {
+                switch (state->location_state.active_digit) {
                     case 0: // tens
-                        state->working_latitude.tens = (state->working_latitude.tens + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) {
+                        state->location_state.working_latitude.tens = (state->location_state.working_latitude.tens + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) {
                             // prevent latitude from going over ±90.
                             // TODO: perform these checks when advancing the digit?
-                            state->working_latitude.ones = 0;
-                            state->working_latitude.tenths = 0;
-                            state->working_latitude.hundredths = 0;
+                            state->location_state.working_latitude.ones = 0;
+                            state->location_state.working_latitude.tenths = 0;
+                            state->location_state.working_latitude.hundredths = 0;
                         }
                         break;
                     case 1:
-                        state->working_latitude.ones = (state->working_latitude.ones + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.ones = 0;
+                        state->location_state.working_latitude.ones = (state->location_state.working_latitude.ones + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.ones = 0;
                         break;
                     case 2:
-                        state->working_latitude.tenths = (state->working_latitude.tenths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.tenths = 0;
+                        state->location_state.working_latitude.tenths = (state->location_state.working_latitude.tenths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.tenths = 0;
                         break;
                     case 3:
-                        state->working_latitude.hundredths = (state->working_latitude.hundredths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.hundredths = 0;
+                        state->location_state.working_latitude.hundredths = (state->location_state.working_latitude.hundredths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.hundredths = 0;
                         break;
                     case 4:
-                        state->working_latitude.sign++;
+                        state->location_state.working_latitude.sign++;
                         break;
                 }
                 break;
             case 2: // longitude
-                switch (state->active_digit) {
+                switch (state->location_state.active_digit) {
                     case 0:
                         // Increase tens and handle carry-over to hundreds
-                        state->working_longitude.tens++;
-                        if (state->working_longitude.tens >= 10) {
-                            state->working_longitude.tens = 0;
-                            state->working_longitude.hundreds++;
+                        state->location_state.working_longitude.tens++;
+                        if (state->location_state.working_longitude.tens >= 10) {
+                            state->location_state.working_longitude.tens = 0;
+                            state->location_state.working_longitude.hundreds++;
                         }
 
                         // Reset if we've gone over ±180
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) {
-                            state->working_longitude.hundreds = 0;
-                            state->working_longitude.tens = 0;
-                            state->working_longitude.ones = 0;
-                            state->working_longitude.tenths = 0;
-                            state->working_longitude.hundredths = 0;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) {
+                            state->location_state.working_longitude.hundreds = 0;
+                            state->location_state.working_longitude.tens = 0;
+                            state->location_state.working_longitude.ones = 0;
+                            state->location_state.working_longitude.tenths = 0;
+                            state->location_state.working_longitude.hundredths = 0;
                         }
                         break;
                     case 1:
-                        state->working_longitude.ones = (state->working_longitude.ones + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.ones = 0;
+                        state->location_state.working_longitude.ones = (state->location_state.working_longitude.ones + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.ones = 0;
                         break;
                     case 2:
-                        state->working_longitude.tenths = (state->working_longitude.tenths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.tenths = 0;
+                        state->location_state.working_longitude.tenths = (state->location_state.working_longitude.tenths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.tenths = 0;
                         break;
                     case 3:
-                        state->working_longitude.hundredths = (state->working_longitude.hundredths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.hundredths = 0;
+                        state->location_state.working_longitude.hundredths = (state->location_state.working_longitude.hundredths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.hundredths = 0;
                         break;
                     case 4:
-                        state->working_longitude.sign++;
+                        state->location_state.working_longitude.sign++;
                         break;
                 }
                 break;
         }
     } else {
-        switch (state->page) {
+        switch (state->location_state.page) {
             case 1: // latitude
-                switch (state->active_digit) {
+                switch (state->location_state.active_digit) {
                     case 0:
-                        state->working_latitude.sign++;
+                        state->location_state.working_latitude.sign++;
                         break;
                     case 1:
                         // we skip this digit
                         break;
                     case 2:
-                        state->working_latitude.tens = (state->working_latitude.tens + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) {
+                        state->location_state.working_latitude.tens = (state->location_state.working_latitude.tens + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) {
                             // prevent latitude from going over ±90.
                             // TODO: perform these checks when advancing the digit?
-                            state->working_latitude.ones = 0;
-                            state->working_latitude.tenths = 0;
-                            state->working_latitude.hundredths = 0;
+                            state->location_state.working_latitude.ones = 0;
+                            state->location_state.working_latitude.tenths = 0;
+                            state->location_state.working_latitude.hundredths = 0;
                         }
                         break;
                     case 3:
-                        state->working_latitude.ones = (state->working_latitude.ones + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.ones = 0;
+                        state->location_state.working_latitude.ones = (state->location_state.working_latitude.ones + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.ones = 0;
                         break;
                     case 4:
-                        state->working_latitude.tenths = (state->working_latitude.tenths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.tenths = 0;
+                        state->location_state.working_latitude.tenths = (state->location_state.working_latitude.tenths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.tenths = 0;
                         break;
                     case 5:
-                        state->working_latitude.hundredths = (state->working_latitude.hundredths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_latitude)) > 9000) state->working_latitude.hundredths = 0;
+                        state->location_state.working_latitude.hundredths = (state->location_state.working_latitude.hundredths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_latitude)) > 9000) state->location_state.working_latitude.hundredths = 0;
                         break;
                 }
                 break;
             case 2: // longitude
-                switch (state->active_digit) {
+                switch (state->location_state.active_digit) {
                     case 0:
-                        state->working_longitude.sign++;
+                        state->location_state.working_longitude.sign++;
                         break;
                     case 1:
-                        state->working_longitude.hundreds = (state->working_longitude.hundreds + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) {
+                        state->location_state.working_longitude.hundreds = (state->location_state.working_longitude.hundreds + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) {
                             // prevent longitude from going over ±180
-                            state->working_longitude.tens = 8;
-                            state->working_longitude.ones = 0;
-                            state->working_longitude.tenths = 0;
-                            state->working_longitude.hundredths = 0;
+                            state->location_state.working_longitude.tens = 8;
+                            state->location_state.working_longitude.ones = 0;
+                            state->location_state.working_longitude.tenths = 0;
+                            state->location_state.working_longitude.hundredths = 0;
                         }
                         break;
                     case 2:
-                        state->working_longitude.tens = (state->working_longitude.tens + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.tens = 0;
+                        state->location_state.working_longitude.tens = (state->location_state.working_longitude.tens + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.tens = 0;
                         break;
                     case 3:
-                        state->working_longitude.ones = (state->working_longitude.ones + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.ones = 0;
+                        state->location_state.working_longitude.ones = (state->location_state.working_longitude.ones + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.ones = 0;
                         break;
                     case 4:
-                        state->working_longitude.tenths = (state->working_longitude.tenths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.tenths = 0;
+                        state->location_state.working_longitude.tenths = (state->location_state.working_longitude.tenths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.tenths = 0;
                         break;
                     case 5:
-                        state->working_longitude.hundredths = (state->working_longitude.hundredths + 1) % 10;
-                        if (abs(_latlon_from_struct(state->working_longitude)) > 18000) state->working_longitude.hundredths = 0;
+                        state->location_state.working_longitude.hundredths = (state->location_state.working_longitude.hundredths + 1) % 10;
+                        if (abs(_latlon_from_struct(state->location_state.working_longitude)) > 18000) state->location_state.working_longitude.hundredths = 0;
                         break;
                 }
                 break;
@@ -375,14 +375,14 @@ void sunrise_sunset_face_activate(void *context) {
     }
 #endif
 
-    location_state_t *state = (location_state_t *)context;
+    sunrise_sunset_face_state_t *state = (sunrise_sunset_face_state_t *)context;
     movement_location_t movement_location = load_location_from_filesystem();
-    state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
-    state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
+    state->location_state.working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
+    state->location_state.working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
 }
 
 bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
-    location_state_t *state = (location_state_t *)context;
+    sunrise_sunset_face_state_t *state = (sunrise_sunset_face_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -390,7 +390,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
-            if (state->page == 0) {
+            if (state->location_state.page == 0) {
                 // if entering low energy mode, start tick animation
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
                 // check if we need to update the display
@@ -401,72 +401,73 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
                     _sunrise_sunset_face_update(state);
                 }
             } else {
-                _update_location_settings_display(event, state);
+                _update_location_settings_display(event, &state->location_state);
             }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
-            if (state->page) {
+            if (state->location_state.page) {
                 if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-                    state->active_digit++;
-                    if (state->active_digit > 4) {
-                        state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
-                        _update_location_register(state);
+                    state->location_state.active_digit++;
+                    if (state->location_state.active_digit > 4) {
+                        state->location_state.active_digit = 0;
+                        state->location_state.page = (state->location_state.page + 1) % 3;
+                        _update_location_register(&state->location_state);
                     }
                 } else {
-                    state->active_digit++;
-                    if (state->page == 1 && state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
-                    if (state->active_digit > 5) {
-                        state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
-                        _update_location_register(state);
+                    state->location_state.active_digit++;
+                    if (state->location_state.page == 1 && state->location_state.active_digit == 1) state->location_state.active_digit++; // max latitude is +- 90, no hundreds place
+                    if (state->location_state.active_digit > 5) {
+                        state->location_state.active_digit = 0;
+                        state->location_state.page = (state->location_state.page + 1) % 3;
+                        _update_location_register(&state->location_state);
                     }
                 }
-                _update_location_settings_display(event, context);
+                _update_location_settings_display(event, &state->location_state);
+                _update_location_settings_display(event, &state->location_state);
             } else if (_location_count <= 1) {
                 movement_illuminate_led();
             }
-            if (state->page == 0) {
+            if (state->location_state.page == 0) {
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (_location_count <= 1) break;
-            else if (!state->page) movement_illuminate_led();
+            else if (!state->location_state.page) movement_illuminate_led();
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if (state->page == 0 && _location_count > 1) {
+            if (state->location_state.page == 0 && _location_count > 1) {
                 state->longLatToUse = (state->longLatToUse + 1) % _location_count;
                 _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (state->page) {
+            if (state->location_state.page) {
                 _sunrise_sunset_face_advance_digit(state);
-                _update_location_settings_display(event, context);
+                _update_location_settings_display(event, &state->location_state);
             } else {
                 state->rise_index = (state->rise_index + 1) % 2;
                 _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (state->page == 0) {
+            if (state->location_state.page == 0) {
             if (state->longLatToUse != 0) {
                 state->longLatToUse = 0;
                 _sunrise_sunset_face_update(state);
                 break;
             }
-                state->page++;
-                state->active_digit = 0;
+                state->location_state.page++;
+                state->location_state.active_digit = 0;
                 watch_clear_display();
                 movement_request_tick_frequency(4);
-                _update_location_settings_display(event, context);
+                _update_location_settings_display(event, &state->location_state);
             }
             else {
-                state->active_digit = 0;
-                state->page = 0;
-                _update_location_register(state);
+                state->location_state.active_digit = 0;
+                state->location_state.page = 0;
+                _update_location_register(&state->location_state);
                 _sunrise_sunset_face_update(state);
             }
             break;
@@ -474,9 +475,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             if (load_location_from_filesystem().reg == 0) {
                 // if no location set, return home
                 movement_move_to_face(0);
-            } else if (state->page || state->rise_index) {
+            } else if (state->location_state.page || state->rise_index) {
                 // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
-                state->page = 0;
+                state->location_state.page = 0;
                 state->rise_index = 0;
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);
@@ -490,9 +491,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
 }
 
 void sunrise_sunset_face_resign(void *context) {
-    location_state_t *state = (location_state_t *)context;
-    state->page = 0;
-    state->active_digit = 0;
+    sunrise_sunset_face_state_t *state = (sunrise_sunset_face_state_t *)context;
+    state->location_state.page = 0;
+    state->location_state.active_digit = 0;
     state->rise_index = 0;
-    _update_location_register(state);
+    _update_location_register(&state->location_state);
 }

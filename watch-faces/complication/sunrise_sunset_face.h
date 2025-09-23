@@ -37,7 +37,7 @@
  */
 
 #include "movement.h"
-#include "location.h"
+#include "./location/location.h"
 
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void sunrise_sunset_face_activate(void *context);
@@ -51,5 +51,12 @@ void sunrise_sunset_face_resign(void *context);
     sunrise_sunset_face_resign, \
     NULL, \
 })
+
+typedef struct {
+    uint8_t rise_index;
+    watch_date_time_t rise_set_expires;
+    uint8_t longLatToUse;
+    location_state_t location_state;
+} sunrise_sunset_face_state_t;
 
 #endif // SUNRISE_SUNSET_FACE_H_
