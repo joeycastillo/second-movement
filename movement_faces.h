@@ -25,7 +25,7 @@
 #pragma once
 
 #include "clock_face.h"
-#include "planetary_face.h"
+#include "planetary_hour_face.h"
 #include "beats_face.h"
 #include "world_clock_face.h"
 #include "alarm_face.h"

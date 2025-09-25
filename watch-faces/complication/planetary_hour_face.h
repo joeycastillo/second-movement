@@ -22,27 +22,32 @@
  * SOFTWARE.
  */
 
-#ifndef PLANETARY_FACE_H_
-#define PLANETARY_FACE_H_
+#ifndef PLANETARY_HOUR_FACE_H_
+#define PLANETARY_HOUR_FACE_H_
 
 #include "movement.h"
+#include "location.h"
 
 typedef struct {
     uint8_t current_planetary_hour;
     uint8_t current_zodiac_sign;
-} planetary_state_t;
+    uint8_t longLatToUse;            
+    int16_t hour_offset;   // 0 = current hour, +1 = next hour, -1 = previous hour, etc.
+    watch_date_time_t hour_offset_expires;
+    location_state_t location_state; 
+} planetary_hour_state_t;
 
-void planetary_face_setup(uint8_t watch_face_index, void **context_ptr);
-void planetary_face_activate(void *context);
-bool planetary_face_loop(movement_event_t event, void *context);
-void planetary_face_resign(void *context);
+void planetary_hour_face_setup(uint8_t watch_face_index, void **context_ptr);
+void planetary_hour_face_activate(void *context);
+bool planetary_hour_face_loop(movement_event_t event, void *context);
+void planetary_hour_face_resign(void *context);
 
-#define planetary_face ((const watch_face_t){ \
-    planetary_face_setup, \
-    planetary_face_activate, \
-    planetary_face_loop, \
-    planetary_face_resign, \
+#define planetary_hour_face ((const watch_face_t){ \
+    planetary_hour_face_setup, \
+    planetary_hour_face_activate, \
+    planetary_hour_face_loop, \
+    planetary_hour_face_resign, \
     NULL, \
 })
 
-#endif // PLANETARY_FACE_H_
+#endif // PLANETARY_HOUR_FACE_H_

@@ -379,6 +379,9 @@ void sunrise_sunset_face_activate(void *context) {
     movement_location_t movement_location = load_location_from_filesystem();
     state->location_state.working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->location_state.working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
+    state->location_state.page = 0;
+    state->location_state.active_digit = 0;
+    state->location_state.location_changed = false;
 }
 
 bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
@@ -496,4 +499,5 @@ void sunrise_sunset_face_resign(void *context) {
     state->location_state.active_digit = 0;
     state->rise_index = 0;
     _update_location_register(&state->location_state);
+    free(context); // Free allocated memory for the context
 }
