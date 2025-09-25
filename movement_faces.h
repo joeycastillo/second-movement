@@ -74,4 +74,5 @@
 #include "wareki_face.h"
 #include "deadline_face.h"
 #include "wordle_face.h"
+#include "zodiac_face.h"
 // New includes go above this line.
