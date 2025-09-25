@@ -20,6 +20,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ * Planetary Hour Face
+ * This face calculates and displays the current planetary hour based on the user's location and time.
+ * Location can be set with an alarm long press, and the planetary hour is determined by the sunrise and sunset times.
+ * Once location is set, short press on the alarm buttom will increment the target hour
+ *
  */
 
 #include "planetary_hour_face.h" 
@@ -41,8 +47,6 @@
 #define ZODIAC_SIGN_ERROR 255 // Define an error code for zodiac sign calculation failure
 
 // Prototypes
-int __sunriset__(int year, int month, int day, double lon, double lat, double altit, int upper_limb, double *rise, double *set);
-static void calculate_planetary_hour(planetary_hour_state_t *state);
 static void calculate_astrological_sign(planetary_hour_state_t *state);
 
 
@@ -136,7 +140,6 @@ static planet_names_t planetary_ruler_from_base_and_time(watch_date_time_t base_
     }
 
     uint8_t day_of_week = (day + (2 * month) + (3 * (month + 1) / 5) + year + (year / 4) - (year / 100) + (year / 400) + 1) % 7;
-    printf("[DEBUG] Day of week: %d\n", day_of_week);
 
     // 2. Calculate the time difference between sunrise and hour_start_local
     uint32_t sunrise_unix = watch_utility_date_time_to_unix_time(base_sunrise_local, 0);
@@ -150,15 +153,12 @@ static planet_names_t planetary_ruler_from_base_and_time(watch_date_time_t base_
     // Calculate the time difference in hours
     double time_since_sunrise = (double)(hour_start_unix - sunrise_unix) / 3600.0;
     int time_since_sunrise_int = (int)floor(time_since_sunrise);
-    printf("[DEBUG] Time since sunrise: %d hours\n", time_since_sunrise_int);
 
     // 3. Get the ruler of the day from the day of the week
     uint8_t ruler_of_day_index = week_days_to_chaldean_order[day_of_week];
-    printf("[DEBUG] Ruler of day index: %d\n", ruler_of_day_index);
 
     // 4. Calculate the planetary ruler of the hour
     int ruler_index = (ruler_of_day_index + time_since_sunrise_int) % 7;
-    printf("[DEBUG] Planetary ruler index: %d\n", ruler_index);
 
     // Return the corresponding planet from the planet_names map
     return planet_names[ruler_index];
@@ -499,49 +499,32 @@ static void _planetary_hour_face_advance_digit(planetary_hour_state_t *state) {
 
 // --------------- MAIN: Planetary Hour Face (with hour_offset) -----------------
 static void _planetary_hour_face_update(planetary_hour_state_t *state) {
-    printf("[DEBUG] Entering _planetary_hour_face_update\n");
-
     char buf[14];
     movement_location_t movement_location;
-
-    // Load location
-    if (state->longLatToUse == 0 || _location_count <= 1) {
-        movement_location = load_location_from_filesystem();
-        printf("[DEBUG] Loaded location from filesystem: reg=%d\n", movement_location.reg);
-    } else {
-        movement_location.bit.latitude = longLatPresets[state->longLatToUse].latitude;
+    if (state->longLatToUse == 0 || _location_count <= 1) movement_location = load_location_from_filesystem();
+    else {
+        movement_location.bit.latitude  = longLatPresets[state->longLatToUse].latitude;
         movement_location.bit.longitude = longLatPresets[state->longLatToUse].longitude;
-        printf("[DEBUG] Using preset location: latitude=%d, longitude=%d\n",
-               movement_location.bit.latitude, movement_location.bit.longitude);
     }
-
-    // Check if location is valid
     if (movement_location.reg == 0) {
-        printf("[ERROR] Invalid location. Displaying 'No LOC'.\n");
-        watch_display_text_with_fallback(WATCH_POSITION_TOP, "PHour", "PH");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP, "PHour ", "PH");
         watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "No LOC", "No Loc");
         return;
     }
 
-    // Get current local time
     watch_date_time_t now_local = movement_get_local_date_time();
-    printf("[DEBUG] Current local time: %02d:%02d:%02d\n",
-           now_local.unit.hour, now_local.unit.minute, now_local.unit.second);
-
-    // Convert latitude and longitude
     int16_t lat_centi = (int16_t)movement_location.bit.latitude;
     int16_t lon_centi = (int16_t)movement_location.bit.longitude;
     double lat = (double)lat_centi / 100.0;
     double lon = (double)lon_centi / 100.0;
     double hours_from_utc = ((double)movement_get_current_timezone_offset()) / 3600.0;
-    printf("[DEBUG] Latitude: %.2f, Longitude: %.2f, Hours from UTC: %.2f\n", lat, lon, hours_from_utc);
 
-    // Find the target hour start
+    // Find the target hour start by advancing hour_offset steps from "current planetary hour"
     watch_date_time_t target_hour_start;
     ph_segment_t seg_at_target;
     if (!_advance_hour_start(now_local, state->hour_offset, lon, lat, hours_from_utc,
                              &target_hour_start, &seg_at_target)) {
-        printf("[ERROR] Failed to advance hour start. Displaying 'None'.\n");
+        // Fallback if polar day/night or compute error
         watch_clear_colon();
         watch_clear_indicator(WATCH_INDICATOR_PM);
         watch_clear_indicator(WATCH_INDICATOR_24H);
@@ -550,32 +533,28 @@ static void _planetary_hour_face_update(planetary_hour_state_t *state) {
         return;
     }
 
-    // Compute sunrise and sunset times
+    // ----- Planetary base selection (your rule; anchored to "now") -----
     watch_date_time_t today0 = _midnight_of(now_local);
     watch_date_time_t sr_today, ss_today;
     if (!_compute_local_sun_times(today0, lon, lat, hours_from_utc, &sr_today, &ss_today)) {
-        printf("[ERROR] Failed to compute sunrise/sunset times. Displaying 'None'.\n");
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "PHour", "PH");
         watch_display_text(WATCH_POSITION_BOTTOM, "None  ");
         return;
     }
-    printf("[DEBUG] Sunrise: %02d:%02d, Sunset: %02d:%02d\n",
-           sr_today.unit.hour, sr_today.unit.minute, ss_today.unit.hour, ss_today.unit.minute);
-
-    // Determine base sunrise
     uint32_t ts_now = _unix(target_hour_start);
+    _planetary_hour_set_expiration(state, target_hour_start);
+
     uint32_t ts_midnight_next = _unix(today0) + 86400;
     watch_date_time_t yday0 = _add_days(today0, -1);
     watch_date_time_t sr_yday, ss_yday;
-    _compute_local_sun_times(yday0, lon, lat, hours_from_utc, &sr_yday, &ss_yday); // best-effort
+    _compute_local_sun_times(yday0, lon, lat, hours_from_utc, &sr_yday, &ss_yday);
+
     watch_date_time_t base_sunrise =
         (ts_now >= _unix(sr_today) && ts_now < ts_midnight_next) ? sr_yday : sr_today;
-
-    // Get planetary ruler
+    
     planet_names_t ruler = planetary_ruler_from_base_and_time(base_sunrise, target_hour_start);
-    printf("[DEBUG] Planetary ruler: %s (%s)\n", ruler.name, ruler.abbreviation);
 
-    // Display planetary hour
+    // ---- DISPLAY ----
     watch_set_colon();
     if (movement_clock_mode_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
     if (!movement_clock_mode_24h()) {
@@ -592,30 +571,28 @@ static void _planetary_hour_face_update(planetary_hour_state_t *state) {
     if (!movement_clock_mode_24h()) (void)watch_utility_convert_to_12_hour(&disp2);
     sprintf(buf, "%2d%02d%2d", disp2.unit.hour, disp2.unit.minute, target_hour_start.unit.day);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
-
-    printf("[DEBUG] Display updated: %s, Time: %s\n", ruler.name, buf);
 }
 
 
 // Function to set up the planetary face, allocating memory for the context
 void planetary_hour_face_setup(__attribute__((unused)) uint8_t watch_face_index, void **context_ptr) {
-    printf("[DEBUG] Setting up planetary face\n");
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(planetary_hour_state_t));
         if (*context_ptr == NULL) {
-            printf("[ERROR] Memory allocation failed for planetary face\n");
             return;
         }
         memset(*context_ptr, 0, sizeof(planetary_hour_state_t));
-        printf("[DEBUG] Context initialized\n");
     }
 }
 
 // Function to activate the planetary face, initializing planetary hour and zodiac sign
 void planetary_hour_face_activate(void *context) {
-    printf("[DEBUG] Activating planetary face\n");
     planetary_hour_state_t *state = (planetary_hour_state_t *)context;
     // Initialize the location_state
+    state->hour_offset = 0;
+    state->longLatToUse = 0;
+    state->hour_offset_expires = movement_get_local_date_time(); // force immediate update
+
     movement_location_t movement_location = load_location_from_filesystem();
     state->location_state.working_latitude = _planetary_hour_face_struct_from_latlon(movement_location.bit.latitude);
     state->location_state.working_longitude = _planetary_hour_face_struct_from_latlon(movement_location.bit.longitude);
@@ -623,19 +600,15 @@ void planetary_hour_face_activate(void *context) {
     state->location_state.active_digit = 0;
     state->location_state.location_changed = false;
 
-    // calculate_planetary_hour(state);
     // calculate_astrological_sign(state);
-    // printf("[DEBUG] Planetary hour: %d, Zodiac sign: %d\n", state->current_planetary_hour, state->current_zodiac_sign);
 }
 
 // Main loop for the planetary face, handling events and updating the display
 bool planetary_hour_face_loop(movement_event_t event, void *context) {
-    printf("[DEBUG] Event type: %d\n", event.event_type);
     planetary_hour_state_t *state = (planetary_hour_state_t *)context;
 
     // Check if the context is null to avoid dereferencing a null pointer
     if (state == NULL) {
-        printf("[ERROR] Context is NULL\n");
         watch_display_text(WATCH_POSITION_TOP, "Error");
         watch_display_text(WATCH_POSITION_BOTTOM, "Error");
         return false;
@@ -643,9 +616,7 @@ bool planetary_hour_face_loop(movement_event_t event, void *context) {
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            // calculate_planetary_hour(state); // Recalculate planetary hour on activation
             // calculate_astrological_sign(state); // Recalculate zodiac sign on activation
-            // printf("[DEBUG] Recalculated planetary hour: %d, Zodiac sign: %d\n", state->current_planetary_hour, state->current_zodiac_sign);
             _planetary_hour_face_update(state);
             break;
 
@@ -660,7 +631,6 @@ bool planetary_hour_face_loop(movement_event_t event, void *context) {
                     // and on the off chance that this happened before EVENT_TIMEOUT snapped us back to rise/set 0, go back now
                     state->hour_offset = 0;
                     _planetary_hour_face_update(state);
-                    printf("[DEBUG] Updated planetary hour: %d\n", state->current_planetary_hour);
                 }
             } else {
                 _update_location_settings_display(event, &state->location_state);
@@ -730,7 +700,6 @@ bool planetary_hour_face_loop(movement_event_t event, void *context) {
                     }
                 }
                 _update_location_settings_display(event, &state->location_state);
-                _update_location_settings_display(event, &state->location_state);
             } else if (_location_count <= 1) {
                 movement_illuminate_led();
             }
@@ -754,25 +723,7 @@ bool planetary_hour_face_loop(movement_event_t event, void *context) {
 
         default:
             return movement_default_loop_handler(event); // Handle other events with default handler
-        
     }
-
-    // // Display the planetary hour or an error message if unavailable
-    // if (state->current_planetary_hour == PLANETARY_HOUR_ERROR) {
-    //     printf("[ERROR] Planetary hour calculation failed\n");
-    //     watch_display_text_with_fallback(WATCH_POSITION_TOP, "Error", "ER");
-    // } else {
-    //     watch_display_text_with_fallback(WATCH_POSITION_TOP, planet_names[state->current_planetary_hour].name, planet_names[state->current_planetary_hour].abbreviation);
-    // }
-
-    // // Display the zodiac sign or an error message if unavailable
-    // if (state->current_zodiac_sign == ZODIAC_SIGN_ERROR) {
-    //     printf("[ERROR] Zodiac sign calculation failed\n");
-    //     watch_display_text(WATCH_POSITION_BOTTOM, "Error ");
-    // } else {
-    //     watch_display_text(WATCH_POSITION_BOTTOM, zodiac_signs[state->current_zodiac_sign].name);
-    // }
-
     return true;
 }
 
@@ -783,86 +734,8 @@ void planetary_hour_face_resign(void *context) {
     state->location_state.active_digit = 0;
     state->hour_offset = 0;
     _update_location_register(&state->location_state);
-    free(context); // Free allocated memory for the context
 }
 
-
-// Function to calculate the current planetary hour based on sunrise and sunset times
-static void calculate_planetary_hour(planetary_hour_state_t *state) {
-    // Get the current date and time from the watch
-    watch_date_time_t current_time = movement_get_local_date_time();
-
-    // Load the sunrise and sunset times for the current day
-    double sunrise, sunset;
-    movement_location_t location = load_location_from_filesystem();
-    if (location.reg == 0) {
-        // No location set, return an error state
-        state->current_planetary_hour = PLANETARY_HOUR_ERROR;
-        return;
-    } else {
-        double lat = (double)location.bit.latitude / 100.0; // Convert latitude to decimal degrees
-        double lon = (double)location.bit.longitude / 100.0; // Convert longitude to decimal degrees
-        int result = __sunriset__(
-            current_time.unit.year + WATCH_RTC_REFERENCE_YEAR,
-            current_time.unit.month,
-            current_time.unit.day,
-            lon,
-            lat,
-            SUNRISE_SUNSET_ALTITUDE, // Altitude for sunrise/sunset calculations
-            1,                       // Upper limb
-            &sunrise,
-            &sunset
-        );
-
-        if (result != 0) {
-            // __sunriset__ failed, set an error state
-            state->current_planetary_hour = PLANETARY_HOUR_ERROR;
-            return;
-        }
-    }
-
-    printf("[DEBUG] Sunrise: %.2f, Sunset: %.2f\n", sunrise, sunset);
-    // Corrected calculation to convert sunrise to local time and compute time since sunrise
-    // Convert sunrise to local time
-    const double timezone_offset = movement_get_current_timezone_offset() / 3600.0; // Convert seconds to hours
-    sunrise += timezone_offset;
-    if (sunrise >= 24.0) sunrise -= 24.0; // Adjust for next day
-    if (sunrise < 0.0) sunrise += 24.0;  // Adjust for previous day
-
-    // Calculate the current time in hours (local time)
-    double current_time_in_hours = current_time.unit.hour + (current_time.unit.minute / 60.0);
-
-    // Calculate time since sunrise
-    double time_since_sunrise = current_time_in_hours - sunrise;
-    if (time_since_sunrise < 0) {
-        time_since_sunrise += 24.0; // Adjust for times past midnight
-    }
-
-    // Convert to integer hours
-    int time_since_sunrise_int = (int)time_since_sunrise;
-
-    // Debug log for time since sunrise
-    printf("[DEBUG] Time since sunrise (local): %d hours\n", time_since_sunrise_int);
-
-    // Get the planetary ruler of the day
-    // Calculate the day of the week using Zeller's Congruence
-    int y = current_time.unit.year + WATCH_RTC_REFERENCE_YEAR;
-    int m = current_time.unit.month;
-    int d = current_time.unit.day;
-
-    if (m < 3) {
-        m += 12;
-        y -= 1;
-    }
-
-    uint8_t day_of_week = (d + (2 * m) + (3 * (m + 1) / 5) + y + (y / 4) - (y / 100) + (y / 400) + 1) % 7;
-    printf("[DEBUG] Day of week: %d\n", day_of_week);
-    uint8_t ruler_of_day_index = week_days_to_chaldean_order[day_of_week]; // Align the day of the week with the chaldean order
-    printf("[DEBUG] Ruler of day index: %d\n", ruler_of_day_index);
-
-    // Calculate the planetary ruler of the hour
-    state->current_planetary_hour = (ruler_of_day_index + time_since_sunrise_int) % 7;
-}
 
 // Function to determine the current astrological sign based on the date
 static void calculate_astrological_sign(planetary_hour_state_t *state) {

@@ -352,8 +352,11 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_face_state_t *stat
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(location_state_t));
-        memset(*context_ptr, 0, sizeof(location_state_t));
+        *context_ptr = malloc(sizeof(sunrise_sunset_face_state_t));
+        if (*context_ptr == NULL) {
+            return;
+        }
+        memset(*context_ptr, 0, sizeof(sunrise_sunset_face_state_t));
     }
 }
 
@@ -499,5 +502,4 @@ void sunrise_sunset_face_resign(void *context) {
     state->location_state.active_digit = 0;
     state->rise_index = 0;
     _update_location_register(&state->location_state);
-    free(context); // Free allocated memory for the context
 }
