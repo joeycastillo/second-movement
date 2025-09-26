@@ -71,8 +71,7 @@ static bool tap_turned_on = false;
 static game_state_t game_state;
 static uint8_t deck[DECK_SIZE] = {0};
 static uint8_t current_card = 0;
-static bool add_to_games_played = false;
-static bool add_to_games_won = false;
+static blackjack_face_state_t *g_state = NULL;
 hand_info_t player;
 hand_info_t dealer;
 
@@ -219,10 +218,27 @@ static void display_score(uint8_t score, watch_position_t pos) {
     watch_display_text(pos, buf);
 }
 
+static void add_to_game_scores(bool add_to_wins) {
+    g_state->games_played++;
+    if (g_state->games_played == 0) {
+        // Overflow
+        g_state->games_played = 1;
+        g_state->games_won = add_to_wins ? 1 : 0;
+        return;
+    }
+    if (add_to_wins) {
+        g_state->games_won++;
+        if (g_state->games_won == 0) {
+            // Overflow
+            g_state->games_played = 1;
+            g_state->games_won = 1;
+        }
+    }
+}
+
 static void display_win(void) {
     game_state = BJ_RESULT;
-    add_to_games_played = true;
-    add_to_games_won = true;
+    add_to_game_scores(true);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "WlN ", " WIN");
     display_score(player.score, WATCH_POSITION_SECONDS);
     display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
@@ -230,7 +246,7 @@ static void display_win(void) {
 
 static void display_lose(void) {
     game_state = BJ_RESULT;
-    add_to_games_played = true;
+    add_to_game_scores(false);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "LOSE", "lOSE");
     display_score(player.score, WATCH_POSITION_SECONDS);
     display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
@@ -245,7 +261,7 @@ static void display_tie(void) {
 
 static void display_bust(void) {
     game_state = BJ_RESULT;
-    add_to_games_played = true;
+    add_to_game_scores(false);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "8UST", "BUST");
 }
 
@@ -332,25 +348,6 @@ static void see_if_dealer_hits(void) {
     }
 }
 
-static void add_to_game_scores(blackjack_face_state_t *state) {
-    if (add_to_games_played) {
-        add_to_games_played = false;
-        state->games_played++;
-        if (state->games_played == 0) {
-            // Overflow
-            state->games_won = 0;
-        }
-    }
-    if (add_to_games_won) {
-        add_to_games_won = false;
-        state->games_won++;
-        if (state->games_won == 0) {
-            // Overflow
-            state->games_played = 0;
-        }
-    }
-}
-
 static void handle_button_presses(bool tap_control_on, bool hit) {
     switch (game_state)
     {
@@ -403,6 +400,7 @@ void blackjack_face_setup(uint8_t watch_face_index, void **context_ptr) {
         blackjack_face_state_t *state = (blackjack_face_state_t *)*context_ptr;
         state->tap_control_on = false;
     }
+    g_state = (blackjack_face_state_t *)*context_ptr;
 }
 
 void blackjack_face_activate(void *context) {
@@ -414,9 +412,6 @@ void blackjack_face_activate(void *context) {
 
 bool blackjack_face_loop(movement_event_t event, void *context) {
     blackjack_face_state_t *state = (blackjack_face_state_t *) context;
-    if (game_state == BJ_RESULT) {
-        add_to_game_scores(state);
-    }
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             if (state->tap_control_on) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
