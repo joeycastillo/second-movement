@@ -36,7 +36,7 @@
 
 /* Default values */
 #define DEFAULT_WATER_GLASS_ML 100
-#define DEFAULT_WATER_GOAL_ML 2000
+#define DEFAULT_WATER_GOAL_ML 1600
 #define DEFAULT_WAKE_HOUR 7
 #define DEFAULT_SLEEP_HOUR 22
 #define DEFAULT_ALERT_INTERVAL 2
@@ -55,10 +55,17 @@ static void _display_water_ml(uint16_t water_ml)
 static void _settings_title_display(hydration_state_t *state, char *buf1, char *buf2)
 {
     char buf[10];
+
     watch_display_text_with_fallback(WATCH_POSITION_TOP, buf1, buf2);
     if (watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM) {
         snprintf(buf, sizeof(buf), "%2d", state->settings_page + 1);
         watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
+    }
+
+    if (state->alert_active) {
+        watch_set_indicator(WATCH_INDICATOR_BELL);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_BELL);
     }
 }
 
@@ -113,7 +120,7 @@ static void _settings_water_goal_advance(void *context)
     hydration_state_t *state = (hydration_state_t *) context;
 
     state->water_goal += state->water_glass;
-    if (state->water_goal > 5000) {
+    if (state->water_goal > 3000) {
         state->water_goal = 100;
     }
 }
@@ -196,7 +203,7 @@ static void _settings_alert_interval_display(void *context, uint8_t subsecond)
     char buf[10];
     hydration_state_t *state = (hydration_state_t *) context;
 
-    _settings_title_display(state, "INTV", "IN");
+    _settings_title_display(state, "INTER", "IN");
     if (_settings_blink(subsecond))
         return;
 
@@ -205,7 +212,12 @@ static void _settings_alert_interval_display(void *context, uint8_t subsecond)
     watch_clear_indicator(WATCH_INDICATOR_24H);
     watch_clear_indicator(WATCH_INDICATOR_PM);
 
-    snprintf(buf, sizeof(buf), "  %2dh ", state->alert_interval);
+    if (state->alert_interval == 0) {
+        snprintf(buf, sizeof(buf), " off  ");
+    } else {
+        snprintf(buf, sizeof(buf), "  %2dh ", state->alert_interval);
+    }
+
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
 }
 
@@ -214,8 +226,8 @@ static void _settings_alert_interval_advance(void *context)
     hydration_state_t *state = (hydration_state_t *) context;
 
     state->alert_interval += 1;
-    if (state->alert_interval > 8) {
-        state->alert_interval = 1;
+    if (state->alert_interval > 6) {
+        state->alert_interval = 0;
     }
 }
 
@@ -241,6 +253,12 @@ static void _tracking_display(hydration_state_t *state)
     char buf[4];
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "HYDRA", "Hy");
+
+    if (state->alert_active) {
+        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    }
 
     if (!state->display_deviation) {
         /* Display current intake in bottom */
@@ -290,24 +308,39 @@ static void _check_hydration_alert(hydration_state_t *state)
 {
     watch_date_time_t now = movement_get_local_date_time();
 
-    /* Check for alert at sleep time */
-    if (now.unit.hour == state->sleep_hour) {
-        if (state->water_intake < state->water_goal) {
-            movement_play_alarm();
-            movement_move_to_face(state->face_index);
+    /* Return if time is between sleep and wake */
+    uint8_t hour = now.unit.hour;
+
+    /* Check if time is between sleep and wake */
+    if (state->sleep_hour == state->wake_hour) {
+        /* Disable alerts completely */
+        return;
+    } else if (state->sleep_hour < state->wake_hour) {
+        /* Sleep time not over midnight */
+        if (hour > state->sleep_hour && hour <= state->wake_hour) {
+            return;
+        }
+    } else {
+        /* Sleep time crosses midnight */
+        if (hour > state->sleep_hour || hour <= state->wake_hour) {
             return;
         }
     }
 
-    /* Check at interval */
-    uint8_t hours_since_wake = (now.unit.hour + 24 - state->wake_hour) % 24;
-    if (hours_since_wake > 0 && hours_since_wake % state->alert_interval == 0) {
-        uint16_t expected_intake = _get_expected_intake(state, hours_since_wake);
-        if (state->water_intake < expected_intake) {
-            movement_play_alarm();
-            movement_move_to_face(state->face_index);
-            return;
-        }
+    /* Check for alert at sleep time */
+    bool alert = (hour == state->sleep_hour);
+
+    /* Check for alert at interval */
+    uint8_t hours_since_wake = (hour + 24 - state->wake_hour) % 24;
+    alert |= (state->alert_interval > 0 && hours_since_wake % state->alert_interval == 0);
+
+    if (!alert)
+        return;
+
+    uint16_t expected_intake = _get_expected_intake(state, hours_since_wake);
+    if (state->water_intake < expected_intake) {
+        movement_play_alarm();
+        movement_move_to_face(state->face_index);
     }
 }
 
@@ -410,6 +443,12 @@ static bool _settings_loop(movement_event_t event, void *context)
                     state->alert_interval = DEFAULT_ALERT_INTERVAL;
                     break;
             }
+            state->settings[state->settings_page].display(context, event.subsecond);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            state->alert_active = !state->alert_active;
+            state->settings[state->settings_page].display(context, event.subsecond);
+            _beep();
             break;
         case EVENT_BACKGROUND_TASK:
             _check_hydration_alert(state);
@@ -493,15 +532,15 @@ movement_watch_face_advisory_t hydration_face_advise(void *context)
 {
     hydration_state_t *state = (hydration_state_t *) context;
     movement_watch_face_advisory_t retval = { 0 };
-    watch_date_time_t now = movement_get_local_date_time();
 
     /* Check for daily reset at wake time */
+    watch_date_time_t now = movement_get_local_date_time();
     if (now.unit.hour == state->wake_hour && now.unit.minute == 0) {
         state->water_intake = 0;
     }
 
     /* Check for alert at every hour */
-    if (now.unit.minute == 0) {
+    if (state->alert_active && now.unit.minute == 0) {
         retval.wants_background_task = true;
     }
 

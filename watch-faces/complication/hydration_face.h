@@ -67,12 +67,13 @@ typedef struct {
 typedef struct {
     uint16_t water_intake;      /* Current water intake in ml */
     uint16_t water_glass;       /* Glass size in ml (default 100ml) */
-    uint16_t water_goal;        /* Target daily water intake (default 2000ml) */
+    uint16_t water_goal;        /* Target daily water intake (default 1600ml) */
     uint8_t wake_hour;          /* Hour for wake time (default 7) */
     uint8_t sleep_hour;         /* Hour for sleep time (default 22) */
     uint8_t alert_interval;     /* Alert interval in hours (default 2) */
     uint8_t face_index;         /* Face index */
     uint8_t display_deviation;  /* Display deviation from estimate */
+    bool alert_active;          /* Alert active */
     hydration_page_t page;      /* Current page */
     hydration_setting_t settings_page;  /* Current settings page */
     hydration_settings_t *settings;     /* Settings configuration */
