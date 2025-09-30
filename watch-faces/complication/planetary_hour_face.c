@@ -46,32 +46,7 @@
 #define PLANETARY_HOUR_ERROR 255 // Define an error code for planetary hour calculation failure
 #define ZODIAC_SIGN_ERROR 255    // Define an error code for zodiac sign calculation failure
 
-// Prototypes
-static void calculate_astrological_sign(planetary_hour_state_t *state);
-
 static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
-
-// Update zodiac_signs to include date ranges for each sign
-static const struct
-{
-    const char *name;
-    uint8_t start_month;
-    uint8_t start_day;
-    uint8_t end_month;
-    uint8_t end_day;
-} zodiac_signs[] = {
-    {"Aries ", 3, 21, 4, 19},
-    {"Taurus", 4, 20, 5, 20},
-    {"Gemini", 5, 21, 6, 20},
-    {"Cancer", 6, 21, 7, 22},
-    {"Leo   ", 7, 23, 8, 22},
-    {"Virgo ", 8, 23, 9, 22},
-    {"Libra ", 9, 23, 10, 22},
-    {"Scorpi", 10, 23, 11, 21},
-    {"Sagitt", 11, 22, 12, 21},
-    {"Capric", 12, 22, 1, 19},
-    {"Aquari", 1, 20, 2, 18},
-    {"Pisces", 2, 19, 3, 20}};
 
 // Map of planetary rulers to day of the week values
 static const uint8_t week_days_to_chaldean_order[] = {
@@ -695,8 +670,6 @@ void planetary_hour_face_activate(void *context)
     state->location_state.page = 0;
     state->location_state.active_digit = 0;
     state->location_state.location_changed = false;
-
-    // calculate_astrological_sign(state);
 }
 
 // Main loop for the planetary face, handling events and updating the display
@@ -715,7 +688,6 @@ bool planetary_hour_face_loop(movement_event_t event, void *context)
     switch (event.event_type)
     {
     case EVENT_ACTIVATE:
-        // calculate_astrological_sign(state); // Recalculate zodiac sign on activation
         _planetary_hour_face_update(state);
         break;
 
@@ -793,6 +765,20 @@ bool planetary_hour_face_loop(movement_event_t event, void *context)
         break;
 
     case EVENT_LIGHT_BUTTON_DOWN:
+    case EVENT_ALARM_BUTTON_DOWN:
+        break;
+
+    case EVENT_LIGHT_LONG_PRESS:
+        movement_illuminate_led();
+        break;
+
+    case EVENT_LIGHT_BUTTON_UP:
+        if (state->location_state.page == 0 && _location_count > 1)
+        {
+            state->longLatToUse = (state->longLatToUse + 1) % _location_count;
+            _planetary_hour_face_update(state);
+            break;
+        }
         if (state->location_state.page)
         {
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM)
@@ -822,19 +808,7 @@ bool planetary_hour_face_loop(movement_event_t event, void *context)
         if (state->location_state.page == 0)
         {
             movement_request_tick_frequency(1);
-            movement_illuminate_led();
-        }
-        break;
-
-    case EVENT_LIGHT_LONG_PRESS:
-        state->hour_offset--; // go back one hour
-        _planetary_hour_face_update(state);
-        break;
-
-    case EVENT_LIGHT_BUTTON_UP:
-        if (state->location_state.page == 0 && _location_count > 1)
-        {
-            state->longLatToUse = (state->longLatToUse + 1) % _location_count;
+            state->hour_offset--; // go back one hour
             _planetary_hour_face_update(state);
         }
         break;
@@ -853,27 +827,4 @@ void planetary_hour_face_resign(void *context)
     state->location_state.active_digit = 0;
     state->hour_offset = 0;
     _update_location_register(&state->location_state);
-}
-
-// Function to determine the current astrological sign based on the date
-static void calculate_astrological_sign(planetary_hour_state_t *state)
-{
-    watch_date_time_t current_time = movement_get_local_date_time();
-    uint8_t month = current_time.unit.month;
-    uint8_t day = current_time.unit.day;
-
-    for (int i = 0; i < (int)(sizeof(zodiac_signs) / sizeof(zodiac_signs[0])); i++)
-    {
-        if ((month == zodiac_signs[i].start_month && day >= zodiac_signs[i].start_day) ||
-            (month == zodiac_signs[i].end_month && day <= zodiac_signs[i].end_day) ||
-            (month > zodiac_signs[i].start_month && month < zodiac_signs[i].end_month))
-        {
-            printf("Current Zodiac Sign: %s\n", zodiac_signs[i].name);
-            state->current_zodiac_sign = i;
-            return;
-        }
-    }
-
-    // Set an error state if no match is found
-    state->current_zodiac_sign = ZODIAC_SIGN_ERROR;
 }

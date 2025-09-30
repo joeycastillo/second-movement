@@ -67,11 +67,19 @@ void zodiac_face_activate(void *context) {
     uint8_t end_month = zodiac_signs[state->current_sign_index].end_month;
     uint8_t end_day = zodiac_signs[state->current_sign_index].end_day;
 
-    char buf[7];
-    snprintf(buf, sizeof(buf), "%02d%02d%02s", end_month, end_day, "ZF");
+    // char buf[7];
+    // snprintf(buf, sizeof(buf), "%02d%02dZF", end_month, end_day);
+
+    char hours[3];
+    sprintf(hours, "%02d", end_month);
+    char days[3];
+    sprintf(days, "%02d", end_day);
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP, current_sign, zodiac_signs[state->current_sign_index].abbreviation);
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
+
+    watch_display_text(WATCH_POSITION_HOURS, hours);
+    watch_display_text(WATCH_POSITION_MINUTES, days);
+    watch_display_text(WATCH_POSITION_SECONDS, "ZF");
 }
 
 bool zodiac_face_loop(movement_event_t event, void *context) {
@@ -84,7 +92,7 @@ bool zodiac_face_loop(movement_event_t event, void *context) {
             zodiac_face_activate(context); // Update the display
             break;
 
-        case EVENT_LIGHT_LONG_PRESS:
+        case EVENT_LIGHT_BUTTON_UP:
             // Move to the previous zodiac sign
             if (state->current_sign_index == 0) {
                 state->current_sign_index = ZODIAC_SIGN_COUNT - 1;
@@ -92,6 +100,15 @@ bool zodiac_face_loop(movement_event_t event, void *context) {
                 state->current_sign_index--;
             }
             zodiac_face_activate(context); // Update the display
+            break;
+
+        case EVENT_LIGHT_LONG_PRESS:
+            movement_illuminate_led();
+            break;
+
+        case EVENT_ALARM_BUTTON_DOWN:
+        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_LIGHT_BUTTON_DOWN:
             break;
 
         default:
