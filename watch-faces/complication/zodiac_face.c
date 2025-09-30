@@ -38,7 +38,7 @@ static uint8_t get_current_zodiac_sign(void) {
         uint8_t start_day = zodiac_signs[i].start_day;
 
         if ((month < start_month) || (month == start_month && day < start_day)) {
-            return (i == 0) ? (ZODIAC_SIGN_COUNT - 1) : (i - 1);
+            return (i == 0) ? (uint8_t)(ZODIAC_SIGN_COUNT - 1) : (uint8_t)(i - 1);
         }
     }
 
@@ -67,10 +67,10 @@ void zodiac_face_activate(void *context) {
     uint8_t start_month = zodiac_signs[state->current_sign_index].start_month;
     uint8_t start_day = zodiac_signs[state->current_sign_index].start_day;
 
-    char month[3];
-    sprintf(month, "%02d", start_month);
-    char day[3];
-    sprintf(day, "%02d", start_day);
+    char month[4];
+    snprintf(month, sizeof(month), "%02d", start_month);
+    char day[4];
+    snprintf(day, sizeof(day), "%02d", start_day);
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP, current_sign, zodiac_signs[state->current_sign_index].abbreviation);
 
