@@ -4,25 +4,25 @@
 #include "watch.h"
 #include "watch_utility.h"
 
-// Zodiac signs and their end dates (month and day)
+// Zodiac signs and their start dates (month and day)
 static const struct {
     const char *name;
-    uint8_t end_month;
-    uint8_t end_day;
+    uint8_t start_month;
+    uint8_t start_day;
     const char *abbreviation;
 } zodiac_signs[] = {
-    {"Aries", 4, 19, "AR"},
-    {"Tauru", 5, 20, "TA"},
-    {"Gemin", 6, 20, "GE"},
-    {"Cance", 7, 22, "CA"},
-    {"Leo  ", 8, 22, "LE"},
-    {"Virgo", 9, 22, "VI"},
-    {"Libra", 10, 22, "LI"},
-    {"Scorp", 11, 21, "SC"},
-    {"Sagit", 12, 21, "SA"},
-    {"Capri", 1, 19, "CA"},
-    {"Aquar", 2, 18, "AQ"},
-    {"Pisce", 3, 20, "PI"},
+    {"Aries", 3, 21, "AR"},
+    {"Tauru", 4, 20, "TA"},
+    {"Gemin", 5, 21, "GE"},
+    {"Cance", 6, 21, "CA"},
+    {"Leo  ", 7, 23, "LE"},
+    {"Virgo", 8, 23, "VI"},
+    {"Libra", 9, 23, "LI"},
+    {"Scorp", 10, 23, "SC"},
+    {"Sagit", 11, 22, "SA"},
+    {"Capri", 12, 22, "CA"},
+    {"Aquar", 1, 20, "AQ"},
+    {"Pisce", 2, 19, "PI"},
 };
 
 #define ZODIAC_SIGN_COUNT (sizeof(zodiac_signs) / sizeof(zodiac_signs[0]))
@@ -34,11 +34,11 @@ static uint8_t get_current_zodiac_sign(void) {
     uint8_t day = now.unit.day;
 
     for (uint8_t i = 0; i < ZODIAC_SIGN_COUNT; i++) {
-        uint8_t end_month = zodiac_signs[i].end_month;
-        uint8_t end_day = zodiac_signs[i].end_day;
+        uint8_t start_month = zodiac_signs[i].start_month;
+        uint8_t start_day = zodiac_signs[i].start_day;
 
-        if ((month < end_month) || (month == end_month && day <= end_day)) {
-            return i;
+        if ((month < start_month) || (month == start_month && day < start_day)) {
+            return (i == 0) ? (ZODIAC_SIGN_COUNT - 1) : (i - 1);
         }
     }
 
@@ -62,24 +62,21 @@ void zodiac_face_setup(uint8_t watch_face_index, void **context_ptr) {
 void zodiac_face_activate(void *context) {
     zodiac_face_state_t *state = (zodiac_face_state_t *)context;
 
-    // Display the current zodiac sign and its end date
+    // Display the current zodiac sign and its start date
     const char *current_sign = zodiac_signs[state->current_sign_index].name;
-    uint8_t end_month = zodiac_signs[state->current_sign_index].end_month;
-    uint8_t end_day = zodiac_signs[state->current_sign_index].end_day;
+    uint8_t start_month = zodiac_signs[state->current_sign_index].start_month;
+    uint8_t start_day = zodiac_signs[state->current_sign_index].start_day;
 
-    // char buf[7];
-    // snprintf(buf, sizeof(buf), "%02d%02dZF", end_month, end_day);
-
-    char hours[3];
-    sprintf(hours, "%02d", end_month);
-    char days[3];
-    sprintf(days, "%02d", end_day);
+    char month[3];
+    sprintf(month, "%02d", start_month);
+    char day[3];
+    sprintf(day, "%02d", start_day);
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP, current_sign, zodiac_signs[state->current_sign_index].abbreviation);
 
-    watch_display_text(WATCH_POSITION_HOURS, hours);
-    watch_display_text(WATCH_POSITION_MINUTES, days);
-    watch_display_text(WATCH_POSITION_SECONDS, "ZF");
+    watch_display_text(WATCH_POSITION_HOURS, month);
+    watch_display_text(WATCH_POSITION_MINUTES, day);
+    watch_display_text(WATCH_POSITION_SECONDS, "ST");
 }
 
 bool zodiac_face_loop(movement_event_t event, void *context) {
