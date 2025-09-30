@@ -35,10 +35,10 @@ const watch_face_t watch_faces[] = {
     alarm_face,
     sunrise_sunset_face,
     moon_phase_face,
-    simple_coin_flip_face,
-    temperature_display_face,
+    zodiac_face,
     tarot_face,
-    zodiac_face, // Add the zodiac face to the list of watch faces
+    temperature_display_face,
+    totp_face,
     voltage_face,
     settings_face,
     set_time_face
