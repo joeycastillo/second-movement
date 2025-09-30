@@ -45,28 +45,34 @@
 #endif
 
 typedef struct {
-    unsigned char labels[2];
+    char* labels;
+    char* name;
     hmac_alg algorithm;
     uint32_t period;
     size_t encoded_key_length;
     unsigned char *encoded_key;
 } totp_t;
 
-#define CREDENTIAL(label, key_array, algo, timestep) \
-    (const totp_t) { \
-        .encoded_key = ((unsigned char *) key_array), \
-        .encoded_key_length = sizeof(key_array) - 1, \
-        .period = (timestep), \
-        .labels = (#label), \
-        .algorithm = (algo), \
-    }
-
 ////////////////////////////////////////////////////////////////////////////////
 // Enter your TOTP key data below
 
 static totp_t credentials[] = {
-    CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30),
-    CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
+    {
+        .labels = "MS",
+        .name = "MSJ",
+        .encoded_key = (unsigned char *)"NSJHWJEHBHCBSJHD2",
+        .encoded_key_length = strlen("NSJHWJEHBHCBSJHD2"),
+        .algorithm = SHA1,
+        .period = 30
+    },
+    {
+        .labels = "SL",
+        .name = "SLA",
+        .encoded_key = (unsigned char *)"JHBSJKAHDBE@BIe2h",
+        .encoded_key_length = strlen("JHBSJKAHDBE@BIe2h"),
+        .algorithm = SHA1,
+        .period = 30
+    },
 };
 
 // END OF KEY DATA.
@@ -121,15 +127,13 @@ static void totp_generate(totp_state_t *totp_state) {
 }
 
 static void totp_display_error(totp_state_t *totp_state) {
-    char buf[10 + 1];
     totp_t *totp = totp_current(totp_state);
 
-    snprintf(buf, sizeof(buf), "%c%c  ERROR ", totp->labels[0], totp->labels[1]);
-    watch_display_text(0, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, totp->name, totp->labels);
+    watch_display_text(WATCH_POSITION_BOTTOM, "ERROR");
 }
 
 static void totp_display_code(totp_state_t *totp_state) {
-    char buf[14];
     div_t result;
     uint8_t valid_for;
     totp_t *totp = totp_current(totp_state);
@@ -140,9 +144,18 @@ static void totp_display_code(totp_state_t *totp_state) {
         totp_state->steps = result.quot;
     }
     valid_for = totp->period - result.rem;
-    sprintf(buf, "%c%c%2d%06lu", totp->labels[0], totp->labels[1], valid_for, totp_state->current_code);
 
-    watch_display_text(0, buf);
+    char short_top[5];
+    sprintf(short_top, "%s%2d", totp->labels, valid_for);
+    char long_top[6];
+    sprintf(long_top, "%s%2d", totp->name, valid_for);
+
+    char bottom[7];
+    sprintf(bottom, "%06u", totp_state->current_code);
+
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, long_top, short_top);
+    watch_display_text(WATCH_POSITION_BOTTOM, bottom);
+
 }
 
 static void totp_display(totp_state_t *totp_state) {
