@@ -48,4 +48,6 @@ SRCS += \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
+  ./watch-faces/complication/planetary_hour_face.c \
+  ./watch-faces/complication/zodiac_face.c \
 # New watch faces go above this line.

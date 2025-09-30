@@ -369,3 +369,19 @@ int filesystem_cmd_echo(int argc, char *argv[]) {
 
     return 0;
 }
+
+movement_location_t load_location_from_filesystem() {
+    movement_location_t location = {0};
+    printf("[DEBUG] Loading location from filesystem\n");
+    filesystem_read_file("location.u32", (char *) &location.reg, sizeof(movement_location_t));
+    return location;
+}
+
+void persist_location_to_filesystem(movement_location_t new_location) {
+    movement_location_t maybe_location = {0};
+
+    filesystem_read_file("location.u32", (char *) &maybe_location.reg, sizeof(movement_location_t));
+    if (new_location.reg != maybe_location.reg) {
+        filesystem_write_file("location.u32", (char *) &new_location.reg, sizeof(movement_location_t));
+    }
+}

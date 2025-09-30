@@ -37,26 +37,7 @@
  */
 
 #include "movement.h"
-
-typedef struct {
-    uint8_t sign: 1;    // 0-1
-    uint8_t hundreds: 5;    // 0-1, ignored for latitude
-    uint8_t tens: 5;        // 0-18 (wraps at 10 on clasic LCD, 18 on custom LCD)
-    uint8_t ones: 4;        // 0-9 (must wrap at 10)
-    uint8_t tenths: 4;      // 0-9 (must wrap at 10)
-    uint8_t hundredths: 4;  // 0-9 (must wrap at 10)
-} sunrise_sunset_lat_lon_settings_t;
-
-typedef struct {
-    uint8_t page;
-    uint8_t rise_index;
-    uint8_t active_digit;
-    bool location_changed;
-    watch_date_time_t rise_set_expires;
-    sunrise_sunset_lat_lon_settings_t working_latitude;
-    sunrise_sunset_lat_lon_settings_t working_longitude;
-    uint8_t longLatToUse;
-} sunrise_sunset_state_t;
+#include "./location/location.h"
 
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void sunrise_sunset_face_activate(void *context);
@@ -72,17 +53,10 @@ void sunrise_sunset_face_resign(void *context);
 })
 
 typedef struct {
-    char name[3];
-    int16_t latitude;
-    int16_t longitude;
-} long_lat_presets_t;
-
-static const long_lat_presets_t longLatPresets[] =
-{
-    { .name = "  "},  // Default, the long and lat get replaced by what's set in the watch
-//    { .name = "Ny", .latitude = 4072, .longitude = -7401 },  // New York City, NY
-//    { .name = "LA", .latitude = 3405, .longitude = -11824 },  // Los Angeles, CA
-//    { .name = "dE", .latitude = 4221, .longitude = -8305 },  // Detroit, MI
-};
+    uint8_t rise_index;
+    watch_date_time_t rise_set_expires;
+    uint8_t longLatToUse;
+    location_state_t location_state;
+} sunrise_sunset_face_state_t;
 
 #endif // SUNRISE_SUNSET_FACE_H_

@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "watch.h"
+#include "movement.h" // For movement_location_t definition
 
 /** @brief Initializes and mounts the tiny 8kb filesystem, formatting it if need be.
   * @return true if the filesystem was mounted successfully.
@@ -103,3 +104,13 @@ int filesystem_cmd_df(int argc, char *argv[]);
 int filesystem_cmd_rm(int argc, char *argv[]);
 int filesystem_cmd_format(int argc, char *argv[]);
 int filesystem_cmd_echo(int argc, char *argv[]);
+
+/** @brief Loads the location from the filesystem.
+  * @return The movement_location_t structure containing the location data.
+  */
+movement_location_t load_location_from_filesystem();
+
+/** @brief Persists the location to the filesystem.
+  * @param new_location The movement_location_t structure containing the new location data.
+  */
+void persist_location_to_filesystem(movement_location_t new_location);
