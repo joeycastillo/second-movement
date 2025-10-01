@@ -29,13 +29,7 @@ and `display_type` is any of:
 - classic
 - custom
 
-Optionally you can set the watch time when building the firmware using `TIMESET=minute`. 
-
-`TIMESET` can be defined as:
-- `year` = Sets the year to the PC's
-- `day` = Sets the default time down to the day (year, month, day)
-- `minute` = Sets the default time down to the minute (year, month, day, hour, minute)
-
+Optionally you can set the watch time when building the firmware using `TIMESET=1`.
 
 If you'd like to modify which faces are built and included in the firmware, edit `movement_config.h`. You will get a compilation error if you enable more faces than the watch can store.
 

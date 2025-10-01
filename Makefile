@@ -56,6 +56,13 @@ ifdef NOSLEEP
     DEFINES += -DMOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
 endif
 
+ifdef TIMESET
+	DEFINES += -DBUILD_YEAR=$(shell echo $$(($$(TZ=UTC date +%Y) - 2020)))
+	DEFINES += -DBUILD_MONTH=$(shell TZ=UTC date +%-m)
+	DEFINES += -DBUILD_DAY=$(shell TZ=UTC date +%-d) -DBUILD_HOUR=$(shell TZ=UTC date +%-H)
+	DEFINES += -DBUILD_MINUTE=$(shell TZ=UTC date +%-M)
+endif
+
 # Emscripten targets are now handled in rules.mk in gossamer
 
 # Add your include directories here.
