@@ -63,9 +63,9 @@ static void _settings_title_display(hydration_state_t *state, char *buf1, char *
     }
 
     if (state->alert_active) {
-        watch_set_indicator(WATCH_INDICATOR_BELL);
+        watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     } else {
-        watch_clear_indicator(WATCH_INDICATOR_BELL);
+        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
     }
 }
 
