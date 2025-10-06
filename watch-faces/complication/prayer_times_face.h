@@ -29,13 +29,14 @@ void prayer_times_face_setup(uint8_t watch_face_index, void **context_ptr);
 void prayer_times_face_activate(void *context);
 bool prayer_times_face_loop(movement_event_t event, void *context);
 void prayer_times_face_resign(void *context);
+movement_watch_face_advisory_t prayer_times_face_advise(void *context);
 
 #define prayer_times_face ((const watch_face_t){ \
-    prayer_times_face_setup,                     \
-    prayer_times_face_activate,                  \
-    prayer_times_face_loop,                      \
-    prayer_times_face_resign,                    \
-    NULL,                                        \
+  prayer_times_face_setup,                     \
+  prayer_times_face_activate,                  \
+  prayer_times_face_loop,                      \
+  prayer_times_face_resign,                    \
+  prayer_times_face_advise,                    \
 })
 
 #endif // PRAYER_TIMES_FACE_H_

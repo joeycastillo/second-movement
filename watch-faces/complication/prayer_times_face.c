@@ -143,7 +143,6 @@ static void _display_prayer_time(prayer_times_state_t *state)
 
   if (!state->times_calculated)
   {
-    // Display a more specific error if the calculation itself failed.
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "CALC", "Calc");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "FAIL", "Fail");
     return;
@@ -151,7 +150,7 @@ static void _display_prayer_time(prayer_times_state_t *state)
 
   uint8_t index = state->current_prayer_index;
   if (index > 6)
-  { // Add bounds checking
+  {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "ERROR", "Err");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "INDEX", "Idx");
     return;
@@ -165,7 +164,7 @@ static void _display_prayer_time(prayer_times_state_t *state)
     return;
   }
 
-  struct tm prayer_tm_buf; // Create a local buffer for the time struct.
+  struct tm prayer_tm_buf;
   struct tm *prayer_tm = localtime_r(&prayer_time, &prayer_tm_buf);
   uint8_t hour = prayer_tm->tm_hour;
   uint8_t minute = prayer_tm->tm_min;
@@ -219,7 +218,6 @@ static void _update_current_prayer_index(prayer_times_state_t *state, watch_date
   uint8_t new_prayer_index = _get_current_prayer_from_watch_time(&state->prayer_times, now);
   if (state->current_prayer_index != new_prayer_index)
   {
-    // A new prayer time has begun.
     state->current_prayer_index = new_prayer_index;
 
     // If alarms are enabled, play a sound for the new prayer time.
@@ -227,7 +225,7 @@ static void _update_current_prayer_index(prayer_times_state_t *state, watch_date
     // We also prevent this from running on the very first calculation.
     if (state->alarms_enabled && !state->first_run && new_prayer_index != 1 && new_prayer_index != 6)
     {
-      movement_play_alarm_beeps(4, BUZZER_NOTE_C8);
+      movement_play_alarm();
     }
   }
 }
@@ -236,14 +234,13 @@ static void _update_prayer_times(prayer_times_state_t *state, watch_date_time_t 
 {
   time_t now_time = mktime(now_tm);
   // If midnight is before 00:00, we need to check if we are past today's midnight
-  struct tm midnight_tm_buf; // Create a local buffer.
+  struct tm midnight_tm_buf;
   struct tm *midnight_tm = localtime_r(&state->prayer_times.midnight, &midnight_tm_buf);
   bool midnight_condition = state->prayer_times.midnight && midnight_tm && (midnight_tm->tm_hour < 0) && now_time >= state->prayer_times.midnight;
 
   // If after today's midnight, use next day's prayers
   if (midnight_condition)
   {
-    // Calculate for next day
     watch_date_time_t next_date_time = now;
     _increment_day(&next_date_time);
     _calculate_prayer_times(state, next_date_time);
@@ -307,6 +304,11 @@ bool prayer_times_face_loop(movement_event_t event, void *context)
 
   switch (event.event_type)
   {
+  case EVENT_BACKGROUND_TASK:
+    if (state->alarms_enabled) {
+      movement_play_alarm();
+    }
+    break;
   case EVENT_LOW_ENERGY_UPDATE:
   case EVENT_TICK:
   {
@@ -380,7 +382,6 @@ bool prayer_times_face_loop(movement_event_t event, void *context)
       }
       else
       {
-        // Cancel and return to display mode
         state->mode = PRAYER_TIMES_MODE_DISPLAY;
         _display_prayer_time(state);
       }
@@ -396,7 +397,7 @@ bool prayer_times_face_loop(movement_event_t event, void *context)
       _display_prayer_time(state);
     }
     else
-    { // PRAYER_TIMES_MODE_SET_METHOD
+    {
       state->selected_method_index = (state->selected_method_index + 1) % NUM_CALCULATION_METHODS;
       _display_set_method(state);
     }
@@ -434,4 +435,33 @@ bool prayer_times_face_loop(movement_event_t event, void *context)
 void prayer_times_face_resign(void *context)
 {
   (void)context;
+}
+
+movement_watch_face_advisory_t prayer_times_face_advise(void *context)
+{
+  movement_watch_face_advisory_t retval = {0};
+  prayer_times_state_t *state = (prayer_times_state_t *)context;
+
+  if (!state) return retval;
+
+  if (state->alarms_enabled && state->times_calculated)
+  {
+    watch_date_time_t now = movement_get_local_date_time();
+    for (uint8_t i = 0; i < 7; i++)
+    {
+      if (i == 1 || i == 6) continue;
+      time_t pt = _get_prayer_time_by_index(&state->prayer_times, i);
+      if (!pt) continue;
+      struct tm pt_tm_buf;
+      struct tm *pt_tm = localtime_r(&pt, &pt_tm_buf);
+      if (!pt_tm) continue;
+      if ((uint8_t)pt_tm->tm_hour == now.unit.hour && (uint8_t)pt_tm->tm_min == now.unit.minute)
+      {
+        retval.wants_background_task = true;
+        break;
+      }
+    }
+  }
+
+  return retval;
 }
