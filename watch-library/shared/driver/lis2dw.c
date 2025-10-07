@@ -277,15 +277,15 @@ inline void lis2dw_disable_fifo(void) {
 #endif
 }
 
-#define FIFO_TIMEOUT 102 // This is timeout seconds * 128[RTC_CNT_HZ]. So 800ms is 102
-bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data) {
+bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout) {
+    // timeout is in terms of 1/RTC_CNT_HZ seconds (likely 128 timeouts is one second)
 #ifdef I2C_SERCOM
     uint8_t temp = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_FIFO_SAMPLE);
     bool overrun = !!(temp & LIS2DW_FIFO_SAMPLE_OVERRUN);
 
     fifo_data->count = temp & LIS2DW_FIFO_SAMPLE_COUNT;
 
-    rtc_counter_t timeout_counter = watch_rtc_get_counter() + FIFO_TIMEOUT;
+    rtc_counter_t timeout_counter = watch_rtc_get_counter() + timeout;
     for(int i = 0; i < fifo_data->count; i++) {
         if (watch_rtc_get_counter() > timeout_counter) {
             break;
@@ -296,6 +296,7 @@ bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data) {
     return overrun;
 #else
     (void) fifo_data;
+    (void) timeout;
     return false;
 #endif
 }

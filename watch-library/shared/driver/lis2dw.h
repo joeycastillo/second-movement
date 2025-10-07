@@ -345,7 +345,7 @@ void lis2dw_enable_fifo(void);
 
 void lis2dw_disable_fifo(void);
 
-bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
+bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout);
 
 void lis2dw_clear_fifo(void);
 
