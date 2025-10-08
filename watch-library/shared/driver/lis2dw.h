@@ -301,6 +301,8 @@ typedef enum {
 #define LIS2DW_CTRL7_VAL_HP_REF_MODE        0b00000010
 #define LIS2DW_CTRL7_VAL_LPASS_ON6D         0b00000001
 
+#define LIS2DW_FIFO_TIMEOUT_SECOND          100
+
 bool lis2dw_begin(void);
 
 uint8_t lis2dw_get_device_id(void);
