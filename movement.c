@@ -24,6 +24,8 @@
  */
 
 #define MOVEMENT_LONG_PRESS_TICKS 64
+#define MOVEMENT_REALLY_LONG_PRESS_TICKS 192
+#define MOVEMENT_MAX_LONG_PRESS_TICKS 1280 // get a chance to check if a button held down over 10 seconds is a glitch
 
 #include <stdio.h>
 #include <string.h>
@@ -61,9 +63,9 @@ watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
 const int16_t movement_timeout_inactivity_deadlines[4] = {60, 120, 300, 1800};
 
-const uint32_t _movement_mode_button_events_mask = 0b1111 << EVENT_MODE_BUTTON_DOWN;
-const uint32_t _movement_light_button_events_mask = 0b1111 << EVENT_LIGHT_BUTTON_DOWN;
-const uint32_t _movement_alarm_button_events_mask = 0b1111 << EVENT_ALARM_BUTTON_DOWN;
+const uint32_t _movement_mode_button_events_mask = 0b111111 << EVENT_MODE_BUTTON_DOWN;
+const uint32_t _movement_light_button_events_mask = 0b111111 << EVENT_LIGHT_BUTTON_DOWN;
+const uint32_t _movement_alarm_button_events_mask = 0b111111 << EVENT_ALARM_BUTTON_DOWN;
 const uint32_t _movement_button_events_mask = _movement_mode_button_events_mask | _movement_light_button_events_mask | _movement_alarm_button_events_mask;
 
 typedef struct {
@@ -298,6 +300,7 @@ static uint32_t _movement_get_accelerometer_events() {
 static void _movement_handle_button_presses(uint32_t pending_events) {
     bool any_up = false;
     bool any_down = false;
+    bool any_long = false;
 
     movement_button_t* buttons[3] = {
         &movement_volatile_state.mode_button,
@@ -322,10 +325,23 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
             movement_volatile_state.passthrough_events &= ~button_events_masks[i];
         }
 
+        // If a long press occurred
+        if (pending_events & (1 << button->down_event + 2)) {
+            watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, button->down_timestamp + MOVEMENT_REALLY_LONG_PRESS_TICKS, button->timeout_index);
+            any_long = true;
+        }
+
+        // If a really long press occurred
+        if (pending_events & (1 << button->down_event + 4)) {
+            watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, button->down_timestamp + MOVEMENT_MAX_LONG_PRESS_TICKS, button->timeout_index);
+            any_long = true;
+        }
+
         // If a button up or button long up occurred
         if (pending_events & (
             (1 << (button->down_event + 1)) |
-            (1 << (button->down_event + 3))
+            (1 << (button->down_event + 3)) |
+            (1 << (button->down_event + 5))
         )) {
             // We cancel the timeout if it hasn't fired yet
             watch_rtc_disable_comp_callback_no_schedule(button->timeout_index);
@@ -343,7 +359,7 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
         }
     }
 
-    if (any_down || any_up) {
+    if (any_down || any_up || any_long) {
         _movement_reset_inactivity_countdown();
         movement_volatile_state.schedule_next_comp = true;
     }
@@ -1391,7 +1407,9 @@ static movement_event_type_t _process_button_event(bool pin_level, movement_butt
 #if MOVEMENT_DEBOUNCE_TICKS
         button->up_timestamp = counter;
 #endif
-        if ((counter - button->down_timestamp) >= MOVEMENT_LONG_PRESS_TICKS) {
+        if ((counter - button->down_timestamp) >= MOVEMENT_REALLY_LONG_PRESS_TICKS) {
+            event_type = button->down_event + 5;
+        } else if ((counter - button->down_timestamp) >= MOVEMENT_LONG_PRESS_TICKS) {
             event_type = button->down_event + 3;
         } else {
             event_type = button->down_event + 1;
@@ -1424,8 +1442,18 @@ static movement_event_type_t _process_button_longpress_timeout(bool pin_level, m
         return EVENT_NONE;
     }
 
+    uint32_t counter = watch_rtc_get_counter();
+    bool max_long_press = (counter - button->down_timestamp) >= MOVEMENT_MAX_LONG_PRESS_TICKS;
+    bool really_long_press = (counter - button->down_timestamp) >= MOVEMENT_REALLY_LONG_PRESS_TICKS;
+
     if (pin_level) {
-        return button->down_event + 2; // event_longpress
+        if (max_long_press) {
+            return EVENT_NONE; // no further events left to emit
+        } else if (really_long_press) {
+            return button->down_event + 4; // event_really_longpress
+        } else {
+            return button->down_event + 2; // event_longpress
+        }
     } else {
     // hypotetical corner case: if the timeout fired but the pin level is actually up, we may have missed/rejected the up event, so fire it here
 #if MOVEMENT_DEBOUNCE_TICKS
@@ -1433,7 +1461,13 @@ static movement_event_type_t _process_button_longpress_timeout(bool pin_level, m
         button->up_timestamp = button->down_timestamp;
 #endif
         button->is_down = false;
-        return button->down_event + 1; // event_up
+        if (max_long_press) {
+            return button->down_event + 5; // event_really_long_up
+        } else if (really_long_press) {
+            return button->down_event + 3; // event_long_up
+        } else {
+            return button->down_event + 1; // event_up
+        }
     }
 }
 
