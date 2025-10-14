@@ -44,6 +44,7 @@
 #include "voltage_face.h"
 #include "set_time_face.h"
 #include "settings_face.h"
+#include "set_location_face.h"
 #include "light_sensor_face.h"
 #include "irda_upload_face.h"
 #include "chirpy_demo_face.h"
@@ -73,4 +74,5 @@
 #include "wareki_face.h"
 #include "deadline_face.h"
 #include "wordle_face.h"
+#include "prayer_times_face.h"
 // New includes go above this line.

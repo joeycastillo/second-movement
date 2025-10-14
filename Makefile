@@ -75,6 +75,8 @@ INCLUDES += \
   -I./lib/TOTP \
   -I./lib/chirpy_tx \
   -I./lib/base64 \
+	-I./lib/location \
+	-I./lib/adhan \
   -I./watch-library/shared/watch \
   -I./watch-library/shared/driver \
   -I./watch-faces/clock \
@@ -102,6 +104,7 @@ SRCS += \
   ./lib/TOTP/TOTP.c \
   ./lib/chirpy_tx/chirpy_tx.c \
   ./lib/base64/base64.c \
+  ./lib/location/location.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
@@ -158,6 +161,18 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
+
+# Adhan library
+INCLUDES += \
+		-I./Adhan-C/src \
+
+SRCS += \
+    Adhan-C/src/astronomical.c \
+    Adhan-C/src/solar_coordinates.c \
+    Adhan-C/src/solar_time.c \
+    Adhan-C/src/calculation_parameters.c \
+    Adhan-C/src/prayer_times.c \
+		lib/adhan/calendrical_helper.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk
