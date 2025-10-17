@@ -75,7 +75,8 @@ static void _temperature_logging_face_update_display(temperature_logging_state_t
 
     if (logger_state->display_index == TEMPERATURE_LOGGING_NUM_DATA_POINTS){
         _temperature_logging_face_blink_display(in_fahrenheit, from_btn);
-        watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP ", "TE  ");
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP, "TEMP ", "TE");
         return;
     }
     watch_clear_indicator(WATCH_INDICATOR_SIGNAL);

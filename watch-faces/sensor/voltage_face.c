@@ -69,7 +69,8 @@ static void _voltage_face_logging_update_display(voltage_face_state_t *logger_st
 
     if (logger_state->display_index == VOLTAGE_NUM_DATA_POINTS){
         _voltage_face_blink_display(from_btn);
-        watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAT  ", "BA  ");
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP, "BAT  ", "BA");
         return;
     }
     watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
