@@ -50,8 +50,8 @@ void file_display_face_activate(void *context) {
 bool file_display_face_loop(movement_event_t event, void *context) {
     file_demo_state_t *state = (file_demo_state_t *)context;
     (void) state;
-    char data[13] = {0};
-    char filename[13];
+    char data[14] = {0};
+    char filename[14];
 
     switch (event.event_type) {
         case EVENT_NONE:
