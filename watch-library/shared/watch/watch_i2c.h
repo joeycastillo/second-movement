@@ -26,7 +26,6 @@
 ////< @file watch_i2c.h
 
 #include "watch.h"
-#include "i2c.h"
 
 /** @addtogroup i2c I2C Controller Driver
   * @brief This section covers functions related to the SAM L22's built-I2C driver, including
@@ -48,7 +47,7 @@ void watch_disable_i2c(void);
   * @param length The number of bytes in buf that you wish to send.
   * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-i2c_result_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length);
+int8_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length);
 
 /** @brief Receives a series of values from a device on the I2C bus.
   * @param addr The address of the device you wish to hear from.
@@ -56,7 +55,7 @@ i2c_result_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length);
   * @param length The number of bytes that you wish to receive.
   * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-i2c_result_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length);
+int8_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length);
 
 /** @brief Writes a byte to a register in an I2C device.
   * @param addr The address of the device you wish to address.
@@ -64,7 +63,7 @@ i2c_result_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length);
   * @param data The value that you wish to set the register to.
   * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-i2c_result_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data);
+int8_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data);
 
 /** @brief Reads a byte from a register in an I2C device.
   * @param addr The address of the device you wish to address.

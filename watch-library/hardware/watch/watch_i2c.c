@@ -23,6 +23,7 @@
  */
 
 #include "watch_i2c.h"
+#include "i2c.h"
 
 #ifdef I2C_SERCOM
 
@@ -37,29 +38,29 @@ void watch_disable_i2c(void) {
     i2c_disable();
 }
 
-i2c_result_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
-    return i2c_write(addr, buf, length);
+int8_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
+    return (int8_t)i2c_write(addr, buf, length);
 }
 
-i2c_result_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
-    return i2c_read(addr, buf, length);
+int8_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
+    return (int8_t)i2c_read(addr, buf, length);
 }
 
-i2c_result_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
+int8_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
     uint8_t buf[2];
     buf[0] = reg;
     buf[1] = data;
 
-    return watch_i2c_send(addr, (uint8_t *)&buf, 2);
+    return (int8_t)watch_i2c_send(addr, (uint8_t *)&buf, 2);
 }
 
 uint8_t watch_i2c_read8(int16_t addr, uint8_t reg) {
     uint8_t data;
 
-    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != 0) {
         return 0;
     }
-    if (watch_i2c_receive(addr, (uint8_t *)&data, 1) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_receive(addr, (uint8_t *)&data, 1) != 0) {
         return 0;
     }
 
@@ -69,10 +70,10 @@ uint8_t watch_i2c_read8(int16_t addr, uint8_t reg) {
 uint16_t watch_i2c_read16(int16_t addr, uint8_t reg) {
     uint16_t data;
 
-    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != 0) {
         return 0;
     }
-    if (watch_i2c_receive(addr, (uint8_t *)&data, 2) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_receive(addr, (uint8_t *)&data, 2) != 0) {
         return 0;
     }
     return data;
@@ -82,10 +83,10 @@ uint32_t watch_i2c_read24(int16_t addr, uint8_t reg) {
     uint32_t data;
     data = 0;
 
-    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != 0) {
         return 0;
     }
-    if (watch_i2c_receive(addr, (uint8_t *)&data, 3) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_receive(addr, (uint8_t *)&data, 3) != 0) {
         return 0;
     }
     return data << 8;
@@ -94,10 +95,10 @@ uint32_t watch_i2c_read24(int16_t addr, uint8_t reg) {
 uint32_t watch_i2c_read32(int16_t addr, uint8_t reg) {
     uint32_t data;
 
-    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_send(addr, (uint8_t *)&reg, 1) != 0) {
         return 0;
     }
-    if (watch_i2c_receive(addr, (uint8_t *)&data, 4) != I2C_RESULT_SUCCESS) {
+    if (watch_i2c_receive(addr, (uint8_t *)&data, 4) != 0) {
         return 0;
     }
     return data;
