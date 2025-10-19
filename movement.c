@@ -1394,46 +1394,43 @@ void cb_alarm_btn_interrupt(void) {
     movement_volatile_state.pending_events |= 1 << _process_button_event(pin_level, &movement_volatile_state.alarm_button);
 }
 
-static movement_event_type_t _process_button_longpress_timeout(movement_button_t* button) {
-    // Looks like all these checks are not needed for the longpress detection to work reliably.
-    // Keep the code around for now in case problems arise long-term.
+static movement_event_type_t _process_button_longpress_timeout(bool pin_level, movement_button_t* button) {
+    if (!button->is_down) {
+        return EVENT_NONE;
+    }
 
-    // if (!button->is_down) {
-    //     return EVENT_NONE;
-    // }
-
-    // movement_event_type_t up_event = button->down_event + 1;
-
-    // if (movement_volatile_state.pending_events & 1 << up_event) {
-    //     return EVENT_NONE;
-    // }
-
-    // uint32_t counter = watch_rtc_get_counter();
-    // if ((counter - button->down_timestamp) < MOVEMENT_LONG_PRESS_TICKS) {
-    //     return EVENT_NONE;
-    // }
-
-    movement_event_type_t longpress_event = button->down_event + 2;
-
-    return longpress_event;
+    if (pin_level) {
+        return button->down_event + 2; // event_longpress
+    } else {
+    // hypotetical corner case: if the timeout fired but the pin level is actually up, we may have missed/rejected the up event, so fire it here
+#if MOVEMENT_DEBOUNCE_TICKS
+        // we're in a corner case, we don't know when the up actually happened.
+        button->up_timestamp = button->down_timestamp;
+#endif
+        button->is_down = false;
+        return button->down_event + 1; // event_up
+    }
 }
 
 void cb_light_btn_timeout_interrupt(void) {
+    bool pin_level = HAL_GPIO_BTN_LIGHT_read();
     movement_button_t* button = &movement_volatile_state.light_button;
 
-    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(button);
+    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(pin_level, button);
 }
 
 void cb_mode_btn_timeout_interrupt(void) {
+    bool pin_level = HAL_GPIO_BTN_MODE_read();
     movement_button_t* button = &movement_volatile_state.mode_button;
 
-    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(button);
+    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(pin_level, button);
 }
 
 void cb_alarm_btn_timeout_interrupt(void) {
+    bool pin_level = HAL_GPIO_BTN_ALARM_read();
     movement_button_t* button = &movement_volatile_state.alarm_button;
 
-    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(button);
+    movement_volatile_state.pending_events |= 1 << _process_button_longpress_timeout(pin_level, button);
 }
 
 void cb_led_timeout_interrupt(void) {
