@@ -28,11 +28,17 @@ void watch_enable_i2c(void) {}
 
 void watch_disable_i2c(void) {}
 
-void watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {}
+i2c_result_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
+    return I2C_RESULT_SUCCESS;
+}
 
-void watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {}
+i2c_result_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
+    return I2C_RESULT_SUCCESS;
+}
 
-void watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {}
+i2c_result_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
+    return I2C_RESULT_SUCCESS;
+}
 
 uint8_t watch_i2c_read8(int16_t addr, uint8_t reg) {
     return 0;
