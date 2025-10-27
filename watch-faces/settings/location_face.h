@@ -69,7 +69,7 @@ void location_face_resign(void *context);
 })
 
 typedef struct {
-    char name[26];
+    char name[13];
     int16_t latitude;
     int16_t longitude;
     int8_t region;
@@ -86,7 +86,7 @@ static const location_long_lat_presets_t locationLongLatPresets[] =
     { .name = "Culiacan", .latitude = 2480, .longitude = -10739, .region = 0 , .timezone = UTZ_PHOENIX },  // Culiacan, Mexico (2025 Population: 918494)
     { .name = "Detroit", .latitude = 4233, .longitude = -8304, .region = 0 , .timezone = UTZ_NEW_YORK },  // Detroit, United States (2025 Population: 645705)
     { .name = "Edmonton", .latitude = 5355, .longitude = -11349, .region = 0 , .timezone = UTZ_DENVER },  // Edmonton, Canada (2025 Population: 1588600)
-    { .name = "Guatemala City", .latitude = 1464, .longitude = -9051, .region = 0 , .timezone = UTZ_CHICAGO },  // Guatemala City, Guatemala (2025 Population: 3229740)
+    { .name = "GuatemalaCity", .latitude = 1464, .longitude = -9051, .region = 0 , .timezone = UTZ_CHICAGO },  // Guatemala City, Guatemala (2025 Population: 3229740)
     { .name = "Havana", .latitude = 2314, .longitude = -8236, .region = 0 , .timezone = UTZ_NEW_YORK  },  // Havana, Cuba (2025 Population: 2156350)
     { .name = "Houston", .latitude = 2976, .longitude = -9537, .region = 0 , .timezone = UTZ_CHICAGO },  // Houston, United States (2025 Population: 2324082)
     { .name = "Jacksonville", .latitude = 3033, .longitude = -8166, .region = 0 , .timezone = UTZ_NEW_YORK },  // Jacksonville, United States (2025 Population: 1008485)
@@ -186,7 +186,7 @@ static const location_long_lat_presets_t locationLongLatPresets[] =
     { .name = "Manaus", .latitude = -313, .longitude = -5998, .region = 4 , .timezone = UTZ_CHICAGO  },  // Manaus, Brazil (2025 Population: 2434640)
     { .name = "Porto Alegre", .latitude = -3003, .longitude = -5123, .region = 4 , .timezone = UTZ_SAO_PAULO },  // Porto Alegre, Brazil (2025 Population: 4268960)
     { .name = "Recife", .latitude = -806, .longitude = -3488, .region = 4 , .timezone = UTZ_SAO_PAULO },  // Recife, Brazil (2025 Population: 4344050)
-    { .name = "San Miguel de Tucuman", .latitude = -2683, .longitude = -6520, .region = 4 , .timezone = UTZ_SAO_PAULO },  // San Miguel de Tucuman, Argentina (2025 Population: 1051040)
+    { .name = "San Miguel de", .latitude = -2683, .longitude = -6520, .region = 4 , .timezone = UTZ_SAO_PAULO },  // San Miguel de Tucuman, Argentina (2025 Population: 1051040)
     { .name = "Santiago", .latitude = -3344, .longitude = -7065, .region = 4 , .timezone = UTZ_SANTIAGO },  // Santiago, Chile (2025 Population: 6999460)
     { .name = "Sao Paulo", .latitude = -2355, .longitude = -4663, .region = 4 , .timezone = UTZ_SAO_PAULO },  // Sao Paulo, Brazil (2025 Population: 22990000)
     // Oceania
