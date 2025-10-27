@@ -336,7 +336,7 @@ static void _location_face_move_forward(location_state_t *state) {
     uint8_t init_idx = state->city_idx;
     do {
         state->city_idx = (state->city_idx + 1) % (_location_count + 1);
-    } while (!state->curr_tz_has_no_cities && tz != 0 && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
+    } while (!state->curr_tz_has_no_cities && tz != UTZ_UTC && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
         state->curr_tz_has_no_cities = true;
         state->city_idx = (state->city_idx + 1) % (_location_count + 1);
@@ -350,7 +350,7 @@ static void _location_face_move_backwards(location_state_t *state) {
     uint8_t init_idx = state->city_idx;
     do {
         state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
-    } while (!state->curr_tz_has_no_cities && tz != 0 && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
+    } while (!state->curr_tz_has_no_cities && tz != UTZ_UTC && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
         state->curr_tz_has_no_cities = true;
         state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
@@ -371,6 +371,7 @@ static void _location_face_stop_quick_cyc(location_state_t *state) {
 
 
 static bool _location_face_update_long_lat_display(movement_event_t event, location_state_t *state) {
+    bool go_to_next_page = false;
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
@@ -378,12 +379,23 @@ static bool _location_face_update_long_lat_display(movement_event_t event, locat
             break;
         case EVENT_LIGHT_BUTTON_UP:
             state->active_digit++;
-            if (state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
-            if (state->active_digit > 5) {
-                state->active_digit = 0;
+            if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+                if (state->active_digit > 4) {
+                    state->active_digit = 0;
+                    go_to_next_page = true;
+                }
+            } else {
+                if (state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
+                if (state->active_digit > 5) {
+                    state->active_digit = 0;
+                    go_to_next_page = true;
+                }
+            }
+            if (go_to_next_page) {
                 state->page = (state->page + 1) % LOCATION_FACE_PAGES_COUNT;
                 _location_face_update_location_register(state);
                 if (state->page == LOCATION_FACE_CITIES) {
+                    watch_clear_display();
                     display_city(state);
                 }
                 break;
