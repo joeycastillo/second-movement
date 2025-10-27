@@ -37,6 +37,10 @@
 #include <emscripten.h>
 #endif
 
+#define FREQ_FAST 8
+#define FREQ 2
+
+static uint8_t _ts_ticks = 0;
 static const uint8_t _location_count = sizeof(locationLongLatPresets) / sizeof(locationLongLatPresets[0]);
 
 static void persist_location_to_filesystem(movement_location_t new_location) {
@@ -62,18 +66,24 @@ static uint8_t city_idx_of_curr_location(int16_t latitude, int16_t longitude){
             return i;
         }
     }
+    printf("custmom %d\n", _location_count);
     return _location_count;
 }
 
 static void display_city(location_state_t *state) {
     char buf[7];
+    printf("display_city %d\n", state->city_idx);
     printf("%s\n", locationLongLatPresets[state->city_idx].name);
     if (state->city_idx >= _location_count) {
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
         watch_display_text(WATCH_POSITION_BOTTOM, "CUSTOM");
     } else {
+        sprintf(buf, " %d", locationLongLatPresets[state->city_idx].region);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         sprintf(buf, " %.5s", locationLongLatPresets[state->city_idx].name);
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LOC", "L ");
 }
 
 static int16_t _location_face_latlon_from_struct(location_lat_lon_settings_t val) {
@@ -118,6 +128,7 @@ static void _location_face_update_location_register(location_state_t *state) {
 
 static void _location_face_update_settings_display(movement_event_t event, location_state_t *state) {
     char buf[12];
+    printf("%d %d\n", state->page, event.subsecond);
 
     watch_clear_display();
 
@@ -138,6 +149,7 @@ static void _location_face_update_settings_display(movement_event_t event, locat
                 else watch_display_character('N', 9);
 
                 if (event.subsecond % 2) {
+                    printf("hi %d\r\n", event.subsecond);
                     watch_display_character(' ', 4 + state->active_digit);
                     // for degrees N or S, also flash the last character
                     if (state->active_digit == 4) watch_display_character(' ', 9);
@@ -323,27 +335,52 @@ static void _location_face_advance_digit(location_state_t *state) {
     }
 }
 
+static void _location_face_move_forward(location_state_t *state) {
+    state->city_idx = (state->city_idx + 1) % (_location_count + 1);
+    display_city(state);
+}
+
+static void _location_face_move_backwards(location_state_t *state) {
+    state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
+    printf("_location_face_move_backwards %d\n", state->city_idx);
+    display_city(state);
+}
+
+static void _location_face_start_quick_cyc(location_state_t *state) {
+    state->quick_ticks_running = true;
+    movement_request_tick_frequency(FREQ_FAST);
+}
+
+static void _location_face_stop_quick_cyc(location_state_t *state) {
+    state->quick_ticks_running = false;
+    movement_request_tick_frequency(FREQ);
+}
+
+
 static bool _location_face_update_long_lat_display(movement_event_t event, location_state_t *state) {
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
+            printf("_location_face_update_long_lat_display\n");
             _location_face_update_settings_display(event, state);
             break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_LIGHT_BUTTON_UP:
             state->active_digit++;
             if (state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
             if (state->active_digit > 5) {
                 state->active_digit = 0;
                 state->page = (state->page + 1) % LOCATION_FACE_PAGES_COUNT;
                 _location_face_update_location_register(state);
-                display_city(state);
+                if (state->page == LOCATION_FACE_CITIES) {
+                    display_city(state);
+                }
                 break;
             }
             _location_face_update_settings_display(event, state);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             break;
-        case EVENT_LIGHT_BUTTON_UP:
+        case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_ALARM_BUTTON_UP:
             _location_face_advance_digit(state);
@@ -366,25 +403,35 @@ static bool _location_face_update_long_lat_display(movement_event_t event, locat
 static bool _location_face_update_choose_city(movement_event_t event, location_state_t *state) {
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
-        case EVENT_TICK:
-        case EVENT_LIGHT_LONG_PRESS:
-        case EVENT_LIGHT_BUTTON_UP:
-            break;
         case EVENT_LIGHT_BUTTON_DOWN:
-            state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
-            display_city(state);
+        case EVENT_ALARM_BUTTON_DOWN:
+            break;
+        case EVENT_TICK:
+            if (state->quick_ticks_running) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
+                    _location_face_move_forward(state);
+                } else {
+                    _location_face_stop_quick_cyc(state);
+                }
+            }
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            _location_face_move_backwards(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            state->city_idx = (state->city_idx + 1) % (_location_count + 1);
-            display_city(state);
+            _location_face_move_forward(state);
             break;
-        case EVENT_ALARM_LONG_PRESS:
+        case EVENT_LIGHT_LONG_PRESS:
             state->active_digit = 0;
             if (state->city_idx < _location_count) {
                     state->working_latitude = _location_face_struct_from_latlon(locationLongLatPresets[state->city_idx].latitude);
                     state->working_longitude = _location_face_struct_from_latlon(locationLongLatPresets[state->city_idx].longitude);
             }
             state->page = LOCATION_FACE_SETTING_LAT;
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            _location_face_start_quick_cyc(state);
+            _location_face_move_forward(state);
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
@@ -426,7 +473,9 @@ void location_face_activate(void *context) {
     state->working_latitude = _location_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _location_face_struct_from_latlon(movement_location.bit.longitude);
     state->city_idx = city_idx_of_curr_location(movement_location.bit.latitude, movement_location.bit.longitude);
+    state->quick_ticks_running = false;
     display_city(state);
+    movement_request_tick_frequency(FREQ);
 }
 
 bool location_face_loop(movement_event_t event, void *context) {
