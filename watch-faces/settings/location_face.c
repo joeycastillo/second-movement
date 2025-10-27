@@ -332,13 +332,27 @@ static void _location_face_advance_digit(location_state_t *state) {
 }
 
 static void _location_face_move_forward(location_state_t *state) {
-    state->city_idx = (state->city_idx + 1) % (_location_count + 1);
+    int32_t tz = movement_get_timezone_index();
+    uint8_t init_idx = state->city_idx;
+    do {
+        state->city_idx = (state->city_idx + 1) % (_location_count + 1);
+    } while (tz != 0 && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
+    if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
+        state->city_idx = (state->city_idx + 1) % (_location_count + 1);
+    }
     printf("%s\n", locationLongLatPresets[state->city_idx].name);
     display_city(state);
 }
 
 static void _location_face_move_backwards(location_state_t *state) {
-    state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
+    int32_t tz = movement_get_timezone_index();
+    uint8_t init_idx = state->city_idx;
+    do {
+        state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
+    } while (tz != 0 && locationLongLatPresets[state->city_idx].timezone != tz && state->city_idx != init_idx);
+    if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
+        state->city_idx = (_location_count + state->city_idx) % (_location_count + 1);
+    }
     printf("%s\n", locationLongLatPresets[state->city_idx].name);
     display_city(state);
 }
