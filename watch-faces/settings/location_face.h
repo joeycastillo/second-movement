@@ -52,6 +52,7 @@ typedef struct {
     location_lat_lon_settings_t working_latitude;
     location_lat_lon_settings_t working_longitude;
     bool quick_ticks_running;
+    bool curr_tz_has_no_cities;
 } location_state_t;
 
 void location_face_setup(uint8_t watch_face_index, void ** context_ptr);
