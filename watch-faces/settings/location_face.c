@@ -40,7 +40,6 @@
 #define FREQ_FAST 8
 #define FREQ 2
 
-static uint8_t _ts_ticks = 0;
 static const uint8_t _location_count = sizeof(locationLongLatPresets) / sizeof(locationLongLatPresets[0]);
 
 static void persist_location_to_filesystem(movement_location_t new_location) {

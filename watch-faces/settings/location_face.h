@@ -25,6 +25,38 @@
 #ifndef LOCATION_FACE_H_
 #define LOCATION_FACE_H_
 
+/*
+ * LOCATION FACE
+ *
+ * The Location face is designed to more quickly set the latitude and longitude
+ * for your location. It contains the 800 most-populated cities, but filtered to only
+ * cities that are not within 750km of a more-populated city.
+ * 
+ * When you have the Timezone set to anything aside from UTC, the locations are
+ * filtered to ones that match your timezone. If there are no locations within your timezone,
+ * all locations will display.
+ * 
+ * The cities are ordered by continent, followed by alphabetical order. The continent's index dispalys
+ * on the tpp-right of the screen for every city.
+ * 
+ * If your timezone is not set to one in the list, it'll display that you're in a Custom location.
+ * Otherwise, when you enter the face, your city will already display.
+ * To change the location, scroll forward with the ALARM button and backwards with the LIGHT button.
+ * 
+ * Holding the ALARM button will allow you to quickly scroll forward.
+ * Holding the LIGHT button will have you enter the screen that has you set the longitude and latitude
+ * with the location you selected preset in. That way, if you want to set your watch to a city, just long-press
+ * the LIGHT button until the latitude displays. from there, continuously press the LIGHT button until you
+ * are back to displaying cities.
+ * 
+ * After selecting the city, the latitude/longitude selection behaves the same as the Sunrise/Sunset face:
+ *  The top line will read “LA” (Latitude), and the bottom line “+ 0000”. 
+ *  The large digits are the whole number part of the latitude, and the smaller digits (in the seconds place) 
+ *  are the fractional part. Enter your latitude and longitude (“LO”) by pressing the Alarm button to change 
+ *  the sign or advance the digits, and the Light button to move to the next character; 
+ *  for example, a latitude of 40.73° N would be “+ 4073”, and a longitude of 73.94° W would be “–07394”.
+ */
+
 #include "movement.h"
 #include "zones.h"
 
