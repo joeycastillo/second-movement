@@ -20,16 +20,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
- * Sunrise/sunset calculations are public domain code by Paul Schlyter, December 1992
- *
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include "location_face.h"
 #include "watch.h"
-#include "watch_utility.h"
 #include "watch_common_display.h"
 #include "filesystem.h"
 
