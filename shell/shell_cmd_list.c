@@ -80,6 +80,13 @@ shell_command_t g_shell_commands[] = {
         .cb = filesystem_cmd_b64encode,
     },
     {
+        .name = "b64decode",
+        .help = "usage: b64decode <PAYLOAD> {>, >>} <FILE>",
+        .min_args = 3,
+        .max_args = 3,
+        .cb = filesystem_cmd_b64decode,
+    },
+    {
         .name = "df",
         .help = "print filesystem free space",
         .min_args = 0,
