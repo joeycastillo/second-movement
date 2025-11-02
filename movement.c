@@ -270,6 +270,10 @@ bool movement_default_loop_handler(movement_event_t event) {
                 movement_move_to_face(0);
             }
             break;
+        case EVENT_MODE_LONG_UP:
+            //stop flipping through the submenus
+            movement_state.menu_selection_state = 0;
+            break;
         default:
             break;
     }
