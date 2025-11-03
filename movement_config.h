@@ -47,6 +47,7 @@ const watch_face_t watch_faces[] = {
  * Also excludes these faces from the normal rotation.
  * You can have as many submenus as you like, which you can reach by holding the Mode button.
  * Just add the indexes of the first faces of the submenus to this array.
+ * If you want to snap back to the first face after reaching the last submenu, just add 0 as the last index.
  * In the default firmware, this lets you access temperature and battery voltage with a long press of Mode.
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to { 0 } and a long Mode press will have no effect.

@@ -299,7 +299,7 @@ typedef struct {
 
     // stuff for selecting submenus when user holds mode button
     int16_t menu_selection_timestamp;
-    uint8_t menu_selection_state;
+    uint8_t menu_selection_index;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
