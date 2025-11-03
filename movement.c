@@ -262,9 +262,9 @@ bool movement_default_loop_handler(movement_event_t event) {
         case EVENT_MODE_LONG_PRESS:
             if (movement_state.current_face_idx == 0) {
                 if (watch_menu_indexes[0]) {
-                    movement_move_to_face(watch_menu_indexes[0]); //go to first submenu
+                    movement_move_to_face(watch_menu_indexes[0]); // go to first submenu
                     movement_state.menu_selection_timestamp = movement_state.fast_ticks;
-                    movement_state.menu_selection_index = 1; //start flipping through the submenus while user holds mode button
+                    movement_state.menu_selection_index = 1; // start flipping through the submenus while user holds mode button
                 }
             } else {
                 movement_move_to_face(0);
@@ -287,7 +287,7 @@ void movement_move_to_face(uint8_t watch_face_index) {
 }
 
 void movement_move_to_next_face(void) {
-    uint16_t face_max = MOVEMENT_NUM_FACES; //face_max is the index of the last face within the current submenu
+    uint16_t face_max = MOVEMENT_NUM_FACES; // face_max is the index of the last face within the current submenu
     for (int i = 0; i < sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]); i++) {
         if (movement_state.current_face_idx < watch_menu_indexes[i]) {
             face_max = watch_menu_indexes[i];
@@ -876,10 +876,10 @@ bool app_loop(void) {
 
     // handle menu selection when user holds mode button
     if (movement_state.menu_selection_index) {
-        if(movement_state.fast_ticks - movement_state.menu_selection_timestamp > MOVEMENT_LONG_PRESS_TICKS * 2) {           
+        if (movement_state.fast_ticks - movement_state.menu_selection_timestamp > MOVEMENT_LONG_PRESS_TICKS * 2) {
             movement_move_to_face(watch_menu_indexes[movement_state.menu_selection_index]); // move to first face of next menu
             movement_state.menu_selection_index = (movement_state.menu_selection_index + 1) % (sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]));
-            movement_state.menu_selection_timestamp = movement_state.fast_ticks;           
+            movement_state.menu_selection_timestamp = movement_state.fast_ticks;
         }
     }
 
