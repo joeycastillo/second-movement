@@ -271,7 +271,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
         case EVENT_MODE_LONG_UP:
-            //stop flipping through the submenus
+            // stop flipping through the submenus
             movement_state.menu_selection_index = 0;
             break;
         default:
