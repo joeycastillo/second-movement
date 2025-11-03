@@ -263,16 +263,17 @@ bool movement_default_loop_handler(movement_event_t event) {
             if (movement_state.current_face_idx == 0) {
                 if (watch_menu_indexes[0]) {
                     movement_move_to_face(watch_menu_indexes[0]); // go to first submenu
-                    movement_state.menu_selection_timestamp = movement_state.fast_ticks;
-                    movement_state.menu_selection_state = 1; // start flipping through the submenus while user holds mode button
+                    if (sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]) > 1) {
+                        movement_state.menu_selection_timestamp = movement_state.fast_ticks;
+                        movement_state.menu_selection_state = 1; // start flipping through the submenus while user holds mode button
+                    }
                 }
             } else {
                 movement_move_to_face(0);
             }
             break;
         case EVENT_MODE_LONG_UP:
-            // stop flipping through the submenus
-            movement_state.menu_selection_state = 0;
+            movement_state.menu_selection_state = 0; // stop flipping through the submenus
             break;
         default:
             break;
