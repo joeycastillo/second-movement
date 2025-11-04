@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 <#author_name#>
+ * Copyright (c) 2025 Eirik S. Morland
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,16 @@
 #pragma once
 
 #include "movement.h"
+#include "fesk_session.h"
 
 /*
- * A DESCRIPTION OF YOUR WATCH FACE
+ * The very simplest demo of using the FESK transmission library in a watch face.
  *
- * and a description of how use it
- *
+ * Press the Alarm button to start a FESK transmission of the text "test".
  */
 
 typedef struct {
-    // Anything you need to keep track of, put it here!
-    uint8_t unused;
+    fesk_session_t session;
 } fesk_demo_lite_state_t;
 
 void fesk_demo_lite_face_setup(uint8_t watch_face_index, void ** context_ptr);
