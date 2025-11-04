@@ -33,7 +33,7 @@ void movement_custom_signal_tunes_set_active_tune_index(uint8_t index);
 extern const int8_t default_signal_tune[];
 extern int8_t* signal_tune;
 
-#define MOVEMENT_N_SIGNAL_TUNES 16
+#define MOVEMENT_N_SIGNAL_TUNES 40
 
 extern const int8_t* signal_tunes[MOVEMENT_N_SIGNAL_TUNES];
 extern const char* signal_tunes_names[MOVEMENT_N_SIGNAL_TUNES];

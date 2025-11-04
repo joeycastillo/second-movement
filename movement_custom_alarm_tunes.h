@@ -33,7 +33,7 @@ void movement_custom_alarm_tunes_set_active_tune_index(uint8_t index);
 extern const int8_t default_alarm_tune[];
 extern int8_t* alarm_tune;
 
-#define MOVEMENT_N_ALARM_TUNES 16
+#define MOVEMENT_N_ALARM_TUNES 40
 
 extern const int8_t* alarm_tunes[MOVEMENT_N_ALARM_TUNES];
 extern const char* alarm_tunes_names[MOVEMENT_N_ALARM_TUNES];

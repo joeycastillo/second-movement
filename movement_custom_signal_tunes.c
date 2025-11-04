@@ -311,6 +311,395 @@ static const int8_t signal_tune_evangelion[] = {
 #endif // SIGNAL_TUNE_EVANGELION || INCLUDE_SIGNAL_TUNE_HARRY_POTTER_LONG
 
 
+#if defined SIGNAL_TUNE_WINDOWS_XP || defined INCLUDE_SIGNAL_TUNE_WINDOWS_XP
+static const char* signal_tune_windows_xp_name = " WINxp";
+static const int8_t signal_tune_windows_xp[] = {
+    BUZZER_NOTE_D7SHARP_E7FLAT, 4,
+    BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A6SHARP_B6FLAT, 4,
+    BUZZER_NOTE_REST, 20,
+    BUZZER_NOTE_G6SHARP_A6FLAT, 4,
+    BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_D7SHARP_E7FLAT, 4,
+    BUZZER_NOTE_REST, 12,
+    BUZZER_NOTE_A6SHARP_B6FLAT, 4,
+    0,
+};
+#endif // SIGNAL_TUNE_WINDOWS_XP || INCLUDE_SIGNAL_TUNE_WINDOWS_XP
+
+
+#if defined SIGNAL_TUNE_WHATSAPP || defined INCLUDE_SIGNAL_TUNE_WHATSAPP
+static const char* signal_tune_whatsapp_name = "UhatAp";
+static const int8_t signal_tune_whatsapp[] = {
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 7,
+    
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    BUZZER_NOTE_REST, 7,
+    
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, 7,
+    
+    
+    BUZZER_NOTE_G6, 2,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, 13,
+    
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    0,
+};
+#endif // SIGNAL_TUNE_WHATSAPP || INCLUDE_SIGNAL_TUNE_WHATSAPP
+
+#if defined SIGNAL_TUNE_FF_VICTORY || defined INCLUDE_SIGNAL_TUNE_FF_VICTORY
+static const char* signal_tune_ff_victory_name = " FiFan";
+static const int8_t signal_tune_ff_victory[] = {
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_G5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_A5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 14,
+    BUZZER_NOTE_A5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 8,
+    0,
+};
+#endif // SIGNAL_TUNE_FF_VICTORY || INCLUDE_SIGNAL_TUNE_FF_VICTORY
+
+#if defined SIGNAL_TUNE_GAME_BOY || defined INCLUDE_SIGNAL_TUNE_GAME_BOY
+static const char* signal_tune_game_boy_name = "Gb sta";
+static const int8_t signal_tune_game_boy[] = {
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_C7, 8,
+    BUZZER_NOTE_REST, 4,
+    0,
+};
+#endif // SIGNAL_TUNE_GAME_BOY || INCLUDE_SIGNAL_TUNE_GAME_BOY
+
+
+#if defined SIGNAL_TUNE_GAME_BOY_PAUSE || defined INCLUDE_SIGNAL_TUNE_GAME_BOY_PAUSE
+static const char* signal_tune_game_boy_pause_name = "Gb pau";
+static const int8_t signal_tune_game_boy_pause[] = {
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 5,
+    -4,1,
+    0,
+};
+#endif // SIGNAL_TUNE_GAME_BOY_PAUSE || INCLUDE_SIGNAL_TUNE_GAME_BOY_PAUSE
+
+#if defined SIGNAL_TUNE_WESTMINSTER || defined INCLUDE_SIGNAL_TUNE_WESTMINSTER
+static const char* signal_tune_westminster_name = "Westmi";
+static const int8_t signal_tune_westminster[] = {
+    BUZZER_NOTE_G7SHARP_A7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_E7, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_F7SHARP_G7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_B6, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 74,
+
+
+    BUZZER_NOTE_B6, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_F7SHARP_G7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_G7SHARP_A7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_E7, 1,
+    BUZZER_NOTE_REST, 1,
+    -2,2,
+    0,
+};
+#endif // SIGNAL_TUNE_WESTMINSTER || INCLUDE_SIGNAL_TUNE_WESTMINSTER
+
+
+#if defined SIGNAL_TUNE_OCEAN || defined INCLUDE_SIGNAL_TUNE_OCEAN
+static const char* signal_tune_ocean_name = "Ocean";
+static const int8_t signal_tune_ocean[] = {
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_D6, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 2,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 2,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_A5, 1,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_A5, 1,
+    
+    //BUZZER_NOTE_G6, 1,
+    //BUZZER_NOTE_D7, 1,
+    //-8,12,
+    0,
+};
+#endif // SIGNAL_TUNE_OCEAN || INCLUDE_SIGNAL_TUNE_OCEAN
+
+
+#if defined SIGNAL_TUNE_KIRBY_VICTORY || defined INCLUDE_SIGNAL_TUNE_KIRBY_VICTORY
+
+static const int8_t KIRBY_VICTORY_QUARTER = 6 - DEFAULT_NOTE_DURATION;
+static const int8_t KIRBY_VICTORY_THIRD = 8 - DEFAULT_NOTE_DURATION;
+static const int8_t KIRBY_VICTORY_HALF = 12 - DEFAULT_NOTE_DURATION;
+static const int8_t KIRBY_VICTORY_REST = 24 - DEFAULT_NOTE_DURATION;
+
+static const char* signal_tune_kirby_victory_name = " Kirby";
+static const int8_t signal_tune_kirby_victory[] = {
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    
+    
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_HALF + KIRBY_VICTORY_QUARTER + 4,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_QUARTER,
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_HALF + KIRBY_VICTORY_QUARTER + 4,
+    BUZZER_NOTE_G7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_QUARTER,
+    
+    
+    BUZZER_NOTE_F7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_HALF + KIRBY_VICTORY_QUARTER + 4,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_QUARTER,
+    BUZZER_NOTE_D7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_HALF + KIRBY_VICTORY_QUARTER + 4,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_QUARTER,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_HALF + KIRBY_VICTORY_QUARTER + 4 + KIRBY_VICTORY_QUARTER + 4,
+    
+    
+    BUZZER_NOTE_C8, 4,
+    BUZZER_NOTE_REST, KIRBY_VICTORY_THIRD,
+    0,
+};
+#endif // SIGNAL_TUNE_KIRBY_VICTORY || INCLUDE_SIGNAL_TUNE_KIRBY_VICTORY
+
+#if defined SIGNAL_TUNE_THIRD_SANCTUARY || defined INCLUDE_SIGNAL_TUNE_THIRD_SANCTUARY
+static const char* signal_tune_third_sanctuary_name = " 3rdSa";
+static const int8_t signal_tune_third_sanctuary[] = {
+    BUZZER_NOTE_C7, 3, 
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    0,
+};
+#endif // SIGNAL_TUNE_THIRD_SANCTUARY || INCLUDE_SIGNAL_TUNE_THIRD_SANCTUARY
+
+
+#if defined SIGNAL_TUNE_MINECRAFT || defined INCLUDE_SIGNAL_TUNE_MINECRAFT
+static const char* signal_tune_minecraft_name = "rnCraf";
+static const int8_t signal_tune_minecraft[] = {
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, 68,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, 1, 
+    BUZZER_NOTE_REST, 32,
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, 68,
+    BUZZER_NOTE_G6, 4,
+    0,
+};
+#endif // SIGNAL_TUNE_MINECRAFT || INCLUDE_SIGNAL_TUNE_MINECRAFT
+
+#if defined SIGNAL_TUNE_SONIC_RING || defined INCLUDE_SIGNAL_TUNE_SONIC_RING
+static const char* signal_tune_sonic_ring_name = "SonRin";
+static const int8_t signal_tune_sonic_ring[] = {
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_C7, 5,
+    0,
+};
+#endif // SIGNAL_TUNE_SONIC_RING || INCLUDE_SIGNAL_TUNE_SONIC_RING
+
+
+
+#if defined SIGNAL_TUNE_NEO_GEO || defined INCLUDE_SIGNAL_TUNE_NEO_GEO
+static const char* signal_tune_neo_geo_name = "NEOGEO";
+static const int8_t signal_tune_neo_geo[] = {
+    BUZZER_NOTE_D5, 4,
+    BUZZER_NOTE_F5, 4,
+    BUZZER_NOTE_A5, 4,
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_D7, 4,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_D7, 1,
+    BUZZER_NOTE_E7, 2,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_E7, 1,
+    0,
+};
+#endif // SIGNAL_TUNE_NEO_GEO || INCLUDE_SIGNAL_TUNE_NEO_GEO
+
+
+#if defined SIGNAL_TUNE_BOSUN_WHISTLE || defined INCLUDE_SIGNAL_TUNE_BOSUN_WHISTLE
+static const char* signal_tune_bosun_whistle_name = " boSUn";
+static const int8_t signal_tune_bosun_whistle[] = {
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_C7SHARP_D7FLAT, 4,
+    BUZZER_NOTE_D7SHARP_E7FLAT, 52,
+    BUZZER_NOTE_C7SHARP_D7FLAT, 2,
+    BUZZER_NOTE_C7, 2,
+    BUZZER_NOTE_B6, 6,
+    0,
+};
+#endif // SIGNAL_TUNE_BOSUN_WHISTLE || INCLUDE_SIGNAL_TUNE_BOSUN_WHISTLE
+
+
+#if defined SIGNAL_TUNE_AMONG_US || defined INCLUDE_SIGNAL_TUNE_AMONG_US
+static const int8_t AMONG_US_QUARTER = 10 - DEFAULT_NOTE_DURATION;
+static const int8_t AMONG_US_HALF = 20 - DEFAULT_NOTE_DURATION;
+static const int8_t AMONG_US_REST = 40 - DEFAULT_NOTE_DURATION;
+
+static const char* signal_tune_among_us_name = "AMOGUS";
+static const int8_t signal_tune_among_us[] = {
+    // a, b, e
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    BUZZER_NOTE_REST, AMONG_US_HALF,
+    
+    
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, AMONG_US_REST + AMONG_US_HALF + 4, 
+    BUZZER_NOTE_A5SHARP_B5FLAT, 4,
+    BUZZER_NOTE_REST, AMONG_US_QUARTER,
+    BUZZER_NOTE_D6, 4,
+    BUZZER_NOTE_REST, AMONG_US_QUARTER,
+    BUZZER_NOTE_C6, 4,
+    0,
+};
+#endif // SIGNAL_TUNE_AMONG_US || INCLUDE_SIGNAL_TUNE_AMONG_US
+
+
+
+
 void movement_custom_signal_tunes_init(void) {
     // memset((void*)signal_tunes, 0, sizeof(int8_t*) * MOVEMENT_N_SIGNAL_TUNES);
     // memset((void*)signal_tunes_names, 0, sizeof(char*) * MOVEMENT_N_SIGNAL_TUNES);
@@ -427,6 +816,135 @@ void movement_custom_signal_tunes_init(void) {
     active_signal_tune_index = signal_tune_index;
 #endif // SIGNAL_TUNE_EVANGELION
 #endif
+
+
+#if defined SIGNAL_TUNE_WINDOWS_XP || defined INCLUDE_SIGNAL_TUNE_WINDOWS_XP
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_windows_xp;
+    signal_tunes_names[signal_tune_index] = signal_tune_windows_xp_name;
+#if defined SIGNAL_TUNE_WINDOWS_XP
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_WINDOWS_XP
+#endif
+
+#if defined SIGNAL_TUNE_WHATSAPP || defined INCLUDE_SIGNAL_TUNE_WHATSAPP
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_whatsapp;
+    signal_tunes_names[signal_tune_index] = signal_tune_whatsapp_name;
+#if defined SIGNAL_TUNE_WHATSAPP
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_WHATSAPP
+#endif
+
+#if defined SIGNAL_TUNE_FF_VICTORY || defined INCLUDE_SIGNAL_TUNE_FF_VICTORY
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_ff_victory;
+    signal_tunes_names[signal_tune_index] = signal_tune_ff_victory_name;
+#if defined SIGNAL_TUNE_FF_VICTORY
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_FF_VICTORY
+#endif
+
+#if defined SIGNAL_TUNE_GAME_BOY || defined INCLUDE_SIGNAL_TUNE_GAME_BOY
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_game_boy;
+    signal_tunes_names[signal_tune_index] = signal_tune_game_boy_name;
+#if defined SIGNAL_TUNE_GAME_BOY
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_GAME_BOY
+#endif
+
+#if defined SIGNAL_TUNE_GAME_BOY_PAUSE || defined INCLUDE_SIGNAL_TUNE_GAME_BOY_PAUSE
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_game_boy_pause;
+    signal_tunes_names[signal_tune_index] = signal_tune_game_boy_pause_name;
+#if defined SIGNAL_TUNE_GAME_BOY_PAUSE
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_GAME_BOY_PAUSE
+#endif
+
+#if defined SIGNAL_TUNE_WESTMINSTER || defined INCLUDE_SIGNAL_TUNE_WESTMINSTER
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_westminster;
+    signal_tunes_names[signal_tune_index] = signal_tune_westminster_name;
+#if defined SIGNAL_TUNE_WESTMINSTER
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_WESTMINSTER
+#endif
+
+#if defined SIGNAL_TUNE_OCEAN || defined INCLUDE_SIGNAL_TUNE_OCEAN
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_ocean;
+    signal_tunes_names[signal_tune_index] = signal_tune_ocean_name;
+#if defined SIGNAL_TUNE_OCEAN
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_OCEAN
+#endif
+
+#if defined SIGNAL_TUNE_KIRBY_VICTORY || defined INCLUDE_SIGNAL_TUNE_KIRBY_VICTORY
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_kirby_victory;
+    signal_tunes_names[signal_tune_index] = signal_tune_kirby_victory_name;
+#if defined SIGNAL_TUNE_KIRBY_VICTORY
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_KIRBY_VICTORY
+#endif
+
+#if defined SIGNAL_TUNE_THIRD_SANCTUARY || defined INCLUDE_SIGNAL_TUNE_THIRD_SANCTUARY
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_third_sanctuary;
+    signal_tunes_names[signal_tune_index] = signal_tune_third_sanctuary_name;
+#if defined SIGNAL_TUNE_THIRD_SANCTUARY
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_THIRD_SANCTUARY
+#endif
+
+#if defined SIGNAL_TUNE_MINECRAFT || defined INCLUDE_SIGNAL_TUNE_MINECRAFT
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_minecraft;
+    signal_tunes_names[signal_tune_index] = signal_tune_minecraft_name;
+#if defined SIGNAL_TUNE_MINECRAFT
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_MINECRAFT
+#endif
+
+#if defined SIGNAL_TUNE_SONIC_RING || defined INCLUDE_SIGNAL_TUNE_SONIC_RING
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_sonic_ring;
+    signal_tunes_names[signal_tune_index] = signal_tune_sonic_ring_name;
+#if defined SIGNAL_TUNE_SONIC_RING
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_SONIC_RING
+#endif
+
+#if defined SIGNAL_TUNE_NEO_GEO || defined INCLUDE_SIGNAL_TUNE_NEO_GEO
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_neo_geo;
+    signal_tunes_names[signal_tune_index] = signal_tune_neo_geo_name;
+#if defined SIGNAL_TUNE_NEO_GEO
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_NEO_GEO
+#endif
+
+#if defined SIGNAL_TUNE_BOSUN_WHISTLE || defined INCLUDE_SIGNAL_TUNE_BOSUN_WHISTLE
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_bosun_whistle;
+    signal_tunes_names[signal_tune_index] = signal_tune_bosun_whistle_name;
+#if defined SIGNAL_TUNE_BOSUN_WHISTLE
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_BOSUN_WHISTLE
+#endif
+
+#if defined SIGNAL_TUNE_AMONG_US || defined INCLUDE_SIGNAL_TUNE_AMONG_US
+    signal_tune_index++;
+    signal_tunes[signal_tune_index] = signal_tune_among_us;
+    signal_tunes_names[signal_tune_index] = signal_tune_among_us_name;
+#if defined SIGNAL_TUNE_AMONG_US
+    active_signal_tune_index = signal_tune_index;
+#endif // SIGNAL_TUNE_AMONG_US
+#endif
+
+
 
     signal_tune = signal_tunes[active_signal_tune_index];
 }
