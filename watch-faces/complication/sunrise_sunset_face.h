@@ -67,7 +67,6 @@ typedef struct {
     uint8_t longLatToUse;
     uint8_t city_idx;
     uint8_t set_city_idx;
-    bool quick_ticks_running;
     bool curr_tz_has_no_cities;
 } sunrise_sunset_state_t;
 
@@ -93,7 +92,7 @@ typedef struct {
 static const long_lat_presets_t longLatPresets[] =
 {
     { .name = "  "},  // Default, the long and lat get replaced by what's set in the watch
-//    { .name = "Ny", .latitude = 4072, .longitude = -7401 },  // New York City, NY
+    { .name = "Ny", .latitude = 4072, .longitude = -7401 },  // New York City, NY
 //    { .name = "LA", .latitude = 3405, .longitude = -11824 },  // Los Angeles, CA
 //    { .name = "dE", .latitude = 4221, .longitude = -8305 },  // Detroit, MI
 };
