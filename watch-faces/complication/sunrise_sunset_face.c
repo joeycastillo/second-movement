@@ -254,10 +254,10 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
     watch_clear_display();
 
     switch (state->page) {
-        case 0:
+        case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+        case SUNRISE_SUNSET_FACE_PAGES_COUNT:
             return;
-        case 1:
-            // Latitude
+        case SUNRISE_SUNSET_FACE_SETTING_LAT:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LAT", "LA");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
@@ -280,8 +280,7 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
             }
             break;
-        case 2:
-            // Longitude
+        case SUNRISE_SUNSET_FACE_SETTING_LONG:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LON", "LO");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
@@ -314,7 +313,10 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     state->location_changed = true;
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
         switch (state->page) {
-            case 1: // latitude
+            case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+            case SUNRISE_SUNSET_FACE_PAGES_COUNT:
+                return;
+            case SUNRISE_SUNSET_FACE_SETTING_LAT:
                 switch (state->active_digit) {
                     case 0: // tens
                         state->working_latitude.tens = (state->working_latitude.tens + 1) % 10;
@@ -343,7 +345,7 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
                         break;
                 }
                 break;
-            case 2: // longitude
+            case SUNRISE_SUNSET_FACE_SETTING_LONG:
                 switch (state->active_digit) {
                     case 0:
                         // Increase tens and handle carry-over to hundreds
@@ -382,7 +384,10 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
         }
     } else {
         switch (state->page) {
-            case 1: // latitude
+            case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+            case SUNRISE_SUNSET_FACE_PAGES_COUNT:
+                return;
+            case SUNRISE_SUNSET_FACE_SETTING_LAT:
                 switch (state->active_digit) {
                     case 0:
                         state->working_latitude.sign++;
@@ -414,7 +419,7 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
                         break;
                 }
                 break;
-            case 2: // longitude
+            case SUNRISE_SUNSET_FACE_SETTING_LONG:
                 switch (state->active_digit) {
                     case 0:
                         state->working_longitude.sign++;
@@ -492,7 +497,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
-            if (state->page == 0) {
+            if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
                 // if entering low energy mode, start tick animation
                 if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
                 // check if we need to update the display
@@ -507,20 +512,20 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
-            if (state->page) {
+            if (state->page != SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
                 if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                     state->active_digit++;
                     if (state->active_digit > 4) {
                         state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
+                        state->page = (state->page + 1) % SUNRISE_SUNSET_FACE_PAGES_COUNT;
                         _sunrise_sunset_face_update_location_register(state);
                     }
                 } else {
                     state->active_digit++;
-                    if (state->page == 1 && state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
+                    if (state->page == SUNRISE_SUNSET_FACE_SETTING_LAT && state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
                     if (state->active_digit > 5) {
                         state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
+                        state->page = (state->page + 1) % SUNRISE_SUNSET_FACE_PAGES_COUNT;
                         _sunrise_sunset_face_update_location_register(state);
                     }
                 }
@@ -528,23 +533,23 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             } else if (_location_count <= 1) {
                 movement_illuminate_led();
             }
-            if (state->page == 0) {
+            if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (_location_count <= 1) break;
-            else if (!state->page) movement_illuminate_led();
+            else if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES) movement_illuminate_led();
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if (state->page == 0 && _location_count > 1) {
+            if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES && _location_count > 1) {
                 state->longLatToUse = (state->longLatToUse + 1) % _location_count;
                 _sunrise_sunset_face_update(state);
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (state->page) {
+            if (state->page != SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
                 _sunrise_sunset_face_advance_digit(state);
                 _sunrise_sunset_face_update_settings_display(event, context);
             } else {
@@ -553,12 +558,12 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (state->page == 0) {
-            if (state->longLatToUse != 0) {
-                state->longLatToUse = 0;
-                _sunrise_sunset_face_update(state);
-                break;
-            }
+            if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
+                if (state->longLatToUse != 0) {
+                    state->longLatToUse = 0;
+                    _sunrise_sunset_face_update(state);
+                    break;
+                }
                 state->page++;
                 state->active_digit = 0;
                 watch_clear_display();
@@ -567,7 +572,7 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             }
             else {
                 state->active_digit = 0;
-                state->page = 0;
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
                 _sunrise_sunset_face_update_location_register(state);
                 _sunrise_sunset_face_update(state);
             }
@@ -576,9 +581,9 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             if (load_location_from_filesystem().reg == 0) {
                 // if no location set, return home
                 movement_move_to_face(0);
-            } else if (state->page || state->rise_index) {
+            } else if ((state->page != SUNRISE_SUNSET_FACE_RISE_SET_TIMES) || state->rise_index) {
                 // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
-                state->page = 0;
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
                 state->rise_index = 0;
                 movement_request_tick_frequency(1);
                 _sunrise_sunset_face_update(state);

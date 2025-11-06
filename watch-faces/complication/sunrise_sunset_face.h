@@ -38,6 +38,13 @@
 
 #include "movement.h"
 
+typedef enum {
+    SUNRISE_SUNSET_FACE_RISE_SET_TIMES = 0,
+    SUNRISE_SUNSET_FACE_SETTING_LAT,
+    SUNRISE_SUNSET_FACE_SETTING_LONG,
+    SUNRISE_SUNSET_FACE_PAGES_COUNT,
+} sunrise_sunset_pages_t;
+
 typedef struct {
     uint8_t sign: 1;    // 0-1
     uint8_t hundreds: 5;    // 0-1, ignored for latitude
@@ -48,7 +55,7 @@ typedef struct {
 } sunrise_sunset_lat_lon_settings_t;
 
 typedef struct {
-    uint8_t page;
+    sunrise_sunset_pages_t page;
     uint8_t rise_index;
     uint8_t active_digit;
     bool location_changed;
