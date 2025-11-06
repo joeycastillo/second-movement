@@ -48,7 +48,6 @@ bool fesk_demo_lite_face_loop(movement_event_t event, void *context) {
             {
                 fesk_session_config_t config = fesk_session_config_defaults();
                 config.static_message = "test";
-                config.static_message_length = strlen(config.static_message);
                 fesk_session_init(&state->session, &config);
                 fesk_session_start(&state->session);
             }

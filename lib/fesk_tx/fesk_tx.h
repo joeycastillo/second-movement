@@ -48,7 +48,7 @@
  * Example Usage:
  *   int8_t *sequence = NULL;
  *   size_t entries = 0;
- *   fesk_result_t result = fesk_encode_cstr("Hello", &sequence, &entries);
+ *   fesk_result_t result = fesk_encode("Hello", &sequence, &entries);
  *   if (result == FESK_OK) {
  *       watch_buzzer_play_sequence(sequence, callback);
  *       fesk_free_sequence(sequence);
@@ -97,31 +97,18 @@ enum {
 extern const watch_buzzer_note_t fesk_tone_map[FESK_TONE_COUNT];
 
 /**
- * @brief Encode text into FESK audio sequence
- * @param text Input text (must be valid, non-NULL)
- * @param length Length of text in bytes (max 1024)
- * @param out_sequence Pointer to receive allocated sequence (caller must free with fesk_free_sequence)
- * @param out_entries Optional pointer to receive number of sequence entries
- * @return FESK_OK on success, error code otherwise
- */
-fesk_result_t fesk_encode_text(const char *text,
-                               size_t length,
-                               int8_t **out_sequence,
-                               size_t *out_entries);
-
-/**
  * @brief Encode null-terminated string into FESK audio sequence
  * @param text Null-terminated string (must be valid, non-NULL, non-empty)
  * @param out_sequence Pointer to receive allocated sequence (caller must free with fesk_free_sequence)
  * @param out_entries Optional pointer to receive number of sequence entries
  * @return FESK_OK on success, error code otherwise
  */
-fesk_result_t fesk_encode_cstr(const char *text,
-                               int8_t **out_sequence,
-                               size_t *out_entries);
+fesk_result_t fesk_encode(const char *text,
+                          int8_t **out_sequence,
+                          size_t *out_entries);
 
 /**
- * @brief Free sequence allocated by fesk_encode_*
+ * @brief Free sequence allocated by fesk_encode
  * @param sequence Sequence to free (NULL-safe)
  */
 void fesk_free_sequence(int8_t *sequence);

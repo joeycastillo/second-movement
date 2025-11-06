@@ -353,16 +353,9 @@ static fesk_result_t _encode_internal(const char *text,
     return FESK_OK;
 }
 
-fesk_result_t fesk_encode_text(const char *text,
-                               size_t length,
-                               int8_t **out_sequence,
-                               size_t *out_entries) {
-    return _encode_internal(text, length, out_sequence, out_entries);
-}
-
-fesk_result_t fesk_encode_cstr(const char *text,
-                               int8_t **out_sequence,
-                               size_t *out_entries) {
+fesk_result_t fesk_encode(const char *text,
+                          int8_t **out_sequence,
+                          size_t *out_entries) {
     if (!text) {
         return FESK_ERR_INVALID_ARGUMENT;
     }

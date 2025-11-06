@@ -100,7 +100,6 @@ typedef struct {
     bool countdown_beep;                        /**< Play beep during countdown */
     bool show_bell_indicator;                   /**< Show bell icon during countdown/transmission */
     const char *static_message;                 /**< Static message to transmit (or NULL if using provide_payload) */
-    size_t static_message_length;               /**< Length of static_message (0 = use strlen) */
     fesk_session_payload_cb provide_payload;    /**< Dynamic payload callback (overrides static_message) */
     fesk_session_simple_cb on_countdown_begin;  /**< Called when countdown starts */
     fesk_session_countdown_cb on_countdown_tick;/**< Called each countdown second */

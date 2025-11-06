@@ -39,7 +39,7 @@ void test_encode_simple_text() {
     int8_t *sequence = NULL;
     size_t entries = 0;
 
-    fesk_result_t result = fesk_encode_cstr("a", &sequence, &entries);
+    fesk_result_t result = fesk_encode("a", &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -56,8 +56,8 @@ void test_encode_case_insensitive() {
     size_t entries_lower = 0;
     size_t entries_upper = 0;
 
-    fesk_result_t result1 = fesk_encode_cstr("hello", &seq_lower, &entries_lower);
-    fesk_result_t result2 = fesk_encode_cstr("HELLO", &seq_upper, &entries_upper);
+    fesk_result_t result1 = fesk_encode("hello", &seq_lower, &entries_lower);
+    fesk_result_t result2 = fesk_encode("HELLO", &seq_upper, &entries_upper);
 
     TEST_ASSERT_EQUAL(FESK_OK, result1);
     TEST_ASSERT_EQUAL(FESK_OK, result2);
@@ -76,7 +76,7 @@ void test_encode_all_characters() {
     size_t entries = 0;
 
     const char *test_str = "abcdefghijklmnopqrstuvwxyz0123456789 ,:'\"\n";
-    fesk_result_t result = fesk_encode_text(test_str, strlen(test_str), &sequence, &entries);
+    fesk_result_t result = fesk_encode(test_str, &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -90,7 +90,7 @@ void test_encode_unsupported_character() {
     size_t entries = 0;
 
     // '@' is not supported
-    fesk_result_t result = fesk_encode_cstr("hello@world", &sequence, &entries);
+    fesk_result_t result = fesk_encode("hello@world", &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_ERR_UNSUPPORTED_CHARACTER, result);
     TEST_ASSERT_NULL(sequence);
@@ -101,10 +101,10 @@ void test_encode_null_pointer() {
     int8_t *sequence = NULL;
     size_t entries = 0;
 
-    fesk_result_t result = fesk_encode_cstr(NULL, &sequence, &entries);
+    fesk_result_t result = fesk_encode(NULL, &sequence, &entries);
     TEST_ASSERT_EQUAL(FESK_ERR_INVALID_ARGUMENT, result);
 
-    result = fesk_encode_text("hello", 5, NULL, &entries);
+    result = fesk_encode("hello", NULL, &entries);
     TEST_ASSERT_EQUAL(FESK_ERR_INVALID_ARGUMENT, result);
 }
 
@@ -113,10 +113,7 @@ void test_encode_empty_string() {
     int8_t *sequence = NULL;
     size_t entries = 0;
 
-    fesk_result_t result = fesk_encode_cstr("", &sequence, &entries);
-    TEST_ASSERT_EQUAL(FESK_ERR_INVALID_ARGUMENT, result);
-
-    result = fesk_encode_text("hello", 0, &sequence, &entries);
+    fesk_result_t result = fesk_encode("", &sequence, &entries);
     TEST_ASSERT_EQUAL(FESK_ERR_INVALID_ARGUMENT, result);
 }
 
@@ -125,7 +122,7 @@ void test_sequence_structure() {
     int8_t *sequence = NULL;
     size_t entries = 0;
 
-    fesk_result_t result = fesk_encode_cstr("a", &sequence, &entries);
+    fesk_result_t result = fesk_encode("a", &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -147,7 +144,7 @@ void test_encode_digits() {
     int8_t *sequence = NULL;
     size_t entries = 0;
 
-    fesk_result_t result = fesk_encode_cstr("0123456789", &sequence, &entries);
+    fesk_result_t result = fesk_encode("0123456789", &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -161,7 +158,7 @@ void test_encode_punctuation() {
     size_t entries = 0;
 
     const char *test_str = "hello, world: 'test' \"quote\"";
-    fesk_result_t result = fesk_encode_text(test_str, strlen(test_str), &sequence, &entries);
+    fesk_result_t result = fesk_encode(test_str, &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -175,7 +172,7 @@ void test_encode_newline() {
     size_t entries = 0;
 
     const char *test_str = "line1\nline2";
-    fesk_result_t result = fesk_encode_text(test_str, strlen(test_str), &sequence, &entries);
+    fesk_result_t result = fesk_encode(test_str, &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -193,7 +190,7 @@ void test_encode_max_length() {
     memset(long_str, 'a', 1024);
     long_str[1024] = '\0';
 
-    fesk_result_t result = fesk_encode_text(long_str, 1024, &sequence, &entries);
+    fesk_result_t result = fesk_encode(long_str, &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_OK, result);
     TEST_ASSERT_NOT_NULL(sequence);
@@ -211,7 +208,7 @@ void test_encode_over_max_length() {
     memset(long_str, 'a', 1025);
     long_str[1025] = '\0';
 
-    fesk_result_t result = fesk_encode_text(long_str, 1025, &sequence, &entries);
+    fesk_result_t result = fesk_encode(long_str, &sequence, &entries);
 
     TEST_ASSERT_EQUAL(FESK_ERR_INVALID_ARGUMENT, result);
     TEST_ASSERT_NULL(sequence);
@@ -237,8 +234,8 @@ void test_different_inputs_different_sequences() {
     size_t entries1 = 0;
     size_t entries2 = 0;
 
-    fesk_encode_cstr("abc", &seq1, &entries1);
-    fesk_encode_cstr("xyz", &seq2, &entries2);
+    fesk_encode("abc", &seq1, &entries1);
+    fesk_encode("xyz", &seq2, &entries2);
 
     TEST_ASSERT_EQUAL(entries1, entries2);  // Same length
 
