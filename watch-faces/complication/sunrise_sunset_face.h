@@ -67,7 +67,7 @@ typedef struct {
     uint8_t longLatToUse;
     uint8_t city_idx;
     uint8_t set_city_idx;
-    bool curr_tz_has_no_cities;
+    bool curr_tz_has_cities;
 } sunrise_sunset_state_t;
 
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr);

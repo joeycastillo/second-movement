@@ -492,16 +492,25 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     }
 }
 
+static bool _sunrise_sunset_face_location_in_tz(int32_t tz) {
+    for (uint8_t i = 0; i < _long_lat_preset_count; i++) {
+        if (sunriseSunsetLongLatPresets[i].timezone == tz) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void _sunrise_sunset_face_move_forward(sunrise_sunset_state_t *state) {
     int32_t tz = movement_get_timezone_index();
     uint8_t init_idx = state->city_idx;
     do {
         state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
-    } while (!state->curr_tz_has_no_cities && tz != UTZ_UTC
-            && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
+    } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
             && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
-        state->curr_tz_has_no_cities = true;
+        // UI won't allow this since we go straight to lat/long if we have no locations in our tz
+        state->curr_tz_has_cities = false;
         state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
     }
     printf("%s\n", sunriseSunsetLongLatPresets[state->city_idx].name);
@@ -513,11 +522,11 @@ static void _sunrise_sunset_face_move_backwards(sunrise_sunset_state_t *state) {
     uint8_t init_idx = state->city_idx;
     do {
         state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
-    } while (!state->curr_tz_has_no_cities && tz != UTZ_UTC
-            && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
+    } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
             && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
-        state->curr_tz_has_no_cities = true;
+        // UI won't allow this since we go straight to lat/long if we have no locations in our tz
+        state->curr_tz_has_cities = false;
         state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
     }
     printf("%s\n", sunriseSunsetLongLatPresets[state->city_idx].name);
@@ -556,7 +565,6 @@ void sunrise_sunset_face_activate(void *context) {
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
     state->set_city_idx = city_idx_of_curr_location(movement_location.bit.latitude, movement_location.bit.longitude);
     state->city_idx = state->set_city_idx;
-    state->curr_tz_has_no_cities = false;
 }
 
 static bool _sunrise_sunset_face_update_long_lat_display(movement_event_t event, sunrise_sunset_state_t *state) {
@@ -687,6 +695,7 @@ static bool _sunrise_sunset_face_update_choose_city(movement_event_t event, sunr
 }
 
 static bool _sunrise_sunset_face_update_rise_set(movement_event_t event, sunrise_sunset_state_t *state) {
+    int32_t tz = movement_get_timezone_index();
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             _sunrise_sunset_face_update(state);
@@ -731,10 +740,20 @@ static bool _sunrise_sunset_face_update_rise_set(movement_event_t event, sunrise
                 _sunrise_sunset_face_update(state);
                 break;
             }
-            state->page = SUNRISE_SUNSET_FACE_CITIES;
-            watch_clear_display();
-            movement_request_tick_frequency(FREQ_FAST);
-            display_city(state);
+            tz = movement_get_timezone_index();
+            state->curr_tz_has_cities = _sunrise_sunset_face_location_in_tz(tz);
+            if (tz == UTZ_UTC || !state->curr_tz_has_cities) {
+                state->active_digit = 0;
+                state->page = SUNRISE_SUNSET_FACE_SETTING_LAT;
+                watch_clear_display();
+                movement_request_tick_frequency(FREQ_FAST);
+                _sunrise_sunset_face_update_settings_display(event, state);
+            } else {
+                state->page = SUNRISE_SUNSET_FACE_CITIES;
+                watch_clear_display();
+                movement_request_tick_frequency(FREQ_FAST);
+                display_city(state);
+            }
             break;
         case EVENT_TIMEOUT:
             if (load_location_from_filesystem().reg == 0) {
