@@ -513,7 +513,6 @@ static void _sunrise_sunset_face_move_forward(sunrise_sunset_state_t *state) {
         state->curr_tz_has_cities = false;
         state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
     }
-    printf("%s\n", sunriseSunsetLongLatPresets[state->city_idx].name);
     display_city(state);
 }
 
@@ -529,7 +528,6 @@ static void _sunrise_sunset_face_move_backwards(sunrise_sunset_state_t *state) {
         state->curr_tz_has_cities = false;
         state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
     }
-    printf("%s\n", sunriseSunsetLongLatPresets[state->city_idx].name);
     display_city(state);
 }
 
