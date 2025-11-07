@@ -86,6 +86,7 @@ typedef struct {
     uint8_t longLatToUse;
     uint8_t city_idx;
     uint8_t set_city_idx;
+    bool quick_ticks_running;
     const sunrise_sunset_timezone_city_group_t *cities_in_tz;
 } sunrise_sunset_state_t;
 
@@ -117,7 +118,7 @@ static const long_lat_presets_t longLatPresets[] =
 };
 
 // Data came from here: https://worldpopulationreview.com/cities
-// All cities have a 2025 population of at least 1000000 and removed all cities that are within 500km of a more populated city. 167 cities total.
+// All cities have a 2025 population of at least 1000000 and removed all cities that are within 500km of a more populated city that shares a timezone. 190 cities total.
 static const sunrise_sunset_long_lat_presets_t UTZ_LOS_ANGELES_CITIES[] = {
     { .name = "Los Angeles", .latitude = 3405, .longitude = -11824, .region = 0 },  // Los Angeles, United States (Region: North America, 2025 Population: 3770958)
     { .name = "Vancouver", .latitude = 4926, .longitude = -12311, .region = 0 },  // Vancouver, Canada (Region: North America, 2025 Population: 2707920)
@@ -134,6 +135,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_PHOENIX_CITIES[] = {
 
 static const sunrise_sunset_long_lat_presets_t UTZ_CHICAGO_CITIES[] = {
     { .name = "Chicago", .latitude = 4188, .longitude = -8762, .region = 0 },  // Chicago, United States (Region: North America, 2025 Population: 2611867)
+    { .name = "Chihuahua", .latitude = 2850, .longitude = -10600, .region = 0 },  // Chihuahua, Mexico (Region: North America, 2025 Population: 1153540)
     { .name = "Guatemala Cit", .latitude = 1464, .longitude = -9051, .region = 0 },  // Guatemala City, Guatemala (Region: North America, 2025 Population: 3229740)
     { .name = "Houston", .latitude = 2976, .longitude = -9537, .region = 0 },  // Houston, United States (Region: North America, 2025 Population: 2324082)
     { .name = "Managua", .latitude = 1216, .longitude = -8627, .region = 0 },  // Managua, Nicaragua (Region: North America, 2025 Population: 1120900)
@@ -147,6 +149,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_NEW_YORK_CITIES[] = {
     { .name = "Jacksonville", .latitude = 3033, .longitude = -8166, .region = 0 },  // Jacksonville, United States (Region: North America, 2025 Population: 1008485)
     { .name = "Montreal", .latitude = 4550, .longitude = -7357, .region = 0 },  // Montreal, Canada (Region: North America, 2025 Population: 4377310)
     { .name = "New York City", .latitude = 4071, .longitude = -7401, .region = 0 },  // New York City, United States (Region: North America, 2025 Population: 7936530)
+    { .name = "Port-au-Princ", .latitude = 1855, .longitude = -7234, .region = 0 },  // Port-au-Prince, Haiti (Region: North America, 2025 Population: 3133080)
     { .name = "Raleigh", .latitude = 3578, .longitude = -7864, .region = 0 },  // Raleigh, United States (Region: North America, 2025 Population: 493589)
     { .name = "Toronto", .latitude = 4365, .longitude = -7938, .region = 0 },  // Toronto, Canada (Region: North America, 2025 Population: 6491290)
 };
@@ -163,6 +166,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_SAO_PAULO_CITIES[] = {
     { .name = "Fortaleza", .latitude = -373, .longitude = -3852, .region = 4 },  // Fortaleza, Brazil (Region: South America, 2025 Population: 4284450)
     { .name = "Goiania", .latitude = -1668, .longitude = -4925, .region = 4 },  // Goiania, Brazil (Region: South America, 2025 Population: 2927080)
     { .name = "Grande Sao Lu", .latitude = -302, .longitude = -4400, .region = 4 },  // Grande Sao Luis, Brazil (Region: South America, 2025 Population: 1548210)
+    { .name = "Mendoza", .latitude = -3460, .longitude = -6873, .region = 4 },  // Mendoza, Argentina (Region: South America, 2025 Population: 1257180)
     { .name = "Porto Alegre", .latitude = -3003, .longitude = -5123, .region = 4 },  // Porto Alegre, Brazil (Region: South America, 2025 Population: 4268960)
     { .name = "Recife", .latitude = -806, .longitude = -3488, .region = 4 },  // Recife, Brazil (Region: South America, 2025 Population: 4344050)
     { .name = "Salvador", .latitude = -1298, .longitude = -3848, .region = 4 },  // Salvador, Brazil (Region: South America, 2025 Population: 4029910)
@@ -171,8 +175,9 @@ static const sunrise_sunset_long_lat_presets_t UTZ_SAO_PAULO_CITIES[] = {
 };
 
 static const sunrise_sunset_long_lat_presets_t UTZ_LONDON_CITIES[] = {
+    { .name = "Glasgow", .latitude = 5586, .longitude = -425, .region = 2 },  // Glasgow, United Kingdom (Region: Europe, 2025 Population: 1718940)
     { .name = "Lisbon", .latitude = 3871, .longitude = -914, .region = 2 },  // Lisbon, Portugal (Region: Europe, 2025 Population: 3028270)
-    { .name = "Manchester", .latitude = 5348, .longitude = -225, .region = 2 },  // Manchester, United Kingdom (Region: Europe, 2025 Population: 2832580)
+    { .name = "London", .latitude = 5151, .longitude = -13, .region = 2 },  // London, United Kingdom (Region: Europe, 2025 Population: 9840740)
 };
 
 static const sunrise_sunset_long_lat_presets_t UTZ_LAGOS_CITIES[] = {
@@ -184,12 +189,17 @@ static const sunrise_sunset_long_lat_presets_t UTZ_LAGOS_CITIES[] = {
     { .name = "Luanda", .latitude = -883, .longitude = 1324, .region = 3 },  // Luanda, Angola (Region: Africa, 2025 Population: 10027900)
     { .name = "Lubango", .latitude = -1492, .longitude = 1349, .region = 3 },  // Lubango, Angola (Region: Africa, 2025 Population: 1047810)
     { .name = "N-Djamena", .latitude = 1212, .longitude = 1505, .region = 3 },  // N-Djamena, Chad (Region: Africa, 2025 Population: 1722780)
+    { .name = "Niamey", .latitude = 1352, .longitude = 211, .region = 3 },  // Niamey, Niger (Region: Africa, 2025 Population: 1561490)
     { .name = "Tunis", .latitude = 3384, .longitude = 940, .region = 3 },  // Tunis, Tunisia (Region: Africa, 2025 Population: 2545030)
     { .name = "Yaounde", .latitude = 387, .longitude = 1152, .region = 3 },  // Yaounde, Cameroon (Region: Africa, 2025 Population: 4854260)
 };
 
 static const sunrise_sunset_long_lat_presets_t UTZ_CAIRO_CITIES[] = {
     { .name = "Cairo", .latitude = 3004, .longitude = 3124, .region = 3 },  // Cairo, Egypt (Region: Africa, 2025 Population: 23074200)
+};
+
+static const sunrise_sunset_long_lat_presets_t UTZ_JERUSALEM_CITIES[] = {
+    { .name = "Tel Aviv", .latitude = 3209, .longitude = 3478, .region = 1 },  // Tel Aviv, Israel (Region: Asia, 2025 Population: 4568530)
 };
 
 static const sunrise_sunset_long_lat_presets_t UTZ_MOSCOW_CITIES[] = {
@@ -201,6 +211,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_MOSCOW_CITIES[] = {
     { .name = "Kuwait City", .latitude = 2938, .longitude = 4797, .region = 1 },  // Kuwait City, Kuwait (Region: Asia, 2025 Population: 3405000)
     { .name = "Riyadh", .latitude = 2333, .longitude = 4533, .region = 1 },  // Riyadh, Saudi Arabia (Region: Asia, 2025 Population: 7952860)
     { .name = "Sanaa", .latitude = 1535, .longitude = 4420, .region = 1 },  // Sanaa, Yemen (Region: Asia, 2025 Population: 3527430)
+    { .name = "Minsk", .latitude = 5390, .longitude = 2756, .region = 2 },  // Minsk, Belarus (Region: Europe, 2025 Population: 2070930)
     { .name = "Addis Ababa", .latitude = 904, .longitude = 3875, .region = 3 },  // Addis Ababa, Ethiopia (Region: Africa, 2025 Population: 5956680)
     { .name = "Antananarivo", .latitude = -1891, .longitude = 4753, .region = 3 },  // Antananarivo, Madagascar (Region: Africa, 2025 Population: 4228980)
     { .name = "Asmara", .latitude = 1534, .longitude = 3893, .region = 3 },  // Asmara, Eritrea (Region: Africa, 2025 Population: 1152180)
@@ -213,6 +224,8 @@ static const sunrise_sunset_long_lat_presets_t UTZ_MOSCOW_CITIES[] = {
 
 static const sunrise_sunset_long_lat_presets_t UTZ_TEHRAN_CITIES[] = {
     { .name = "Mashhad", .latitude = 3630, .longitude = 5961, .region = 1 },  // Mashhad, Iran (Region: Asia, 2025 Population: 3460660)
+    { .name = "Shiraz", .latitude = 2961, .longitude = 5254, .region = 1 },  // Shiraz, Iran (Region: Asia, 2025 Population: 1763900)
+    { .name = "Tabriz", .latitude = 3807, .longitude = 4630, .region = 1 },  // Tabriz, Iran (Region: Asia, 2025 Population: 1695670)
     { .name = "Tehran", .latitude = 3569, .longitude = 5139, .region = 1 },  // Tehran, Iran (Region: Asia, 2025 Population: 9729740)
 };
 
@@ -224,11 +237,18 @@ static const sunrise_sunset_long_lat_presets_t UTZ_DUBAI_CITIES[] = {
 static const sunrise_sunset_long_lat_presets_t UTZ_KOLKATA_CITIES[] = {
     { .name = "Bangalore", .latitude = 1298, .longitude = 7759, .region = 1 },  // Bangalore, India (Region: Asia, 2025 Population: 14395400)
     { .name = "Delhi", .latitude = 2863, .longitude = 7722, .region = 1 },  // Delhi, India (Region: Asia, 2025 Population: 34665600)
+    { .name = "Guwahati", .latitude = 2618, .longitude = 9175, .region = 1 },  // Guwahati, India (Region: Asia, 2025 Population: 1224170)
     { .name = "Indore", .latitude = 2272, .longitude = 7587, .region = 1 },  // Indore, India (Region: Asia, 2025 Population: 3482830)
+    { .name = "Kolkata", .latitude = 2257, .longitude = 8836, .region = 1 },  // Kolkata, India (Region: Asia, 2025 Population: 15845200)
     { .name = "Mumbai", .latitude = 1905, .longitude = 7287, .region = 1 },  // Mumbai, India (Region: Asia, 2025 Population: 22089000)
-    { .name = "Patna", .latitude = 2561, .longitude = 8512, .region = 1 },  // Patna, India (Region: Asia, 2025 Population: 2689540)
+    { .name = "Srinagar", .latitude = 3407, .longitude = 7482, .region = 1 },  // Srinagar, India (Region: Asia, 2025 Population: 1777610)
     { .name = "Thiruvanantha", .latitude = 849, .longitude = 7695, .region = 1 },  // Thiruvananthapuram, India (Region: Asia, 2025 Population: 3072530)
+    { .name = "Varanasi", .latitude = 2534, .longitude = 8301, .region = 1 },  // Varanasi, India (Region: Asia, 2025 Population: 1826010)
     { .name = "Visakhapatnam", .latitude = 1769, .longitude = 8329, .region = 1 },  // Visakhapatnam, India (Region: Asia, 2025 Population: 2440420)
+};
+
+static const sunrise_sunset_long_lat_presets_t UTZ_KATHMANDU_CITIES[] = {
+    { .name = "Kathmandu", .latitude = 2771, .longitude = 8532, .region = 1 },  // Kathmandu, Nepal (Region: Asia, 2025 Population: 1672900)
 };
 
 static const sunrise_sunset_long_lat_presets_t UTZ_YANGON_CITIES[] = {
@@ -238,10 +258,13 @@ static const sunrise_sunset_long_lat_presets_t UTZ_YANGON_CITIES[] = {
 
 static const sunrise_sunset_long_lat_presets_t UTZ_BANGKOK_CITIES[] = {
     { .name = "Bangkok", .latitude = 1375, .longitude = 10049, .region = 1 },  // Bangkok, Thailand (Region: Asia, 2025 Population: 11391700)
+    { .name = "Batam", .latitude = 110, .longitude = 10404, .region = 1 },  // Batam, Indonesia (Region: Asia, 2025 Population: 1858910)
+    { .name = "Chiang Mai", .latitude = 1879, .longitude = 9899, .region = 1 },  // Chiang Mai, Thailand (Region: Asia, 2025 Population: 1244190)
     { .name = "Da Nang", .latitude = 1607, .longitude = 10821, .region = 1 },  // Da Nang, Vietnam (Region: Asia, 2025 Population: 1286000)
     { .name = "Hanoi", .latitude = 2103, .longitude = 10585, .region = 1 },  // Hanoi, Vietnam (Region: Asia, 2025 Population: 5602200)
     { .name = "Ho Chi Minh C", .latitude = 1082, .longitude = 10663, .region = 1 },  // Ho Chi Minh City, Vietnam (Region: Asia, 2025 Population: 9816320)
     { .name = "Jakarta", .latitude = -618, .longitude = 10683, .region = 1 },  // Jakarta, Indonesia (Region: Asia, 2025 Population: 11634100)
+    { .name = "Medan", .latitude = 359, .longitude = 9867, .region = 1 },  // Medan, Indonesia (Region: Asia, 2025 Population: 2521590)
     { .name = "Surabaya", .latitude = -725, .longitude = 11274, .region = 1 },  // Surabaya, Indonesia (Region: Asia, 2025 Population: 3137620)
 };
 
@@ -251,6 +274,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_SINGAPORE_CITIES[] = {
     { .name = "Chongqing", .latitude = 3006, .longitude = 10787, .region = 1 },  // Chongqing, China (Region: Asia, 2025 Population: 18171200)
     { .name = "Daqing", .latitude = 4632, .longitude = 12456, .region = 1 },  // Daqing, China (Region: Asia, 2025 Population: 2085470)
     { .name = "Davao City", .latitude = 706, .longitude = 12561, .region = 1 },  // Davao City, Philippines (Region: Asia, 2025 Population: 2033990)
+    { .name = "Denpasar", .latitude = -865, .longitude = 11522, .region = 1 },  // Denpasar, Indonesia (Region: Asia, 2025 Population: 1097310)
     { .name = "Guangzhou", .latitude = 2313, .longitude = 11326, .region = 1 },  // Guangzhou, China (Region: Asia, 2025 Population: 14878700)
     { .name = "Haerbin", .latitude = 3611, .longitude = 12039, .region = 1 },  // Haerbin, China (Region: Asia, 2025 Population: 7066860)
     { .name = "Jixi Heilongj", .latitude = 4530, .longitude = 13098, .region = 1 },  // Jixi Heilongjiang, China (Region: Asia, 2025 Population: 1024970)
@@ -259,6 +283,7 @@ static const sunrise_sunset_long_lat_presets_t UTZ_SINGAPORE_CITIES[] = {
     { .name = "Lanzhou", .latitude = 3647, .longitude = 10373, .region = 1 },  // Lanzhou, China (Region: Asia, 2025 Population: 3430880)
     { .name = "Makassar", .latitude = -513, .longitude = 11941, .region = 1 },  // Makassar, Indonesia (Region: Asia, 2025 Population: 1737390)
     { .name = "Manila", .latitude = 1459, .longitude = 12098, .region = 1 },  // Manila, Philippines (Region: Asia, 2025 Population: 15230600)
+    { .name = "Nanning", .latitude = 2282, .longitude = 10836, .region = 1 },  // Nanning, China (Region: Asia, 2025 Population: 4383600)
     { .name = "New Taipei", .latitude = 2501, .longitude = 12147, .region = 1 },  // New Taipei, Taiwan (Region: Asia, 2025 Population: 4563850)
     { .name = "Samarinda", .latitude = -50, .longitude = 11714, .region = 1 },  // Samarinda, Indonesia (Region: Asia, 2025 Population: 1154760)
     { .name = "Shanghai", .latitude = 3123, .longitude = 12147, .region = 1 },  // Shanghai, China (Region: Asia, 2025 Population: 30482100)
@@ -305,10 +330,12 @@ static const sunrise_sunset_timezone_city_group_t sunriseSunsetLongLatPresets[] 
     { UTZ_LONDON, UTZ_LONDON_CITIES, sizeof(UTZ_LONDON_CITIES)/sizeof(UTZ_LONDON_CITIES[0]) },
     { UTZ_LAGOS, UTZ_LAGOS_CITIES, sizeof(UTZ_LAGOS_CITIES)/sizeof(UTZ_LAGOS_CITIES[0]) },
     { UTZ_CAIRO, UTZ_CAIRO_CITIES, sizeof(UTZ_CAIRO_CITIES)/sizeof(UTZ_CAIRO_CITIES[0]) },
+    { UTZ_JERUSALEM, UTZ_JERUSALEM_CITIES, sizeof(UTZ_JERUSALEM_CITIES)/sizeof(UTZ_JERUSALEM_CITIES[0]) },
     { UTZ_MOSCOW, UTZ_MOSCOW_CITIES, sizeof(UTZ_MOSCOW_CITIES)/sizeof(UTZ_MOSCOW_CITIES[0]) },
     { UTZ_TEHRAN, UTZ_TEHRAN_CITIES, sizeof(UTZ_TEHRAN_CITIES)/sizeof(UTZ_TEHRAN_CITIES[0]) },
     { UTZ_DUBAI, UTZ_DUBAI_CITIES, sizeof(UTZ_DUBAI_CITIES)/sizeof(UTZ_DUBAI_CITIES[0]) },
     { UTZ_KOLKATA, UTZ_KOLKATA_CITIES, sizeof(UTZ_KOLKATA_CITIES)/sizeof(UTZ_KOLKATA_CITIES[0]) },
+    { UTZ_KATHMANDU, UTZ_KATHMANDU_CITIES, sizeof(UTZ_KATHMANDU_CITIES)/sizeof(UTZ_KATHMANDU_CITIES[0]) },
     { UTZ_YANGON, UTZ_YANGON_CITIES, sizeof(UTZ_YANGON_CITIES)/sizeof(UTZ_YANGON_CITIES[0]) },
     { UTZ_BANGKOK, UTZ_BANGKOK_CITIES, sizeof(UTZ_BANGKOK_CITIES)/sizeof(UTZ_BANGKOK_CITIES[0]) },
     { UTZ_SINGAPORE, UTZ_SINGAPORE_CITIES, sizeof(UTZ_SINGAPORE_CITIES)/sizeof(UTZ_SINGAPORE_CITIES[0]) },
