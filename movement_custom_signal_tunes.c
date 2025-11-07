@@ -698,6 +698,13 @@ static const int8_t signal_tune_among_us[] = {
 #endif // SIGNAL_TUNE_AMONG_US || INCLUDE_SIGNAL_TUNE_AMONG_US
 
 
+static void _movement_custom_signal_tunes_increment_index(uint8_t* index) {
+    if (*index >= (MOVEMENT_N_SIGNAL_TUNES - 1)) {
+        return;
+    }
+
+    *index = *index + 1;
+}
 
 
 void movement_custom_signal_tunes_init(void) {
@@ -710,7 +717,7 @@ void movement_custom_signal_tunes_init(void) {
     signal_tunes_names[signal_tune_index] = default_signal_tune_name;
 
 #if defined SIGNAL_TUNE_ZELDA_SECRET || defined INCLUDE_SIGNAL_TUNE_ZELDA_SECRET
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_zelda;
     signal_tunes_names[signal_tune_index] = signal_tune_zelda_name;
 #if defined SIGNAL_TUNE_ZELDA_SECRET
@@ -719,7 +726,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_MARIO_THEME || defined INCLUDE_SIGNAL_TUNE_MARIO_THEME
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_mario;
     signal_tunes_names[signal_tune_index] = signal_tune_mario_name;
 #if defined SIGNAL_TUNE_MARIO_THEME
@@ -728,7 +735,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_MARIO_1UP || defined INCLUDE_SIGNAL_TUNE_MARIO_1UP
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_mario_1up;
     signal_tunes_names[signal_tune_index] = signal_tune_mario_1up_name;
 #if defined SIGNAL_TUNE_MARIO_1UP
@@ -737,7 +744,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_MARIO_PUP || defined INCLUDE_SIGNAL_TUNE_MARIO_PUP
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_mario_pup;
     signal_tunes_names[signal_tune_index] = signal_tune_mario_pup_name;
 #if defined SIGNAL_TUNE_MARIO_PUP
@@ -746,7 +753,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_MGS_CODEC || defined INCLUDE_SIGNAL_TUNE_MGS_CODEC
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_msg_codec;
     signal_tunes_names[signal_tune_index] = signal_tune_msg_codec_name;
 #if defined SIGNAL_TUNE_MGS_CODEC
@@ -755,7 +762,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_KIM_POSSIBLE || defined INCLUDE_SIGNAL_TUNE_KIM_POSSIBLE
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_kim;
     signal_tunes_names[signal_tune_index] = signal_tune_kim_name;
 #if defined SIGNAL_TUNE_KIM_POSSIBLE
@@ -764,7 +771,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_POWER_RANGERS || defined INCLUDE_SIGNAL_TUNE_POWER_RANGERS
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_power_rangers;
     signal_tunes_names[signal_tune_index] = signal_tune_power_rangers_name;
 #if defined SIGNAL_TUNE_POWER_RANGERS
@@ -773,7 +780,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_LAYLA || defined INCLUDE_SIGNAL_TUNE_LAYLA
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_layla;
     signal_tunes_names[signal_tune_index] = signal_tune_layla_name;
 #if defined SIGNAL_TUNE_LAYLA
@@ -782,7 +789,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_HARRY_POTTER_SHORT || defined INCLUDE_SIGNAL_TUNE_HARRY_POTTER_SHORT
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_harry_short;
     signal_tunes_names[signal_tune_index] = signal_tune_harry_short_name;
 #if defined SIGNAL_TUNE_HARRY_POTTER_SHORT
@@ -791,7 +798,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_HARRY_POTTER_LONG || defined INCLUDE_SIGNAL_TUNE_HARRY_POTTER_LONG
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_harry_long;
     signal_tunes_names[signal_tune_index] = signal_tune_harry_long_name;
 #if defined SIGNAL_TUNE_HARRY_POTTER_LONG
@@ -800,7 +807,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_JURASSIC_PARK || defined INCLUDE_SIGNAL_TUNE_JURASSIC_PARK
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_jurassic;
     signal_tunes_names[signal_tune_index] = signal_tune_jurassic_name;
 #if defined SIGNAL_TUNE_JURASSIC_PARK
@@ -809,7 +816,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_EVANGELION || defined INCLUDE_SIGNAL_TUNE_EVANGELION
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_evangelion;
     signal_tunes_names[signal_tune_index] = signal_tune_evangelion_name;
 #if defined SIGNAL_TUNE_EVANGELION
@@ -819,7 +826,7 @@ void movement_custom_signal_tunes_init(void) {
 
 
 #if defined SIGNAL_TUNE_WINDOWS_XP || defined INCLUDE_SIGNAL_TUNE_WINDOWS_XP
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_windows_xp;
     signal_tunes_names[signal_tune_index] = signal_tune_windows_xp_name;
 #if defined SIGNAL_TUNE_WINDOWS_XP
@@ -828,7 +835,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_WHATSAPP || defined INCLUDE_SIGNAL_TUNE_WHATSAPP
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_whatsapp;
     signal_tunes_names[signal_tune_index] = signal_tune_whatsapp_name;
 #if defined SIGNAL_TUNE_WHATSAPP
@@ -837,7 +844,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_FF_VICTORY || defined INCLUDE_SIGNAL_TUNE_FF_VICTORY
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_ff_victory;
     signal_tunes_names[signal_tune_index] = signal_tune_ff_victory_name;
 #if defined SIGNAL_TUNE_FF_VICTORY
@@ -846,7 +853,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_GAME_BOY || defined INCLUDE_SIGNAL_TUNE_GAME_BOY
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_game_boy;
     signal_tunes_names[signal_tune_index] = signal_tune_game_boy_name;
 #if defined SIGNAL_TUNE_GAME_BOY
@@ -855,7 +862,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_GAME_BOY_PAUSE || defined INCLUDE_SIGNAL_TUNE_GAME_BOY_PAUSE
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_game_boy_pause;
     signal_tunes_names[signal_tune_index] = signal_tune_game_boy_pause_name;
 #if defined SIGNAL_TUNE_GAME_BOY_PAUSE
@@ -864,7 +871,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_WESTMINSTER || defined INCLUDE_SIGNAL_TUNE_WESTMINSTER
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_westminster;
     signal_tunes_names[signal_tune_index] = signal_tune_westminster_name;
 #if defined SIGNAL_TUNE_WESTMINSTER
@@ -873,7 +880,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_OCEAN || defined INCLUDE_SIGNAL_TUNE_OCEAN
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_ocean;
     signal_tunes_names[signal_tune_index] = signal_tune_ocean_name;
 #if defined SIGNAL_TUNE_OCEAN
@@ -882,7 +889,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_KIRBY_VICTORY || defined INCLUDE_SIGNAL_TUNE_KIRBY_VICTORY
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_kirby_victory;
     signal_tunes_names[signal_tune_index] = signal_tune_kirby_victory_name;
 #if defined SIGNAL_TUNE_KIRBY_VICTORY
@@ -891,7 +898,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_THIRD_SANCTUARY || defined INCLUDE_SIGNAL_TUNE_THIRD_SANCTUARY
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_third_sanctuary;
     signal_tunes_names[signal_tune_index] = signal_tune_third_sanctuary_name;
 #if defined SIGNAL_TUNE_THIRD_SANCTUARY
@@ -900,7 +907,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_MINECRAFT || defined INCLUDE_SIGNAL_TUNE_MINECRAFT
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_minecraft;
     signal_tunes_names[signal_tune_index] = signal_tune_minecraft_name;
 #if defined SIGNAL_TUNE_MINECRAFT
@@ -909,7 +916,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_SONIC_RING || defined INCLUDE_SIGNAL_TUNE_SONIC_RING
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_sonic_ring;
     signal_tunes_names[signal_tune_index] = signal_tune_sonic_ring_name;
 #if defined SIGNAL_TUNE_SONIC_RING
@@ -918,7 +925,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_NEO_GEO || defined INCLUDE_SIGNAL_TUNE_NEO_GEO
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_neo_geo;
     signal_tunes_names[signal_tune_index] = signal_tune_neo_geo_name;
 #if defined SIGNAL_TUNE_NEO_GEO
@@ -927,7 +934,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_BOSUN_WHISTLE || defined INCLUDE_SIGNAL_TUNE_BOSUN_WHISTLE
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_bosun_whistle;
     signal_tunes_names[signal_tune_index] = signal_tune_bosun_whistle_name;
 #if defined SIGNAL_TUNE_BOSUN_WHISTLE
@@ -936,7 +943,7 @@ void movement_custom_signal_tunes_init(void) {
 #endif
 
 #if defined SIGNAL_TUNE_AMONG_US || defined INCLUDE_SIGNAL_TUNE_AMONG_US
-    signal_tune_index++;
+    _movement_custom_signal_tunes_increment_index(&signal_tune_index);
     signal_tunes[signal_tune_index] = signal_tune_among_us;
     signal_tunes_names[signal_tune_index] = signal_tune_among_us_name;
 #if defined SIGNAL_TUNE_AMONG_US

@@ -5299,7 +5299,13 @@ static const int8_t alarm_tune_lease[] = {
 };
 #endif // ALARM_TUNE_LEASE || INCLUDE_ALARM_LEASE
 
+static void _movement_custom_alarm_tunes_increment_index(uint8_t* index) {
+    if (*index >= (MOVEMENT_N_ALARM_TUNES - 1)) {
+        return;
+    }
 
+    *index = *index + 1;
+}
 
 void movement_custom_alarm_tunes_init(void) {
     // memset((void*)alarm_tunes, 0, sizeof(int8_t*) * MOVEMENT_N_ALARM_TUNES);
@@ -5311,7 +5317,7 @@ void movement_custom_alarm_tunes_init(void) {
     alarm_tunes_names[alarm_tune_index] = default_alarm_tune_name;
 
 #if defined ALARM_TUNE_GIGI_DAG || defined INCLUDE_ALARM_TUNE_GIGI_DAG
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_gigi_dag;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_gigi_dag_name;
 #if defined ALARM_TUNE_GIGI_DAG
@@ -5320,7 +5326,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif
 
 #if defined ALARM_TUNE_TWINKLE || defined INCLUDE_ALARM_TUNE_TWINKLE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_twinkle;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_twinkle_name;
 #if defined ALARM_TUNE_TWINKLE
@@ -5329,7 +5335,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif
 
 #if defined ALARM_TUNE_BABY || defined INCLUDE_ALARM_TUNE_BABY
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_baby;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_baby_name;
 #if defined ALARM_TUNE_BABY
@@ -5338,7 +5344,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif
 
 #if defined ALARM_TUNE_INTER || defined INCLUDE_ALARM_TUNE_INTER
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_inter;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_inter_name;
 #if defined ALARM_TUNE_INTER
@@ -5347,7 +5353,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_INTER || INCLUDE_ALARM_TUNE_INTER
 
 #if defined ALARM_TUNE_ELMO || defined INCLUDE_ALARM_TUNE_ELMO
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_elmo;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_elmo_name;
 #if defined ALARM_TUNE_ELMO
@@ -5356,7 +5362,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_ELMO || INCLUDE_ALARM_TUNE_ELMO
 
 #if defined ALARM_TUNE_FARM || defined INCLUDE_ALARM_TUNE_FARM
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_farm;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_farm_name;
 #if defined ALARM_TUNE_FARM
@@ -5365,7 +5371,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_FARM || INCLUDE_ALARM_TUNE_FARM
 
 #if defined ALARM_TUNE_ONEOFTHESEDAYS || defined INCLUDE_ALARM_TUNE_ONEOFTHESEDAYS
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_days;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_days_name;
 #if defined ALARM_TUNE_ONEOFTHESEDAYS
@@ -5374,7 +5380,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_ONEOFTHESEDAYS || INCLUDE_ALARM_TUNE_ONEOFTHESEDAYS
 
 #if defined ALARM_TUNE_SIX_TRILLION_YEARS || defined INCLUDE_ALARM_TUNE_SIX_TRILLION_YEARS
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_six_trillion_years;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_six_trillion_years_name;
 #if defined ALARM_TUNE_SIX_TRILLION_YEARS
@@ -5383,7 +5389,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_SIX_TRILLION_YEARS || INCLUDE_ALARM_TUNE_SIX_TRILLION_YEARS
 
 #if defined ALARM_TUNE_BAD_APPLE || defined INCLUDE_ALARM_TUNE_BAD_APPLE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_bad_apple;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_bad_apple_name;
 #if defined ALARM_TUNE_BAD_APPLE
@@ -5392,7 +5398,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_BAD_APPLE || INCLUDE_ALARM_TUNE_BAD_APPLE
 
 #if defined ALARM_TUNE_BRAIN_POWER || defined INCLUDE_ALARM_TUNE_BRAIN_POWER
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_brain_power;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_brain_power_name;
 #if defined ALARM_TUNE_BRAIN_POWER
@@ -5401,7 +5407,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_BRAIN_POWER || INCLUDE_ALARM_TUNE_BRAIN_POWER
 
 #if defined ALARM_TUNE_BUTTERFLY || defined INCLUDE_ALARM_TUNE_BUTTERFLY
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_butterfly;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_butterfly_name;
 #if defined ALARM_TUNE_BUTTERFLY
@@ -5410,7 +5416,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_BUTTERFLY || INCLUDE_ALARM_TUNE_BUTTERFLY
 
 #if defined ALARM_TUNE_CBAT || defined INCLUDE_ALARM_TUNE_CBAT
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_cbat;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_cbat_name;
 #if defined ALARM_TUNE_CBAT
@@ -5419,7 +5425,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CBAT || INCLUDE_ALARM_TUNE_CBAT
 
 #if defined ALARM_TUNE_CALAMARI_INKANTATION || defined INCLUDE_ALARM_TUNE_CALAMARI_INKANTATION
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_calamari_inkantation;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_calamari_inkantation_name;
 #if defined ALARM_TUNE_CALAMARI_INKANTATION
@@ -5428,7 +5434,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CALAMARI_INKANTATION || INCLUDE_ALARM_TUNE_CALAMARI_INKANTATION
 
 #if defined ALARM_TUNE_CARAMELLDANSEN || defined INCLUDE_ALARM_TUNE_CARAMELLDANSEN
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_caramelldansen;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_caramelldansen_name;
 #if defined ALARM_TUNE_CARAMELLDANSEN
@@ -5437,7 +5443,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CARAMELLDANSEN || INCLUDE_ALARM_TUNE_CARAMELLDANSEN
 
 #if defined ALARM_TUNE_CHEETAHMEN || defined INCLUDE_ALARM_TUNE_CHEETAHMEN
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_cheetahmen;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_cheetahmen_name;
 #if defined ALARM_TUNE_CHEETAHMEN
@@ -5446,7 +5452,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CHEETAHMEN || INCLUDE_ALARM_TUNE_CHEETAHMEN
 
 #if defined ALARM_TUNE_CIRNOS_PERFECT_MATH_CLASS || defined INCLUDE_ALARM_TUNE_CIRNOS_PERFECT_MATH_CLASS
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_cirnos_perfect_math_class;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_cirnos_perfect_math_class_name;
 #if defined ALARM_TUNE_CIRNOS_PERFECT_MATH_CLASS
@@ -5455,7 +5461,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CIRNOS_PERFECT_MATH_CLASS || INCLUDE_ALARM_TUNE_CIRNOS_PERFECT_MATH_CLASS
 
 #if defined ALARM_TUNE_CRAB_RAVE || defined INCLUDE_ALARM_TUNE_CRAB_RAVE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_crab_rave;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_crab_rave_name;
 #if defined ALARM_TUNE_CRAB_RAVE
@@ -5464,7 +5470,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CRAB_RAVE || INCLUDE_ALARM_TUNE_CRAB_RAVE
 
 #if defined ALARM_TUNE_CRAZY_FROG || defined INCLUDE_ALARM_TUNE_CRAZY_FROG
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_crazy_frog;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_crazy_frog_name;
 #if defined ALARM_TUNE_CRAZY_FROG
@@ -5473,7 +5479,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_CRAZY_FROG || INCLUDE_ALARM_TUNE_CRAZY_FROG
 
 #if defined ALARM_TUNE_DK_ISLAND_SWING || defined INCLUDE_ALARM_TUNE_DK_ISLAND_SWING
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_dk_island_swing;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_dk_island_swing_name;
 #if defined ALARM_TUNE_DK_ISLAND_SWING
@@ -5482,7 +5488,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_DK_ISLAND_SWING || INCLUDE_ALARM_TUNE_DK_ISLAND_SWING
 
 #if defined ALARM_TUNE_DRILLCHU || defined INCLUDE_ALARM_TUNE_DRILLCHU
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_drillchu;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_drillchu_name;
 #if defined ALARM_TUNE_DRILLCHU
@@ -5491,7 +5497,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_DRILLCHU || INCLUDE_ALARM_TUNE_DRILLCHU
 
 #if defined ALARM_TUNE_E1M1 || defined INCLUDE_ALARM_TUNE_E1M1
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_e1m1;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_e1m1_name;
 #if defined ALARM_TUNE_E1M1
@@ -5500,7 +5506,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_E1M1 || INCLUDE_ALARM_TUNE_E1M1
 
 #if defined ALARM_TUNE_FLOWERING_NIGHT || defined INCLUDE_ALARM_TUNE_FLOWERING_NIGHT
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_flowering_night;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_flowering_night_name;
 #if defined ALARM_TUNE_FLOWERING_NIGHT
@@ -5509,7 +5515,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_FLOWERING_NIGHT || INCLUDE_ALARM_TUNE_FLOWERING_NIGHT
 
 #if defined ALARM_TUNE_FORD || defined INCLUDE_ALARM_TUNE_FORD
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_ford;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_ford_name;
 #if defined ALARM_TUNE_FORD
@@ -5518,7 +5524,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_FORD || INCLUDE_ALARM_TUNE_FORD
 
 #if defined ALARM_TUNE_GOD_KNOWS || defined INCLUDE_ALARM_TUNE_GOD_KNOWS
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_god_knows;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_god_knows_name;
 #if defined ALARM_TUNE_GOD_KNOWS
@@ -5527,7 +5533,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_GOD_KNOWS || INCLUDE_ALARM_TUNE_GOD_KNOWS
 
 #if defined ALARM_TUNE_INNOCENT_STARTER || defined INCLUDE_ALARM_TUNE_INNOCENT_STARTER
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_innocent_starter;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_innocent_starter_name;
 #if defined ALARM_TUNE_INNOCENT_STARTER
@@ -5536,7 +5542,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_INNOCENT_STARTER || INCLUDE_ALARM_TUNE_INNOCENT_STARTER
 
 #if defined ALARM_TUNE_IPHONE || defined INCLUDE_ALARM_TUNE_IPHONE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_iphone;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_iphone_name;
 #if defined ALARM_TUNE_IPHONE
@@ -5546,7 +5552,7 @@ void movement_custom_alarm_tunes_init(void) {
 
 
 #if defined ALARM_TUNE_LEASE || defined INCLUDE_ALARM_TUNE_LEASE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_lease;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_lease_name;
 #if defined ALARM_TUNE_LEASE
@@ -5555,7 +5561,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_LEASE || INCLUDE_ALARM_TUNE_LEASE
 
 #if defined ALARM_TUNE_LEVAN_POLKKA || defined INCLUDE_ALARM_TUNE_LEVAN_POLKKA
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_levan_polkka;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_levan_polkka_name;
 #if defined ALARM_TUNE_LEVAN_POLKKA
@@ -5564,7 +5570,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_LEVAN_POLKKA || INCLUDE_ALARM_TUNE_LEVAN_POLKKA
 
 #if defined ALARM_TUNE_LEVAN_LONELY_ROLLING_STAR || defined INCLUDE_ALARM_TUNE_LONELY_ROLLING_STAR
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_lonely_rolling_star;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_lonely_rolling_star_name;
 #if defined ALARM_TUNE_LONELY_ROLLING_STAR
@@ -5573,7 +5579,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_LONELY_ROLLING_STAR || INCLUDE_ALARM_TUNE_LONELY_ROLLING_STAR
 
 #if defined ALARM_TUNE_LUCKY_STAR || defined INCLUDE_ALARM_TUNE_LUCKY_STAR
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_lucky_star;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_lucky_star_name;
 #if defined ALARM_TUNE_LUCKY_STAR
@@ -5582,7 +5588,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_LUCKY_STAR || INCLUDE_ALARM_TUNE_LUCKY_STAR
 
 #if defined ALARM_TUNE_NAZRIN || defined INCLUDE_ALARM_TUNE_NAZRIN
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_nazrin;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_nazrin_name;
 #if defined ALARM_TUNE_NAZRIN
@@ -5591,7 +5597,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_NAZRIN || INCLUDE_ALARM_TUNE_NAZRIN
 
 #if defined ALARM_TUNE_NOKIA || defined INCLUDE_ALARM_TUNE_NOKIA
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_nokia;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_nokia_name;
 #if defined ALARM_TUNE_NOKIA
@@ -5600,7 +5606,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_NOKIA || INCLUDE_ALARM_TUNE_NOKIA
 
 #if defined ALARM_TUNE_MAGICAL_SOUND_SHOWER || defined INCLUDE_ALARM_TUNE_MAGICAL_SOUND_SHOWER
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_magical_sound_shower;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_magical_sound_shower_name;
 #if defined ALARM_TUNE_MAGICAL_SOUND_SHOWER
@@ -5609,7 +5615,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_MAGICAL_SOUND_SHOWER || INCLUDE_ALARM_TUNE_MAGICAL_SOUND_SHOWER
 
 #if defined ALARM_TUNE_PACMAN || defined INCLUDE_ALARM_TUNE_PACMAN
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_pacman;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_pacman_name;
 #if defined ALARM_TUNE_PACMAN
@@ -5618,7 +5624,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_PACMAN || INCLUDE_ALARM_TUNE_PACMAN
 
 #if defined ALARM_TUNE_PARTY_NIGHT || defined INCLUDE_ALARM_TUNE_PARTY_NIGHT
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_party_night;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_party_night_name;
 #if defined ALARM_TUNE_PARTY_NIGHT
@@ -5627,7 +5633,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_PARTY_NIGHT || INCLUDE_ALARM_TUNE_PARTY_NIGHT
 
 #if defined ALARM_TUNE_PICTIONARY || defined INCLUDE_ALARM_TUNE_PICTIONARY
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_pictionary;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_pictionary_name;
 #if defined ALARM_TUNE_PICTIONARY
@@ -5636,7 +5642,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_PICTIONARY || INCLUDE_ALARM_TUNE_PICTIONARY
 
 #if defined ALARM_TUNE_RUNNING_IN_THE_90S || defined INCLUDE_ALARM_TUNE_RUNNING_IN_THE_90S
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_running_in_the_90s;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_running_in_the_90s_name;
 #if defined ALARM_TUNE_RUNNING_IN_THE_90S
@@ -5646,7 +5652,7 @@ void movement_custom_alarm_tunes_init(void) {
 
 
 #if defined ALARM_TUNE_SAILOR_MOON || defined INCLUDE_ALARM_TUNE_SAILOR_MOON
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_sailor_moon;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_sailor_moon_name;
 #if defined ALARM_TUNE_SAILOR_MOON
@@ -5655,7 +5661,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif
 
 #if defined ALARM_TUNE_SAMSUNG || defined INCLUDE_ALARM_TUNE_SAMSUNG
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_samsung;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_samsung_name;
 #if defined ALARM_TUNE_SAMSUNG
@@ -5664,7 +5670,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_SAMSUNG || INCLUDE_ALARM_TUNE_SAMSUNG
 
 #if defined ALARM_TUNE_SKYPE || defined INCLUDE_ALARM_TUNE_SKYPE
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_skype;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_skype_name;
 #if defined ALARM_TUNE_SKYPE
@@ -5673,7 +5679,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_SKYPE || INCLUDE_ALARM_TUNE_SKYPE
 
 #if defined ALARM_TUNE_SMACK_MY || defined INCLUDE_ALARM_TUNE_SMACK_MY
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_smack_my;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_smack_my_name;
 #if defined ALARM_TUNE_SMACK_MY
@@ -5682,7 +5688,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_SMACK_MY || INCLUDE_ALARM_TUNE_SMACK_MY
 
 #if defined ALARM_TUNE_SONIC_1_INVINCIBILITY || defined INCLUDE_ALARM_TUNE_SONIC_1_INVINCIBILITY
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_sonic_1_invincibility;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_sonic_1_invincibility_name;
 #if defined ALARM_TUNE_SONIC_1_INVINCIBILITY
@@ -5691,7 +5697,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_SONIC_1_INVINCIBILITY || INCLUDE_ALARM_TUNE_SONIC_1_INVINCIBILITY
 
 #if defined ALARM_TUNE_TO_HEART || defined INCLUDE_ALARM_TUNE_TO_HEART
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_to_heart;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_to_heart_name;
 #if defined ALARM_TUNE_TO_HEART
@@ -5700,7 +5706,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_TO_HEART || INCLUDE_ALARM_TUNE_TO_HEART
 
 #if defined ALARM_TUNE_VOICES || defined INCLUDE_ALARM_TUNE_VOICES
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_voices;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_voices_name;
 #if defined ALARM_TUNE_VOICES
@@ -5709,7 +5715,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif // ALARM_TUNE_VOICES || INCLUDE_ALARM_TUNE_VOICES
 
 #if defined ALARM_TUNE_UNWELCOME_SCHOOL || defined INCLUDE_ALARM_TUNE_UNWELCOME_SCHOOL
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_unwelcome_school;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_unwelcome_school_name;
 #if defined ALARM_TUNE_UNWELCOME_SCHOOL
@@ -5718,7 +5724,7 @@ void movement_custom_alarm_tunes_init(void) {
 #endif
 
 #if defined ALARM_TUNE_YOU || defined INCLUDE_ALARM_TUNE_YOU
-    alarm_tune_index++;
+    _movement_custom_alarm_tunes_increment_index(&alarm_tune_index);
     alarm_tunes[alarm_tune_index] = alarm_tune_you;
     alarm_tunes_names[alarm_tune_index] = alarm_tune_you_name;
 #if defined ALARM_TUNE_YOU
