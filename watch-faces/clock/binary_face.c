@@ -115,7 +115,7 @@ static const uint8_t MINUTE_2_POS = 8;
 static const uint8_t MINUTE_1_POS = 9;
 
 
-static bool displayBinaryMinutes(watch_date_time_t current, watch_date_time_t previous) {
+static bool display_binary_minutes(watch_date_time_t current, watch_date_time_t previous) {
     if ((current.reg >> 6) == (previous.reg >> 6)) {
         // everything before seconds is the same, don't waste cycles setting those segments.
         return true;
@@ -138,7 +138,7 @@ static bool displayBinaryMinutes(watch_date_time_t current, watch_date_time_t pr
     }
 }
 
-static uint8_t decToHex(uint8_t decMod16) {
+static uint8_t dec_to_hex(uint8_t decMod16) {
     if (decMod16<10) {
         return decMod16 + '0';
     } else if (decMod16 == 11 || decMod16 == 13) {
@@ -148,20 +148,20 @@ static uint8_t decToHex(uint8_t decMod16) {
     }
 }
 
-static void displayHoursClassicalDisplay(uint32_t hour) {
+static void display_hours_classical_display(uint32_t hour) {
     if (hour / 16 > 0) {
         watch_display_character('1', HOUR_2_POS);
     } else {
         watch_display_character(' ', HOUR_2_POS);
     }
-    watch_display_character(decToHex(hour % 16), HOUR_1_POS);
+    watch_display_character(dec_to_hex(hour % 16), HOUR_1_POS);
 }
 
 
-static void displayBinaryAll(watch_date_time_t current, bool mode24h) {
+static void display_binary_all(watch_date_time_t current, bool mode24h) {
     
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-        displayHoursClassicalDisplay(current.unit.hour);
+        display_hours_classical_display(current.unit.hour);
     } else {
         if (current.unit.hour / 16 > 0) {
             watch_display_character('1', HOUR_16_POS);
@@ -181,14 +181,14 @@ static void displayBinaryAll(watch_date_time_t current, bool mode24h) {
     watch_display_character(current.unit.minute % 2 + '0', MINUTE_1_POS);
 }
 
-static void displayBinary(binary_state_t *state, watch_date_time_t current) {
-    if (!displayBinaryMinutes(current, state->date_time.previous)) {
+static void display_binary(binary_state_t *state, watch_date_time_t current) {
+    if (!display_binary_minutes(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm(current);
             current = clock_24h_to_12h(current);
-            displayBinaryAll(current, false);
+            display_binary_all(current, false);
         } else {
-            displayBinaryAll(current, true);
+            display_binary_all(current, true);
         }
     }
 }
@@ -236,7 +236,7 @@ bool binary_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             current = movement_get_local_date_time();
 
-            displayBinary(state, current);
+            display_binary(state, current);
             clock_check_battery_periodically(state, current);
 
             state->date_time.previous = current;

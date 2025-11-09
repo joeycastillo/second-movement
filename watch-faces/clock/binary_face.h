@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Ola Kåre Risa
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,31 @@
 #define BINARY_FACE_H_
 
 /*
- * MARS TIME face
+ * BINARY FACE
  *
- * This watch face is dedicated to Martian timekeeping.
- * It has several modes, and can display either a time or a date.
+ * This watch face displays the current time in binary format, adapting to
+ * the type of LCD display:
  *
- * Pressing the ALARM button cycles through different time zones on Mars:
- *   MC - Mars Coordinated Time, the time at Airy-0 Crater on the Martian prime meridian
- *   ZH - Local mean solar time for the Zhurong rover
- *   PE - LMST for the Perseverance rover
- *   IN - LMST for the Insight lander
- *   CU - LMST for the Curiosity rover
+ * - On classic displays (e.g., original Casio-style), there are not enough
+ *   segments to show hours in full binary for values above 15, so hours are
+ *   displayed in hexadecimal instead. In 12-hour format, there are in principle
+ *   enough positions to show the numbers 1–12 in binary, but the original
+ *   Casio display is only designed to display the digits 1, 2, and 3 in the
+ *   tens place for the day, so a 0 written there would not render well.
  *
- * Press the LIGHT button to toggle between displaying time and date:
- *   MC S - the Mars Sol Date, Martian days since December 29, 1873
- *   ZH Sol - Mission sol for the Zhurong rover
- *   PE Sol - Mission sol for the Perseverance rover
- *   IN S - Mission sol for the InSight lander
- *   CU S - Mission sol for the Curiosity rover
+ * - On custom displays, all hour bits can be shown in full binary format.
  *
- * Note that where the mission sol is below 1000, this watch face displays
- * the word “Sol” on the bottom line. When the mission sol is over 1000, the
- * word “Sol” will not fit and so it displays a stylized letter S at the top
- * right.
+ * Minutes are always shown in binary on both display types.
+ *
+ * Additional features:
+ * - The 24h mode and AM/PM indicators are handled according to user settings.
+ * - Alarm and hourly time signal indicators are displayed when enabled.
+ * - Low battery status is indicated differently depending on display type:
+ *   - Custom display: interlocking arrows
+ *   - Classic display: LAP indicator
+ *
+ * The watch face also optimizes rendering by updating only changed segments
+ * since the previous tick.
  */
 
 #include "movement.h"

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Joey Castillo
+ * Copyright (c) 2025 Ola Kåre Risa
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,15 @@
 #define HEXA_DECIMAL_FACE_H_
 
 /*
- * MARS TIME face
+ * HEXA DECIMAL FACE
  *
- * This watch face is dedicated to Martian timekeeping.
- * It has several modes, and can display either a time or a date.
+ * This watch face is based on Joey Castillo's clock_face but displays time 
+ * and date in hexadecimal format instead of decimal. 
  *
- * Pressing the ALARM button cycles through different time zones on Mars:
- *   MC - Mars Coordinated Time, the time at Airy-0 Crater on the Martian prime meridian
- *   ZH - Local mean solar time for the Zhurong rover
- *   PE - LMST for the Perseverance rover
- *   IN - LMST for the Insight lander
- *   CU - LMST for the Curiosity rover
+ * Hexadecimal digits above 9 are normally displayed in uppercase (A, C, E, F), 
+ * but 11 and 13 are shown in lowercase ('b' and 'd') to improve clarity on 
+ * the 7-segment display.
  *
- * Press the LIGHT button to toggle between displaying time and date:
- *   MC S - the Mars Sol Date, Martian days since December 29, 1873
- *   ZH Sol - Mission sol for the Zhurong rover
- *   PE Sol - Mission sol for the Perseverance rover
- *   IN S - Mission sol for the InSight lander
- *   CU S - Mission sol for the Curiosity rover
- *
- * Note that where the mission sol is below 1000, this watch face displays
- * the word “Sol” on the bottom line. When the mission sol is over 1000, the
- * word “Sol” will not fit and so it displays a stylized letter S at the top
- * right.
  */
 
 #include "movement.h"

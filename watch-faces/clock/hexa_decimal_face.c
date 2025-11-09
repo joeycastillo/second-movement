@@ -111,7 +111,7 @@ static const uint8_t MINUTE_1_POS = 7;
 static const uint8_t SECOND_16_POS = 8;
 static const uint8_t SECOND_1_POS = 9;
 
-static uint8_t decToHex(uint8_t decMod16) {
+static uint8_t dec_to_hex(uint8_t decMod16) {
     if (decMod16<10) {
         return decMod16 + '0';
     } else if (decMod16 == 11 || decMod16 == 13) {
@@ -121,22 +121,22 @@ static uint8_t decToHex(uint8_t decMod16) {
     }
 }
 
-static bool displayHexaTimeSome(watch_date_time_t current, watch_date_time_t previous) {
+static bool display_hexa_time_some(watch_date_time_t current, watch_date_time_t previous) {
     if ((current.reg >> 6) == (previous.reg >> 6)) {
         // everything before seconds is the same, don't waste cycles setting those segments.
     
-        watch_display_character_lp_seconds(decToHex(current.unit.second / 16), SECOND_16_POS);
-        watch_display_character_lp_seconds(decToHex(current.unit.second % 16), SECOND_1_POS);    
+        watch_display_character_lp_seconds(dec_to_hex(current.unit.second / 16), SECOND_16_POS);
+        watch_display_character_lp_seconds(dec_to_hex(current.unit.second % 16), SECOND_1_POS);    
 
         return true;
 
     } else if ((current.reg >> 12) == (previous.reg >> 12)) {
         // everything before minutes is the same.
 
-        watch_display_character(decToHex(current.unit.minute / 16), MINUTE_16_POS);
-        watch_display_character(decToHex(current.unit.minute % 16), MINUTE_1_POS);
-        watch_display_character_lp_seconds(decToHex(current.unit.second / 16), SECOND_16_POS);
-        watch_display_character_lp_seconds(decToHex(current.unit.second % 16), SECOND_1_POS);           
+        watch_display_character(dec_to_hex(current.unit.minute / 16), MINUTE_16_POS);
+        watch_display_character(dec_to_hex(current.unit.minute % 16), MINUTE_1_POS);
+        watch_display_character_lp_seconds(dec_to_hex(current.unit.second / 16), SECOND_16_POS);
+        watch_display_character_lp_seconds(dec_to_hex(current.unit.second % 16), SECOND_1_POS);           
 
         return true;
 
@@ -146,54 +146,58 @@ static bool displayHexaTimeSome(watch_date_time_t current, watch_date_time_t pre
     }
 }
 
-static void displayHexaTimeAllButSeconds(watch_date_time_t current) {
+static void display_hexa_time_all_but_seconds(watch_date_time_t current) {
     //weekday
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, watch_utility_get_long_weekday(current), watch_utility_get_weekday(current));
     
     //day
     if (current.unit.day / 16 > 0) {
-        watch_display_character(decToHex(current.unit.day / 16), DAY_16_POS);
+        watch_display_character(dec_to_hex(current.unit.day / 16), DAY_16_POS);
     } else {
         watch_display_character(' ', DAY_16_POS);
     }
     
-    watch_display_character(decToHex(current.unit.day % 16), DAY_1_POS);
+    watch_display_character(dec_to_hex(current.unit.day % 16), DAY_1_POS);
 
     //hours
-    watch_display_character(decToHex(current.unit.hour / 16), HOUR_16_POS);
-    watch_display_character(decToHex(current.unit.hour % 16), HOUR_1_POS);
+    if (current.unit.hour / 16 > 0) {
+        watch_display_character('1', HOUR_16_POS);
+    } else {
+        watch_display_character(' ', HOUR_16_POS);
+    }
+    watch_display_character(dec_to_hex(current.unit.hour % 16), HOUR_1_POS);
     
     //minutes
-    watch_display_character(decToHex(current.unit.minute / 16), MINUTE_16_POS);
-    watch_display_character(decToHex(current.unit.minute % 16), MINUTE_1_POS);
+    watch_display_character(dec_to_hex(current.unit.minute / 16), MINUTE_16_POS);
+    watch_display_character(dec_to_hex(current.unit.minute % 16), MINUTE_1_POS);
 
     
 }
 
-static void displayHexaTimeAll(watch_date_time_t current) {
-    displayHexaTimeAllButSeconds(current);
+static void display_hexa_time_all(watch_date_time_t current) {
+    display_hexa_time_all_but_seconds(current);
     
     //seconds
-    watch_display_character_lp_seconds(decToHex(current.unit.second / 16), SECOND_16_POS);
-    watch_display_character_lp_seconds(decToHex(current.unit.second % 16), SECOND_1_POS);
+    watch_display_character_lp_seconds(dec_to_hex(current.unit.second / 16), SECOND_16_POS);
+    watch_display_character_lp_seconds(dec_to_hex(current.unit.second % 16), SECOND_1_POS);
 }
 
-static void displayHexaTime(hexa_decimal_state_t *state, watch_date_time_t current) {
-    if (!displayHexaTimeSome(current, state->date_time.previous)) {
+static void display_hexa_time(hexa_decimal_state_t *state, watch_date_time_t current) {
+    if (!display_hexa_time_some(current, state->date_time.previous)) {
         if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
             clock_indicate_pm(current);
             current = clock_24h_to_12h(current);
         }
-        displayHexaTimeAll(current);
+        display_hexa_time_all(current);
     }
 }
 
-static void displayHexaTimeLowEnergy(watch_date_time_t date_time) {
+static void display_hexa_time_low_energy(watch_date_time_t date_time) {
     if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_12H) {
         clock_indicate_pm(date_time);
         date_time = clock_24h_to_12h(date_time);
     }
-    displayHexaTimeAllButSeconds(date_time);
+    display_hexa_time_all_but_seconds(date_time);
 
     //seconds
     watch_display_character_lp_seconds(' ', SECOND_16_POS);
@@ -258,13 +262,13 @@ bool hexa_decimal_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
             clock_start_tick_tock_animation();
-            displayHexaTimeLowEnergy(movement_get_local_date_time());
+            display_hexa_time_low_energy(movement_get_local_date_time());
             break;
         case EVENT_TICK:
         case EVENT_ACTIVATE:
             current = movement_get_local_date_time();
 
-            displayHexaTime(state, current);
+            display_hexa_time(state, current);
             clock_check_battery_periodically(state, current);
 
             state->date_time.previous = current;
