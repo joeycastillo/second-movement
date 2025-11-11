@@ -62,27 +62,48 @@ static movement_location_t load_location_from_filesystem() {
     return location;
 }
 
-static uint8_t city_idx_of_curr_location(const sunrise_sunset_timezone_city_group_t *cities_in_tz, int16_t latitude, int16_t longitude){
-    for (uint8_t i = 0; i < cities_in_tz->count; i++) {
-        if (cities_in_tz->cities[i].latitude == latitude && cities_in_tz->cities[i].longitude == longitude) {
-            return i;
+static bool city_idx_of_curr_location(sunrise_sunset_state_t *state, int16_t latitude, int16_t longitude){
+    uint8_t start_tz = state->set_tz_idx;
+    uint8_t start_idx = state->set_city_idx;
+    state->set_tz_idx = -1;
+    uint8_t tz_count = sizeof(sunriseSunsetLongLatPresets) / sizeof(sunriseSunsetLongLatPresets[0]);
+    for (uint8_t loop_tz = 0; loop_tz < tz_count; loop_tz++) {
+        int8_t tz_idx = (start_tz + loop_tz) % tz_count;
+        const sunrise_sunset_timezone_city_group_t *cities_in_tz = &sunriseSunsetLongLatPresets[tz_idx];
+        for (uint8_t loop_idx = 0; loop_idx < cities_in_tz->count; loop_idx++) {
+            int8_t idx = (start_idx + loop_idx) % cities_in_tz->count;
+            if (cities_in_tz->cities[idx].latitude == latitude && cities_in_tz->cities[idx].longitude == longitude) {
+                state->set_city_idx = idx;
+                if (movement_get_timezone_index() != sunriseSunsetLongLatPresets[tz_idx].timezone) {
+                    state->set_tz_idx = tz_idx;
+                }
+                return true;
+            }
         }
     }
-    return cities_in_tz->count;
+    state->set_city_idx = state->cities_in_tz->count;
+    return false;
 }
 
 static void display_city(sunrise_sunset_state_t *state) {
     char buf[7];
-    if (state->city_idx >= state->cities_in_tz->count) {
+    if (state->city_idx == state->cities_in_tz->count) {
         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
         watch_display_text(WATCH_POSITION_BOTTOM, "CUSTOM");
     } else {
-        sprintf(buf, " %d", state->cities_in_tz->cities[state->city_idx].region);
+        printf("state->set_tz_idx (%d) != -1 && state->city_idx (%d) > (%d) state->cities_in_tz->count\r\n", state->set_tz_idx, state->city_idx, state->cities_in_tz->count);
+        sunrise_sunset_long_lat_presets_t curr_city;
+        if (state->set_tz_idx != -1 && state->city_idx > state->cities_in_tz->count) {
+            curr_city = sunriseSunsetLongLatPresets[state->set_tz_idx].cities[state->set_city_idx];
+        } else {
+            curr_city = state->cities_in_tz->cities[state->city_idx];
+        }
+        sprintf(buf, " %d", curr_city.region);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
         if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-            sprintf(buf, "%.6s", state->cities_in_tz->cities[state->city_idx].name);
+            sprintf(buf, "%.6s", curr_city.name);
         } else {
-            sprintf(buf, " %.5s", state->cities_in_tz->cities[state->city_idx].name);
+            sprintf(buf, " %.5s", curr_city.name);
         }
         watch_display_text(WATCH_POSITION_BOTTOM, buf);
     }
@@ -102,7 +123,11 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     int32_t tz;
     if (state->longLatToUse == 0 || _location_count <= 1) {
         movement_location = load_location_from_filesystem();
-        tz = movement_get_current_timezone_offset();
+        if (state->set_tz_idx != -1) {
+            tz = sunriseSunsetLongLatPresets[state->set_tz_idx].timezone;
+        } else {
+            tz = movement_get_current_timezone_offset();
+        }
     }
     else{
         movement_location.bit.latitude = longLatPresets[state->longLatToUse].latitude;
@@ -276,7 +301,7 @@ static void _sunrise_sunset_face_update_location_register(sunrise_sunset_state_t
         movement_location_t movement_location;
         int16_t lat = _sunrise_sunset_face_latlon_from_struct(state->working_latitude);
         int16_t lon = _sunrise_sunset_face_latlon_from_struct(state->working_longitude);
-        state->set_city_idx = city_idx_of_curr_location(state->cities_in_tz, lat, lon);
+        city_idx_of_curr_location(state, lat, lon);
         state->city_idx = state->set_city_idx;
         movement_location.bit.latitude = lat;
         movement_location.bit.longitude = lon;
@@ -508,15 +533,23 @@ static const sunrise_sunset_timezone_city_group_t *find_timezone_preset(int32_t 
 }
 
 static void _sunrise_sunset_face_move_forward(sunrise_sunset_state_t *state) {
-    if (state->cities_in_tz->count > 0) {
-        state->city_idx = (state->city_idx + 1) % (state->cities_in_tz->count + 1);
+    uint8_t count = state->cities_in_tz->count;
+    if (state->set_tz_idx != -1) {
+        count += 1;
+    }
+    if (count > 0) {
+        state->city_idx = (state->city_idx + 1) % (count + 1);
     }
     display_city(state);
 }
 
 static void _sunrise_sunset_face_move_backwards(sunrise_sunset_state_t *state) {
-    if (state->cities_in_tz->count > 0) {
-        state->city_idx = (state->cities_in_tz->count + state->city_idx) % (state->cities_in_tz->count + 1);
+    uint8_t count = state->cities_in_tz->count;
+    if (state->set_tz_idx != -1) {
+        count += 1;
+    }
+    if (count > 0) {
+        state->city_idx = (count + state->city_idx) % (count + 1);
     }
     display_city(state);
 }
@@ -562,7 +595,7 @@ void sunrise_sunset_face_activate(void *context) {
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
     state->cities_in_tz = find_timezone_preset(movement_get_timezone_index());
-    state->set_city_idx = city_idx_of_curr_location(state->cities_in_tz, movement_location.bit.latitude, movement_location.bit.longitude);
+    city_idx_of_curr_location(state, movement_location.bit.latitude, movement_location.bit.longitude);
     state->city_idx = state->set_city_idx;
     state->quick_ticks_running = false;
 }
@@ -631,6 +664,9 @@ static bool _sunrise_sunset_face_update_long_lat_display(movement_event_t event,
 }
 
 static bool _sunrise_sunset_face_update_choose_city(movement_event_t event, sunrise_sunset_state_t *state) {
+    bool displaying_external_location = state->set_tz_idx != -1 && (state->city_idx > state->set_city_idx + 1);
+    bool displaying_custom_location = state->city_idx == (state->set_city_idx + 1);
+    bool displaying_current_location = displaying_external_location || displaying_custom_location || (state->set_tz_idx == -1 && state->city_idx == state->set_city_idx);
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -644,7 +680,7 @@ static bool _sunrise_sunset_face_update_choose_city(movement_event_t event, sunr
                     _sunrise_sunset_face_stop_quick_cyc(state);
                 }
             }
-            else if (state->city_idx != state->set_city_idx) {
+            else if (!displaying_current_location) {
                 if (event.subsecond % 2) {
                     display_city(state);
                 } else {
@@ -660,9 +696,14 @@ static bool _sunrise_sunset_face_update_choose_city(movement_event_t event, sunr
             break;
         case EVENT_LIGHT_LONG_PRESS:
             state->quick_ticks_running = false;
-            state->working_latitude = _sunrise_sunset_face_struct_from_latlon(state->cities_in_tz->cities[state->city_idx].latitude);
-            state->working_longitude = _sunrise_sunset_face_struct_from_latlon(state->cities_in_tz->cities[state->city_idx].longitude);
-            if (state->city_idx < state->cities_in_tz->count) {
+            if (displaying_external_location) {
+                state->working_latitude = _sunrise_sunset_face_struct_from_latlon(sunriseSunsetLongLatPresets[state->set_tz_idx].cities[state->city_idx].latitude);
+                state->working_longitude = _sunrise_sunset_face_struct_from_latlon(sunriseSunsetLongLatPresets[state->set_tz_idx].cities[state->city_idx].longitude);
+            } else {
+                state->working_latitude = _sunrise_sunset_face_struct_from_latlon(state->cities_in_tz->cities[state->city_idx].latitude);
+                state->working_longitude = _sunrise_sunset_face_struct_from_latlon(state->cities_in_tz->cities[state->city_idx].longitude);
+            }
+            if (!displaying_custom_location) {
                 state->location_changed = state->city_idx != state->set_city_idx;
                 _sunrise_sunset_face_update_location_register(state);
                 state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;

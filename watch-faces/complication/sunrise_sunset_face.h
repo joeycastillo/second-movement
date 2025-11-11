@@ -86,6 +86,7 @@ typedef struct {
     uint8_t longLatToUse;
     uint8_t city_idx;
     uint8_t set_city_idx;
+    int8_t set_tz_idx;
     bool quick_ticks_running;
     const sunrise_sunset_timezone_city_group_t *cities_in_tz;
 } sunrise_sunset_state_t;
