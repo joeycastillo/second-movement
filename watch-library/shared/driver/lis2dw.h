@@ -301,7 +301,7 @@ typedef enum {
 #define LIS2DW_CTRL7_VAL_HP_REF_MODE        0b00000010
 #define LIS2DW_CTRL7_VAL_LPASS_ON6D         0b00000001
 
-#define LIS2DW_FIFO_TIMEOUT_SECOND          100
+#define LIS2DW_FIFO_TIMEOUT                 100  // timeout is in terms of 1/RTC_CNT_HZ seconds (likely 128 timeouts is one second)
 
 bool lis2dw_begin(void);
 
