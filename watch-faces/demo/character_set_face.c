@@ -49,8 +49,7 @@ static void _character_set_face_update_display(char c) {
     char buf[7];
     memset(buf, c, 6);
     buf[6] = '\0';
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
-    watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, buf, buf);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
 }
 
