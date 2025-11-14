@@ -45,17 +45,21 @@ void character_set_face_activate(void *context) {
     movement_request_tick_frequency(0);
 }
 
+static void _character_set_face_update_display(char c) {
+    char buf[7];
+    memset(buf, c, 6);
+    buf[6] = '\0';
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+}
+
 bool character_set_face_loop(movement_event_t event, void *context) {
     character_set_state_t *state = (character_set_state_t *)context;
-    char buf[11];
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
-            sprintf(buf, "%c%c%c%c%c%c", state->current_char, state->current_char,
-                    state->current_char, state->current_char, state->current_char, state->current_char);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+            _character_set_face_update_display(state->current_char);
             break;
 
         case EVENT_TICK:
@@ -77,11 +81,7 @@ bool character_set_face_loop(movement_event_t event, void *context) {
                 }
 
                 // Update display
-                sprintf(buf, "%c%c%c%c%c%c", state->current_char, state->current_char,
-                        state->current_char, state->current_char, state->current_char, state->current_char);
-                watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
-                watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
-                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+                _character_set_face_update_display(state->current_char);
             }
             break;
 
@@ -89,11 +89,7 @@ bool character_set_face_loop(movement_event_t event, void *context) {
             // Short press - advance one character
             state->current_char = state->current_char + 1;
             if (state->current_char & 0x80) state->current_char = ' ';
-            sprintf(buf, "%c%c%c%c%c%c", state->current_char, state->current_char,
-                    state->current_char, state->current_char, state->current_char, state->current_char);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+            _character_set_face_update_display(state->current_char);
             break;
 
         case EVENT_ALARM_LONG_PRESS:
@@ -108,11 +104,7 @@ bool character_set_face_loop(movement_event_t event, void *context) {
             // Short press - go back one character
             state->current_char = state->current_char - 1;
             if (state->current_char < ' ') state->current_char = 0x7F;
-            sprintf(buf, "%c%c%c%c%c%c", state->current_char, state->current_char,
-                    state->current_char, state->current_char, state->current_char, state->current_char);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
+            _character_set_face_update_display(state->current_char);
             break;
 
         case EVENT_LIGHT_LONG_PRESS:
