@@ -425,6 +425,20 @@ void lis2dw_disable_interrupts(void) {
 #endif
 }
 
+void lis2dw_pulsed_interrupts(void) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration | LIS2DW_CTRL7_VAL_DRDY_PULSED);
+#endif
+}
+
+void lis2dw_latched_interrupts(void) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration & ~LIS2DW_CTRL7_VAL_DRDY_PULSED);
+#endif
+}
+
 lis2dw_wakeup_source_t lis2dw_get_wakeup_source() {
 #ifdef I2C_SERCOM
     return (lis2dw_wakeup_source_t) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_SRC);

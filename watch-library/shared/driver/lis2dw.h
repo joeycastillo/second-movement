@@ -375,6 +375,10 @@ void lis2dw_enable_interrupts(void);
 
 void lis2dw_disable_interrupts(void);
 
+void lis2dw_pulsed_interrupts(void);
+
+void lis2dw_latched_interrupts(void);
+
 lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 
 lis2dw_wakeup_source_t lis2dw_get_wakeup_source(void);

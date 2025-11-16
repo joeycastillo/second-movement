@@ -284,12 +284,12 @@ static uint32_t _movement_get_accelerometer_events() {
 
     if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) {
         accelerometer_events |= 1 << EVENT_DOUBLE_TAP;
-        printf("Double tap!\n");
+        printf("Double tap!\r\n");
     }
 
     if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) {
         accelerometer_events |= 1 << EVENT_SINGLE_TAP;
-        printf("Single tap!\n");
+        printf("Single tap!\r\n");
     }
 
     return accelerometer_events;
@@ -1118,6 +1118,7 @@ void app_setup(void) {
             watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
             // Enable the interrupts...
+            lis2dw_latched_interrupts();
             lis2dw_enable_interrupts();
 
             // At first boot, this next line sets the accelerometer's sampling rate to 0, which is LIS2DW_DATA_RATE_POWERDOWN.
