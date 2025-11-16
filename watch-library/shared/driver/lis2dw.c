@@ -411,6 +411,33 @@ void lis2dw_configure_int2(uint8_t sources) {
 #endif
 }
 
+void lis2dw12_int_notification_set(lis2dw12_lir_t val) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL3);
+    if (val == LIS2DW12_INT_LATCHED) {
+        configuration |= LIS2DW_CTRL3_VAL_LIR;
+    } else {
+        configuration &= ~LIS2DW_CTRL7_VAL_DRDY_PULSED;
+    }
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL3, configuration);
+#else
+    (void)val;
+#endif
+}
+
+lis2dw12_lir_t lis2dw12_int_notification_get(void) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL3);
+    if (configuration & LIS2DW12_INT_LATCHED) {
+        return LIS2DW12_INT_LATCHED;
+    } else {
+        return LIS2DW12_INT_PULSED;
+    }
+#else
+    return LIS2DW12_INT_PULSED;
+#endif
+}
+
 void lis2dw_enable_interrupts(void) {
 #ifdef I2C_SERCOM
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
@@ -425,14 +452,14 @@ void lis2dw_disable_interrupts(void) {
 #endif
 }
 
-void lis2dw_pulsed_interrupts(void) {
+void lis2dw_pulsed_drdy_interrupts(void) {
 #ifdef I2C_SERCOM
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration | LIS2DW_CTRL7_VAL_DRDY_PULSED);
 #endif
 }
 
-void lis2dw_latched_interrupts(void) {
+void lis2dw_latched_drdy_interrupts(void) {
 #ifdef I2C_SERCOM
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7);
     watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_CTRL7, configuration & ~LIS2DW_CTRL7_VAL_DRDY_PULSED);

@@ -816,6 +816,7 @@ bool movement_enable_tap_detection_if_available(void) {
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
         lis2dw_enable_double_tap();
+        lis2dw12_int_notification_set(LIS2DW12_INT_LATCHED);
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
@@ -836,6 +837,7 @@ bool movement_disable_tap_detection_if_available(void) {
         lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
         lis2dw_disable_double_tap();
+        lis2dw12_int_notification_set(LIS2DW12_INT_PULSED);
         // ...disable Z axis (not sure if this is needed, does this save power?)...
         lis2dw_configure_tap_threshold(0, 0, 0, 0);
 
@@ -1118,7 +1120,6 @@ void app_setup(void) {
             watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 
             // Enable the interrupts...
-            lis2dw_latched_interrupts();
             lis2dw_enable_interrupts();
 
             // At first boot, this next line sets the accelerometer's sampling rate to 0, which is LIS2DW_DATA_RATE_POWERDOWN.
