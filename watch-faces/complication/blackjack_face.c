@@ -303,21 +303,22 @@ static void begin_playing(bool tap_control_on) {
     display_score(dealer.score, WATCH_POSITION_TOP_RIGHT);
 }
 
+static void perform_stand(void) {
+    game_state = BJ_DEALER_PLAYING;
+    watch_display_text(WATCH_POSITION_BOTTOM, "Stnd");
+    display_score(player.score, WATCH_POSITION_SECONDS);
+}
+
 static void perform_hit(void) {
     if (player.score == 21) {
-        return; // Assume hitting on 21 is a mistake and ignore
+        perform_stand();
+        return; // Assume hitting on 21 is a mistake and stand
     }
     give_card(&player);
     if (player.score > 21) {
         game_state = BJ_BUST;
     }
     display_player_hand();
-    display_score(player.score, WATCH_POSITION_SECONDS);
-}
-
-static void perform_stand(void) {
-    game_state = BJ_DEALER_PLAYING;
-    watch_display_text(WATCH_POSITION_BOTTOM, "Stnd");
     display_score(player.score, WATCH_POSITION_SECONDS);
 }
 
