@@ -23,6 +23,9 @@
  */
 
 #include "movement_signal_tunes.h"
+
+#include <assert.h>
+
 #include "watch.h"
 
 static const int8_t signal_tune_default[] = {
@@ -248,6 +251,8 @@ const int8_t * const movement_signal_tunes[] = {
     signal_tune_evangelion,
     0
 };
+
+static_assert(sizeof(movement_signal_tunes) / sizeof(movement_signal_tunes[0]) <= 100, "Adding so many tunes requres modification of signal_tunes_face");
 
 const int8_t *movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES] = {
     signal_tune_default,            // chime
