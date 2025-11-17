@@ -36,7 +36,7 @@ void cb_watch_buzzer_seq(void *userData);
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
 static long _em_interval_id = 0;
-static int8_t *_sequence;
+static const int8_t *_sequence;
 static void (*_cb_finished)(void);
 
 void _watch_enable_tcc(void) {}
@@ -46,7 +46,7 @@ static inline void _em_interval_stop() {
     _em_interval_id = 0;
 }
 
-void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
+void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_end)(void)) {
     if (_em_interval_id) _em_interval_stop();
     watch_set_buzzer_off();
     _sequence = note_sequence;

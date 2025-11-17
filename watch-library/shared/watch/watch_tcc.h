@@ -200,7 +200,7 @@ extern const uint16_t NotePeriods[108];
   *       zero byte, which is used here as the end-of-sequence marker. But hey, a frequency that low cannot be
   *       played properly by the watch's buzzer, anyway.
   */
-void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void));
+void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_end)(void));
 
 /** @brief Aborts a playing sequence.
   */

@@ -47,7 +47,7 @@
 
 #include "movement_config.h"
 
-#include "movement_custom_signal_tunes.h"
+#include "movement_signal_tunes.h"
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
@@ -340,6 +340,10 @@ static void end_buzzing_and_disable_buzzer(void) {
 }
 
 void movement_play_signal(void) {
+    movement_play_signal_tune(MOVEMENT_TUNE_MODE_CHIME);
+}
+
+void movement_play_signal_tune(movement_tune_mode_t mode) {
     void *maybe_disable_buzzer = end_buzzing_and_disable_buzzer;
     if (watch_is_buzzer_or_led_enabled()) {
         maybe_disable_buzzer = end_buzzing;
@@ -347,7 +351,7 @@ void movement_play_signal(void) {
         watch_enable_buzzer();
     }
     movement_state.is_buzzing = true;
-    watch_buzzer_play_sequence(signal_tune, maybe_disable_buzzer);
+    watch_buzzer_play_sequence(movement_selected_signal_tunes[mode], maybe_disable_buzzer);
     if (movement_state.le_mode_ticks == -1) {
         // the watch is asleep. wake it up for "1" round through the main loop.
         // the sleep_mode_app_loop will notice the is_buzzing and note that it
@@ -359,7 +363,7 @@ void movement_play_signal(void) {
 }
 
 void movement_play_alarm(void) {
-    movement_play_alarm_beeps(5, BUZZER_NOTE_C8);
+    movement_play_signal_tune(MOVEMENT_TUNE_MODE_ALARM);
 }
 
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {

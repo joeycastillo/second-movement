@@ -29,6 +29,7 @@
 #include "watch.h"
 #include "utz.h"
 #include "lis2dw.h"
+#include "movement_signal_tunes.h"
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
@@ -324,7 +325,11 @@ void movement_cancel_background_task_for_face(uint8_t watch_face_index);
 void movement_request_sleep(void);
 void movement_request_wake(void);
 
+/// Play user-selected chime signal
 void movement_play_signal(void);
+
+/// Play user-selected signal for mode.
+void movement_play_signal_tune(movement_tune_mode_t mode);
 void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 
