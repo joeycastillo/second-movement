@@ -985,6 +985,9 @@ static movement_event_type_t _figure_out_button_event(bool pin_level, movement_e
     // force alarm off if the user pressed a button.
     if (movement_state.alarm_ticks) movement_state.alarm_ticks = 0;
 
+    // force signal tune off if the user pressed a button.
+    watch_buzzer_abort_sequence();
+
     if (pin_level) {
         // handle rising edge
         _movement_enable_fast_tick_if_needed();

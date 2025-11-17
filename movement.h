@@ -330,7 +330,12 @@ void movement_play_signal(void);
 
 /// Play user-selected signal for mode.
 void movement_play_signal_tune(movement_tune_mode_t mode);
+
+/// Play simple alarm beep.
+/// DEPRECATED: use movement_play_signal_tune(MOVEMENT_TUNE_MODE_ALARM)
 void movement_play_alarm(void);
+
+/// Play simple alarm beep.
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 
 uint8_t movement_claim_backup_register(void);

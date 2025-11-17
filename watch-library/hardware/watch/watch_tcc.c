@@ -119,7 +119,6 @@ void cb_watch_buzzer_seq(void) {
         } else {
             // end the sequence
             watch_buzzer_abort_sequence();
-            if (_cb_finished) _cb_finished();
         }
     } else _tone_ticks--;
 }
@@ -130,6 +129,8 @@ void watch_buzzer_abort_sequence(void) {
     watch_set_buzzer_off();
     // disable standby mode for TCC
     _tcc_write_RUNSTDBY(false);
+    if (_cb_finished) _cb_finished();
+    _cb_finished = 0;
 }
 
 void irq_handler_tc0(void) {
