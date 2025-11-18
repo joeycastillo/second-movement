@@ -35,6 +35,22 @@ static const int8_t signal_tune_default[] = {
     0
 };
 
+static const int8_t signal_tune_alarm[] = {
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C8, 2,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C8, 2,
+    0
+};
+
+static const int8_t signal_tune_beep[] = {
+    BUZZER_NOTE_C8, 32,
+    0
+};
+
 static const int8_t signal_tune_zelda_secret[] = {
     BUZZER_NOTE_G5, 8,
     BUZZER_NOTE_F5SHARP_G5FLAT, 8,
@@ -239,6 +255,8 @@ static const int8_t signal_tune_evangelion[] = {
 
 const int8_t * const movement_signal_tunes[] = {
     signal_tune_default,
+    signal_tune_alarm,
+    signal_tune_beep,
     signal_tune_zelda_secret,
     signal_tune_mario_theme,
     signal_tune_mgs_codec,
@@ -255,9 +273,21 @@ const int8_t * const movement_signal_tunes[] = {
 static_assert(sizeof(movement_signal_tunes) / sizeof(movement_signal_tunes[0]) <= 100,
     "Adding so many tunes requres modification of signal_tunes_face");
 
-const int8_t *movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES] = {
-    [MOVEMENT_TUNE_MODE_CHIME] = signal_tune_default,
-    [MOVEMENT_TUNE_MODE_ALARM] = signal_tune_harry_potter_long,
-    [MOVEMENT_TUNE_MODE_TIMER] = signal_tune_mgs_codec,
+movement_tune_params_t movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES] = {
+    [MOVEMENT_TUNE_MODE_CHIME] = {
+        .tune = signal_tune_default,
+        .duration_sec = 0,
+        .interval_ticks = 0,
+    },
+    [MOVEMENT_TUNE_MODE_ALARM] = {
+        .tune = signal_tune_alarm,
+        .duration_sec = 60,
+        .interval_ticks = 32,
+    },
+    [MOVEMENT_TUNE_MODE_TIMER] = {
+        .tune = signal_tune_alarm,
+        .duration_sec = 15,
+        .interval_ticks = 32,
+    }
 };
 

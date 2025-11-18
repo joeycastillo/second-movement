@@ -36,5 +36,11 @@ typedef enum {
     MOVEMENT_NUM_TUNE_MODES,
 } movement_tune_mode_t;
 
+typedef struct {
+    const int8_t *tune;              /// The tune
+    uint16_t duration_sec;           /// Minimum play duration in seconds
+    uint8_t interval_ticks;          /// Interval between repeats in TC0 ticks (64 Hz)
+} movement_tune_params_t;
+
 /// User-selected signal tunes for each mode, indexed by movement_tune_mode_t.
-extern const int8_t *movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES];
+extern movement_tune_params_t movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES];

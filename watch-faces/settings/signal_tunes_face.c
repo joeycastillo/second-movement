@@ -50,7 +50,7 @@ static size_t mode_index = 0;
 static size_t tune_index = 0;
 
 static void find_tune_index(void) {
-    const int8_t *ptr = movement_selected_signal_tunes[mode_index];
+    const int8_t *ptr = movement_selected_signal_tunes[mode_index].tune;
     for (tune_index = 0; movement_signal_tunes[tune_index]; ++tune_index) {
         if (movement_signal_tunes[tune_index] == ptr) {
             return;
@@ -73,7 +73,7 @@ static void advance_tune(void) {
     if (!movement_signal_tunes[tune_index]) {
         tune_index = 0;
     }
-    movement_selected_signal_tunes[mode_index] = movement_signal_tunes[tune_index];
+    movement_selected_signal_tunes[mode_index].tune = movement_signal_tunes[tune_index];
 }
 
 static void play_tune(void) {
