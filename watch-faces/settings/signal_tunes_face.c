@@ -23,7 +23,7 @@
  */
 
 #include <stdlib.h>
-#include "settings_face.h"
+#include "signal_tunes_face.h"
 #include "watch.h"
 
 typedef struct {
@@ -88,7 +88,7 @@ static void display(void) {
 
     // Bottom: signal tune index
     char buf[3];
-    snprintf(buf, sizeof(buf), "%02lu", tune_index + 1);
+    snprintf(buf, sizeof(buf), "%02zu", tune_index + 1);
     watch_display_text(WATCH_POSITION_MINUTES, buf);
 }
 
@@ -105,7 +105,7 @@ void signal_tunes_face_activate(void *context) {
 }
 
 bool signal_tunes_face_loop(movement_event_t event, void *context) {
-    settings_state_t *state = (settings_state_t *)context;
+    (void) context;
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:

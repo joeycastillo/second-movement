@@ -252,11 +252,12 @@ const int8_t * const movement_signal_tunes[] = {
     0
 };
 
-static_assert(sizeof(movement_signal_tunes) / sizeof(movement_signal_tunes[0]) <= 100, "Adding so many tunes requres modification of signal_tunes_face");
+static_assert(sizeof(movement_signal_tunes) / sizeof(movement_signal_tunes[0]) <= 100,
+    "Adding so many tunes requres modification of signal_tunes_face");
 
 const int8_t *movement_selected_signal_tunes[MOVEMENT_NUM_TUNE_MODES] = {
-    signal_tune_default,            // chime
-    signal_tune_harry_potter_long,  // alarm
-    signal_tune_mgs_codec,          // timer
+    [MOVEMENT_TUNE_MODE_CHIME] = signal_tune_default,
+    [MOVEMENT_TUNE_MODE_ALARM] = signal_tune_harry_potter_long,
+    [MOVEMENT_TUNE_MODE_TIMER] = signal_tune_mgs_codec,
 };
 
