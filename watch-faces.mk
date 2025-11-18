@@ -48,4 +48,6 @@ SRCS += \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
+  ./watch-faces/clock/hexa_decimal_face.c \
+  ./watch-faces/clock/binary_face.c \
 # New watch faces go above this line.
