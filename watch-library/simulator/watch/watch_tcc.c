@@ -28,16 +28,21 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
+#define TC0_FREQ 64
+
 static bool buzzer_enabled = false;
 static uint32_t buzzer_period;
 
 void cb_watch_buzzer_seq(void *userData);
 
-static uint16_t _seq_position;
-static int8_t _tone_ticks, _repeat_counter;
+static uint16_t _seq_position = 0;
+static uint8_t _tone_ticks = 0;
+static int8_t _repeat_counter = 0;
+static uint32_t _total_ticks_remaining = 0;
+static uint8_t _interval_ticks = 0;
 static long _em_interval_id = 0;
-static const int8_t *_sequence;
-static void (*_cb_finished)(void);
+static const int8_t *_sequence = 0;
+static void (*_cb_finished)(void) = 0;
 
 void _watch_enable_tcc(void) {}
 
@@ -47,6 +52,14 @@ static inline void _em_interval_stop() {
 }
 
 void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_end)(void)) {
+    watch_buzzer_play_sequence_repeat(note_sequence, callback_on_end, 0, 0);
+}
+
+void watch_buzzer_play_sequence_repeat(
+        const int8_t *note_sequence,
+        void (*callback_on_end)(void),
+        uint16_t min_play_duration_sec,
+        uint8_t interval_ticks) {
     if (_em_interval_id) _em_interval_stop();
     watch_set_buzzer_off();
     _sequence = note_sequence;
@@ -54,10 +67,12 @@ void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_
     _seq_position = 0;
     _tone_ticks = 0;
     _repeat_counter = -1;
+    _interval_ticks = interval_ticks;
+    _total_ticks_remaining = min_play_duration_sec * TC0_FREQ;
     // prepare buzzer
     watch_enable_buzzer();
     // initiate 64 hz callback
-    _em_interval_id = emscripten_set_interval(cb_watch_buzzer_seq, (double)(1000/64), (void *)NULL);
+    _em_interval_id = emscripten_set_interval(cb_watch_buzzer_seq, (double)(1000/TC0_FREQ), (void *)NULL);
 }
 
 void cb_watch_buzzer_seq(void *userData) {
@@ -95,10 +110,22 @@ void cb_watch_buzzer_seq(void *userData) {
             _tone_ticks = _sequence[_seq_position + 1];
             _seq_position += 2;
         } else {
-            // end the sequence
-            watch_buzzer_abort_sequence();
+            if (_total_ticks_remaining == 0) {
+                // end the sequence
+                watch_buzzer_abort_sequence();
+            } else {
+                // restart the sequence and play a rest
+                watch_set_buzzer_off();
+                _seq_position = 0;
+                _tone_ticks = _interval_ticks;
+                _repeat_counter = -1;
+            }
         }
     } else _tone_ticks--;
+
+    if (_total_ticks_remaining > 0) {
+        _total_ticks_remaining -= 1;
+    }
 }
 
 void watch_buzzer_abort_sequence(void) {

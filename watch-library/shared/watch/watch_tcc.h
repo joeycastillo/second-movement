@@ -187,9 +187,10 @@ void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t durat
 /// @brief An array of periods for all the notes on a piano, corresponding to the names in watch_buzzer_note_t.
 extern const uint16_t NotePeriods[108];
 
-/** @brief Plays the given sequence of notes in a non-blocking way.
-  * @param note_sequence A pointer to the sequence of buzzer note & duration tuples, ending with a zero. A simple
-  *        RLE logic is implemented: a negative number instead of a buzzer note means that the sequence
+/** @brief Plays the given sequence of notes in a non-blocking way without repeat.
+  * @param note_sequence A pointer to the sequence of buzzer note & duration tuples, ending with a zero.
+  *        One unit of duration equals to 1/64 of a second (TC0 timer frequency).
+  *        A simple RLE logic is implemented: a negative number instead of a buzzer note means that the sequence
   *        is rewound by the given number of notes. The byte following a negative number determines the number
   *        of loops. I.e. if you want to repeat the last three notes of the sequence one time, you should provide 
   *        the tuple -3, 1. The repeated notes must not contain any other repeat markers, or you will end up with 
@@ -201,6 +202,28 @@ extern const uint16_t NotePeriods[108];
   *       played properly by the watch's buzzer, anyway.
   */
 void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_end)(void));
+
+/** @brief Plays and repeats the given sequence of notes in a non-blocking way for at least given number of seconds.
+  * @param note_sequence A pointer to the sequence of buzzer note & duration tuples, ending with a zero.
+  *        One unit of duration equals to 1/64 of a second (TC0 timer frequency).
+  *        A simple RLE logic is implemented: a negative number instead of a buzzer note means that the sequence
+  *        is rewound by the given number of notes. The byte following a negative number determines the number
+  *        of loops. I.e. if you want to repeat the last three notes of the sequence one time, you should provide
+  *        the tuple -3, 1. The repeated notes must not contain any other repeat markers, or you will end up with
+  *        an eternal loop.
+  * @param callback_on_end A pointer to a callback function to be invoked when the sequence has finished playing.
+  * @param min_play_duration_sec The whole sequence is repeated for at least this many seconds. Pass zero for no repeat.
+  * @param interval_ticks Interval (in ticks, 1/64 of a second) between repeats.
+  * @note This function plays the sequence asynchronously, so the UI will not be blocked.
+  *       Hint: It is not possible to play the lowest note BUZZER_NOTE_A1 (55.00 Hz). The note is represented by a
+  *       zero byte, which is used here as the end-of-sequence marker. But hey, a frequency that low cannot be
+  *       played properly by the watch's buzzer, anyway.
+  */
+void watch_buzzer_play_sequence_repeat(
+        const int8_t *note_sequence,
+        void (*callback_on_end)(void),
+        uint16_t min_play_duration_sec,
+        uint8_t interval_ticks);
 
 /** @brief Aborts a playing sequence.
   */
