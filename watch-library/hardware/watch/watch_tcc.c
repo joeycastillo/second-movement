@@ -27,14 +27,17 @@
 #include "tcc.h"
 #include "tc.h"
 
-void _watch_enable_tcc(void);
-void cb_watch_buzzer_seq(void);
+static void _watch_enable_tcc(void);
+static void cb_watch_buzzer_seq(void);
 
-static uint16_t _seq_position;
-static int8_t _tone_ticks, _repeat_counter;
+static uint16_t _seq_position = 0;
+static uint8_t _tone_ticks = 0;
+static int8_t _repeat_counter = 0;
+static uint32_t _total_ticks_remaining = 0;
+static uint8_t _interval_ticks = 0;
 static bool _callback_running = false;
-static int8_t *_sequence;
-static void (*_cb_finished)(void);
+static const int8_t *_sequence = 0;
+static void (*_cb_finished)(void) = 0;
 
 static void _tcc_write_RUNSTDBY(bool value) {
     // enables or disables RUNSTDBY of the tcc
@@ -67,7 +70,15 @@ static void _tc0_initialize() {
     NVIC_EnableIRQ (TC0_IRQn);
 }
 
-void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
+void watch_buzzer_play_sequence(const int8_t *note_sequence, void (*callback_on_end)(void)) {
+    watch_buzzer_play_sequence_repeat(note_sequence, callback_on_end, 0, 0);
+}
+
+void watch_buzzer_play_sequence_repeat(
+        const int8_t *note_sequence,
+        void (*callback_on_end)(void),
+        uint16_t min_play_duration_sec,
+        uint8_t interval_ticks) {
     if (_callback_running) _tc0_stop();
     watch_set_buzzer_off();
     _sequence = note_sequence;
@@ -75,6 +86,8 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
     _seq_position = 0;
     _tone_ticks = 0;
     _repeat_counter = -1;
+    _interval_ticks = interval_ticks;
+    _total_ticks_remaining = min_play_duration_sec * 64;
     // prepare buzzer
     watch_enable_buzzer();
     // setup TC0 timer
@@ -85,7 +98,7 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
     _tc0_start();
 }
 
-void cb_watch_buzzer_seq(void) {
+static void cb_watch_buzzer_seq(void) {
     // callback for reading the note sequence
     if (_tone_ticks == 0) {
         if (_sequence[_seq_position] < 0 && _sequence[_seq_position + 1]) {
@@ -117,11 +130,22 @@ void cb_watch_buzzer_seq(void) {
             _tone_ticks = _sequence[_seq_position + 1];
             _seq_position += 2;
         } else {
-            // end the sequence
-            watch_buzzer_abort_sequence();
-            if (_cb_finished) _cb_finished();
+            if (_total_ticks_remaining == 0) {
+                // end the sequence
+                watch_buzzer_abort_sequence();
+            } else {
+                // restart the sequence and play a rest
+                watch_set_buzzer_off();
+                _seq_position = 0;
+                _tone_ticks = _interval_ticks;
+                _repeat_counter = -1;
+            }
         }
     } else _tone_ticks--;
+
+    if (_total_ticks_remaining > 0) {
+        _total_ticks_remaining -= 1;
+    }
 }
 
 void watch_buzzer_abort_sequence(void) {
@@ -130,6 +154,8 @@ void watch_buzzer_abort_sequence(void) {
     watch_set_buzzer_off();
     // disable standby mode for TCC
     _tcc_write_RUNSTDBY(false);
+    if (_cb_finished) _cb_finished();
+    _cb_finished = 0;
 }
 
 void irq_handler_tc0(void) {
@@ -182,7 +208,7 @@ void watch_buzzer_play_note_with_volume(watch_buzzer_note_t note, uint16_t durat
     watch_set_buzzer_off();
 }
 
-void _watch_enable_tcc(void) {
+static void _watch_enable_tcc(void) {
     // set up the TCC with a 1 MHz clock, but there's a trick:
     if (USB->DEVICE.CTRLA.bit.ENABLE) {
         // if USB is enabled, we are running an 8 MHz clock, so we divide by 8.
