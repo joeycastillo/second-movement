@@ -41,6 +41,7 @@ SRCS += \
   ./watch-faces/clock/ke_decimal_time_face.c \
   ./watch-faces/complication/baby_kicks_face.c \
   ./watch-faces/complication/counter_face.c \
+  ./watch-faces/complication/hydration_face.c \
   ./watch-faces/complication/pulsometer_face.c \
   ./watch-faces/complication/interval_face.c \
   ./watch-faces/complication/timer_face.c \
