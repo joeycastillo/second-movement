@@ -237,6 +237,9 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
             state->prev_five_minute_period = five_minute_period;
             break;
 
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             return movement_default_loop_handler(event);
     }
@@ -247,4 +250,3 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
 void close_enough_face_resign(void *context) {
     (void) context;
 }
-
