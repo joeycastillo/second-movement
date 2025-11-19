@@ -277,10 +277,20 @@ static void _movement_renew_top_of_minute_alarm(void) {
     movement_volatile_state.schedule_next_comp = true;
 }
 
+#define PRINT_LIS_EVENTS false
 static uint32_t _movement_get_accelerometer_events() {
     uint32_t accelerometer_events = 0;
 
     uint8_t int_src = lis2dw_get_interrupt_source();
+#if PRINT_LIS_EVENTS
+    printf("_movement_get_accelerometer_events\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_SLEEP_CHANGE_IA)  printf("Sleep Change IA\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA)            printf("6D IA\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP)       printf("Single Tap\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP)       printf("Double Tap\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_WU_IA)            printf("Wake Up\r\n");
+    if (int_src & LIS2DW_REG_ALL_INT_SRC_FF_IA)            printf("Free Fall\r\n");
+#endif
 
     if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) {
         accelerometer_events |= 1 << EVENT_DOUBLE_TAP;
