@@ -517,7 +517,7 @@ static void _sunrise_sunset_face_move_forward(sunrise_sunset_state_t *state) {
         state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
     } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
             && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count
-            && state->city_idx != state->set_city_idx);
+            && state->city_idx != state->set_city_idx && tz != UTZ_UTC);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
         // UI won't allow this since we go straight to lat/long if we have no locations in our tz
         state->curr_tz_has_cities = false;
@@ -533,7 +533,7 @@ static void _sunrise_sunset_face_move_backwards(sunrise_sunset_state_t *state) {
         state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
     } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
             && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count
-            && state->city_idx != state->set_city_idx);
+            && state->city_idx != state->set_city_idx && tz != UTZ_UTC);
     if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
         // UI won't allow this since we go straight to lat/long if we have no locations in our tz
         state->curr_tz_has_cities = false;
@@ -766,7 +766,7 @@ static bool _sunrise_sunset_face_update_rise_set(movement_event_t event, sunrise
             }
             tz = movement_get_timezone_index();
             state->curr_tz_has_cities = _sunrise_sunset_face_location_in_tz(tz);
-            if (tz == UTZ_UTC || !state->curr_tz_has_cities) {
+            if (!state->curr_tz_has_cities) {
                 state->active_digit = 0;
                 state->page = SUNRISE_SUNSET_FACE_SETTING_LAT;
                 watch_clear_display();
