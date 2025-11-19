@@ -51,6 +51,7 @@
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
+void _wake_up_simulator(void);
 #else
 #include "watch_usb_cdc.h"
 #endif
@@ -609,7 +610,7 @@ void app_init(void) {
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
-    delay_ms(10);
+    delay_ms(100);
     if (HAL_GPIO_VBUS_DET_read()){
         /// if so, enable USB functionality.
         _watch_enable_usb();
@@ -1023,6 +1024,10 @@ void cb_alarm_btn_extwake(void) {
 }
 
 void cb_alarm_fired(void) {
+#if __EMSCRIPTEN__
+    _wake_up_simulator();
+#endif
+
     movement_state.woke_from_alarm_handler = true;
 }
 

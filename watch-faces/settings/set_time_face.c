@@ -44,9 +44,9 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             movement_set_timezone_index(movement_get_timezone_index() + 1);
             if (movement_get_timezone_index() >= NUM_ZONE_NAMES) movement_set_timezone_index(0);
             current_offset = movement_get_current_timezone_offset_for_zone(movement_get_timezone_index());
-            break;
+            return;
         case 0: // year
-            date_time.unit.year = ((date_time.unit.year % 60) + 1);
+            date_time.unit.year = (date_time.unit.year + 1) % 60;
             break;
         case 1: // month
             date_time.unit.month = (date_time.unit.month % 12) + 1;
