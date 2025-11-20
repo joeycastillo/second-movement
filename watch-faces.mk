@@ -51,4 +51,5 @@ SRCS += \
   ./watch-faces/complication/blackjack_face.c \
   ./watch-faces/complication/endless_runner_face.c \
   ./watch-faces/complication/higher_lower_game_face.c \
+  ./watch-faces/complication/lander_face.c \
 # New watch faces go above this line.
