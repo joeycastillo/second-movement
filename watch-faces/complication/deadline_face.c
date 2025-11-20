@@ -161,19 +161,19 @@ static inline void _beep(beep_type_t beep_type)
 
     switch (beep_type) {
         case BEEP_BUTTON:
-            watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
             break;
 
         case BEEP_ENABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 50);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_G7, 50, movement_button_volume());
             watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 75);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C8, 50, movement_button_volume());
             break;
 
         case BEEP_DISABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_C8, 50, movement_button_volume());
             watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 75);
+            watch_buzzer_play_note_with_volume(BUZZER_NOTE_G7, 50, movement_button_volume());
             break;
     }
 }
