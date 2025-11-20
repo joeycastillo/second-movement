@@ -521,7 +521,7 @@ bool movement_enable_tap_detection_if_available(void) {
         // ramp data rate up to 400 Hz and high performance mode
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
@@ -610,7 +610,7 @@ void app_init(void) {
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
-    delay_ms(10);
+    delay_ms(100);
     if (HAL_GPIO_VBUS_DET_read()){
         /// if so, enable USB functionality.
         _watch_enable_usb();
