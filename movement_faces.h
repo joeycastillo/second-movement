@@ -75,4 +75,5 @@
 #include "wordle_face.h"
 #include "blackjack_face.h"
 #include "endless_runner_face.h"
+#include "higher_lower_game_face.h"
 // New includes go above this line.
