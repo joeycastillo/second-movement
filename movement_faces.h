@@ -77,4 +77,5 @@
 #include "endless_runner_face.h"
 #include "higher_lower_game_face.h"
 #include "lander_face.h"
+#include "simon_face.h"
 // New includes go above this line.
