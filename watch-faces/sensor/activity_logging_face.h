@@ -40,6 +40,8 @@
  *
  * A short press of the Alarm button moves backwards in the data log, showing yesterday's active minutes,
  * then the day before, etc. going back 14 days.
+ * A short press of the Light button moves forward in the data log, looping around if we're on the most-recent day.
+ * Holding the Light button will illuminate the display.
  *
  */
 

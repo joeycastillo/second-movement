@@ -47,6 +47,9 @@
  * each button press, and both the text and the graphical representation will
  * display the moon phase for that day. Try pressing the Alarm button 27 times
  * now, just to visualize what the moon will look like over the next month.
+ * Pressing the Light button will move back in time.
+ * 
+ * Holding the Light button will illuminate the display.
  */
 
 #include "movement.h"
