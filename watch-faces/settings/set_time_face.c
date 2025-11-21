@@ -91,6 +91,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     watch_date_time_t date_time = movement_get_local_date_time();
 
     switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            break;
         case EVENT_TICK:
             if (_quick_ticks_running) {
                 if (HAL_GPIO_BTN_ALARM_read()) _handle_alarm_button(date_time, current_page);
