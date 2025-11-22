@@ -252,6 +252,9 @@ bool clock_face_loop(movement_event_t event, void *context) {
             state->date_time.previous = current;
 
             break;
+        case EVENT_ALARM_BUTTON_UP:
+            movement_move_to_quick_face();
+            break;
         case EVENT_ALARM_LONG_PRESS:
             clock_toggle_time_signal(state);
             break;

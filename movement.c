@@ -286,6 +286,12 @@ void movement_move_to_next_face(void) {
     movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
 }
 
+void movement_move_to_quick_face(void) {
+    if (MOVEMENT_QUICK_FACE_INDEX) {
+        movement_move_to_face(MOVEMENT_QUICK_FACE_INDEX);
+    }
+}
+
 void movement_schedule_background_task(watch_date_time_t date_time) {
     movement_schedule_background_task_for_face(movement_state.current_face_idx, date_time);
 }

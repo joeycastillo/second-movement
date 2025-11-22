@@ -100,4 +100,11 @@ const watch_face_t watch_faces[] = {
  */
 #define MOVEMENT_DEFAULT_LED_DURATION 1
 
+/* Determines what face to go to from the clock face on short press of the Alarm button.
+ * If defined, pressing the alarm button briefly while on the clock face will jump directly
+ * to the specified face index. This provides quick access to a frequently used face.
+ * If not defined, the alarm button short press will have no effect on the clock face.
+ */
+#define MOVEMENT_QUICK_FACE_INDEX 0
+
 #endif // MOVEMENT_CONFIG_H_
