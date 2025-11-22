@@ -32,6 +32,7 @@
 #include "watch.h"
 #include "watch_utility.h"
 #include "filesystem.h"
+#include "movement_pin_service.h"
 
 #include "totp_lfs_face.h"
 
@@ -191,9 +192,11 @@ static void totp_lfs_face_read_file(char *filename) {
 }
 
 void totp_lfs_face_setup(uint8_t watch_face_index, void ** context_ptr) {
-    (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(totp_lfs_state_t));
+        memset(*context_ptr, 0, sizeof(totp_lfs_state_t));
+        totp_lfs_state_t *state = (totp_lfs_state_t *)*context_ptr;
+        state->face_index = watch_face_index;
     }
 
 #if !(__EMSCRIPTEN__)
@@ -242,8 +245,10 @@ static void totp_face_set_record(totp_lfs_state_t *totp_state, int i) {
 }
 
 void totp_lfs_face_activate(void *context) {
-    memset(context, 0, sizeof(totp_lfs_state_t));
     totp_lfs_state_t *totp_state = (totp_lfs_state_t *)context;
+    totp_state->timestamp = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
+    totp_state->steps = 0;
+    totp_state->current_code = 0;
 
 #if __EMSCRIPTEN__
     if (num_totp_records == 0) {
@@ -253,7 +258,6 @@ void totp_lfs_face_activate(void *context) {
     }
 #endif
 
-    totp_state->timestamp = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
     totp_face_set_record(totp_state, 0);
 }
 
@@ -283,6 +287,10 @@ static void totp_face_display(totp_lfs_state_t *totp_state) {
 bool totp_lfs_face_loop(movement_event_t event, void *context) {
 
     totp_lfs_state_t *totp_state = (totp_lfs_state_t *)context;
+
+    if (movement_pin_service_is_locked()) {
+        return movement_pin_service_loop(event, totp_state->face_index, "totp", "2f");
+    }
 
     switch (event.event_type) {
         case EVENT_TICK:
