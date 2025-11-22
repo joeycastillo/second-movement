@@ -119,11 +119,6 @@ void irq_handler_tc1(void) {
 
 #endif
 
-static inline void _button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-}
-
 /// @brief Display minutes, seconds and fractions derived from 128 Hz tick counter
 ///        on the lcd.
 /// @param ticks
@@ -280,7 +275,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
                 movement_cancel_background_task();
             }
             _draw();
-            _button_beep();
+            movement_play_button_sound_if_enabled();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             if (state->light_on_button) movement_illuminate_led();
@@ -302,7 +297,7 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
                 } else if (_ticks) {
                     // reset stopwatch
                     _ticks = _lap_ticks = _blink_ticks = _old_minutes = _old_seconds = _hours = 0;
-                    _button_beep();
+                    movement_play_button_sound_if_enabled();
                 }
             }
             _display_ticks(_ticks);

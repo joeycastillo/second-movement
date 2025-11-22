@@ -50,11 +50,6 @@ static void _alarm_face_display_alarm_time(alarm_face_state_t *state) {
     watch_display_text(WATCH_POSITION_BOTTOM, lcdbuf);
 }
 
-static inline void button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-}
-
 //
 // Exported
 //
@@ -115,7 +110,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                     state->setting_mode = ALARM_FACE_SETTING_MODE_NONE;
                     movement_request_tick_frequency(1);
                     // beep to confirm setting.
-                    button_beep();
+                    movement_play_button_sound_if_enabled();
                     // also turn the alarm on since they just set it.
                     state->alarm_is_on = 1;
                     movement_set_alarm_enabled(true);
@@ -158,7 +153,7 @@ bool alarm_face_loop(movement_event_t event, void *context) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
                 state->setting_mode = ALARM_FACE_SETTING_MODE_SETTING_HOUR;
                 movement_request_tick_frequency(4);
-                button_beep();
+                movement_play_button_sound_if_enabled();
             }
             break;
         case EVENT_BACKGROUND_TASK:
