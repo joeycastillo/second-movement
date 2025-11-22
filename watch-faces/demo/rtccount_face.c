@@ -48,6 +48,14 @@ typedef struct {
 
 static const uint32_t COUNTER_MASK = (1 << 19) - 1;
 
+static void _rtccount_face_display_string(char* string, uint8_t pos) {
+    // watch_display_string is deprecated, but there is no alternative for this use-case
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    watch_display_string(string, pos);
+    #pragma GCC diagnostic pop
+}
+
 static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state) {
     uint32_t counter = watch_rtc_get_counter();
 
@@ -77,48 +85,48 @@ static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state)
             break;
     }
 
-    watch_display_string(buf, 0);
+    _rtccount_face_display_string(buf, 0);
 
     snprintf(buf, sizeof(buf), "%u", event.subsecond);
     uint32_t len = strlen(buf);
-    watch_display_string(buf, 4 - len);
+    _rtccount_face_display_string(buf, 4 - len);
 
     switch (state->status) {
         case RTCCOUNT_STATUS_COUNTER: {
-            snprintf(buf, sizeof(buf), "%lu", counter & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%u", counter & COUNTER_MASK);
 
             size_t len = strlen(buf);
 
-            watch_display_string(buf, 10 - len);
+            _rtccount_face_display_string(buf, 10 - len);
             break;
         }
 
         case RTCCOUNT_STATUS_COUNTER_SUB: {
-            snprintf(buf, sizeof(buf), "%lu", counter & 127);
+            snprintf(buf, sizeof(buf), "%u", counter & 127);
 
             size_t len = strlen(buf);
 
-            watch_display_string(buf, 10 - len);
+            _rtccount_face_display_string(buf, 10 - len);
             break;
         }
 
         case RTCCOUNT_STATUS_MINUTES: {
-            snprintf(buf, sizeof(buf), "%lu", state->n_top_of_minute & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%u", state->n_top_of_minute & COUNTER_MASK);
 
             size_t len = strlen(buf);
 
-            watch_display_string(buf, 10 - len);
+            _rtccount_face_display_string(buf, 10 - len);
             break;
         }
 
         case RTCCOUNT_STATUS_MINUTES_DIFF: {
             uint32_t elapsed_minutes = (movement_get_utc_timestamp() - state->ref_timestamp) / 60;
 
-            snprintf(buf, sizeof(buf), "%lu", (elapsed_minutes - state->n_top_of_minute) & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%u", (elapsed_minutes - state->n_top_of_minute) & COUNTER_MASK);
 
             size_t len = strlen(buf);
 
-            watch_display_string(buf, 10 - len);
+            _rtccount_face_display_string(buf, 10 - len);
             break;
         }
 
