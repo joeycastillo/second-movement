@@ -44,6 +44,7 @@
 #include "voltage_face.h"
 #include "set_time_face.h"
 #include "settings_face.h"
+#include "set_location_face.h"
 #include "light_sensor_face.h"
 #include "irda_upload_face.h"
 #include "chirpy_demo_face.h"
