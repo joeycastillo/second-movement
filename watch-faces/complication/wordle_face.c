@@ -646,4 +646,3 @@ bool wordle_face_loop(movement_event_t event, void *context) {
 void wordle_face_resign(void *context) {
     (void) context;
 }
-
