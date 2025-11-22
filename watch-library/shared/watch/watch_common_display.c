@@ -43,6 +43,8 @@ uint8_t IndicatorSegments[8] = {
 };
 
 void watch_display_character(uint8_t character, uint8_t position) {
+    if((character-0x20 < 0) | (character-0x20 >= sizeof(Classic_LCD_Character_Set)) return ;
+
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
         if (character == 'R' && position > 1 && position < 8) character = 'r'; // We can't display uppercase R in these positions
         else if (character == 'T' && position > 1 && position < 8) character = 't'; // lowercase t is the only option for these positions
@@ -57,6 +59,7 @@ void watch_display_character(uint8_t character, uint8_t position) {
             else if (character == 'c') character = 'C'; // C needs to be uppercase
             else if (character == 'J') character = 'j'; // same
             else if (character == 'v' || character == 'V' || character == 'U' || character == 'W' || character == 'w') character = 'u'; // bottom segment duplicated, so show in top half
+            else if (character == 't' || character == 'T') character = '+'; // avoid confusion with uppercase E
         } else {
             if (character == 'u') character = 'v'; // we can use the bottom segment; move to lower half
             else if (character == 'j') character = 'J'; // same but just display a normal J
@@ -124,9 +127,9 @@ void watch_display_character(uint8_t character, uint8_t position) {
 
 void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
     // Will only work for digits and for positions  8 and 9 - but less code & checks to reduce power consumption
-
     digit_mapping_t segmap;
     uint8_t segdata;
+    if(character < 20) return ;
 
     /// TODO: See optimization note above.
 
@@ -168,6 +171,7 @@ void watch_display_string(const char *string, uint8_t position) {
 }
 
 void watch_display_text(watch_position_t location, const char *string) {
+    if(!string[0]) return ;
     switch (location) {
         case WATCH_POSITION_TOP:
         case WATCH_POSITION_TOP_LEFT:

@@ -27,9 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "app.h"
 #include "watch.h"
 #include "watch_utility.h"
@@ -51,11 +49,12 @@
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
+void _wake_up_simulator(void);
 #else
 #include "watch_usb_cdc.h"
 #endif
 
-movement_state_t movement_state;
+volatile movement_state_t movement_state;
 void * watch_face_contexts[MOVEMENT_NUM_FACES];
 watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
@@ -520,7 +519,7 @@ bool movement_enable_tap_detection_if_available(void) {
         // ramp data rate up to 400 Hz and high performance mode
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
@@ -587,6 +586,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
 
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
+#if __EMSCRIPTEN__
+    temperature_c = EM_ASM_DOUBLE({
+        return temp_c || 25.0;
+    });
+#else
 
     if (movement_state.has_thermistor) {
         thermistor_driver_enable();
@@ -597,6 +601,7 @@ float movement_get_temperature(void) {
             val = val >> 4;
             temperature_c = 25 + (float)val / 16.0;
     }
+#endif
 
     return temperature_c;
 }
@@ -609,13 +614,14 @@ void app_init(void) {
     // check if we are plugged into USB power.
     HAL_GPIO_VBUS_DET_in();
     HAL_GPIO_VBUS_DET_pulldown();
+    delay_ms(100);
     if (HAL_GPIO_VBUS_DET_read()){
         /// if so, enable USB functionality.
         _watch_enable_usb();
     }
     HAL_GPIO_VBUS_DET_off();
 
-    memset(&movement_state, 0, sizeof(movement_state));
+    memset((void *)&movement_state, 0, sizeof(movement_state));
 
     movement_state.has_thermistor = thermistor_driver_init();
 
@@ -944,10 +950,14 @@ bool app_loop(void) {
         }
     }
 
+#if __EMSCRIPTEN__
+    shell_task();
+#else
     // if we are plugged into USB, handle the serial shell
     if (usb_is_enabled()) {
         shell_task();
     }
+#endif
 
     event.subsecond = 0;
 
@@ -971,7 +981,7 @@ bool app_loop(void) {
     return can_sleep;
 }
 
-static movement_event_type_t _figure_out_button_event(bool pin_level, movement_event_type_t button_down_event_type, uint16_t *down_timestamp) {
+static movement_event_type_t _figure_out_button_event(bool pin_level, movement_event_type_t button_down_event_type, volatile uint16_t *down_timestamp) {
     // force alarm off if the user pressed a button.
     if (movement_state.alarm_ticks) movement_state.alarm_ticks = 0;
 
@@ -1018,6 +1028,10 @@ void cb_alarm_btn_extwake(void) {
 }
 
 void cb_alarm_fired(void) {
+#if __EMSCRIPTEN__
+    _wake_up_simulator();
+#endif
+
     movement_state.woke_from_alarm_handler = true;
 }
 
