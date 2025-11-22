@@ -528,7 +528,7 @@ bool movement_enable_tap_detection_if_available(void) {
         delay_ms(3);
 
         // enable tap detection on INT1/A3.
-        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP | LIS2DW_CTRL4_INT1_6D);
+        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP);
 
         return true;
     }
