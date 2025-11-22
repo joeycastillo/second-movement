@@ -42,6 +42,9 @@ uint8_t IndicatorSegments[8] = {
     SLCD_SEGID(4, 0)   // WATCH_INDICATOR_COLON (does not exist, will set in SDATAL4 which is harmless)
 };
 
+const uint8_t LCD_Character_Set_first = 0x20 ;
+const uint8_t LCD_Character_Set_last = 0x20 + sizeof(Classic_LCD_Character_Set) - 1 ;
+
 void watch_display_character(uint8_t character, uint8_t position) {
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
         if (character == 'R' && position > 1 && position < 8) character = 'r'; // We can't display uppercase R in these positions
@@ -89,6 +92,8 @@ void watch_display_character(uint8_t character, uint8_t position) {
     digit_mapping_t segmap;
     uint8_t segdata;
 
+    if((character-0x20 < LCD_Character_Set_first) | (character-0x20 > LCD_Character_Set_last)) return ;
+
     /// TODO: This could be optimized by doing this check once and setting a pointer in watch_discover_lcd_type.
 
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
@@ -125,9 +130,10 @@ void watch_display_character(uint8_t character, uint8_t position) {
 
 void watch_display_character_lp_seconds(uint8_t character, uint8_t position) {
     // Will only work for digits and for positions  8 and 9 - but less code & checks to reduce power consumption
-
     digit_mapping_t segmap;
     uint8_t segdata;
+
+    if((character-0x20 < LCD_Character_Set_first) | (character-0x20 > LCD_Character_Set_last)) return ;
 
     /// TODO: See optimization note above.
 
@@ -169,6 +175,7 @@ void watch_display_string(const char *string, uint8_t position) {
 }
 
 void watch_display_text(watch_position_t location, const char *string) {
+    if(string[0] == '\0') return ;
     switch (location) {
         case WATCH_POSITION_TOP:
         case WATCH_POSITION_TOP_LEFT:
@@ -228,9 +235,11 @@ void watch_display_text(watch_position_t location, const char *string) {
 
 void watch_display_text_with_fallback(watch_position_t location, const char *string, const char *fallback) {
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        if (string[0] == '\0') return;
         switch (location) {
             case WATCH_POSITION_TOP:
                 for (size_t i = 0; i < strlen(string); i++) {
+                    if (string[i] == '\0') break;
                     if (i < 2) watch_display_character(string[i], i);
                     else if (i == 2) watch_display_character(string[i], 10);
                     else if (i < 5) watch_display_character(string[i], i - 1);
