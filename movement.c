@@ -27,9 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "app.h"
 #include "watch.h"
 #include "watch_utility.h"
@@ -521,8 +519,7 @@ bool movement_enable_tap_detection_if_available(void) {
         // ramp data rate up to 400 Hz and high performance mode
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
-        lis2dw_enable_double_tap();
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
@@ -590,6 +587,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
 
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
+#if __EMSCRIPTEN__
+    temperature_c = EM_ASM_DOUBLE({
+        return temp_c || 25.0;
+    });
+#else
 
     if (movement_state.has_thermistor) {
         thermistor_driver_enable();
@@ -600,6 +602,7 @@ float movement_get_temperature(void) {
             val = val >> 4;
             temperature_c = 25 + (float)val / 16.0;
     }
+#endif
 
     return temperature_c;
 }
