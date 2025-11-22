@@ -32,8 +32,8 @@
  * Life counters each begin at twenty and the face begins in decrement mode. This means the associated player's life total will decrement by a value of one each time LIGHT or ALARM is pressed. Once the face is changed to increment mode, the associated player's life total will increase by one each time LIGHT or ALARM is pressed.
  *
  * Usage:
- * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Caps at 0 and 99.
- * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Caps at 0 and 99.
+ * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to 0-99.
+ * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to 0-99.
  * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a "d" or "I" character in the top right of LCD.
  * Long-press ALARM to reset mode to decrement mode and both life counters to twenty.
  */
@@ -48,14 +48,12 @@ typedef struct {
     bool increment_mode_on;
 } tcg_life_counter_state_t;
 
-
 void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void tcg_life_counter_face_activate(void *context);
 bool tcg_life_counter_face_loop(movement_event_t event, void *context);
 void tcg_life_counter_face_resign(void *context);
 
 void print_tcg_life_counter(tcg_life_counter_state_t *state);
-void beep_tcg_life_counter(tcg_life_counter_state_t *state);
 
 #define tcg_life_counter_face ((const watch_face_t){ \
     tcg_life_counter_face_setup, \
