@@ -28,7 +28,7 @@
 /*
  * TCG_LIFE_COUNTER face
  *
- * TCG Life Counter face is designed to track player life totals in a two-player trading card game. Two life totals will be displayed on the screen, separated by a colon. The left counter is controlled by short-pressing LIGHT. The right counter is controlled by short-pressing ALARM.
+ * TCG Life Counter face is designed to track player life totals in a two-player trading card game. Two life totals will be displayed on the screen. The left counter is controlled by short-pressing LIGHT. The right counter is controlled by short-pressing ALARM.
  * Life counters each begin at twenty and the face begins in decrement mode. This means the associated player's life total will decrement by a value of one each time LIGHT or ALARM is pressed. Once the face is changed to increment mode, the associated player's life total will increase by one each time LIGHT or ALARM is pressed.
  *
  * Usage:
