@@ -20,6 +20,8 @@ TINYUSB_CDC=1
 # Now we're all set to include gossamer's make rules.
 include $(GOSSAMER_PATH)/make.mk
 
+CFLAGS+=-D_POSIX_C_SOURCE=200112L
+
 define n
 
 

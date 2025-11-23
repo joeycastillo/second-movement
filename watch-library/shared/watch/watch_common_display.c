@@ -57,6 +57,7 @@ void watch_display_character(uint8_t character, uint8_t position) {
             else if (character == 'c') character = 'C'; // C needs to be uppercase
             else if (character == 'J') character = 'j'; // same
             else if (character == 'v' || character == 'V' || character == 'U' || character == 'W' || character == 'w') character = 'u'; // bottom segment duplicated, so show in top half
+            else if (character == 't' || character == 'T') character = '+'; // avoid confusion with uppercase E
         } else {
             if (character == 'u') character = 'v'; // we can use the bottom segment; move to lower half
             else if (character == 'j') character = 'J'; // same but just display a normal J

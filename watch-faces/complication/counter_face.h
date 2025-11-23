@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Joey Castillo
+ * Copyright (c) 2022 Shogo Okamoto
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,42 @@
  * SOFTWARE.
  */
 
-#include "watch_i2c.h"
+#ifndef COUNTER_FACE_H_
+#define COUNTER_FACE_H_
 
-void watch_enable_i2c(void) {}
+/*
+ * COUNTER face
+ *
+ * Counter face is designed to count the number of running laps during exercises.
+ *
+ * Usage:
+ * Short-press ALARM to increment the counter (loops at 99)
+ * Long-press ALARM to reset the counter.
+ * Long-press LIGHT to toggle sound.
+ */
 
-void watch_disable_i2c(void) {}
+#include "movement.h"
 
-int8_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
-    return 0;
-}
+typedef struct {
+    uint8_t counter_idx;
+    bool beep_on;
+} counter_state_t;
 
-int8_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
-    return 0;
-}
 
-int8_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
-    return 0;
-}
+void counter_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void counter_face_activate(void *context);
+bool counter_face_loop(movement_event_t event, void *context);
+void counter_face_resign(void *context);
 
-uint8_t watch_i2c_read8(int16_t addr, uint8_t reg) {
-    return 0;
-}
+void print_counter(counter_state_t *state);
+void beep_counter(counter_state_t *state);
 
-uint16_t watch_i2c_read16(int16_t addr, uint8_t reg) {
-    return 0;
-}
+#define counter_face ((const watch_face_t){ \
+    counter_face_setup, \
+    counter_face_activate, \
+    counter_face_loop, \
+    counter_face_resign, \
+    NULL, \
+})
 
-uint32_t watch_i2c_read24(int16_t addr, uint8_t reg) {
-    return 0;
-}
-
-uint32_t watch_i2c_read32(int16_t addr, uint8_t reg) {
-    return 0;
-}
+#endif // COUNTER_FACE_H_
