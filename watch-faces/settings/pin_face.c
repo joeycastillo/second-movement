@@ -57,6 +57,13 @@ typedef enum {
     PIN_TIMEOUT_60MIN
 } pin_timeout_page_t;
 
+typedef enum {
+    PIN_BUTTON_NONE = 0,
+    PIN_BUTTON_MODE,
+    PIN_BUTTON_LIGHT,
+    PIN_BUTTON_ALARM
+} pin_button_t;
+
 typedef struct {
     void (*transition)(movement_event_t event, void* context);
     void (*display)(movement_event_t event, void* context);
@@ -70,7 +77,6 @@ typedef struct {
     watch_pin_t new_pin_confirm;
     pin_status_t status;
     uint8_t animation_tick;
-    bool ignore_next_up;
     bool validating;
     bool validation_success;
     pin_menu_page_t menu_page;
@@ -79,6 +85,7 @@ typedef struct {
     uint8_t lock_timeout;
     uint8_t unlock_elapsed;
     pin_face_screen_t screens[6];
+    pin_button_t active_button;
 } pin_state_t;
 
 static uint8_t _get_pin_digit(watch_pin_t* pin, uint8_t digit_index) {
@@ -195,7 +202,6 @@ void _pin_face_menu_transition(movement_event_t event, void* context) {
             switch (state->menu_page) {
                 case PIN_MENU_UNLOCK:
                     if (movement_pin_service_is_locked()) {
-                        state->ignore_next_up = true;
                         state->status = PIN_STATUS_ENTERING;
                         state->entering_reason = PIN_ENTERING_UNLOCK;
                     } else {
@@ -203,7 +209,6 @@ void _pin_face_menu_transition(movement_event_t event, void* context) {
                     }
                     break;
                 case PIN_MENU_CHANGE:
-                    state->ignore_next_up = true;
                     state->status = PIN_STATUS_ENTERING;
                     state->entering_reason = PIN_ENTERING_OLD;
                     break;
@@ -245,6 +250,36 @@ void _pin_face_menu_display(movement_event_t event, void* context) {
     }
 }
 
+void _pin_face_advance_digit(pin_state_t* state) {
+    state->digit_index += 1;
+
+    if (state->digit_index == 6) {
+        state->digit_index = 0;
+        state->animation_tick = 0;
+        switch (state->entering_reason) {
+            case PIN_ENTERING_UNLOCK:
+            case PIN_ENTERING_OLD:
+                state->current_pin.reg = state->scratch_pin.reg;
+                _clear_pin(&state->scratch_pin);
+                state->status = PIN_STATUS_VALIDATING;
+                state->validating = true;
+                break;
+            case PIN_ENTERING_NEW:
+                state->new_pin.reg = state->scratch_pin.reg;
+                _clear_pin(&state->scratch_pin);
+                state->status = PIN_STATUS_ENTERING;
+                state->entering_reason = PIN_ENTERING_NEW_CONFIRM;
+                break;
+            case PIN_ENTERING_NEW_CONFIRM:
+                state->new_pin_confirm.reg = state->scratch_pin.reg;
+                _clear_pin(&state->scratch_pin);
+                state->status = PIN_STATUS_VALIDATING;
+                state->validating = true;
+                break;
+        }
+    }
+}
+
 void _pin_face_entering_transition(movement_event_t event, void* context) {
     pin_state_t *state = (pin_state_t *)context;
 
@@ -253,60 +288,57 @@ void _pin_face_entering_transition(movement_event_t event, void* context) {
             state->animation_tick += 1;
             break;
         case EVENT_MODE_BUTTON_DOWN:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 0);
+            if (state->active_button == PIN_BUTTON_NONE) {
+                state->active_button = PIN_BUTTON_MODE;
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 0);
+            }
             break;
         case EVENT_MODE_LONG_PRESS:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 1);
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 2);
-            break;
-        case EVENT_LIGHT_LONG_PRESS:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 3);
-            break;
-        case EVENT_ALARM_BUTTON_DOWN:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 4);
-            break;
-        case EVENT_ALARM_LONG_PRESS:
-            _set_pin_digit(&state->scratch_pin, state->digit_index, 5);
+            if (state->active_button == PIN_BUTTON_MODE) {
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 1);
+            }
             break;
         case EVENT_MODE_BUTTON_UP:
         case EVENT_MODE_LONG_UP:
+            if (state->active_button == PIN_BUTTON_MODE) {
+                state->active_button = PIN_BUTTON_NONE;
+                _pin_face_advance_digit(state);
+            }
+            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            if (state->active_button == PIN_BUTTON_NONE) {
+                state->active_button = PIN_BUTTON_LIGHT;
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 2);
+            }
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (state->active_button == PIN_BUTTON_LIGHT) {
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 3);
+            }
+            break;
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_LIGHT_LONG_UP:
+            if (state->active_button == PIN_BUTTON_LIGHT) {
+                state->active_button = PIN_BUTTON_NONE;
+                _pin_face_advance_digit(state);
+            }
+            break;
+        case EVENT_ALARM_BUTTON_DOWN:
+            if (state->active_button == PIN_BUTTON_NONE) {
+                state->active_button = PIN_BUTTON_ALARM;
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 4);
+            }
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            if (state->active_button == PIN_BUTTON_ALARM) {
+                _set_pin_digit(&state->scratch_pin, state->digit_index, 5);
+            }
+            break;
         case EVENT_ALARM_BUTTON_UP:
         case EVENT_ALARM_LONG_UP:
-            if (state->ignore_next_up) {
-                state->ignore_next_up = false;
-                return;
-            }
-
-            state->digit_index += 1;
-
-            if (state->digit_index == 6) {
-                state->digit_index = 0;
-                state->animation_tick = 0;
-                switch (state->entering_reason) {
-                    case PIN_ENTERING_UNLOCK:
-                    case PIN_ENTERING_OLD:
-                        state->current_pin.reg = state->scratch_pin.reg;
-                        _clear_pin(&state->scratch_pin);
-                        state->status = PIN_STATUS_VALIDATING;
-                        state->validating = true;
-                        break;
-                    case PIN_ENTERING_NEW:
-                        state->new_pin.reg = state->scratch_pin.reg;
-                        _clear_pin(&state->scratch_pin);
-                        state->status = PIN_STATUS_ENTERING;
-                        state->entering_reason = PIN_ENTERING_NEW_CONFIRM;
-                        break;
-                    case PIN_ENTERING_NEW_CONFIRM:
-                        state->new_pin_confirm.reg = state->scratch_pin.reg;
-                        _clear_pin(&state->scratch_pin);
-                        state->status = PIN_STATUS_VALIDATING;
-                        state->validating = true;
-                        break;
-                }
+            if (state->active_button == PIN_BUTTON_ALARM) {
+                state->active_button = PIN_BUTTON_NONE;
+                _pin_face_advance_digit(state);
             }
             break;
         default:
@@ -403,7 +435,6 @@ void _pin_face_validating_transition(movement_event_t event, void* context) {
             break;
         case EVENT_ALARM_BUTTON_DOWN:
             if (!state->validating && !state->validation_success) {
-                state->ignore_next_up = true;
                 state->status = PIN_STATUS_ENTERING;
                 state->digit_index = 0;
                 state->animation_tick = 0;
@@ -508,7 +539,7 @@ static void _pin_face_reset_state(pin_state_t* state) {
     _clear_pin(&state->new_pin_confirm);
     state->status = PIN_STATUS_MENU;
     state->animation_tick = 0;
-    state->ignore_next_up = true;
+    state->active_button = PIN_BUTTON_NONE;
     state->validating = false;
     state->validation_success = false;
     state->menu_page = 0;
@@ -522,6 +553,7 @@ void pin_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
         state->timeout_page = PIN_TIMEOUT_5MIN;
         state->lock_timeout = 5;
+        state->active_button = PIN_BUTTON_NONE;
 
         movement_pin_service_enable();
         movement_pin_service_set_pin_face(watch_face_index);
@@ -546,7 +578,6 @@ void pin_face_activate(void *context) {
         // If we got redirected by another page, go straight to unlocking screen
         state->status = PIN_STATUS_ENTERING;
         state->entering_reason = PIN_ENTERING_UNLOCK;
-        state->ignore_next_up = true;
     }
 }
 
