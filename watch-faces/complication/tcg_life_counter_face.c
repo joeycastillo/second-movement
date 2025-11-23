@@ -103,7 +103,7 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
 void print_tcg_life_counter(tcg_life_counter_state_t *state) {
     char buf[14];
     watch_display_text(WATCH_POSITION_TOP, "TC");
-    watch_display_text(WATCH_POSITION_TOP_RIGHT, state->increment_mode_on ? " I" : " d");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, state->increment_mode_on ? " +" : " -");
     sprintf(buf, "%3d%3d", state->life_values[0], state->life_values[1]);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
