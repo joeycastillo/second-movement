@@ -32,8 +32,8 @@
  * Life counters each begin at twenty and the face begins in decrement mode. This means the associated player's life total will decrement by a value of one each time LIGHT or ALARM is pressed. Once the face is changed to increment mode, the associated player's life total will increase by one each time LIGHT or ALARM is pressed.
  *
  * Usage:
- * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to 0-99.
- * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to 0-99.
+ * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to 0-999.
+ * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to 0-999.
  * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a "d" or "I" character in the top right of LCD.
  * Long-press ALARM to reset mode to decrement mode and both life counters to twenty.
  */
@@ -44,7 +44,7 @@
 #define TCG_LIFE_COUNTER_DEFAULT_LIFE_VALUE 20
 
 typedef struct {
-    uint8_t life_values[2];
+    uint16_t life_values[2];
     bool increment_mode_on;
 } tcg_life_counter_state_t;
 

@@ -40,7 +40,7 @@ void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 
 void tcg_life_counter_face_activate(void *context) {
     tcg_life_counter_state_t *state = (tcg_life_counter_state_t *)context;
-    watch_set_pixel(1, 16); // set colon indicator
+    // watch_set_pixel(1, 16); // set colon indicator
 }
 
 bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
@@ -56,7 +56,7 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
                 state->life_values[0]--; // decrement counter index 0
               }
             } else {
-              if (state->life_values[0] < 99) {
+              if (state->life_values[0] < 999) {
                 state->life_values[0]++; // increment counter index 0
               }
             }
@@ -73,7 +73,7 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
                 state->life_values[1]--; // decrement counter index 1
               }
             } else {
-              if (state->life_values[1] < 99) {
+              if (state->life_values[1] < 999) {
                 state->life_values[1]++; // increment counter index 1
               }
             }
@@ -104,7 +104,7 @@ void print_tcg_life_counter(tcg_life_counter_state_t *state) {
     char buf[14];
     watch_display_text(WATCH_POSITION_TOP, "TC");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, state->increment_mode_on ? " I" : " d");
-    sprintf(buf, "%02d%02d", state->life_values[0], state->life_values[1]);
+    sprintf(buf, "%3d%3d", state->life_values[0], state->life_values[1]);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 
 }
