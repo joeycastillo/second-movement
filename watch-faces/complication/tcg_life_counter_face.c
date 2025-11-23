@@ -26,14 +26,23 @@
 #include <string.h>
 #include "tcg_life_counter_face.h"
 
+#define TCG_LIFE_COUNTER_NUM_LIFE_VALUES 2
+
+static const int16_t _tcg_life_counter_defaults[] = {
+    20,
+    40
+};
+#define TCG_LIFE_COUNTER_DEFAULT_SIZE() (sizeof(_tcg_life_counter_defaults) / sizeof(int16_t))
+
 void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(tcg_life_counter_state_t));
         memset(*context_ptr, 0, sizeof(tcg_life_counter_state_t));
         tcg_life_counter_state_t *state = (tcg_life_counter_state_t *)*context_ptr;
+        state->default_idx = 0;
         for (size_t i = 0; i < TCG_LIFE_COUNTER_NUM_LIFE_VALUES; i++)
-          state->life_values[i] = TCG_LIFE_COUNTER_DEFAULT_LIFE_VALUE;
+          state->life_values[i] = _tcg_life_counter_defaults[state->default_idx];
         state->increment_mode_on = false;
     }
 }
@@ -80,9 +89,17 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
             print_tcg_life_counter(state);
             break;
         case EVENT_ALARM_LONG_PRESS:
+            // possibly advance to next set of default values
+            if (_tcg_life_counter_defaults[state->default_idx] == state->life_values[0] &&
+              _tcg_life_counter_defaults[state->default_idx] == state->life_values[1] &&
+              false == state->increment_mode_on) {
+                state->default_idx++;
+                if (state->default_idx >= TCG_LIFE_COUNTER_DEFAULT_SIZE())
+                  state->default_idx = 0;
+              }
             // reset all life counters
             for (size_t i = 0; i < TCG_LIFE_COUNTER_NUM_LIFE_VALUES; i++)
-              state->life_values[i] = TCG_LIFE_COUNTER_DEFAULT_LIFE_VALUE;
+              state->life_values[i] = _tcg_life_counter_defaults[state->default_idx];
             state->increment_mode_on = false;
             print_tcg_life_counter(state);
             break;

@@ -35,17 +35,15 @@
  * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to 0-999.
  * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to 0-999.
  * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a "d" or "I" character in the top right of LCD.
- * Long-press ALARM to reset mode to decrement mode and both life counters to twenty.
+ * Long-press ALARM to reset mode to decrement mode and both life counters to current default value. If the life values displayed by the face are each equal to the current default life value, and the face is also set to decrement mode, this action will advance to the next set of default life values (currently twenty or forty). The initial default life value is configured to twenty.
  */
 
 #include "movement.h"
 
-#define TCG_LIFE_COUNTER_NUM_LIFE_VALUES 2
-#define TCG_LIFE_COUNTER_DEFAULT_LIFE_VALUE 20
-
 typedef struct {
     uint16_t life_values[2];
     bool increment_mode_on;
+    uint8_t default_idx;
 } tcg_life_counter_state_t;
 
 void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr);
