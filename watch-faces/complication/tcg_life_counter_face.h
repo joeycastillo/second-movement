@@ -29,13 +29,14 @@
  * TCG_LIFE_COUNTER face
  *
  * TCG Life Counter face is designed to track player life totals in a two-player trading card game. Two life totals will be displayed on the screen. The left counter is controlled by short-pressing LIGHT. The right counter is controlled by short-pressing ALARM.
- * Life counters each begin at twenty and the face begins in decrement mode. This means the associated player's life total will decrement by a value of one each time LIGHT or ALARM is pressed. Once the face is changed to increment mode, the associated player's life total will increase by one each time LIGHT or ALARM is pressed.
+ * Life counters each begin at twenty and the face begins in decrement mode with a decrement value of one. This means the associated player's life total will decrement by a value of one each time LIGHT or ALARM is pressed. Once the face is changed to increment mode, the associated player's life total will increase by one each time LIGHT or ALARM is pressed.
  *
  * Usage:
  * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to 0-999.
  * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to 0-999.
- * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a "d" or "I" character in the top right of LCD.
- * Long-press ALARM to reset mode to decrement mode and both life counters to current default value. If the life values displayed by the face are each equal to the current default life value, and the face is also set to decrement mode, this action will advance to the next set of default life values (currently twenty or forty). The initial default life value is configured to twenty.
+ * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a "d" or "i" character in the top right of LCD.
+ * Long-press MODE to reset TCG life counter to decrement mode, decrement amount to 1, and both life counters to the current default value. If the life values displayed by the face are each equal to the current default life value and the face is also set to decrement mode with a decrement amount of 1, this action will instead return to the watch's first face.
+ * Long-press ALARM to advance to the next set of increment/decrement values (1 and 5). The initial increment/decrement value is configured to 1. If the life values displayed by the face are each equal to the current default life value and the face is also set to decrement mode with a decrement amount of 1, this action will instead advance to the next set of default life values (20 and 40). The initial default life value is configured to 20.
  */
 
 #include "movement.h"
@@ -44,6 +45,7 @@ typedef struct {
     uint16_t life_values[2];
     bool increment_mode_on;
     uint8_t default_idx;
+    uint8_t increment_idx;
 } tcg_life_counter_state_t;
 
 void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr);
