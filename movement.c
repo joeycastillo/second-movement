@@ -326,13 +326,13 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
         }
 
         // If a long press occurred
-        if (pending_events & (1 << button->down_event + 2)) {
+        if (pending_events & (1 << (button->down_event + 2))) {
             watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, button->down_timestamp + MOVEMENT_REALLY_LONG_PRESS_TICKS, button->timeout_index);
             any_long = true;
         }
 
         // If a really long press occurred
-        if (pending_events & (1 << button->down_event + 4)) {
+        if (pending_events & (1 << (button->down_event + 4))) {
             watch_rtc_register_comp_callback_no_schedule(button->cb_longpress, button->down_timestamp + MOVEMENT_MAX_LONG_PRESS_TICKS, button->timeout_index);
             any_long = true;
         }

@@ -34,7 +34,6 @@ static const uint32_t RTC_CNT_HZ = 128;
 static const uint32_t RTC_CNT_SUBSECOND_MASK = RTC_CNT_HZ - 1;
 static const uint32_t RTC_CNT_DIV = 7;
 static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
-static const uint32_t RTC_CNT_TICKS_PER_HOUR = RTC_CNT_TICKS_PER_MINUTE * 60;
 
 static uint32_t counter_interval;
 static uint32_t counter;

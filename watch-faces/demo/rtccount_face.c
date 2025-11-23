@@ -93,7 +93,7 @@ static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state)
 
     switch (state->status) {
         case RTCCOUNT_STATUS_COUNTER: {
-            snprintf(buf, sizeof(buf), "%u", counter & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%lu", counter & COUNTER_MASK);
 
             size_t len = strlen(buf);
 
@@ -102,7 +102,7 @@ static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state)
         }
 
         case RTCCOUNT_STATUS_COUNTER_SUB: {
-            snprintf(buf, sizeof(buf), "%u", counter & 127);
+            snprintf(buf, sizeof(buf), "%lu", counter & 127);
 
             size_t len = strlen(buf);
 
@@ -111,7 +111,7 @@ static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state)
         }
 
         case RTCCOUNT_STATUS_MINUTES: {
-            snprintf(buf, sizeof(buf), "%u", state->n_top_of_minute & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%lu", state->n_top_of_minute & COUNTER_MASK);
 
             size_t len = strlen(buf);
 
@@ -122,7 +122,7 @@ static void _rtccount_face_draw(movement_event_t event, rtccount_state_t* state)
         case RTCCOUNT_STATUS_MINUTES_DIFF: {
             uint32_t elapsed_minutes = (movement_get_utc_timestamp() - state->ref_timestamp) / 60;
 
-            snprintf(buf, sizeof(buf), "%u", (elapsed_minutes - state->n_top_of_minute) & COUNTER_MASK);
+            snprintf(buf, sizeof(buf), "%lu", (elapsed_minutes - state->n_top_of_minute) & COUNTER_MASK);
 
             size_t len = strlen(buf);
 

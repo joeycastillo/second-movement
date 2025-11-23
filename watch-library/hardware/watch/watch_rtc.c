@@ -37,7 +37,6 @@ static const uint32_t RTC_CNT_HZ = RTC_OSC_HZ >> RTC_PRESCALER_DIV; // 1024 / 2^
 static const uint32_t RTC_CNT_SUBSECOND_MASK = RTC_CNT_HZ - 1;
 static const uint32_t RTC_CNT_DIV = RTC_OSC_DIV - RTC_PRESCALER_DIV; // 7
 static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
-static const uint32_t RTC_CNT_TICKS_PER_HOUR = RTC_CNT_TICKS_PER_MINUTE * 60;
 
 static const uint32_t RTC_COMP_GRACE_PERIOD = 4;
 
