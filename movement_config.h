@@ -38,7 +38,8 @@ const watch_face_t watch_faces[] = {
     temperature_display_face,
     voltage_face,
     settings_face,
-    set_time_face
+    set_time_face,
+    set_location_face
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
