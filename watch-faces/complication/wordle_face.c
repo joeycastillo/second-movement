@@ -256,7 +256,7 @@ static void reset_board(wordle_state_t *state) {
 
 static void display_title(wordle_state_t *state) {
     state->curr_screen = WORDLE_SCREEN_TITLE;
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text(WATCH_POSITION_BOTTOM, "WordLE");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
@@ -286,7 +286,7 @@ static void display_streak(wordle_state_t *state) {
 #else
     sprintf(buf, "St%4d", state->streak);
 #endif
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
     watch_set_colon();
@@ -304,7 +304,7 @@ static void display_wait(wordle_state_t *state) {
     else {  // Streak too long to display in top-right
         watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     }
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "WO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Wdl", "WO");
     watch_display_text(WATCH_POSITION_BOTTOM, " WaIt ");
     show_skip_wrong_letter_indicator(state->skip_wrong_letter, state->curr_screen);
 }
@@ -321,15 +321,17 @@ static uint32_t get_day_unix_time(void) {
 static void display_lose(wordle_state_t *state, uint8_t subsecond) {
     char buf[10];
     sprintf(buf," %s", subsecond % 2 ? _valid_words[state->curr_answer] : "     ");
-    watch_display_text(WATCH_POSITION_TOP, "L   ");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "LOSE", "L ");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void display_win(wordle_state_t *state, uint8_t subsecond) {
     (void) state;
     char buf[10];
-    sprintf(buf," %s  ", subsecond % 2 ? "NICE" : "JOb ");
-    watch_display_text(WATCH_POSITION_TOP, "W   ");
+    sprintf(buf," %s ", subsecond % 2 ? "NICE" : "JOb ");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WIN", "W ");
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
@@ -644,4 +646,3 @@ bool wordle_face_loop(movement_event_t event, void *context) {
 void wordle_face_resign(void *context) {
     (void) context;
 }
-
