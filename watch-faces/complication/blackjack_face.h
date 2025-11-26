@@ -46,7 +46,7 @@
  * 
  * To hit, press the ALARM button.
  * To stand, press the LIGHT button.
- * If you're at 21, you cannoy hit, since we just assume it's a mispress on the button.
+ * If you're at 21, you will stand if you try to hit, since we just assume it's a mispress on the button.
  * 
  * Once you stand, the dealer will deal out to themselves once per second (or immidietly when you press the LIGHT or ALARM buttons).
  * The game results are:
@@ -55,10 +55,14 @@
  * BUST: Your score is above 21.
  * TIE: Your score matches the dealer's final score
  * 
- * On a watch that has the accelerometer, long-pressing the ALARM button will turn on the ability to play by tapping.
+ * On a watch that has the accelerometer, long-pressing the ALARM button on the Title Screen will turn on the ability to play by tapping.
  * The SIGNAL indicator will display when tapping is enabled.
  * Tapping once will behave like the ALARM button and hit.
- * Tapping twice behave like the LIGHT button and stand.
+ * Tapping twice behave like the LIGHT button and stand. Warning: if you're using the LIS2DW board, it cannot register a double-tapping
+ * without seeing a single-tap first.
+ * 
+ * Long-pressing the LIGHT button on the Title Screen will display your win rate as a percentage of games finished.
+ * It displays as games won / (games won + games lost) it does not include incomplete nor tied games.
  * 
  * | Cards   |                          |
  * |---------|--------------------------|
