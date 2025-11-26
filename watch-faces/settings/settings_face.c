@@ -137,6 +137,19 @@ static void low_energy_setting_advance(void) {
     movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
 }
 
+static void keep_led_on_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "KEEP", "LT");
+    watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "LED", "KEEP");
+    if (subsecond % 2) {
+        if (movement_get_keep_led_on()) watch_display_text(WATCH_POSITION_SECONDS, "Y");
+        else watch_display_text(WATCH_POSITION_SECONDS, "N");
+    }
+}
+
+static void keep_led_on_setting_advance(void) {
+    movement_set_keep_led_on(!movement_get_keep_led_on());
+}
+
 static void led_duration_setting_display(uint8_t subsecond) {
     char buf[8];
 
@@ -252,6 +265,9 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens = malloc(state->num_settings * sizeof(settings_screen_t));
         state->settings_screens[current_setting].display = clock_setting_display;
         state->settings_screens[current_setting].advance = clock_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = keep_led_on_setting_display;
+        state->settings_screens[current_setting].advance = keep_led_on_setting_advance;
         current_setting++;
         state->settings_screens[current_setting].display = beep_setting_display;
         state->settings_screens[current_setting].advance = beep_setting_advance;

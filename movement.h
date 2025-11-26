@@ -85,6 +85,8 @@ typedef union {
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
+
+        bool keep_lighting_on : 1;          //boolean to keep lighting on in other faces
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -362,6 +364,9 @@ void movement_set_low_energy_timeout(uint8_t value);
 
 movement_color_t movement_backlight_color(void);
 void movement_set_backlight_color(movement_color_t color);
+
+bool movement_get_keep_led_on(void);
+void movement_set_keep_led_on(bool value);
 
 uint8_t movement_get_backlight_dwell(void);
 void movement_set_backlight_dwell(uint8_t value);
