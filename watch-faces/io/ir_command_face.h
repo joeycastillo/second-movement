@@ -26,8 +26,6 @@
 
 #include "movement.h"
 
-#ifdef HAS_IR_SENSOR
-
 /*
  * IR COMMAND FACE
  *
@@ -35,6 +33,9 @@
  * Currently supports:
  * - ls: List files in the filesystem
  *
+ * In hardware mode: Receives commands via IR sensor
+ * In simulator mode: Use ALARM button to cycle through commands,
+ *                    LIGHT long-press to execute
  */
 
 typedef struct {
@@ -43,6 +44,7 @@ typedef struct {
     char filenames[16][13];  // Up to 16 files, 12 chars + null terminator
     int32_t file_sizes[16];
     bool display_mode;  // false = showing command prompt, true = showing results
+    uint8_t selected_command;  // For simulator: which command is selected
 } ir_command_state_t;
 
 void ir_command_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -57,5 +59,3 @@ void ir_command_face_resign(void *context);
     ir_command_face_resign, \
     NULL, \
 })
-
-#endif // HAS_IR_SENSOR

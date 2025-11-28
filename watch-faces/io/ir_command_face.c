@@ -25,14 +25,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ir_command_face.h"
-#include "uart.h"
 #include "filesystem.h"
 #include "lfs.h"
 
 #ifdef HAS_IR_SENSOR
+#include "uart.h"
+#endif
 
 // External filesystem instance from filesystem.c
 extern lfs_t eeprom_filesystem;
+
+static const char *commands[] = {"ls"};
+static const uint8_t num_commands = 1;
 
 static void list_files(ir_command_state_t *state) {
     lfs_dir_t dir;
@@ -85,6 +89,22 @@ static void display_file_list(ir_command_state_t *state) {
     watch_display_text(WATCH_POSITION_BOTTOM, filename_display);
 }
 
+static void execute_command(ir_command_state_t *state, const char *cmd) {
+    if (strcmp(cmd, "ls") == 0) {
+        movement_force_led_on(0, 48, 0);  // Green LED for success
+        list_files(state);
+        state->current_file = 0;
+        state->display_mode = true;
+        display_file_list(state);
+    } else {
+        // Unknown command
+        movement_force_led_on(48, 48, 0);  // Yellow LED for unknown
+        watch_clear_display();
+        watch_display_text(WATCH_POSITION_TOP, "UnKno ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "Wn Cmd");
+    }
+}
+
 void ir_command_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
@@ -98,8 +118,10 @@ void ir_command_face_activate(void *context) {
     state->display_mode = false;
     state->current_file = 0;
     state->file_count = 0;
+    state->selected_command = 0;
 
-    // Initialize IR receiver
+#ifdef HAS_IR_SENSOR
+    // Initialize IR receiver on hardware
     HAL_GPIO_IR_ENABLE_out();
     HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_in();
@@ -107,6 +129,7 @@ void ir_command_face_activate(void *context) {
     uart_init_instance(0, UART_TXPO_NONE, UART_RXPO_0, 900);
     uart_set_irda_mode_instance(0, true);
     uart_enable_instance(0);
+#endif
 }
 
 bool ir_command_face_loop(movement_event_t event, void *context) {
@@ -119,13 +142,21 @@ bool ir_command_face_loop(movement_event_t event, void *context) {
             if (state->display_mode) {
                 display_file_list(state);
             } else {
+#ifdef HAS_IR_SENSOR
                 watch_display_text(WATCH_POSITION_TOP, "IR    ");
                 watch_display_text(WATCH_POSITION_BOTTOM, "Cmd   ");
+#else
+                // In simulator, show selected command
+                watch_display_text(WATCH_POSITION_TOP, "Cmd   ");
+                watch_display_text(WATCH_POSITION_BOTTOM, (char *)commands[state->selected_command]);
+#endif
             }
             break;
 
         case EVENT_TICK:
         {
+#ifdef HAS_IR_SENSOR
+            // Hardware mode: read from IR sensor
             char data[64];
             size_t bytes_read = uart_read_instance(0, data, 63);
 
@@ -138,20 +169,8 @@ bool ir_command_face_loop(movement_event_t event, void *context) {
                     bytes_read--;
                 }
 
-                // Process commands
-                if (strcmp(data, "ls") == 0) {
-                    // Execute ls command
-                    movement_force_led_on(0, 48, 0);  // Green LED for success
-                    list_files(state);
-                    state->current_file = 0;
-                    state->display_mode = true;
-                    display_file_list(state);
-                } else if (bytes_read > 0) {
-                    // Unknown command
-                    movement_force_led_on(48, 48, 0);  // Yellow LED for unknown
-                    watch_clear_display();
-                    watch_display_text(WATCH_POSITION_TOP, "UnKno ");
-                    watch_display_text(WATCH_POSITION_BOTTOM, "Wn Cmd");
+                if (bytes_read > 0) {
+                    execute_command(state, data);
                 }
             } else {
                 movement_force_led_off();
@@ -164,23 +183,72 @@ bool ir_command_face_loop(movement_event_t event, void *context) {
                     }
                 }
             }
+#else
+            // Simulator mode: blink to show we're active
+            if (!state->display_mode) {
+                if (watch_rtc_get_date_time().unit.second % 2 == 0) {
+                    watch_set_indicator(WATCH_INDICATOR_BELL);
+                } else {
+                    watch_clear_indicator(WATCH_INDICATOR_BELL);
+                }
+            }
+#endif
         }
             break;
 
+        case EVENT_LIGHT_BUTTON_UP:
+#ifndef HAS_IR_SENSOR
+            // In simulator mode: cycle through available commands
+            if (!state->display_mode) {
+                state->selected_command = (state->selected_command + 1) % num_commands;
+                watch_display_text(WATCH_POSITION_BOTTOM, (char *)commands[state->selected_command]);
+            }
+#endif
+            break;
+
+        case EVENT_LIGHT_LONG_PRESS:
+#ifndef HAS_IR_SENSOR
+            // In simulator mode: execute selected command
+            if (!state->display_mode) {
+                execute_command(state, commands[state->selected_command]);
+            }
+#endif
+            break;
+
         case EVENT_ALARM_BUTTON_UP:
-            // Next file in list
             if (state->display_mode && state->file_count > 0) {
+                // Navigate through file list
                 state->current_file = (state->current_file + 1) % state->file_count;
                 display_file_list(state);
             }
+#ifndef HAS_IR_SENSOR
+            else if (!state->display_mode) {
+                // In simulator mode: also allow cycling commands with ALARM button
+                state->selected_command = (state->selected_command + 1) % num_commands;
+                watch_display_text(WATCH_POSITION_BOTTOM, (char *)commands[state->selected_command]);
+            }
+#endif
             break;
 
         case EVENT_ALARM_LONG_PRESS:
             // Return to command mode
-            state->display_mode = false;
-            watch_clear_display();
-            watch_display_text(WATCH_POSITION_TOP, "IR    ");
-            watch_display_text(WATCH_POSITION_BOTTOM, "Cmd   ");
+            if (state->display_mode) {
+                state->display_mode = false;
+                watch_clear_display();
+#ifdef HAS_IR_SENSOR
+                watch_display_text(WATCH_POSITION_TOP, "IR    ");
+                watch_display_text(WATCH_POSITION_BOTTOM, "Cmd   ");
+#else
+                watch_display_text(WATCH_POSITION_TOP, "Cmd   ");
+                watch_display_text(WATCH_POSITION_BOTTOM, (char *)commands[state->selected_command]);
+#endif
+            }
+#ifndef HAS_IR_SENSOR
+            else {
+                // In simulator mode: execute command on long press
+                execute_command(state, commands[state->selected_command]);
+            }
+#endif
             break;
 
         case EVENT_TIMEOUT:
@@ -200,15 +268,17 @@ bool ir_command_face_loop(movement_event_t event, void *context) {
 
 void ir_command_face_resign(void *context) {
     (void) context;
+#ifdef HAS_IR_SENSOR
     uart_disable_instance(0);
     HAL_GPIO_IRSENSE_pmuxdis();
     HAL_GPIO_IRSENSE_off();
     HAL_GPIO_IR_ENABLE_off();
+#endif
 }
 
+#ifdef HAS_IR_SENSOR
 void irq_handler_sercom0(void);
 void irq_handler_sercom0(void) {
     uart_irq_handler(0);
 }
-
-#endif // HAS_IR_SENSOR
+#endif
