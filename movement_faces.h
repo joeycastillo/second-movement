@@ -46,6 +46,7 @@
 #include "settings_face.h"
 #include "light_sensor_face.h"
 #include "irda_upload_face.h"
+#include "ir_command_face.h"
 #include "chirpy_demo_face.h"
 #include "finetune_face.h"
 #include "nanosec_face.h"
