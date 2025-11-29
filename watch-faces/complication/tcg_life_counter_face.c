@@ -92,7 +92,7 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
             print_tcg_life_counter(state);
             break;
         case EVENT_LIGHT_LONG_PRESS:
-#ifndef TCG_LIFE_COUNTER_FACE_DISABLE_LED
+#ifdef TCG_LIFE_COUNTER_FACE_ENABLE_LED
             movement_illuminate_led();
 #endif
             state->increment_mode_on = !state->increment_mode_on;

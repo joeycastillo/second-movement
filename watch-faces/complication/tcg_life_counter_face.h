@@ -34,15 +34,15 @@
  * Usage:
  * Short-press LIGHT to decrement or increment (determined by mode) left counter (player 1). Clamps to `0`-`999`.
  * Short-press ALARM to decrement or increment (determined by mode) right counter (player 2). Clamps to `0`-`999`.
- * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a `d` or `i` character in the top right of LCD. The number `1` or `5` will be visible next to this character, indicating the current increment/decrement amount. This action will also illuminate the watch's LED.
+ * Long-press LIGHT to toggle mode to decrement or increment mode, indicated by a `d` or `i` character in the top right of LCD. The number `1` or `5` will be visible next to this character, indicating the current increment/decrement amount.
  * Long-press MODE to reset TCG life counter to decrement mode, decrement amount to `1`, and both life counters to the current initial value. If the face is displaying initial values, this action will instead return to the watch's first face.
  * Long-press ALARM to advance to the next set of increment/decrement values (`1` and `5`). The initial increment/decrement value is configured to `1`. If the face is displaying initial values, this action will instead advance to the next set of initial life values (`20` and `40`). The face starts with an initial life value of `20`.
  */
 
 #include "movement.h"
 
-// Uncomment the following to disable the LED lighting upon holding LIGHT.
-// #define TCG_LIFE_COUNTER_FACE_DISABLE_LED
+// Uncomment the following to enable the LED lighting upon holding LIGHT.
+// #define TCG_LIFE_COUNTER_FACE_ENABLE_LED
 
 typedef struct {
     uint16_t life_values[2];
