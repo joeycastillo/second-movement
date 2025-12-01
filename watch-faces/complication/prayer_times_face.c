@@ -2,7 +2,8 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include "watch_rtc.h"
+#include "watch.h"
+#include "watch_utility.h"
 #include "prayer_times_face.h"
 #include "location.h"
 
@@ -49,21 +50,32 @@ static time_t _get_prayer_time_by_index(prayer_times_t *prayer_times, uint8_t in
 static uint8_t _get_current_prayer_from_watch_time(prayer_times_t *prayer_times, watch_date_time_t now);
 static void _display_prayer_time(prayer_times_state_t *state);
 static void _display_set_method(prayer_times_state_t *state);
-static void _update_prayer_times(prayer_times_state_t *state, watch_date_time_t now, struct tm *now_tm);
+static void _update_prayer_times(prayer_times_state_t *state, watch_date_time_t now);
 static void _increment_day(watch_date_time_t *dt);
 static void _update_current_prayer_index(prayer_times_state_t *state, watch_date_time_t now);
 
 static void _calculate_prayer_times(prayer_times_state_t *state, watch_date_time_t date_time)
 {
-  struct tm tm_date = {
-      .tm_year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - 1900,
-      .tm_mon = date_time.unit.month - 1,
-      .tm_mday = date_time.unit.day,
-      .tm_hour = 0,
-      .tm_min = 0,
-      .tm_sec = 0,
-      .tm_isdst = -1};
-  time_t date = mktime(&tm_date);
+  // Get the local date (the date in the user's timezone).
+  // The watch RTC stores UTC time, but we need to know what the LOCAL date is
+  // to calculate prayers for the correct day.
+  watch_date_time_t local_date_time = watch_utility_date_time_convert_zone(
+      date_time, 0, movement_get_current_timezone_offset());
+
+  // Build a UTC midnight timestamp for the LOCAL date.
+  // The Adhan library expects a UTC timestamp representing midnight in UTC
+  // for the date we want prayers for (in the user's local timezone).
+  watch_date_time_t utc_midnight;
+  utc_midnight.reg = 0;
+  utc_midnight.unit.year = local_date_time.unit.year;
+  utc_midnight.unit.month = local_date_time.unit.month;
+  utc_midnight.unit.day = local_date_time.unit.day;
+  utc_midnight.unit.hour = 0;
+  utc_midnight.unit.minute = 0;
+  utc_midnight.unit.second = 0;
+
+  // Pass 0 as the offset to get the UTC timestamp for this date at 00:00 UTC
+  time_t date = (time_t)watch_utility_date_time_to_unix_time(utc_midnight, 0);
 
   movement_location_t location = location_load();
   if (location.reg == 0)
@@ -115,15 +127,10 @@ static time_t _get_prayer_time_by_index(prayer_times_t *prayer_times, uint8_t in
 
 static uint8_t _get_current_prayer_from_watch_time(prayer_times_t *prayer_times, watch_date_time_t now)
 {
-  struct tm now_tm = {
-      .tm_year = now.unit.year + WATCH_RTC_REFERENCE_YEAR - 1900,
-      .tm_mon = now.unit.month - 1,
-      .tm_mday = now.unit.day,
-      .tm_hour = now.unit.hour,
-      .tm_min = now.unit.minute,
-      .tm_sec = now.unit.second,
-      .tm_isdst = -1};
-  time_t now_time = mktime(&now_tm);
+  // Convert the watch's local date/time into a UTC unix timestamp using Movement's
+  // timezone offset. This avoids reliance on the C library's localtime/mktime
+  // behavior which can differ between emulator and hardware.
+  time_t now_time = (time_t)watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
   prayer_t prayer = currentPrayer(prayer_times, now_time);
   // Default to Fajr
   if (prayer == NONE)
@@ -164,10 +171,12 @@ static void _display_prayer_time(prayer_times_state_t *state)
     return;
   }
 
-  struct tm prayer_tm_buf;
-  struct tm *prayer_tm = localtime_r(&prayer_time, &prayer_tm_buf);
-  uint8_t hour = prayer_tm->tm_hour;
-  uint8_t minute = prayer_tm->tm_min;
+  // Convert the UTC timestamp returned by the Adhan library into a local
+  // watch_date_time_t using Movement's timezone offset so display is consistent
+  // across emulator and hardware.
+  watch_date_time_t prayer_dt = watch_utility_date_time_from_unix_time((uint32_t)prayer_time, movement_get_current_timezone_offset());
+  uint8_t hour = prayer_dt.unit.hour;
+  uint8_t minute = prayer_dt.unit.minute;
 
   if (movement_clock_mode_24h())
     watch_set_indicator(WATCH_INDICATOR_24H);
@@ -196,21 +205,12 @@ static void _display_set_method(prayer_times_state_t *state)
 
 static void _increment_day(watch_date_time_t *dt)
 {
-  struct tm tm_val = {
-      .tm_year = dt->unit.year + WATCH_RTC_REFERENCE_YEAR - 1900,
-      .tm_mon = dt->unit.month - 1,
-      .tm_mday = dt->unit.day,
-      .tm_hour = 12, // Use midday to avoid DST issues
-      .tm_min = 0,
-      .tm_sec = 0,
-      .tm_isdst = -1};
-  time_t time_val = mktime(&tm_val);
-  time_val += 86400; // Add seconds in one day
-  struct tm *next_day_tm = localtime(&time_val);
-
-  dt->unit.year = next_day_tm->tm_year - WATCH_RTC_REFERENCE_YEAR + 1900;
-  dt->unit.month = next_day_tm->tm_mon + 1;
-  dt->unit.day = next_day_tm->tm_mday;
+  // Increment the watch_date_time_t by one day using Movement's timezone-aware
+  // unix-time conversion to avoid libc timezone/DST differences.
+  time_t t = (time_t)watch_utility_date_time_to_unix_time(*dt, movement_get_current_timezone_offset());
+  t += 86400; // Add seconds in one day
+  watch_date_time_t next = watch_utility_date_time_from_unix_time((uint32_t)t, movement_get_current_timezone_offset());
+  dt->reg = next.reg;
 }
 
 static void _update_current_prayer_index(prayer_times_state_t *state, watch_date_time_t now)
@@ -230,34 +230,28 @@ static void _update_current_prayer_index(prayer_times_state_t *state, watch_date
   }
 }
 
-static void _update_prayer_times(prayer_times_state_t *state, watch_date_time_t now, struct tm *now_tm)
+static void _update_prayer_times(prayer_times_state_t *state, watch_date_time_t now)
 {
-  time_t now_time = mktime(now_tm);
-  // If midnight is before 00:00, we need to check if we are past today's midnight
-  struct tm midnight_tm_buf;
-  struct tm *midnight_tm = localtime_r(&state->prayer_times.midnight, &midnight_tm_buf);
-  bool midnight_condition = state->prayer_times.midnight && midnight_tm && (midnight_tm->tm_hour < 0) && now_time >= state->prayer_times.midnight;
+  // Convert current time to UTC timestamp for comparison with prayer times
+  time_t now_time = (time_t)watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
 
-  // If after today's midnight, use next day's prayers
-  if (midnight_condition)
+  // Recalculate prayer times if we've passed Islamic midnight
+  // Islamic midnight marks the end of the prayer day
+  if (state->times_calculated && state->prayer_times.midnight > 0 && now_time >= state->prayer_times.midnight)
   {
-    watch_date_time_t next_date_time = now;
-    _increment_day(&next_date_time);
-    _calculate_prayer_times(state, next_date_time);
+    _calculate_prayer_times(state, now);
     state->manual_override = false;
-    state->current_prayer_index = 0;
   }
-  else
+  // Also recalculate if the date changed (fallback for when times aren't calculated yet)
+  else if (state->last_calculated_day != now.unit.day)
   {
-    if (state->last_calculated_day != now.unit.day)
-    {
-      _calculate_prayer_times(state, now);
-      state->manual_override = false;
-    }
-    if (!state->manual_override)
-    {
-      _update_current_prayer_index(state, now);
-    }
+    _calculate_prayer_times(state, now);
+    state->manual_override = false;
+  }
+
+  if (!state->manual_override)
+  {
+    _update_current_prayer_index(state, now);
   }
   _display_prayer_time(state);
 }
@@ -282,15 +276,7 @@ void prayer_times_face_activate(void *context)
 {
   prayer_times_state_t *state = (prayer_times_state_t *)context;
   watch_date_time_t date_time = watch_rtc_get_date_time();
-  struct tm now_tm = {
-      .tm_year = date_time.unit.year + WATCH_RTC_REFERENCE_YEAR - 1900,
-      .tm_mon = date_time.unit.month - 1,
-      .tm_mday = date_time.unit.day,
-      .tm_hour = date_time.unit.hour,
-      .tm_min = date_time.unit.minute,
-      .tm_sec = date_time.unit.second,
-      .tm_isdst = -1};
-  _update_prayer_times(state, date_time, &now_tm);
+  _update_prayer_times(state, date_time);
 
   if (state->alarms_enabled)
     watch_set_indicator(WATCH_INDICATOR_BELL);
@@ -336,15 +322,7 @@ bool prayer_times_face_loop(movement_event_t event, void *context)
     if (state->mode == PRAYER_TIMES_MODE_DISPLAY)
     {
       watch_date_time_t now = watch_rtc_get_date_time();
-      struct tm now_tm = {
-          .tm_year = now.unit.year + WATCH_RTC_REFERENCE_YEAR - 1900,
-          .tm_mon = now.unit.month - 1,
-          .tm_mday = now.unit.day,
-          .tm_hour = now.unit.hour,
-          .tm_min = now.unit.minute,
-          .tm_sec = now.unit.second,
-          .tm_isdst = -1};
-      _update_prayer_times(state, now, &now_tm);
+      _update_prayer_times(state, now);
     }
     break;
   }
@@ -449,13 +427,17 @@ movement_watch_face_advisory_t prayer_times_face_advise(void *context)
     watch_date_time_t now = movement_get_local_date_time();
     for (uint8_t i = 0; i < 7; i++)
     {
+      // Skip sunrise (index 1) and midnight (index 6) - no alarms for those
       if (i == 1 || i == 6) continue;
+
       time_t pt = _get_prayer_time_by_index(&state->prayer_times, i);
       if (!pt) continue;
-      struct tm pt_tm_buf;
-      struct tm *pt_tm = localtime_r(&pt, &pt_tm_buf);
-      if (!pt_tm) continue;
-      if ((uint8_t)pt_tm->tm_hour == now.unit.hour && (uint8_t)pt_tm->tm_min == now.unit.minute)
+
+      // Convert UTC prayer time to local time using Movement's timezone offset
+      watch_date_time_t prayer_dt = watch_utility_date_time_from_unix_time((uint32_t)pt, movement_get_current_timezone_offset());
+
+      // Check if we're at the prayer time (matching hour and minute)
+      if (prayer_dt.unit.hour == now.unit.hour && prayer_dt.unit.minute == now.unit.minute)
       {
         retval.wants_background_task = true;
         break;
