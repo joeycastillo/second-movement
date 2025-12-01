@@ -59,9 +59,14 @@ time_t add_days(const time_t when, int amount) {
 }
 
 time_t date_from_time(const time_t time) {
-  struct tm *tm_date = localtime(&time);
-  tm_date->tm_hour = 0;
-  tm_date->tm_min = 0;
-  tm_date->tm_sec = 0;
-  return mktime(tm_date);
+  struct tm tm_date = *gmtime(&time);
+  tm_date.tm_hour = 0;
+  tm_date.tm_min = 0;
+  tm_date.tm_sec = 0;
+  // Portable UTC time conversion - avoid timegm which isn't available everywhere
+  time_t result = mktime(&tm_date);
+  // mktime assumes local time, so we need to adjust for the difference
+  struct tm *gmt = gmtime(&result);
+  time_t offset = mktime(gmt) - result;
+  return result - offset;
 }
