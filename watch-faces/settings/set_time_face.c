@@ -46,7 +46,7 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             current_offset = movement_get_current_timezone_offset_for_zone(movement_get_timezone_index());
             return;
         case 0: // year
-            date_time.unit.year = ((date_time.unit.year % 60) + 1);
+            date_time.unit.year = (date_time.unit.year + 1) % 60;
             break;
         case 1: // month
             date_time.unit.month = (date_time.unit.month % 12) + 1;
@@ -91,6 +91,8 @@ bool set_time_face_loop(movement_event_t event, void *context) {
     watch_date_time_t date_time = movement_get_local_date_time();
 
     switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            break;
         case EVENT_TICK:
             if (_quick_ticks_running) {
                 if (HAL_GPIO_BTN_ALARM_read()) _handle_alarm_button(date_time, current_page);

@@ -95,8 +95,8 @@ void simon_face_activate(void *context);
 bool simon_face_loop(movement_event_t event, void *context);
 void simon_face_resign(void *context);
 
-#define simon_face                                                             \
-    ((const watch_face_t){                                                       \
+#define simon_face                                                            \
+    ((const watch_face_t){                                                    \
      simon_face_setup,                                                        \
      simon_face_activate,                                                     \
      simon_face_loop,                                                         \
