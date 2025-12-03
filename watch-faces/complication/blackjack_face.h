@@ -63,6 +63,7 @@
  * 
  * Long-pressing the LIGHT button on the Title Screen will display your win rate as a percentage of games finished.
  * It displays as games won / (games won + games lost) it does not include incomplete nor tied games.
+ * You can reset the win rate on that screen by long-pressing the ALARM button.
  * 
  * | Cards   |                          |
  * |---------|--------------------------|
