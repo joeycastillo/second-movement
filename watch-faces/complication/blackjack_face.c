@@ -444,6 +444,11 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_LONG_PRESS:
             if (game_state == BJ_TITLE_SCREEN) {
                 toggle_tap_control(state);
+            } else if (game_state == BJ_WIN_RATIO) {
+                // Reset the win-lose ratio
+                state->games_won = 0;
+                state->games_played = 0;
+                watch_display_text(WATCH_POSITION_BOTTOM, "  0Pct");
             }
             break;
         case EVENT_TIMEOUT:
