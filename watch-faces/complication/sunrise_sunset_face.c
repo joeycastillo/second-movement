@@ -39,7 +39,12 @@
 #include <emscripten.h>
 #endif
 
-static const uint8_t _location_count = sizeof(longLatPresets) / sizeof(long_lat_presets_t);
+#define FREQ_SCROLL 8
+#define FREQ_FAST 4
+#define FREQ 1
+
+static const uint8_t _location_count = sizeof(sunriseSunsetAltLocationPresets) / sizeof(sunrise_sunset_alt_location_presets_t);
+static const uint8_t _long_lat_preset_count = sizeof(sunriseSunsetLongLatPresets) / sizeof(sunriseSunsetLongLatPresets[0]);
 
 static void persist_location_to_filesystem(movement_location_t new_location) {
     movement_location_t maybe_location = {0};
@@ -58,6 +63,33 @@ static movement_location_t load_location_from_filesystem() {
     return location;
 }
 
+static uint8_t city_idx_of_curr_location(int16_t latitude, int16_t longitude){
+    for (uint8_t i = 0; i < _long_lat_preset_count; i++) {
+        if (sunriseSunsetLongLatPresets[i].latitude == latitude && sunriseSunsetLongLatPresets[i].longitude == longitude) {
+            return i;
+        }
+    }
+    return _long_lat_preset_count;
+}
+
+static void display_city(sunrise_sunset_state_t *state) {
+    char buf[7];
+    if (state->city_idx >= _long_lat_preset_count) {
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "CUSTOM");
+    } else {
+        sprintf(buf, " %d", sunriseSunsetLongLatPresets[state->city_idx].region);
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+        if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+            sprintf(buf, "%.6s", sunriseSunsetLongLatPresets[state->city_idx].name);
+        } else {
+            sprintf(buf, " %.5s", sunriseSunsetLongLatPresets[state->city_idx].name);
+        }
+        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+    }
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "CIT", "CI");
+}
+
 static void _sunrise_sunset_set_expiration(sunrise_sunset_state_t *state, watch_date_time_t next_rise_set) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(next_rise_set, 0);
     state->rise_set_expires = watch_utility_date_time_from_unix_time(timestamp + 60, 0);
@@ -68,11 +100,19 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     double rise, set, minutes, seconds;
     bool show_next_match = false;
     movement_location_t movement_location;
-    if (state->longLatToUse == 0 || _location_count <= 1)
+    int32_t tz;
+    if (state->longLatToUse == 0 || _location_count <= 1) {
         movement_location = load_location_from_filesystem();
+        if (state->city_idx < _long_lat_preset_count) {
+            tz = movement_get_current_timezone_offset_for_zone(sunriseSunsetLongLatPresets[state->city_idx].timezone);
+        } else {
+            tz = movement_get_current_timezone_offset();
+        }
+    }
     else{
-        movement_location.bit.latitude = longLatPresets[state->longLatToUse].latitude;
-        movement_location.bit.longitude = longLatPresets[state->longLatToUse].longitude;
+        movement_location.bit.latitude = sunriseSunsetAltLocationPresets[state->longLatToUse].latitude;
+        movement_location.bit.longitude = sunriseSunsetAltLocationPresets[state->longLatToUse].longitude;
+        tz = movement_get_current_timezone_offset_for_zone(sunriseSunsetAltLocationPresets[state->longLatToUse].timezone);
     }
 
     if (movement_location.reg == 0) {
@@ -96,7 +136,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     // sunriset returns the rise/set times as signed decimal hours in UTC.
     // this can mean hours below 0 or above 31, which won't fit into a watch_date_time_t struct.
     // to deal with this, we set aside the offset in hours, and add it back before converting it to a watch_date_time_t.
-    double hours_from_utc = ((double)movement_get_current_timezone_offset()) / 3600.0;
+    double hours_from_utc = ((double)tz) / 3600.0;
 
     // we loop twice because if it's after sunset today, we need to recalculate to display values for tomorrow.
     for(int i = 0; i < 2; i++) {
@@ -151,7 +191,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                 watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "RIS", "rI");
                 sprintf(buf, "%2d", scratch_time.unit.day);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,sunriseSunsetAltLocationPresets[state->longLatToUse].name);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
@@ -190,7 +230,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
                 watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SET", "SE");
                 sprintf(buf, "%2d", scratch_time.unit.day);
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,longLatPresets[state->longLatToUse].name);
+                sprintf(buf, "%2d%02d%2s", scratch_time.unit.hour, scratch_time.unit.minute,sunriseSunsetAltLocationPresets[state->longLatToUse].name);
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
                 return;
             } else {
@@ -240,6 +280,8 @@ static void _sunrise_sunset_face_update_location_register(sunrise_sunset_state_t
         movement_location_t movement_location;
         int16_t lat = _sunrise_sunset_face_latlon_from_struct(state->working_latitude);
         int16_t lon = _sunrise_sunset_face_latlon_from_struct(state->working_longitude);
+        state->set_city_idx = city_idx_of_curr_location(lat, lon);
+        state->city_idx = state->set_city_idx;
         movement_location.bit.latitude = lat;
         movement_location.bit.longitude = lon;
         persist_location_to_filesystem(movement_location);
@@ -253,10 +295,11 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
     watch_clear_display();
 
     switch (state->page) {
-        case 0:
+        case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+        case SUNRISE_SUNSET_FACE_CITIES:
+        case SUNRISE_SUNSET_FACE_PAGES_COUNT:
             return;
-        case 1:
-            // Latitude
+        case SUNRISE_SUNSET_FACE_SETTING_LAT:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LAT", "LA");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
@@ -279,8 +322,7 @@ static void _sunrise_sunset_face_update_settings_display(movement_event_t event,
                 watch_display_text(WATCH_POSITION_BOTTOM, buf);
             }
             break;
-        case 2:
-            // Longitude
+        case SUNRISE_SUNSET_FACE_SETTING_LONG:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LON", "LO");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
                 watch_set_decimal_if_available();
@@ -313,7 +355,11 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     state->location_changed = true;
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
         switch (state->page) {
-            case 1: // latitude
+            case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+            case SUNRISE_SUNSET_FACE_CITIES:
+            case SUNRISE_SUNSET_FACE_PAGES_COUNT:
+                return;
+            case SUNRISE_SUNSET_FACE_SETTING_LAT:
                 switch (state->active_digit) {
                     case 0: // tens
                         state->working_latitude.tens = (state->working_latitude.tens + 1) % 10;
@@ -342,7 +388,7 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
                         break;
                 }
                 break;
-            case 2: // longitude
+            case SUNRISE_SUNSET_FACE_SETTING_LONG:
                 switch (state->active_digit) {
                     case 0:
                         // Increase tens and handle carry-over to hundreds
@@ -381,7 +427,11 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
         }
     } else {
         switch (state->page) {
-            case 1: // latitude
+            case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+            case SUNRISE_SUNSET_FACE_CITIES:
+            case SUNRISE_SUNSET_FACE_PAGES_COUNT:
+                return;
+            case SUNRISE_SUNSET_FACE_SETTING_LAT:
                 switch (state->active_digit) {
                     case 0:
                         state->working_latitude.sign++;
@@ -413,7 +463,7 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
                         break;
                 }
                 break;
-            case 2: // longitude
+            case SUNRISE_SUNSET_FACE_SETTING_LONG:
                 switch (state->active_digit) {
                     case 0:
                         state->working_longitude.sign++;
@@ -450,6 +500,57 @@ static void _sunrise_sunset_face_advance_digit(sunrise_sunset_state_t *state) {
     }
 }
 
+static bool _sunrise_sunset_face_location_in_tz(int32_t tz) {
+    for (uint8_t i = 0; i < _long_lat_preset_count; i++) {
+        if (sunriseSunsetLongLatPresets[i].timezone == tz) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void _sunrise_sunset_face_move_forward(sunrise_sunset_state_t *state) {
+    int32_t tz = movement_get_timezone_index();
+    uint8_t init_idx = state->city_idx;
+    do {
+        state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
+    } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
+            && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count
+            && state->city_idx != state->set_city_idx && tz != UTZ_UTC);
+    if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
+        // UI won't allow this since we go straight to lat/long if we have no locations in our tz
+        state->curr_tz_has_cities = false;
+        state->city_idx = (state->city_idx + 1) % (_long_lat_preset_count + 1);
+    }
+    display_city(state);
+}
+
+static void _sunrise_sunset_face_move_backwards(sunrise_sunset_state_t *state) {
+    int32_t tz = movement_get_timezone_index();
+    uint8_t init_idx = state->city_idx;
+    do {
+        state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
+    } while (state->curr_tz_has_cities && sunriseSunsetLongLatPresets[state->city_idx].timezone != tz
+            && state->city_idx != init_idx && state->city_idx != _long_lat_preset_count
+            && state->city_idx != state->set_city_idx && tz != UTZ_UTC);
+    if (state->city_idx == init_idx) {  // Allow going to the next timezone if no timezones exist in the index
+        // UI won't allow this since we go straight to lat/long if we have no locations in our tz
+        state->curr_tz_has_cities = false;
+        state->city_idx = (_long_lat_preset_count + state->city_idx) % (_long_lat_preset_count + 1);
+    }
+    display_city(state);
+}
+
+static void _sunrise_sunset_face_start_quick_cyc(sunrise_sunset_state_t *state) {
+    state->quick_ticks_running = true;
+    movement_request_tick_frequency(FREQ_SCROLL);
+}
+
+static void _sunrise_sunset_face_stop_quick_cyc(sunrise_sunset_state_t *state) {
+    state->quick_ticks_running = false;
+    movement_request_tick_frequency(FREQ_FAST);
+}
+
 void sunrise_sunset_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
@@ -480,114 +581,240 @@ void sunrise_sunset_face_activate(void *context) {
     movement_location_t movement_location = load_location_from_filesystem();
     state->working_latitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.latitude);
     state->working_longitude = _sunrise_sunset_face_struct_from_latlon(movement_location.bit.longitude);
+    state->set_city_idx = city_idx_of_curr_location(movement_location.bit.latitude, movement_location.bit.longitude);
+    state->city_idx = state->set_city_idx;
+    state->quick_ticks_running = false;
 }
 
-bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
-    sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
-
+static bool _sunrise_sunset_face_update_long_lat_display(movement_event_t event, sunrise_sunset_state_t *state) {
+    bool go_to_next_page = false;
     switch (event.event_type) {
-        case EVENT_ACTIVATE:
-            _sunrise_sunset_face_update(state);
-            break;
         case EVENT_LOW_ENERGY_UPDATE:
         case EVENT_TICK:
-            if (state->page == 0) {
-                // if entering low energy mode, start tick animation
-                if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
-                // check if we need to update the display
-                watch_date_time_t date_time = movement_get_local_date_time();
-                if (date_time.reg >= state->rise_set_expires.reg) {
-                    // and on the off chance that this happened before EVENT_TIMEOUT snapped us back to rise/set 0, go back now
-                    state->rise_index = 0;
-                    _sunrise_sunset_face_update(state);
-                }
-            } else {
-                _sunrise_sunset_face_update_settings_display(event, state);
-            }
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
-            if (state->page) {
-                if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
-                    state->active_digit++;
-                    if (state->active_digit > 4) {
-                        state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
-                        _sunrise_sunset_face_update_location_register(state);
-                    }
-                } else {
-                    state->active_digit++;
-                    if (state->page == 1 && state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
-                    if (state->active_digit > 5) {
-                        state->active_digit = 0;
-                        state->page = (state->page + 1) % 3;
-                        _sunrise_sunset_face_update_location_register(state);
-                    }
-                }
-                _sunrise_sunset_face_update_settings_display(event, context);
-            } else if (_location_count <= 1) {
-                movement_illuminate_led();
-            }
-            if (state->page == 0) {
-                movement_request_tick_frequency(1);
-                _sunrise_sunset_face_update(state);
-            }
-            break;
-        case EVENT_LIGHT_LONG_PRESS:
-            if (_location_count <= 1) break;
-            else if (!state->page) movement_illuminate_led();
+            _sunrise_sunset_face_update_settings_display(event, state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if (state->page == 0 && _location_count > 1) {
-                state->longLatToUse = (state->longLatToUse + 1) % _location_count;
-                _sunrise_sunset_face_update(state);
-            }
-            break;
-        case EVENT_ALARM_BUTTON_UP:
-            if (state->page) {
-                _sunrise_sunset_face_advance_digit(state);
-                _sunrise_sunset_face_update_settings_display(event, context);
+            state->active_digit++;
+            if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+                if (state->active_digit > 4) {
+                    state->active_digit = 0;
+                    go_to_next_page = true;
+                }
             } else {
-                state->rise_index = (state->rise_index + 1) % 2;
-                _sunrise_sunset_face_update(state);
+                if (state->page == SUNRISE_SUNSET_FACE_SETTING_LAT && state->active_digit == 1) state->active_digit++; // max latitude is +- 90, no hundreds place
+                if (state->active_digit > 5) {
+                    state->active_digit = 0;
+                    go_to_next_page = true;
+                }
             }
-            break;
-        case EVENT_ALARM_LONG_PRESS:
-            if (state->page == 0) {
-            if (state->longLatToUse != 0) {
-                state->longLatToUse = 0;
-                _sunrise_sunset_face_update(state);
+            if (go_to_next_page) {
+                state->page = (state->page + 1) % SUNRISE_SUNSET_FACE_PAGES_COUNT;
+                _sunrise_sunset_face_update_location_register(state);
+                if (state->page == SUNRISE_SUNSET_FACE_RISE_SET_TIMES) {
+                    watch_clear_display();
+                    _sunrise_sunset_face_update(state);
+                }
                 break;
             }
-                state->page++;
-                state->active_digit = 0;
-                watch_clear_display();
-                movement_request_tick_frequency(4);
-                _sunrise_sunset_face_update_settings_display(event, context);
-            }
-            else {
-                state->active_digit = 0;
-                state->page = 0;
-                _sunrise_sunset_face_update_location_register(state);
-                _sunrise_sunset_face_update(state);
-            }
+            _sunrise_sunset_face_update_settings_display(event, state);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            _sunrise_sunset_face_advance_digit(state);
+            _sunrise_sunset_face_update_settings_display(event, state);
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            state->active_digit = 0;
+            state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
+            _sunrise_sunset_face_update_location_register(state);
             break;
         case EVENT_TIMEOUT:
             if (load_location_from_filesystem().reg == 0) {
                 // if no location set, return home
                 movement_move_to_face(0);
-            } else if (state->page || state->rise_index) {
+            } else {
                 // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
-                state->page = 0;
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
                 state->rise_index = 0;
-                movement_request_tick_frequency(1);
+                movement_request_tick_frequency(FREQ_FAST);
                 _sunrise_sunset_face_update(state);
             }
             break;
         default:
             return movement_default_loop_handler(event);
     }
-
     return true;
+}
+
+static bool _sunrise_sunset_face_update_choose_city(movement_event_t event, sunrise_sunset_state_t *state) {
+    switch (event.event_type) {
+        case EVENT_LOW_ENERGY_UPDATE:
+        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_ALARM_BUTTON_DOWN:
+            break;
+        case EVENT_TICK:
+            if (state->quick_ticks_running) {
+                if (HAL_GPIO_BTN_ALARM_read()) {
+                    _sunrise_sunset_face_move_forward(state);
+                } else {
+                    _sunrise_sunset_face_stop_quick_cyc(state);
+                }
+            }
+            else if (state->city_idx != state->set_city_idx) {
+                if (event.subsecond % 2) {
+                    display_city(state);
+                } else {
+                    watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+                }
+            }
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            _sunrise_sunset_face_move_backwards(state);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            _sunrise_sunset_face_move_forward(state);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            state->quick_ticks_running = false;
+            if (state->city_idx < _long_lat_preset_count) {
+                state->working_latitude = _sunrise_sunset_face_struct_from_latlon(sunriseSunsetLongLatPresets[state->city_idx].latitude);
+                state->working_longitude = _sunrise_sunset_face_struct_from_latlon(sunriseSunsetLongLatPresets[state->city_idx].longitude);
+                state->location_changed = state->city_idx != state->set_city_idx;
+                _sunrise_sunset_face_update_location_register(state);
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
+                watch_clear_display();
+                _sunrise_sunset_face_update(state);
+            } else {
+                state->page = SUNRISE_SUNSET_FACE_SETTING_LAT;
+                state->active_digit = 0;
+                watch_clear_display();
+                movement_request_tick_frequency(FREQ_FAST);
+                _sunrise_sunset_face_update_settings_display(event, state);
+            }
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            _sunrise_sunset_face_start_quick_cyc(state);
+            _sunrise_sunset_face_move_forward(state);
+            break;
+        case EVENT_TIMEOUT:
+            if (load_location_from_filesystem().reg == 0) {
+                // if no location set, return home
+                movement_move_to_face(0);
+            } else {
+                // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
+                state->rise_index = 0;
+                movement_request_tick_frequency(FREQ);
+                _sunrise_sunset_face_update(state);
+            }
+            break;
+        default:
+            return movement_default_loop_handler(event);
+    }
+    return true;
+}
+
+static bool _sunrise_sunset_face_update_rise_set(movement_event_t event, sunrise_sunset_state_t *state) {
+    int32_t tz = movement_get_timezone_index();
+    switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            _sunrise_sunset_face_update(state);
+            break;
+        case EVENT_LOW_ENERGY_UPDATE:
+        case EVENT_TICK:
+            // if entering low energy mode, start tick animation
+            if (event.event_type == EVENT_LOW_ENERGY_UPDATE && !watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
+            // check if we need to update the display
+            watch_date_time_t date_time = movement_get_local_date_time();
+            if (date_time.reg >= state->rise_set_expires.reg) {
+                // and on the off chance that this happened before EVENT_TIMEOUT snapped us back to rise/set 0, go back now
+                state->rise_index = 0;
+                _sunrise_sunset_face_update(state);
+            }
+            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            if (_location_count <= 1) {
+                movement_illuminate_led();
+            }
+            movement_request_tick_frequency(FREQ);
+            _sunrise_sunset_face_update(state);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (_location_count <= 1) break;
+            else movement_illuminate_led();
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            if (_location_count > 1) {
+                state->longLatToUse = (state->longLatToUse + 1) % _location_count;
+                _sunrise_sunset_face_update(state);
+            }
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            state->rise_index = (state->rise_index + 1) % 2;
+            _sunrise_sunset_face_update(state);
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            if (state->longLatToUse != 0) {
+                state->longLatToUse = 0;
+                watch_clear_display();
+                _sunrise_sunset_face_update(state);
+                break;
+            }
+            tz = movement_get_timezone_index();
+            state->curr_tz_has_cities = _sunrise_sunset_face_location_in_tz(tz);
+            if (!state->curr_tz_has_cities) {
+                state->active_digit = 0;
+                state->page = SUNRISE_SUNSET_FACE_SETTING_LAT;
+                watch_clear_display();
+                movement_request_tick_frequency(FREQ_FAST);
+                _sunrise_sunset_face_update_settings_display(event, state);
+            } else {
+                state->page = SUNRISE_SUNSET_FACE_CITIES;
+                watch_clear_display();
+                movement_request_tick_frequency(FREQ_FAST);
+                display_city(state);
+            }
+            break;
+        case EVENT_TIMEOUT:
+            if (load_location_from_filesystem().reg == 0) {
+                // if no location set, return home
+                movement_move_to_face(0);
+            } else if (state->rise_index) {
+                // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
+                state->page = SUNRISE_SUNSET_FACE_RISE_SET_TIMES;
+                state->rise_index = 0;
+                movement_request_tick_frequency(FREQ);
+                _sunrise_sunset_face_update(state);
+            }
+            break;
+        default:
+            return movement_default_loop_handler(event);
+    }
+    return true;
+}
+
+bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
+    sunrise_sunset_state_t *state = (sunrise_sunset_state_t *)context;
+    bool retval;
+    switch (state->page)
+    {
+        case SUNRISE_SUNSET_FACE_SETTING_LAT:
+        case SUNRISE_SUNSET_FACE_SETTING_LONG:
+            retval = _sunrise_sunset_face_update_long_lat_display(event, state);
+            break;
+        case SUNRISE_SUNSET_FACE_CITIES:
+            retval = _sunrise_sunset_face_update_choose_city(event, state);
+            break;
+        case SUNRISE_SUNSET_FACE_RISE_SET_TIMES:
+        default:
+            retval = _sunrise_sunset_face_update_rise_set(event, state);
+            break;
+    }
+
+    return retval;
 }
 
 void sunrise_sunset_face_resign(void *context) {
@@ -595,5 +822,4 @@ void sunrise_sunset_face_resign(void *context) {
     state->page = 0;
     state->active_digit = 0;
     state->rise_index = 0;
-    _sunrise_sunset_face_update_location_register(state);
 }
