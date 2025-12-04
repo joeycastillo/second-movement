@@ -210,7 +210,7 @@ static inline void _display_counts(baby_kicks_state_t *state) {
         watch_display_text(WATCH_POSITION_BOTTOM, "baby  ");
         watch_clear_colon();
     } else {
-        char buf[7];
+        char buf[9];
 
         snprintf(
             buf,
@@ -259,7 +259,7 @@ static void _display_elapsed_minutes(baby_kicks_state_t *state) {
          * the total elapsed minutes.
          */
 
-        char buf[3];
+        char buf[5];
         uint32_t elapsed_minutes = _elapsed_minutes(state);
         uint8_t multiple = elapsed_minutes / 30;
         uint8_t remainder = elapsed_minutes % 30;
