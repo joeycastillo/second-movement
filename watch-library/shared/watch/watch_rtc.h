@@ -27,7 +27,7 @@
 ////< @file watch_rtc.h
 
 #include "watch.h"
-#include "rtc.h"
+#include "rtc32.h"
 
 /** @addtogroup rtc Real-Time Clock
   * @brief This section covers functions related to the SAM L22's real-time clock peripheral, including
@@ -42,17 +42,20 @@
 extern watch_cb_t btn_alarm_callback;
 extern watch_cb_t a2_callback;
 extern watch_cb_t a4_callback;
+extern watch_cb_t comp_callback;
 
 #define WATCH_RTC_REFERENCE_YEAR (2020)
 
 #define watch_date_time_t rtc_date_time_t
+typedef rtc_counter_t watch_counter_t;
+typedef uint32_t unix_timestamp_t;
 
 /** @brief Called by main.c to check if the RTC is enabled.
   * You may call this function, but outside of app_init, it should always return true.
   */
 bool _watch_rtc_is_enabled(void);
 
-/** @brief Sets the date and time.
+/** @brief Sets the date and time. Calls watch_rtc_set_unix_time internally.
   * @param date_time The date and time you wish to set, with a year value from 0-63 representing 2020-2083.
   * @note The SAM L22 stores the year as six bits representing a value from 0 to 63. It treats this as a year
   *       offset from a reference year, which must be a leap year. Since 2020 was a leap year, and it allows
@@ -62,7 +65,7 @@ bool _watch_rtc_is_enabled(void);
   */
 void watch_rtc_set_date_time(rtc_date_time_t date_time);
 
-/** @brief Returns the date and time.
+/** @brief Returns the date and time. Calls watch_rtc_get_unix_time internally.
   * @return A rtc_date_time_t with the current date and time, with a year value from 0-63 representing 2020-2083.
   * @see watch_rtc_set_date_time for notes about how the year is stored.
   */
@@ -73,26 +76,79 @@ rtc_date_time_t watch_rtc_get_date_time(void);
   */
 rtc_date_time_t watch_get_init_date_time(void);
 
-/** @brief Registers an alarm callback that will be called when the RTC time matches the target time, as masked
-  *        by the provided mask.
-  * @param callback The function you wish to have called when the alarm fires. If this value is NULL, the alarm
+/** @brief Set the current UTC date and time using a unix timestamp
+ */
+void watch_rtc_set_unix_time(unix_timestamp_t unix_time);
+
+/** @brief Get the current UTC date and time using a unix timestamp
+ */ 
+unix_timestamp_t watch_rtc_get_unix_time(void);
+
+/** @brief Get the current value of the internal hardware counter
+ *  @details The counter starts at 0 and it increases at a 128Hz rate until it overflows and starts over.
+ *           We never manually set the counter. Doing so allows us to calculate absolute elapsed and more.
+ *           When the user sets the time, what is modified is the reference time (i.e. the date and time when
+ *           the counter is 0).
+ */ 
+rtc_counter_t watch_rtc_get_counter(void);
+
+/** @brief Get the RTC counter frequency.
+ */
+uint32_t watch_rtc_get_frequency(void);
+
+/** @brief Get how many counter ticks are in one minute.
+ */
+uint32_t watch_rtc_get_ticks_per_minute(void);
+
+/** @brief Registers a callback that will be called when the RTC counter matches the target counter.
+  * @param callback The function you wish to have called when the target counter is reached. If this value is NULL, the comp
   *                 interrupt will still be enabled, but no callback function will be called.
-  * @param alarm_time The time that you wish to match. The date is currently ignored.
-  * @param mask One of the values in rtc_alarm_match_t indicating which values to check.
-  * @details The alarm interrupt is a versatile tool for scheduling events in the future, especially since it can
-  *          wake the device from all sleep modes. The key to its versatility is the mask parameter.
-  *          Suppose we set an alarm for midnight, 00:00:00.
-  *           * if mask is ALARM_MATCH_SS, the alarm will fire every minute when the clock ticks to seconds == 0.
-  *           * with ALARM_MATCH_MMSS, the alarm will once an hour, at the top of each hour.
-  *           * with ALARM_MATCH_HHMMSS, the alarm will fire at midnight every day.
-  *          In theory the SAM L22's alarm function can match on days, months and even years, but I have not had
-  *          success with this yet; as such, I am omitting these options for now.
+  * @param counter The time that you wish to match. The date is currently ignored.
+  * @param index We can have up to 8 active callbacks at a time. This parameter specifies which of the 8 callbacks should be set.
+  * @details The hardware RTC provides us with single interrupt that fires when the RTC counter matches a target counter COMP0.
+  *          With a little bit of logic, we can provide multiple active compare callbacks. Every time a comp callback is 
+  *          registered/disabled/fired we iterate over all the active comp callbacks and set the hardware COMP0 counter
+  *          to the next occurring one.
+  *          With this very simple API, movement can implement one-shot timers to turn off the led and determine button longpresses
+  *          as well as the inactivity timeouts for resigning and sleeping, as well as emulating the top of the minute alarm.
   */
-void watch_rtc_register_alarm_callback(watch_cb_t callback, rtc_date_time_t alarm_time, rtc_alarm_match_t mask);
+void watch_rtc_register_comp_callback(watch_cb_t callback, rtc_counter_t counter, uint8_t index);
+
+/** @brief Just like watch_rtc_register_comp_callback but doesn't actually schedule the callback
+  *
+  *  Useful if you need register multiple callbacks at once, avoids multiple calls to the expensive watch_rtc_schedule_next_comp:
+  *  Usage:
+  *  watch_rtc_register_comp_callback_no_schedule(cb0, counter0, index0);
+  *  watch_rtc_register_comp_callback_no_schedule(cb1, counter1, index1);
+  *  watch_rtc_schedule_next_comp();
+  */
+void watch_rtc_register_comp_callback_no_schedule(watch_cb_t callback, rtc_counter_t counter, uint8_t index);
+
+/** @brief Disables the specified comp callback.
+  */
+void watch_rtc_disable_comp_callback(uint8_t index);
+
+/** @brief Just like watch_rtc_disable_comp_callback but doesn't actually schedule the callback
+  *
+  *  Useful if you need disable multiple callbacks at once, avoids multiple calls to the expensive watch_rtc_schedule_next_comp:
+  *  Usage:
+  *  watch_rtc_disable_comp_callback_no_schedule(index0);
+  *  watch_rtc_disable_comp_callback_no_schedule(index1);
+  *  watch_rtc_schedule_next_comp();
+  */
+/** @brief Disables the specified comp callback.
+  */
+void watch_rtc_disable_comp_callback_no_schedule(uint8_t index);
+
+/** @brief Determines the first comp callback that should fire and schedule it with the RTC
+  *
+  * You would never need to call this manually, unless you used the 'no_schedule' functions above.
+  */
+void watch_rtc_schedule_next_comp(void);
 
 /** @brief Disables the alarm callback.
   */
-void watch_rtc_disable_alarm_callback(void);
+// void watch_rtc_disable_alarm_callback(void);
 
 /** @brief Registers a "tick" callback that will be called once per second.
   * @param callback The function you wish to have called when the clock ticks. If you pass in NULL, the tick
@@ -117,10 +173,6 @@ void watch_rtc_disable_tick_callback(void);
   *       tick at 16 or 32 Hz to update the screen more quickly. Just remember that the more frequent the tick, the more
   *       power your app will consume. Ideally you should enable the fast tick only when the user requires it (i.e. in
   *       response to an input event), and move back to the slow tick after some time.
-  *
-  *       Also note that the RTC peripheral does not have sub-second resolution, so even if you set a 2 or 4 Hz interval,
-  *       the system will not have any way of telling you where you are within a given second; watch_rtc_get_date_time
-  *       will return the exact same timestamp until the second ticks over.
   */
 void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency);
 

@@ -44,11 +44,6 @@
  * worry about aging only on second/third years of watch calibration (if you
  * are really looking at less than 10 seconds per year of error).
  *
- * Warning, do not use at the first second of a month, as you might stay at
- * the same month and it will surprise you. Just wait 1 second...We are not
- * fully replicating RTC timer behavior when RTC is off.
- * Simulating months and years is... too much complexity.
- *
  * For full usage instructions, please refer to the wiki:
  *  https://www.sensorwatch.net/docs/watchfaces/nanosec/
  */

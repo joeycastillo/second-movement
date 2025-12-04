@@ -108,10 +108,6 @@ bool set_time_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_LONG_UP:
             _abort_quick_ticks();
             break;
-        case EVENT_MODE_BUTTON_UP:
-            _abort_quick_ticks();
-            movement_move_to_next_face();
-            return false;
         case EVENT_LIGHT_BUTTON_DOWN:
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
             *((uint8_t *)context) = current_page;
@@ -187,6 +183,6 @@ bool set_time_face_loop(movement_event_t event, void *context) {
 
 void set_time_face_resign(void *context) {
     (void) context;
-    watch_set_led_off();
     movement_store_settings();
+    movement_request_tick_frequency(1);
 }
