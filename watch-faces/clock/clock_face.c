@@ -116,7 +116,7 @@ static void clock_display_all(watch_date_time_t date_time) {
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d%02d" : "%2d%2d%02d%02d",
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%2d%02d%02d%02d" : "%2d%2d%02d%02d",
         date_time.unit.day,
         date_time.unit.hour,
         date_time.unit.minute,
@@ -181,7 +181,7 @@ static void clock_display_low_energy(watch_date_time_t date_time) {
     snprintf(
         buf,
         sizeof(buf),
-        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%02d%02d%02d  " : "%2d%2d%02d  ",
+        movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_024H ? "%2d%02d%02d  " : "%2d%2d%02d  ",
         date_time.unit.day,
         date_time.unit.hour,
         date_time.unit.minute
