@@ -21,6 +21,7 @@ TINYUSB_CDC=1
 include $(GOSSAMER_PATH)/make.mk
 
 CFLAGS+=-D_POSIX_C_SOURCE=200112L
+CFLAGS+=-std=gnu17
 
 define n
 
@@ -158,6 +159,7 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
+  ./movement_signal_tunes.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk

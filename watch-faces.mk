@@ -53,4 +53,5 @@ SRCS += \
   ./watch-faces/complication/higher_lower_game_face.c \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
+  ./watch-faces/settings/signal_tunes_face.c \
 # New watch faces go above this line.
