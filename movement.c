@@ -27,9 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "app.h"
 #include "watch.h"
 #include "watch_utility.h"
@@ -524,18 +522,19 @@ bool movement_enable_tap_detection_if_available(void) {
     if (movement_state.has_lis2dw) {
         // configure tap duration threshold and enable Z axis
         lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
-        lis2dw_configure_tap_duration(10, 2, 2);
+        lis2dw_configure_tap_duration(2, 2, 2);
 
         // ramp data rate up to 400 Hz and high performance mode
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
-        lis2dw_set_mode(LIS2DW_MODE_HIGH_PERFORMANCE);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        lis2dw_enable_double_tap();
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
 
         // enable tap detection on INT1/A3.
-        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_6D);
+        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP);
 
         return true;
     }
@@ -549,6 +548,7 @@ bool movement_disable_tap_detection_if_available(void) {
         lis2dw_set_low_noise_mode(false);
         lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        lis2dw_disable_double_tap();
         // ...disable Z axis (not sure if this is needed, does this save power?)...
         lis2dw_configure_tap_threshold(0, 0, 0, 0);
 
@@ -596,6 +596,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
 
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
+#if __EMSCRIPTEN__
+    temperature_c = EM_ASM_DOUBLE({
+        return temp_c || 25.0;
+    });
+#else
 
     if (movement_state.has_thermistor) {
         thermistor_driver_enable();
@@ -606,6 +611,7 @@ float movement_get_temperature(void) {
             val = val >> 4;
             temperature_c = 25 + (float)val / 16.0;
     }
+#endif
 
     return temperature_c;
 }

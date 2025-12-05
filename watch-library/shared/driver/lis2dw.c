@@ -302,6 +302,20 @@ void lis2dw_clear_fifo(void) {
 #endif
 }
 
+void lis2dw_enable_double_tap(void) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration | LIS2DW_WAKE_UP_THS_ENABLE_DOUBLE_TAP);
+#endif
+}
+
+void lis2dw_disable_double_tap(void) {
+#ifdef I2C_SERCOM
+    uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);
+    watch_i2c_write8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS, configuration & ~LIS2DW_WAKE_UP_THS_ENABLE_DOUBLE_TAP);
+#endif
+}
+
 void lis2dw_enable_sleep(void) {
 #ifdef I2C_SERCOM
     uint8_t configuration = watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_WAKE_UP_THS);

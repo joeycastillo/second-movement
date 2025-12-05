@@ -80,6 +80,7 @@ static void pulsometer_display_measurement(pulsometer_state_t *pulsometer) {
     char buf[5];
     int16_t value = pulsometer->pulses;
 
+    if (value < 0) value = 0;
     if (value > 9999) value = 9999;
 
     snprintf(buf, sizeof(buf), "%-4hd", value);
