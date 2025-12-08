@@ -110,6 +110,12 @@ static bool tally_face_should_move_back(tally_state_t *state) {
 bool tally_face_loop(movement_event_t event, void *context) {
     tally_state_t *state = (tally_state_t *)context;
     static bool using_led = false;
+    static int8_t beep_sequence[] = {
+        0, 2,
+        BUZZER_NOTE_REST, 3,
+        0, 2,
+        0
+    };
 
     if (using_led) {
         if(!HAL_GPIO_BTN_MODE_read() && !HAL_GPIO_BTN_LIGHT_read() && !HAL_GPIO_BTN_ALARM_read())
@@ -148,9 +154,11 @@ bool tally_face_loop(movement_event_t event, void *context) {
                 state->tally_idx = _tally_default[state->tally_default_idx]; // reset tally index
                 _init_val = true;
                 //play a reset tune
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
+                if (movement_button_should_sound()) {
+                    beep_sequence[0] = BUZZER_NOTE_G6;
+                    beep_sequence[4] = BUZZER_NOTE_E6;
+                    movement_play_sequence(beep_sequence, 0);
+                }
                 print_tally(state, movement_button_should_sound());
             }
             break;
@@ -168,9 +176,11 @@ bool tally_face_loop(movement_event_t event, void *context) {
             if (TALLY_FACE_PRESETS_SIZE() > 1 && _init_val){
                 state->tally_default_idx = (state->tally_default_idx + 1) % TALLY_FACE_PRESETS_SIZE();
                 state->tally_idx = _tally_default[state->tally_default_idx];
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_E6, 30);
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_REST, 30);
-                if (movement_button_should_sound()) watch_buzzer_play_note(BUZZER_NOTE_G6, 30);
+                if (movement_button_should_sound()) {
+                    beep_sequence[0] = BUZZER_NOTE_E6;
+                    beep_sequence[4] = BUZZER_NOTE_G6;
+                    movement_play_sequence(beep_sequence, 0);
+                }
                 print_tally(state, movement_button_should_sound());
             }
             else{

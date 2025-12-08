@@ -27,7 +27,6 @@
 #include <math.h>
 #include "nanosec_face.h"
 #include "filesystem.h"
-#include "watch_utility.h"
 
 int16_t freq_correction_residual = 0; // Dithering 0.1ppm correction, does not need to be configured.
 int16_t freq_correction_previous = -30000;
@@ -44,8 +43,7 @@ const float voltage_coefficient = 0.241666667 * dithering; // 10 * ppm/V. Nomina
 static void nanosec_init_profile(void) {
     nanosec_changed = true;
     nanosec_state.correction_cadence = 10;
-    watch_date_time_t date_time = watch_rtc_get_date_time();
-    nanosec_state.last_correction_time = watch_utility_date_time_to_unix_time(date_time, 0);
+    nanosec_state.last_correction_time = movement_get_utc_timestamp();
 
     // init data after changing profile - do that once per profile selection
     switch (nanosec_state.correction_profile) {
@@ -265,8 +263,8 @@ static void nanosec_next_edit_screen(void) {
 
 float nanosec_get_aging() // Returns aging correction in ppm
 {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
-    float years = (watch_utility_date_time_to_unix_time(date_time, 0) - nanosec_state.last_correction_time) / 31536000.0f; // Years passed since finetune
+    uint32_t timestamp = movement_get_utc_timestamp();
+    float years = (timestamp - nanosec_state.last_correction_time) / 31536000.0f; // Years passed since finetune
     return years*nanosec_state.aging_ppm_pa/100.0f;
 }
 
@@ -377,7 +375,7 @@ movement_watch_face_advisory_t nanosec_face_advise(void *context) {
 
     // No need for background correction if we are on profile 0 - static hardware correction.
     if (nanosec_state.correction_profile != 0) {
-        watch_date_time_t date_time = watch_rtc_get_date_time();
+        watch_date_time_t date_time = movement_get_utc_date_time();
         retval.wants_background_task = date_time.unit.minute % nanosec_state.correction_cadence == 0;
     }
 

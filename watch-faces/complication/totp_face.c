@@ -36,7 +36,6 @@
 #include <string.h>
 #include "totp_face.h"
 #include "watch.h"
-#include "watch_utility.h"
 #include "TOTP.h"
 #include "base32.h"
 
@@ -159,7 +158,7 @@ static void totp_generate_and_display(totp_state_t *totp_state) {
 }
 
 static inline uint32_t totp_compute_base_timestamp() {
-    return watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
+    return movement_get_utc_timestamp();
 }
 
 void totp_face_setup(uint8_t watch_face_index, void ** context_ptr) {
