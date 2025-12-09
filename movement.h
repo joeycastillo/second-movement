@@ -296,6 +296,10 @@ typedef struct {
     lis2dw_data_rate_t accelerometer_background_rate;
     // threshold for considering the wearer is in motion
     uint8_t accelerometer_motion_threshold;
+
+    // stuff for selecting submenus when user holds mode button
+    int16_t menu_selection_timestamp;
+    uint8_t menu_selection_state;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
