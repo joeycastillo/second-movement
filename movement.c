@@ -440,6 +440,12 @@ void movement_set_button_volume(watch_buzzer_volume_t value) {
     movement_state.settings.bit.button_volume = value;
 }
 
+void movement_play_button_sound_if_enabled(void) {
+    if (movement_button_should_sound()) {
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
+    }
+}
+
 movement_clock_mode_t movement_clock_mode_24h(void) {
     return movement_state.settings.bit.clock_mode_24h ? MOVEMENT_CLOCK_MODE_24H : MOVEMENT_CLOCK_MODE_12H;
 }

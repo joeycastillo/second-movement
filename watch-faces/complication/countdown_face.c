@@ -65,11 +65,6 @@ static inline void load_countdown(countdown_state_t *state) {
     state->seconds = state->set_seconds;
 }
 
-static inline void button_beep() {
-    // play a beep as confirmation for a button press (if applicable)
-    if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
-}
-
 static void schedule_countdown(countdown_state_t *state) {
 
     // Calculate the new state->now_ts but don't update it until we've updated the target - 
@@ -264,7 +259,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                     break;
                 case cd_paused:
                     reset(state);
-                    button_beep();
+                    movement_play_button_sound_if_enabled();
                     break;
                 case cd_setting:
                     state->selection++;
@@ -273,7 +268,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                         state->mode = cd_reset;
                         store_countdown(state);
                         movement_request_tick_frequency(1);
-                        button_beep();
+                        movement_play_button_sound_if_enabled();
                     }
                     break;
             }
@@ -283,7 +278,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
             switch(state->mode) {
                 case cd_running:
                     pause(state);
-                    button_beep();
+                    movement_play_button_sound_if_enabled();
                     break;
                 case cd_reset:
                 case cd_paused:
@@ -291,7 +286,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                     if (!(state->hours == 0 && state->minutes == 0 && state->seconds == 0)) {
                         abort_tap_detection(state);
                         start(state);
-                        button_beep();
+                        movement_play_button_sound_if_enabled();
                         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
                     }
                     break;
@@ -308,7 +303,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                     abort_tap_detection(state);
                     state->mode = cd_setting;
                     movement_request_tick_frequency(4);
-                    button_beep();
+                    movement_play_button_sound_if_enabled();
                     break;
                 case cd_setting:
                     // long press in settings mode starts quick ticks for adjusting the time
@@ -336,7 +331,7 @@ bool countdown_face_loop(movement_event_t event, void *context) {
                 }
             } else {
                 // Toggle auto-repeat
-                button_beep();
+                movement_play_button_sound_if_enabled();
                 state->repeat = !state->repeat;
                 if(state->repeat)
                     watch_set_indicator(WATCH_INDICATOR_BELL);
