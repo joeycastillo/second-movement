@@ -50,23 +50,26 @@ typedef struct {
     uint32_t period;
     size_t encoded_key_length;
     unsigned char *encoded_key;
+    uint32_t counter;
 } totp_t;
 
-#define CREDENTIAL(label, key_array, algo, timestep) \
+#define CREDENTIAL(label, key_array, algo, timestep, init_count) \
     (const totp_t) { \
         .encoded_key = ((unsigned char *) key_array), \
         .encoded_key_length = sizeof(key_array) - 1, \
         .period = (timestep), \
         .labels = (#label), \
         .algorithm = (algo), \
+        .counter = (init_count), \
     }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Enter your TOTP key data below
+// Put 0 in the period column to indicate HOTP
 
 static totp_t credentials[] = {
-    CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30),
-    CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
+    CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30, 0),
+    CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 0, 100),
 };
 
 // END OF KEY DATA.
@@ -92,6 +95,9 @@ static void totp_validate_key_lengths(void) {
             // Key exceeds static limits, turn it off by zeroing the length
             totp->encoded_key_length = 0;
         }
+        if (totp->period == 0) {
+            totp->period = 1;
+        }
     }
 }
 
@@ -113,11 +119,12 @@ static void totp_generate(totp_state_t *totp_state) {
     }
 
     TOTP(
-        totp_state->current_decoded_key,
-        totp_state->current_decoded_key_length,
-        totp->period,
-        totp->algorithm
+    totp_state->current_decoded_key,
+    totp_state->current_decoded_key_length,
+    totp->period,
+    totp->algorithm
     );
+
 }
 
 static void totp_display_error(totp_state_t *totp_state) {
@@ -134,13 +141,18 @@ static void totp_display_code(totp_state_t *totp_state) {
     uint8_t valid_for;
     totp_t *totp = totp_current(totp_state);
 
-    result = div(totp_state->timestamp, totp->period);
-    if (result.quot != totp_state->steps) {
-        totp_state->current_code = getCodeFromTimestamp(totp_state->timestamp);
-        totp_state->steps = result.quot;
+    if (totp->period == 1) {
+        totp_state->current_code = getCodeFromSteps(totp->counter);
+        sprintf(buf, "%c%c H%06lu", totp->labels[0], totp->labels[1], totp_state->current_code);
+    } else {
+        result = div(totp_state->timestamp, totp->period);
+        if (result.quot != totp_state->steps) {
+            totp_state->current_code = getCodeFromTimestamp(totp_state->timestamp);
+            totp_state->steps = result.quot;
+        }
+        valid_for = totp->period - result.rem;
+        sprintf(buf, "%c%c%2d%06lu", totp->labels[0], totp->labels[1], valid_for, totp_state->current_code);
     }
-    valid_for = totp->period - result.rem;
-    sprintf(buf, "%c%c%2d%06lu", totp->labels[0], totp->labels[1], valid_for, totp_state->current_code);
 
     watch_display_text(0, buf);
 }
@@ -225,7 +237,11 @@ bool totp_face_loop(movement_event_t event, void *context) {
 
             break;
         case EVENT_ALARM_BUTTON_DOWN:
+            break;
         case EVENT_ALARM_LONG_PRESS:
+            totp_current(totp_state)->counter++;
+            totp_generate_and_display(totp_state);
+            break;
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_LIGHT_LONG_PRESS:
