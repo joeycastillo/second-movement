@@ -119,10 +119,10 @@ static void totp_generate(totp_state_t *totp_state) {
     }
 
     TOTP(
-    totp_state->current_decoded_key,
-    totp_state->current_decoded_key_length,
-    totp->period,
-    totp->algorithm
+        totp_state->current_decoded_key,
+        totp_state->current_decoded_key_length,
+        totp->period,
+        totp->algorithm
     );
 
 }
