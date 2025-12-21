@@ -45,10 +45,11 @@ typedef enum {
 } PingCurrScreen;
 
 typedef enum {
-    DIFF_BABY = 0,  // FREQ_SLOW FPS
-    DIFF_EASY,      //      FREQ FPS
-    DIFF_NORM,      //      FREQ FPS
-    DIFF_HARD,      //      FREQ FPS
+    DIFF_BABY = 0,  // FREQ_BABY FPS
+    DIFF_EASY,      // FREQ_EASY FPS
+    DIFF_NORM,      // FREQ_NORM FPS
+    DIFF_HARD,      // FREQ_NORM FPS, smaller travel-distance for ball
+    DIFF_FAST,      // FREQ_FAST FPS
     DIFF_COUNT
 } PingDifficulty;
 
@@ -58,12 +59,13 @@ typedef enum {
     RESULT_HIT = 1
 } PingResult;
 
-#define BALL_POS_MAX 11
-#define BALL_OFF_SCREEN 100
 #define FREQ_BABY 2
 #define FREQ_EASY 4
 #define FREQ_NORM 8
-#define FREQ_HARD 16
+#define FREQ_FAST 16
+
+#define BALL_POS_MAX 11
+#define BALL_OFF_SCREEN 100
 #define MAX_HI_SCORE 9999  // Max hi score to store and display on the title screen.
 #define MAX_DISP_SCORE 39  // The top-right digits can't properly display above 39
 
@@ -162,21 +164,20 @@ static bool paddle_hit_ball(void) {
             return true;
         }
     }
-    else if (game_state.paddle_pos == PADDLE_EXTENDING) {
-        if (game_state.ball_pos >= 11 && game_state.ball_is_clockwise) {
-            return true;
-        }
-        if (game_state.ball_pos <= 0 && !game_state.ball_is_clockwise) {
-            return true;
-        }
-    }
     return false;
 }
 
-static uint8_t get_next_ball_pos(bool ball_hit) {
+static uint8_t get_next_ball_pos(bool ball_hit, uint8_t difficulty) {
     int8_t offset_next;
     if (ball_hit) {
-        game_state.ball_is_clockwise = game_state.ball_pos < 6;
+        bool ball_on_top = game_state.ball_pos > 5;
+        game_state.ball_is_clockwise = !ball_on_top;
+        // ball is at the same frame as the paddle
+        if (game_state.paddle_pos == PADDLE_EXTENDED) {
+            return ball_on_top ? 9 : 2;
+        } else if (game_state.paddle_pos == PADDLE_EXTENDING) {
+            return ball_on_top ? 10 : 1;
+        }
     }
     if (game_state.ball_is_clockwise) {
         offset_next = 1;
@@ -186,6 +187,13 @@ static uint8_t get_next_ball_pos(bool ball_hit) {
     int8_t next_pos = game_state.ball_pos + offset_next;
     if (next_pos > BALL_POS_MAX || next_pos < 0) {
         return BALL_OFF_SCREEN;
+    }
+    if (difficulty == DIFF_HARD) {
+        if (next_pos == 4) {
+            next_pos = 8;
+        } else if (next_pos == 7) {
+            next_pos = 3;
+        }
     }
     return next_pos;
 }
@@ -214,7 +222,7 @@ static void display_ball(void) {
     watch_display_character(char_display, char_pos);
 }
 
-static PingResult update_ball(void) {
+static PingResult update_ball(uint8_t difficulty) {
     bool ball_hit = paddle_hit_ball();
     if (!game_state.ball_is_moving) {
         if (ball_hit) {
@@ -223,8 +231,7 @@ static PingResult update_ball(void) {
             return RESULT_NONE;
         }
     }
-    watch_display_character(' ', ball_pos_to_char_pos(game_state.ball_pos)); // remove the old ball.
-    game_state.ball_pos = get_next_ball_pos(ball_hit);
+    game_state.ball_pos = get_next_ball_pos(ball_hit, difficulty);
     if (game_state.ball_pos == BALL_OFF_SCREEN) {
         return RESULT_LOSE;
     }
@@ -265,7 +272,7 @@ static void update_paddle(void) {
         }
         break;
     case PADDLE_EXTENDING:
-        if (game_state.paddle_released) {
+        if (!HAL_GPIO_BTN_ALARM_read()) {
             game_state.paddle_pos = PADDLE_RETRACTED;
         } else {
             game_state.paddle_pos = PADDLE_EXTENDED;
@@ -283,7 +290,6 @@ static void update_paddle(void) {
         break;
     }
     game_state.paddle_hit = false;
-    game_state.paddle_released = false;
     display_paddle();
 }
 
@@ -325,7 +331,8 @@ static void display_difficulty(uint16_t difficulty) {
         [DIFF_BABY]   = " b",
         [DIFF_EASY]   = " E",
         [DIFF_NORM]   = " N",
-        [DIFF_HARD]   = " H"
+        [DIFF_HARD]   = " H",
+        [DIFF_FAST]   = " F"
     };
     watch_display_text(WATCH_POSITION_TOP_RIGHT, labels[difficulty]);
 }
@@ -442,10 +449,11 @@ static void begin_playing(ping_state_t *state) {
     case DIFF_EASY:
         game_state.curr_freq = FREQ_EASY;
         break;
-    case DIFF_HARD:
-        game_state.curr_freq = FREQ_HARD;
+    case DIFF_FAST:
+        game_state.curr_freq = FREQ_FAST;
         break;
     case DIFF_NORM:
+    case DIFF_HARD:
     default:
         game_state.curr_freq = FREQ_NORM;
         break;
@@ -456,7 +464,6 @@ static void begin_playing(ping_state_t *state) {
     game_state.paddle_pos = PADDLE_RETRACTED;
     game_state.ball_pos = 1;
     game_state.paddle_hit = false;
-    game_state.paddle_released = false;
     game_state.ball_is_moving = false;
     game_state.ball_is_clockwise = false;
     game_state.curr_score = 0;
@@ -480,19 +487,16 @@ static void display_lose_screen(ping_state_t *state) {
 }
 
 static void update_game(ping_state_t *state) {
+    if (game_state.ball_is_moving) {
+        watch_display_character(' ', ball_pos_to_char_pos(game_state.ball_pos)); // remove the old ball.
+    }
     update_paddle();
-    bool can_earn_point = game_state.ball_is_moving;
-    int game_result = update_ball();
+    int game_result = update_ball(state -> difficulty);
     if (game_result == RESULT_LOSE) {
         display_lose_screen(state);
-    } else if (game_result == RESULT_HIT && can_earn_point) {
+    } else if (game_result == RESULT_HIT) {
         add_to_score(state);
-        if (game_state.curr_score % 10 == 0) { // Up the speed every 10 points
-            game_state.curr_freq *= 2;
-            movement_request_tick_frequency(game_state.curr_freq);
-        }
     }
-    printf("freq %d\r\n", game_state.curr_freq);
 }
 
 void ping_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -501,7 +505,7 @@ void ping_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         *context_ptr = malloc(sizeof(ping_state_t));
         memset(*context_ptr, 0, sizeof(ping_state_t));
         ping_state_t *state = (ping_state_t *)*context_ptr;
-        state->difficulty = DIFF_NORM;
+        state->difficulty = DIFF_BABY;
         state->tap_control_on = false;
     }
 }
@@ -544,11 +548,6 @@ bool ping_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (game_state.curr_screen == SCREEN_PLAYING){
-                game_state.paddle_released = true;
-                break;
-            }
-        // fall-through
         case EVENT_LIGHT_BUTTON_UP:
             switch (game_state.curr_screen) {
                 case SCREEN_SCORE:
