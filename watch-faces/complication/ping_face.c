@@ -54,7 +54,8 @@ typedef enum {
 typedef enum {
     RESULT_LOSE = -1,
     RESULT_NONE = 0,
-    RESULT_HIT = 1
+    RESULT_HIT = 1,
+    RESULT_FIRST_HIT = 2,
 } PingResult;
 
 #define FREQ_BABY 2
@@ -207,7 +208,7 @@ static void display_ball(void) {
             char_display = '#';
         }
     } else {
-        if (_is_custom_lcd || char_pos == 4 || char_pos == 6) {
+        if (!_is_custom_lcd && (char_pos == 4 || char_pos == 6)) {
             char_display = 'n'; // No need to check for overlap on these segments
         } else {
             if (overlap) {
@@ -222,9 +223,11 @@ static void display_ball(void) {
 
 static PingResult update_ball(uint8_t difficulty) {
     bool ball_hit = paddle_hit_ball();
+    bool first_hit = false;
     if (!game_state.ball_is_moving) {
         if (ball_hit) {
             game_state.ball_is_moving = true;
+            first_hit = true;
         } else {
             return RESULT_NONE;
         }
@@ -235,7 +238,7 @@ static PingResult update_ball(uint8_t difficulty) {
     }
     display_ball();
     if (ball_hit) {
-        return RESULT_HIT;
+        return first_hit ? RESULT_FIRST_HIT : RESULT_HIT;
     } else {
         return RESULT_NONE;
     }
@@ -345,7 +348,7 @@ static void change_difficulty(ping_state_t *state) {
 }
 
 static void display_sound_indicator(bool soundOn) {
-    if (soundOn){
+    if (soundOn) {
         watch_set_indicator(WATCH_INDICATOR_BELL);
     } else {
         watch_clear_indicator(WATCH_INDICATOR_BELL);
@@ -355,7 +358,7 @@ static void display_sound_indicator(bool soundOn) {
 static void toggle_sound(ping_state_t *state) {
     state -> soundOn = !state -> soundOn;
     display_sound_indicator(state -> soundOn);
-    if (state -> soundOn){
+    if (state -> soundOn) {
         watch_buzzer_play_note(BUZZER_NOTE_C5, 30);
     }
 }
@@ -378,7 +381,7 @@ static void display_title(ping_state_t *state) {
     movement_request_tick_frequency(1);
     game_state.curr_screen = SCREEN_TITLE;
     watch_clear_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "PING", "PI  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Ping", "PI  ");
     watch_display_text(WATCH_POSITION_BOTTOM, " Ping ");
     display_sound_indicator(state -> soundOn);
     _ticks_show_title = 1;
@@ -392,7 +395,7 @@ static void display_score_screen(ping_state_t *state) {
     memset(&game_state, 0, sizeof(game_state));
     game_state.curr_screen = SCREEN_SCORE;
     watch_set_colon();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "PING ", "PI  ");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "PI  ", "PI  ");
     if (hi_score > MAX_HI_SCORE) {
         watch_display_text(WATCH_POSITION_BOTTOM, "HS  --");
     }
@@ -435,9 +438,6 @@ static void begin_playing(ping_state_t *state) {
     display_paddle();
     display_ball();
     display_score( game_state.curr_score);
-    if (state -> soundOn){
-        watch_buzzer_play_sequence(start_tune, NULL);
-    }
 }
 
 static void display_lose_screen(ping_state_t *state) {
@@ -461,7 +461,11 @@ static void update_game(ping_state_t *state) {
         display_lose_screen(state);
     } else if (game_result == RESULT_HIT) {
         add_to_score(state);
-        watch_buzzer_play_note(BUZZER_NOTE_C5, 60);
+        if (state -> soundOn) {
+            watch_buzzer_play_note(BUZZER_NOTE_C5, 60);
+        }
+    } else if (game_result == RESULT_FIRST_HIT && state -> soundOn) {
+        watch_buzzer_play_sequence(start_tune, NULL);
     }
 }
 
@@ -542,13 +546,13 @@ bool ping_face_loop(movement_event_t event, void *context) {
                 display_score_screen(state);
                 break;
             }
-            else if (game_state.curr_screen == SCREEN_PLAYING){
+            else if (game_state.curr_screen == SCREEN_PLAYING) {
                 game_state.moving_from_tap = true;
                 game_state.paddle_hit = true;
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
-            if (game_state.curr_screen == SCREEN_PLAYING){
+            if (game_state.curr_screen == SCREEN_PLAYING) {
                 game_state.moving_from_tap = false;
                 game_state.paddle_hit = true;
             }
