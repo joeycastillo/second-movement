@@ -33,7 +33,7 @@
     https://www.instagram.com/reel/DNlTb-ERE1F/
     On the title screen, you can select a difficulty by long-pressing LIGHT or toggle sound by long-pressing ALARM.
     ALARM are used to paddle. Holding the ALARM button longer makes the paddle travel further.
-    If the accelerometer is installed, you can tap the screen to move the paddle.
+    If the accelerometer is installed, you can tap the screen to move the paddle. Paddle will travel its full distance when tapping is used.
     High-score is displayed on the top-right on the title screen. During a game, the current score is displayed.
 */
 

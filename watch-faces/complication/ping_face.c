@@ -82,6 +82,7 @@ typedef struct {
     bool paddle_hit;
     bool paddle_released;
     uint8_t curr_freq;
+    bool moving_from_tap;
 } game_state_t;
 
 static game_state_t game_state;
@@ -272,7 +273,7 @@ static void update_paddle(void) {
         }
         break;
     case PADDLE_EXTENDING:
-        if (!HAL_GPIO_BTN_ALARM_read()) {
+        if (!game_state.moving_from_tap && !HAL_GPIO_BTN_ALARM_read()) {
             game_state.paddle_pos = PADDLE_RETRACTED;
         } else {
             game_state.paddle_pos = PADDLE_EXTENDED;
@@ -285,6 +286,7 @@ static void update_paddle(void) {
     case PADDLE_RETRACTING:
         game_state.paddle_pos = PADDLE_RETRACTED;
         watch_display_character(' ', 8);
+        game_state.moving_from_tap = false;
         break;
     default:
         break;
@@ -580,9 +582,14 @@ bool ping_face_loop(movement_event_t event, void *context) {
                 display_score_screen(state);
                 break;
             }
-            //fall through
+            else if (game_state.curr_screen == SCREEN_PLAYING){
+                game_state.moving_from_tap = true;
+                game_state.paddle_hit = true;
+            }
+            break;
         case EVENT_ALARM_BUTTON_DOWN:
             if (game_state.curr_screen == SCREEN_PLAYING){
+                game_state.moving_from_tap = false;
                 game_state.paddle_hit = true;
             }
             break;
