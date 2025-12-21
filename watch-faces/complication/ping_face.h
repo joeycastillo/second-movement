@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 <David Volovskiy>
+ * Copyright (c) 2025 <David Volovskiy>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,12 @@
 
 /*
     PING face
+    I saw the face made on the Ollee watch and thought it'd be fun to have on my Sensorwatch.
+    https://www.instagram.com/reel/DNlTb-ERE1F/
+    On the title screen, you can select a difficulty by long-pressing LIGHT or toggle sound by long-pressing ALARM.
+    ALARM are used to paddle. Holding the ALARM button longer makes the paddle travel further.
+    If the accelerometer is installed, you can tap the screen to move the paddle.
+    High-score is displayed on the top-right on the title screen. During a game, the current score is displayed.
 */
 
 typedef struct {
