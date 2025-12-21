@@ -476,7 +476,7 @@ void ping_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         *context_ptr = malloc(sizeof(ping_state_t));
         memset(*context_ptr, 0, sizeof(ping_state_t));
         ping_state_t *state = (ping_state_t *)*context_ptr;
-        state->difficulty = DIFF_BABY;
+        state->difficulty = DIFF_NORM;
         state->tap_control_on = false;
     }
 }

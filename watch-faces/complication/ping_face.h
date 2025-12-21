@@ -35,6 +35,14 @@
     ALARM are used to paddle. Holding the ALARM button longer makes the paddle travel further.
     If the accelerometer is installed, you can tap the screen to move the paddle. Paddle will travel its full distance when tapping is used.
     High-score is displayed on the top-right on the title screen. During a game, the current score is displayed.
+
+    Difficulties:
+        Baby: 2 FPS
+        Easy: 4 FPS
+        Normal: 8 FPS
+        Hard: 8 FPS and the ball travels half the half the board.
+        Fast: 16 FPS
+
 */
 
 typedef struct {
