@@ -40,7 +40,6 @@ typedef enum {
     SCREEN_SCORE,
     SCREEN_PLAYING,
     SCREEN_LOSE,
-    SCREEN_TIME,
     SCREEN_COUNT
 } PingCurrScreen;
 
@@ -409,36 +408,6 @@ static void display_score_screen(ping_state_t *state) {
     display_sound_indicator(sound_on);
 }
 
-static void display_time(void) {
-    static watch_date_time_t previous_date_time;
-    watch_date_time_t date_time = movement_get_local_date_time();
-    char buf[6 + 1];
-
-    // If the hour needs updating or it's the first time displaying the time
-    if ((game_state.curr_screen != SCREEN_TIME) || (date_time.unit.hour != previous_date_time.unit.hour)) {
-        uint8_t hour = date_time.unit.hour;
-        game_state.curr_screen = SCREEN_TIME;
-        if (!watch_sleep_animation_is_running()) {
-            watch_set_colon();
-            watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
-        }
-        if (movement_clock_is_24h()) watch_set_indicator(WATCH_INDICATOR_24H);
-        else {
-            if (hour >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
-            hour %= 12;
-            if (hour == 0) hour = 12;
-        }
-        sprintf( buf, movement_clock_has_leading_zeroes() ? "%02d%02d  " : "%2d%02d  ", hour, date_time.unit.minute);
-        watch_display_text(WATCH_POSITION_BOTTOM, buf);
-    }
-    // If only the minute need updating
-    else {
-        sprintf( buf, "%02d", date_time.unit.minute);
-        watch_display_text(WATCH_POSITION_MINUTES, buf);
-    }
-    previous_date_time.reg = date_time.reg;
-}
-
 static void begin_playing(ping_state_t *state) {
     game_state.curr_screen = SCREEN_PLAYING;
     watch_clear_colon();
@@ -526,9 +495,7 @@ bool ping_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             disable_tap_control(state);
             check_and_reset_hi_score(state);
-            if (game_state.curr_screen != SCREEN_TIME) {
-                display_title(state);
-            }
+            display_title(state);
             break;
         case EVENT_TICK:
             switch (game_state.curr_screen)
@@ -541,7 +508,6 @@ bool ping_face_loop(movement_event_t event, void *context) {
                 }
             case SCREEN_SCORE:
             case SCREEN_LOSE:
-            case SCREEN_TIME:
                 break;
             case SCREEN_PLAYING:
             default:
@@ -559,7 +525,6 @@ bool ping_face_loop(movement_event_t event, void *context) {
                 case SCREEN_TITLE:
                     enable_tap_control(state);
                     // fall through
-                case SCREEN_TIME:
                 case SCREEN_LOSE:
                     watch_clear_display();
                     display_score_screen(state);
@@ -599,17 +564,9 @@ bool ping_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_TIMEOUT:
             disable_tap_control(state);
-            if (game_state.curr_screen != SCREEN_SCORE)
+            if (game_state.curr_screen != SCREEN_SCORE) {
                 display_score_screen(state);
-            break;
-        case EVENT_LOW_ENERGY_UPDATE:
-            if (game_state.curr_screen != SCREEN_TIME) {
-                movement_request_tick_frequency(1);
-                watch_display_text_with_fallback(WATCH_POSITION_TOP, "PING ", "PI  ");
-                display_sound_indicator(state -> soundOn);
-                display_difficulty(state->difficulty);
             }
-            display_time();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
