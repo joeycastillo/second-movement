@@ -48,7 +48,6 @@ typedef enum {
     DIFF_EASY,      // FREQ_EASY FPS
     DIFF_NORM,      // FREQ_NORM FPS
     DIFF_HARD,      // FREQ_NORM FPS, smaller travel-distance for ball
-    DIFF_FAST,      // FREQ_FAST FPS
     DIFF_COUNT
 } PingDifficulty;
 
@@ -61,7 +60,6 @@ typedef enum {
 #define FREQ_BABY 2
 #define FREQ_EASY 4
 #define FREQ_NORM 8
-#define FREQ_FAST 16
 
 #define BALL_POS_MAX 11
 #define BALL_OFF_SCREEN 100
@@ -332,8 +330,7 @@ static void display_difficulty(uint16_t difficulty) {
         [DIFF_BABY]   = " b",
         [DIFF_EASY]   = " E",
         [DIFF_NORM]   = " N",
-        [DIFF_HARD]   = " H",
-        [DIFF_FAST]   = " F"
+        [DIFF_HARD]   = " H"
     };
     watch_display_text(WATCH_POSITION_TOP_RIGHT, labels[difficulty]);
 }
@@ -419,9 +416,6 @@ static void begin_playing(ping_state_t *state) {
         break;
     case DIFF_EASY:
         game_state.curr_freq = FREQ_EASY;
-        break;
-    case DIFF_FAST:
-        game_state.curr_freq = FREQ_FAST;
         break;
     case DIFF_NORM:
     case DIFF_HARD:

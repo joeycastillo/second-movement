@@ -41,7 +41,6 @@
         Easy: 4 FPS
         Normal: 8 FPS
         Hard: 8 FPS and the ball travels half the half the board.
-        Fast: 16 FPS
 
 */
 
