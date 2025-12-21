@@ -461,6 +461,7 @@ static void update_game(ping_state_t *state) {
         display_lose_screen(state);
     } else if (game_result == RESULT_HIT) {
         add_to_score(state);
+        watch_buzzer_play_note(BUZZER_NOTE_C5, 60);
     }
 }
 
