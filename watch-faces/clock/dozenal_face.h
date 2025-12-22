@@ -29,12 +29,11 @@
  * HEXA DECIMAL FACE
  *
  * This watch face is based on Joey Castillo's clock_face but displays time 
- * and date in hexadecimal format instead of decimal. 
+ * and date in base 12 format instead of decimal. 
  *
- * Hexadecimal digits above 9 are normally displayed in uppercase (A, C, E, F), 
- * but 11 and 13 are shown in lowercase ('b' and 'd') to improve clarity on 
- * the 7-segment display.
- *
+ * Base 12 (dozenal) digits above 9 are normally are displayed with
+ * Don Hammond's proposed digits, see
+ * http://www.dozenalsociety.org.uk/basicstuff/hammond.html
  */
 
 #include "movement.h"

@@ -51,5 +51,5 @@ SRCS += \
   ./watch-faces/clock/hexa_decimal_face.c \
   ./watch-faces/clock/dozenal_face.c \
   ./watch-faces/clock/binary_face.c \
-  ./legacy/watch_faces/clock/wyoscan_face.c \
+  ./watch-faces/clock/wyoscan_face.c \
 # New watch faces go above this line.
