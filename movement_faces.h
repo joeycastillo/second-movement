@@ -74,5 +74,7 @@
 #include "deadline_face.h"
 #include "wordle_face.h"
 #include "hexa_decimal_face.h"
+#include "dozenal_face.h"
+#include "wyoscan_face.h"
 #include "binary_face.h"
 // New includes go above this line.

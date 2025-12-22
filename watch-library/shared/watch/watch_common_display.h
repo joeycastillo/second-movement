@@ -141,7 +141,7 @@ static const uint8_t Custom_LCD_Character_Set[] =
     0b00010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
     0b00110110, // | (overriden to represent the two character ligature "ll")
     0b00110100, // } (overriden to represent the two character ligature "li")
-    0b00000001, // ~
+    0b01011010, // ~
 };
 
 static const digit_mapping_t Custom_LCD_Display_Mapping[] = {
@@ -377,7 +377,7 @@ static const uint8_t Classic_LCD_Character_Set[] =
     0b00010110, // { (open brace doesn't really work; overriden to represent the two character ligature "il")
     0b00110110, // | (overriden to represent the two character ligature "ll")
     0b00110100, // } (overriden to represent the two character ligature "li")
-    0b00000001, // ~
+    0b01011010, // ~
 };
 
 static const digit_mapping_t Classic_LCD_Display_Mapping[] = {

@@ -31,6 +31,8 @@ const watch_face_t watch_faces[] = {
     clock_face,
     binary_face,
     hexa_decimal_face,
+    wyoscan_face,
+    dozenal_face,
     world_clock_face,
     sunrise_sunset_face,
     moon_phase_face,

@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "wyoscan_face.h"
-#include "watch_private_display.h"
 
 /*
 Slowly render the current time from left to right, 
