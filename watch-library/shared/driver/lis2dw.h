@@ -343,6 +343,10 @@ bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
 
 void lis2dw_clear_fifo(void);
 
+void lis2dw_enable_double_tap(void);
+
+void lis2dw_disable_double_tap(void);
+
 void lis2dw_enable_sleep(void);
 
 void lis2dw_disable_sleep(void);
