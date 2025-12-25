@@ -275,6 +275,8 @@ static void update_paddle(void) {
     case PADDLE_EXTENDING:
         if (!game_state.moving_from_tap && !HAL_GPIO_BTN_ALARM_read()) {
             game_state.paddle_pos = PADDLE_RETRACTED;
+            watch_display_character(' ', 8);
+            game_state.moving_from_tap = false;
         } else {
             game_state.paddle_pos = PADDLE_EXTENDED;
         }
