@@ -114,7 +114,7 @@ bool wyoscan_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_TICK:            
             if (!state->animate) {
-                date_time = watch_rtc_get_date_time();
+                date_time = movement_get_local_date_time();
                 state->start = 0; 
                 state->end = 0;
                 state->animation = 0;
