@@ -55,7 +55,7 @@ void tcg_life_counter_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 }
 
 void tcg_life_counter_face_activate(void *context) {
-    tcg_life_counter_state_t *state = (tcg_life_counter_state_t *)context;
+    (void) context;
 }
 
 static bool _tcg_life_counter_is_initial_default_values(tcg_life_counter_state_t *state) {
@@ -164,7 +164,7 @@ bool tcg_life_counter_face_loop(movement_event_t event, void *context) {
 }
 
 void print_tcg_life_counter(tcg_life_counter_state_t *state) {
-    char buf[7];
+    char buf[11];
     char buf2[3];
     watch_display_text(WATCH_POSITION_TOP, "TC");
     sprintf(buf2, state->increment_mode_on ? "i%1d" : "d%1d", _tcg_life_counter_increment_amts[state->increment_idx]);
