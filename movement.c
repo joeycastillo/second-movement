@@ -494,6 +494,14 @@ void movement_set_backlight_dwell(uint8_t value) {
     movement_state.settings.bit.led_duration = value;
 }
 
+bool movement_get_keep_led_on(void) {
+    return movement_state.settings.bit.keep_lighting_on;
+}
+
+void movement_set_keep_led_on(bool value) {
+    movement_state.settings.bit.keep_lighting_on = value;
+}
+
 void movement_store_settings(void) {
     movement_settings_t old_settings;
     filesystem_read_file("settings.u32", (char *)&old_settings, sizeof(movement_settings_t));
@@ -662,6 +670,7 @@ void app_init(void) {
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
         movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
+        movement_state.settings.bit.keep_lighting_on = MOVEMENT_KEEP_LIGHT_IN_FACES;
 #ifdef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         movement_state.settings.bit.le_interval = 0;
 #else
@@ -859,6 +868,8 @@ bool app_loop(void) {
     if (movement_state.light_ticks == 0) {
         // unless the user is holding down the LIGHT button, in which case, give them more time.
         if (HAL_GPIO_BTN_LIGHT_read()) {
+            movement_state.light_ticks = 1;
+        }else if(movement_state.settings.bit.keep_lighting_on && movement_state.current_face_idx != 0) {
             movement_state.light_ticks = 1;
         } else {
             movement_force_led_off();
