@@ -31,9 +31,22 @@
 //
 
 static void _watch_radio_alarm_face_display_alarm_time(watch_radio_alarm_face_state_t *state) {
-    const char periods[][7] = {"AP", "A ", " P"};
+    switch(state->period) {
+        case WATCH_RADIO_ALARM_FACE_PERIOD_AMPM:
+            watch_clear_indicator(WATCH_INDICATOR_PM);
+            watch_set_indicator(WATCH_INDICATOR_24H);
+            break;
+        case WATCH_RADIO_ALARM_FACE_PERIOD_AM:
+            watch_clear_indicator(WATCH_INDICATOR_PM);
+            watch_clear_indicator(WATCH_INDICATOR_24H);
+            break;
+        case WATCH_RADIO_ALARM_FACE_PERIOD_PM:
+            watch_set_indicator(WATCH_INDICATOR_PM);
+            watch_clear_indicator(WATCH_INDICATOR_24H);
+    }
+
     static char lcdbuf[7];
-    sprintf(lcdbuf, "%2d%02d%s", state->hour, state->minute, periods[state->period]);
+    sprintf(lcdbuf, "%2d%02d  ", state->hour, state->minute);
     watch_display_text(WATCH_POSITION_BOTTOM, lcdbuf);
 }
 
@@ -81,8 +94,26 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
             // but in settings mode, we need to blink up the parameter we're setting.
             _watch_radio_alarm_face_display_alarm_time(state);
             if (event.subsecond % 2 == 0) {
-                const watch_position_t blink_positions[] = {0, WATCH_POSITION_HOURS, WATCH_POSITION_MINUTES, WATCH_POSITION_SECONDS};
+                /* const watch_position_t blink_positions[] = {0, WATCH_POSITION_HOURS, WATCH_POSITION_MINUTES, 0};
                 watch_display_text(blink_positions[state->setting_mode], "  ");
+                watch_display_text((state->setting_mode == WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
+                */
+                switch(state->setting_mode) {
+                    case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR:
+                        watch_display_text(WATCH_POSITION_HOURS, "  ");
+                        break;
+                    case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
+                        watch_display_text(WATCH_POSITION_MINUTES, "  ");
+                        break;
+                    case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD:
+                        watch_clear_indicator(WATCH_INDICATOR_LAP);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (state->setting_mode == WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD) {
+                watch_set_indicator(WATCH_INDICATOR_LAP);
             }
             break;
         case EVENT_LIGHT_BUTTON_UP:
