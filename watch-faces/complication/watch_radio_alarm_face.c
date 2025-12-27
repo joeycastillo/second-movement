@@ -31,20 +31,9 @@
 //
 
 static void _watch_radio_alarm_face_display_alarm_time(watch_radio_alarm_face_state_t *state) {
-    uint8_t hour = state->hour;
-
-    if ( movement_clock_mode_24h() )
-        watch_set_indicator(WATCH_INDICATOR_24H);
-    else {
-        if ( hour >= 12 ) watch_set_indicator(WATCH_INDICATOR_PM);
-        else watch_clear_indicator(WATCH_INDICATOR_PM);
-        hour = hour % 12 ? hour % 12 : 12;
-    }
-
     const char periods[][7] = {"AP", "A ", " P"};
     static char lcdbuf[7];
-    sprintf(lcdbuf, "%2d%02d%s", hour, state->minute, periods[state->period]);
-
+    sprintf(lcdbuf, "%2d%02d%s", state->hour, state->minute, periods[state->period]);
     watch_display_text(WATCH_POSITION_BOTTOM, lcdbuf);
 }
 
