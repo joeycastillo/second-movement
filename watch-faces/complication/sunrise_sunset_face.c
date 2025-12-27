@@ -82,9 +82,8 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
     }
 
     watch_date_time_t date_time = movement_get_local_date_time(); // the current local date / time
-    watch_date_time_t utc_now = watch_utility_date_time_convert_zone(date_time, movement_get_current_timezone_offset(), 0); // the current date / time in UTC
     watch_date_time_t scratch_time; // scratchpad, contains different values at different times
-    scratch_time.reg = utc_now.reg;
+    scratch_time.reg = date_time.reg;
 
     // Weird quirky unsigned things were happening when I tried to cast these directly to doubles below.
     // it looks redundant, but extracting them to local int16's seemed to fix it.
@@ -200,7 +199,7 @@ static void _sunrise_sunset_face_update(sunrise_sunset_state_t *state) {
         }
 
         // it's after sunset. we need to display sunrise/sunset for tomorrow.
-        uint32_t timestamp = watch_utility_date_time_to_unix_time(utc_now, 0);
+        uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, 0);
         timestamp += 86400;
         scratch_time = watch_utility_date_time_from_unix_time(timestamp, 0);
     }

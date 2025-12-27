@@ -520,6 +520,7 @@ bool movement_enable_tap_detection_if_available(void) {
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        lis2dw_enable_double_tap();
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
