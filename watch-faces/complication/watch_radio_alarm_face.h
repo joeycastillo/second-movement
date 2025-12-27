@@ -52,11 +52,12 @@ void watch_radio_alarm_face_setup(uint8_t watch_face_index, void ** context_ptr)
 void watch_radio_alarm_face_activate(void *context);
 bool watch_radio_alarm_face_loop(movement_event_t event, void *context);
 void watch_radio_alarm_face_resign(void *context);
+movement_watch_face_advisory_t watch_radio_alarm_face_advise(void *context);
 
 #define watch_radio_alarm_face ((const watch_face_t){ \
     watch_radio_alarm_face_setup, \
     watch_radio_alarm_face_activate, \
     watch_radio_alarm_face_loop, \
     watch_radio_alarm_face_resign, \
-    NULL, \
+    watch_radio_alarm_face_advise, \
 })
