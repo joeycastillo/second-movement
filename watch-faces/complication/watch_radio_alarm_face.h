@@ -37,13 +37,22 @@
 typedef enum {
     WATCH_RADIO_ALARM_FACE_SETTING_MODE_NONE = 0,
     WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR,
-    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE
+    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE,
+    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD
 } watch_radio_alarm_face_setting_mode_t;
+
+// enum for alarm period
+typedef enum {
+    WATCH_RADIO_ALARM_FACE_PERIOD_AMPM = 0,
+    WATCH_RADIO_ALARM_FACE_PERIOD_AM,
+    WATCH_RADIO_ALARM_FACE_PERIOD_PM
+} watch_radio_alarm_face_period_t;
 
 typedef struct {
     // Anything you need to keep track of, put it here!
     uint32_t hour : 5;
     uint32_t minute : 6;
+    watch_radio_alarm_face_period_t period : 2;
     uint32_t alarm_is_on : 1;
     watch_radio_alarm_face_setting_mode_t setting_mode : 2;
 } watch_radio_alarm_face_state_t;

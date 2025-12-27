@@ -41,8 +41,9 @@ static void _watch_radio_alarm_face_display_alarm_time(watch_radio_alarm_face_st
         hour = hour % 12 ? hour % 12 : 12;
     }
 
+    const char periods[][7] = {"AP", "A ", " P"};
     static char lcdbuf[7];
-    sprintf(lcdbuf, "%2d%02d  ", hour, state->minute);
+    sprintf(lcdbuf, "%2d%02d%s", hour, state->minute, periods[state->period]);
 
     watch_display_text(WATCH_POSITION_BOTTOM, lcdbuf);
 }
@@ -90,8 +91,10 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
             
             // but in settings mode, we need to blink up the parameter we're setting.
             _watch_radio_alarm_face_display_alarm_time(state);
-            if (event.subsecond % 2 == 0) 
-                watch_display_text((state->setting_mode == WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
+            if (event.subsecond % 2 == 0) {
+                const watch_position_t blink_positions[] = {0, WATCH_POSITION_HOURS, WATCH_POSITION_MINUTES, WATCH_POSITION_SECONDS};
+                watch_display_text(blink_positions[state->setting_mode], "  ");
+            }
             break;
         case EVENT_LIGHT_BUTTON_UP:
             // You can use the Light button for your own purposes. Note that by default, Movement will also
@@ -109,7 +112,11 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
                     state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE;
                     break;
                 case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
-                    // If we're setting the minute, advance back to normal mode and cancel fast tick.
+                    // If we're setting the minute, advance to period set mode
+                    state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD;
+                    break;
+                case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD:
+                    // If we're setting the period, advance back to normal mode and cancel fast tick.
                     state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_NONE;
                     movement_request_tick_frequency(1);
                     // beep to confirm setting.
@@ -142,12 +149,16 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
                     // nothing to do here, alarm toggle is handled in EVENT_ALARM_BUTTON_UP.
                     break;
                 case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR:
-                    // increment hour, wrap around to 0 at 23.
-                    state->hour = (state->hour + 1) % 24;
+                    // increment hour, wrap around to 0 at 11.
+                    state->hour = (state->hour + 1) % 12;
                     break;
                 case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE:
                     // increment minute, wrap around to 0 at 59.
                     state->minute = (state->minute + 1) % 60;
+                    break;
+                case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD:
+                    // toggle AMPM/AM/PM period, wrap around to AMPM at PM.
+                    state->period = (state->period + 1) % 3;
                     break;
             }
             _watch_radio_alarm_face_display_alarm_time(state);
@@ -199,7 +210,14 @@ movement_watch_face_advisory_t watch_radio_alarm_face_advise(void *context) {
 
     if ( state->alarm_is_on ) {
         watch_date_time_t now = movement_get_local_date_time();
-        retval.wants_background_task = (state->hour==now.unit.hour && state->minute==now.unit.minute);
+        bool wants_background_task_am = false, wants_background_task_pm = false;
+        if (state->period != WATCH_RADIO_ALARM_FACE_PERIOD_PM) {
+            wants_background_task_am = (state->hour==now.unit.hour && state->minute==now.unit.minute);
+        }
+        if (state->period != WATCH_RADIO_ALARM_FACE_PERIOD_AM) {
+            wants_background_task_pm = (state->hour+12==now.unit.hour && state->minute==now.unit.minute);
+        }
+        retval.wants_background_task = wants_background_task_am || wants_background_task_pm;
         // We’re at the mercy of the advise handler
         // In Safari, the emulator triggers at the ›end‹ of the minute
         // Converting to Unix timestamps and taking a difference between now and wake
