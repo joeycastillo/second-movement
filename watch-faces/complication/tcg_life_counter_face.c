@@ -167,7 +167,7 @@ void print_tcg_life_counter(tcg_life_counter_state_t *state) {
     char buf[11];
     char buf2[3];
     watch_display_text(WATCH_POSITION_TOP, "TC");
-    sprintf(buf2, state->increment_mode_on ? "i%1d" : "d%1d", _tcg_life_counter_increment_amts[state->increment_idx]);
+    sprintf(buf2, state->increment_mode_on ? " %1d" : "-%1d", _tcg_life_counter_increment_amts[state->increment_idx]);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf2);
     sprintf(buf, "%3d%3d", state->life_values[0], state->life_values[1]);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
