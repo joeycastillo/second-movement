@@ -258,11 +258,20 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
         case EVENT_MODE_LONG_PRESS:
-            if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
-                movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
+            if (movement_state.current_face_idx == 0) {
+                if (watch_menu_indexes[0]) {
+                    movement_move_to_face(watch_menu_indexes[0]); // go to first submenu
+                    if (sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]) > 1) {
+                        movement_state.menu_selection_timestamp = movement_state.fast_ticks;
+                        movement_state.menu_selection_state = 1; // start flipping through the submenus while user holds mode button
+                    }
+                }
             } else {
                 movement_move_to_face(0);
             }
+            break;
+        case EVENT_MODE_LONG_UP:
+            movement_state.menu_selection_state = 0; // stop flipping through the submenus
             break;
         default:
             break;
@@ -277,11 +286,12 @@ void movement_move_to_face(uint8_t watch_face_index) {
 }
 
 void movement_move_to_next_face(void) {
-    uint16_t face_max;
-    if (MOVEMENT_SECONDARY_FACE_INDEX) {
-        face_max = (movement_state.current_face_idx < (int16_t)MOVEMENT_SECONDARY_FACE_INDEX) ? MOVEMENT_SECONDARY_FACE_INDEX : MOVEMENT_NUM_FACES;
-    } else {
-        face_max = MOVEMENT_NUM_FACES;
+    uint16_t face_max = MOVEMENT_NUM_FACES; // face_max is the index of the last face within the current submenu
+    for (int i = 0; i < sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]); i++) {
+        if (movement_state.current_face_idx < watch_menu_indexes[i]) {
+            face_max = watch_menu_indexes[i];
+            break;
+        }
     }
     movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
 }
@@ -870,6 +880,15 @@ bool app_loop(void) {
 
     // if we have a scheduled background task, handle that here:
     if (event.event_type == EVENT_TICK && movement_state.has_scheduled_background_task) _movement_handle_scheduled_tasks();
+
+    // handle menu selection when user holds mode button
+    if (movement_state.menu_selection_state) {
+        if (movement_state.fast_ticks - movement_state.menu_selection_timestamp > MOVEMENT_LONG_PRESS_TICKS * 2) {
+            movement_move_to_face(watch_menu_indexes[movement_state.menu_selection_state]); // move to first face of next menu
+            movement_state.menu_selection_state = (movement_state.menu_selection_state + 1) % (sizeof(watch_menu_indexes) / sizeof(watch_menu_indexes[0]));
+            movement_state.menu_selection_timestamp = movement_state.fast_ticks;
+        }
+    }
 
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
     // if we have timed out of our low energy mode countdown, enter low energy mode.

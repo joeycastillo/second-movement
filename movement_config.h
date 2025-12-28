@@ -45,11 +45,14 @@ const watch_face_t watch_faces[] = {
 
 /* Determines what face to go to from the first face on long press of the Mode button.
  * Also excludes these faces from the normal rotation.
+ * You can have as many submenus as you like, which you can reach by holding the Mode button.
+ * Just add the indexes of the first faces of the submenus to this array.
+ * If you want to snap back to the first face after reaching the last submenu, just add 0 as the last index.
  * In the default firmware, this lets you access temperature and battery voltage with a long press of Mode.
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
- * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
+ * If you don't want any faces to be excluded, set this to { 0 } and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)
+const uint8_t watch_menu_indexes[] = { 4 };
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT
