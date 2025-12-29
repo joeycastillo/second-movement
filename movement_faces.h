@@ -49,6 +49,7 @@
 #include "chirpy_demo_face.h"
 #include "finetune_face.h"
 #include "nanosec_face.h"
+#include "pin_face.h"
 #include "mars_time_face.h"
 #include "peek_memory_face.h"
 #include "ish_face.h"
