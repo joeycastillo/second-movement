@@ -94,10 +94,6 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
             // but in settings mode, we need to blink up the parameter we're setting.
             _watch_radio_alarm_face_display_alarm_time(state);
             if (event.subsecond % 2 == 0) {
-                /* const watch_position_t blink_positions[] = {0, WATCH_POSITION_HOURS, WATCH_POSITION_MINUTES, 0};
-                watch_display_text(blink_positions[state->setting_mode], "  ");
-                watch_display_text((state->setting_mode == WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR) ? WATCH_POSITION_HOURS : WATCH_POSITION_MINUTES, "  ");
-                */
                 switch(state->setting_mode) {
                     case WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR:
                         watch_display_text(WATCH_POSITION_HOURS, "  ");
