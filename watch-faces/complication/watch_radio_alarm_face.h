@@ -38,7 +38,8 @@ typedef enum {
     WATCH_RADIO_ALARM_FACE_SETTING_MODE_NONE = 0,
     WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR,
     WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_MINUTE,
-    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_PERIOD
+    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_ALARM_PERIOD,
+    WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_CHIME_PERIOD
 } watch_radio_alarm_face_setting_mode_t;
 
 // enum for alarm period
@@ -46,15 +47,28 @@ typedef enum {
     WATCH_RADIO_ALARM_FACE_PERIOD_AMPM = 0,
     WATCH_RADIO_ALARM_FACE_PERIOD_AM,
     WATCH_RADIO_ALARM_FACE_PERIOD_PM
-} watch_radio_alarm_face_period_t;
+} watch_radio_alarm_face_alarm_period_t;
+
+// array for chime periods
+static const uint32_t chime_periods[] = {60, 30, 15};
+
+// enum for background event type
+typedef enum {
+    WATCH_RADIO_ALARM_FACE_BG_TASK_TYPE_NONE = 0,
+    WATCH_RADIO_ALARM_FACE_BG_TASK_TYPE_ALARM,
+    WATCH_RADIO_ALARM_FACE_BG_TASK_TYPE_CHIME
+} watch_radio_alarm_face_bg_task_type_t;
 
 typedef struct {
     // Anything you need to keep track of, put it here!
     uint32_t hour : 5;
     uint32_t minute : 6;
-    watch_radio_alarm_face_period_t period : 2;
-    uint32_t alarm_is_on : 1;
-    watch_radio_alarm_face_setting_mode_t setting_mode : 2;
+    watch_radio_alarm_face_alarm_period_t alarm_period : 2;
+    uint32_t alarm_is_on : 2;
+    uint32_t chime_period_idx : 2;
+    uint32_t chime_is_on : 2;
+    watch_radio_alarm_face_bg_task_type_t bg_task_type : 2;
+    watch_radio_alarm_face_setting_mode_t setting_mode : 3;
 } watch_radio_alarm_face_state_t;
 
 void watch_radio_alarm_face_setup(uint8_t watch_face_index, void ** context_ptr);
