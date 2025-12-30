@@ -44,13 +44,14 @@ static void _watch_radio_alarm_face_display_alarm_time(watch_radio_alarm_face_st
             watch_set_indicator(WATCH_INDICATOR_PM);
             watch_clear_indicator(WATCH_INDICATOR_24H);
     }
+    watch_clear_indicator(WATCH_INDICATOR_LAP);
 
     static char lcdbuf[7];
     sprintf(lcdbuf, "%2d%02d%2d", state->hour, state->minute, chime_periods[state->chime_period_idx]);
     watch_display_text(WATCH_POSITION_BOTTOM, lcdbuf);
 }
 
-static inline void button_beep() {
+static inline void _button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound()) watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 50, movement_button_volume());
 }
@@ -138,7 +139,7 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
                     // If we're setting the alarm period, advance to chime period set mode.
                     state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_CHIME_PERIOD;
                     // beep to confirm setting.
-                    button_beep();
+                    _button_beep();
                     // also turn the alarm on since they just set it.
                     state->alarm_is_on = 1;
                     movement_set_alarm_enabled(true);
@@ -149,7 +150,7 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
                     state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_NONE;
                     movement_request_tick_frequency(1);
                     // beep to confirm setting.
-                    button_beep();
+                    _button_beep();
                     // also turn the chime on since they just set it.
                     state->chime_is_on = 1;
                     // TODO movement_set_chime_enabled(true);
@@ -214,7 +215,7 @@ bool watch_radio_alarm_face_loop(movement_event_t event, void *context) {
                 // long press in normal mode: move to hour setting mode, request fast tick.
                 state->setting_mode = WATCH_RADIO_ALARM_FACE_SETTING_MODE_SETTING_HOUR;
                 movement_request_tick_frequency(4);
-                button_beep();
+                _button_beep();
             }
             break;
         case EVENT_BACKGROUND_TASK:
