@@ -64,9 +64,9 @@ typedef struct {
     uint32_t hour : 5;
     uint32_t minute : 6;
     watch_radio_alarm_face_alarm_period_t alarm_period : 2;
-    uint32_t alarm_is_on : 2;
+    uint32_t alarm_is_on : 1;
     uint32_t chime_period_idx : 2;
-    uint32_t chime_is_on : 2;
+    uint32_t chime_is_on : 1;
     watch_radio_alarm_face_bg_task_type_t bg_task_type : 2;
     watch_radio_alarm_face_setting_mode_t setting_mode : 3;
 } watch_radio_alarm_face_state_t;
