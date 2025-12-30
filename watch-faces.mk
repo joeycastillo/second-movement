@@ -54,4 +54,5 @@ SRCS += \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
   ./watch-faces/complication/watch_radio_alarm_face.c \
+  ./watch-faces/complication/ping_face.c \
 # New watch faces go above this line.
