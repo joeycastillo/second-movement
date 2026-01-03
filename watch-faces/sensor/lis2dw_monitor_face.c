@@ -420,7 +420,7 @@ static void _monitor_update(lis2dw_monitor_state_t *state)
     lis2dw_fifo_t fifo;
     float x = 0, y = 0, z = 0;
 
-    lis2dw_read_fifo(&fifo);
+    lis2dw_read_fifo(&fifo, LIS2DW_FIFO_TIMEOUT / DISPLAY_FREQUENCY);
     if (fifo.count == 0) {
         return;
     }

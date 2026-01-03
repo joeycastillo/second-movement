@@ -23,80 +23,6 @@
  * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
- * # Deadline Face
- * 
- * This is a watch face for tracking deadlines.  It draws inspiration from
- * other watch faces of the project but focuses on keeping track of
- * deadlines.  You can enter and monitor up to four different deadlines by
- * providing their respective date and time.  The face has two modes:
- * *running mode* and *settings mode*.
- *
- * ## Running Mode
- * 
- * When the watch face is activated, it defaults to running mode.  The top
- * right corner shows the current deadline number, and the main display
- * presents the time left until the deadline.  The format of the display
- * varies depending on the remaining time.
- *
- * - When less than a day is left, the display shows the remaining hours,
- *   minutes, and seconds in the form `HH:MM:SS`.
- * 
- * - When less than a month is left, the display shows the remaining days
- *   and hours in the form `DD:HH` with the unit `dy` for days.
- * 
- * - When less than a year is left, the display shows the remaining months
- *   and days in the form `MM:DD` with the unit `mo` for months.
- * 
- * - When more than a year is left, the years and months are displayed in
- *   the form `YY:MM` with the unit `yr` for years.
- * 
- * - When a deadline has passed in the last 24 hours, the display shows
- *   `over` to indicate that the deadline has just recently been reached.
- * 
- * - When no deadline is set for a particular slot, or if a deadline has
- *   already passed by more than 24 hours, `--:--` is displayed.
- * 
- * The user can navigate in running mode using the following buttons:
- * 
- * - The *alarm button* moves the next deadline.  There are currently four
- *   slots available for deadlines.  When the last slot has been reached,
- *   pressing the button moves to the first slot.
- *
- * - A *long press* on the *alarm button* activates settings mode and
- *   enables configuring the currently selected deadline.
- * 
- * - A *long press* on the *light button* activates a deadline alarm.  The 
- *   bell icon is displayed, and the alarm will ring upon reaching any of
- *   the deadlines set.  It is important to note that the watch will not 
- *   enter low-energy sleep mode while the alarm is enabled.
- *
- *
- * ## Settings Mode
- * 
- * In settings mode, the currently selected slot for a deadline can be
- * configured by providing the date and the time.  Like running mode, the
- * top right corner of the display indicates the current deadline number. 
- * The main display shows the date and, on the next page, the time to be
- * configured.
- *
- * The user can use the following buttons in settings mode.
- *
- * - The *light button* navigates through the different date and time
- *   settings, going from year, month, day, hour, to minute.  The selected
- *   position is blinking.
- *
- * - A *long press* on the light button resets the date and time to the next
- *   day at midnight.  This is the default deadline.
- *
- * - The *alarm button* increments the currently selected position.  A *long
- *   press* on the *alarm button* changes the value faster.
- *
- * - The *mode button* exists setting mode and returns to *running mode*. 
- *   Here the selected deadline slot can be changed.
- *
- */
-
 #include <stdlib.h>
 #include <string.h>
 #include "deadline_face.h"
@@ -156,26 +82,36 @@ static inline int _days_in_month(int16_t month, int16_t year)
 /* Play beep sound based on type */
 static inline void _beep(beep_type_t beep_type)
 {
+    static int8_t beep_sequence[] = {
+        0, 4,
+        0, 6,
+        0, 6,
+        0
+    };
+
     if (!movement_button_should_sound())
         return;
 
     switch (beep_type) {
         case BEEP_BUTTON:
-            watch_buzzer_play_note(BUZZER_NOTE_C7, 50);
+            beep_sequence[0] = BUZZER_NOTE_C7;
+            beep_sequence[2] = 0;
             break;
 
         case BEEP_ENABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 75);
+            beep_sequence[0] = BUZZER_NOTE_G7;
+            beep_sequence[2] = BUZZER_NOTE_REST;
+            beep_sequence[4] = BUZZER_NOTE_C8;
             break;
 
         case BEEP_DISABLE:
-            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
-            watch_buzzer_play_note(BUZZER_NOTE_REST, 75);
-            watch_buzzer_play_note(BUZZER_NOTE_G7, 75);
+            beep_sequence[0] = BUZZER_NOTE_C8;
+            beep_sequence[2] = BUZZER_NOTE_REST;
+            beep_sequence[4] = BUZZER_NOTE_G7;
             break;
     }
+
+    movement_play_sequence(beep_sequence, 0);
 }
 
 /* Change tick frequency */

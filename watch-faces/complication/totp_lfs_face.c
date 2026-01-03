@@ -30,7 +30,6 @@
 #include "base32.h"
 
 #include "watch.h"
-#include "watch_utility.h"
 #include "filesystem.h"
 
 #include "totp_lfs_face.h"
@@ -253,7 +252,7 @@ void totp_lfs_face_activate(void *context) {
     }
 #endif
 
-    totp_state->timestamp = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
+    totp_state->timestamp = movement_get_utc_timestamp();
     totp_face_set_record(totp_state, 0);
 }
 

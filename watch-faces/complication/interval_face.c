@@ -96,8 +96,7 @@ static inline void _inc_uint8(uint8_t *value, uint8_t step, uint8_t max) {
 
 static uint32_t _get_now_ts() {
     // returns the current date time as unix timestamp
-    watch_date_time_t now = watch_rtc_get_date_time();
-    return watch_utility_date_time_to_unix_time(now, 0);
+    return movement_get_utc_timestamp();
 }
 
 static inline void _button_beep() {

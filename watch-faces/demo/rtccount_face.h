@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Joey Castillo
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,26 @@
  * SOFTWARE.
  */
 
-#include "watch_i2c.h"
+#pragma once
 
-void watch_enable_i2c(void) {}
+/*
+ * RTCCOUNT FACE
+ * 
+ * A test face to inspect some metrics of the rtc-counter32 mode.
+ */
 
-void watch_disable_i2c(void) {}
+#include "movement.h"
 
-int8_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length) {
-    return 0;
-}
+void rtccount_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void rtccount_face_activate(void *context);
+bool rtccount_face_loop(movement_event_t event, void *context);
+void rtccount_face_resign(void *context);
+movement_watch_face_advisory_t rtccount_face_advise(void *context);
 
-int8_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length) {
-    return 0;
-}
-
-int8_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data) {
-    return 0;
-}
-
-uint8_t watch_i2c_read8(int16_t addr, uint8_t reg) {
-    return 0;
-}
-
-uint16_t watch_i2c_read16(int16_t addr, uint8_t reg) {
-    return 0;
-}
-
-uint32_t watch_i2c_read24(int16_t addr, uint8_t reg) {
-    return 0;
-}
-
-uint32_t watch_i2c_read32(int16_t addr, uint8_t reg) {
-    return 0;
-}
+#define rtccount_face ((const watch_face_t){ \
+    rtccount_face_setup, \
+    rtccount_face_activate, \
+    rtccount_face_loop, \
+    rtccount_face_resign, \
+    rtccount_face_advise, \
+})
