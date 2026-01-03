@@ -119,30 +119,22 @@ static void _simon_play_note(SimonNote note, simon_state_t *state, bool skip_res
     switch (note) {
         case SIMON_LED_NOTE:
             if (!state->lightOff) watch_set_led_yellow();
-            if (state->soundOff)
-                delay_ms(_delay_beep);
-            else
-                watch_buzzer_play_note(BUZZER_NOTE_D3, _delay_beep);
+            if (!state->soundOff) watch_buzzer_play_note(BUZZER_NOTE_D3, _delay_beep);
+            delay_ms(_delay_beep);
             break;
         case SIMON_MODE_NOTE:
             if (!state->lightOff) watch_set_led_red();
-            if (state->soundOff)
-                delay_ms(_delay_beep);
-            else
-               watch_buzzer_play_note(BUZZER_NOTE_E4, _delay_beep);
+            if (!state->soundOff) watch_buzzer_play_note(BUZZER_NOTE_E4, _delay_beep);
+            delay_ms(_delay_beep);
             break;
         case SIMON_ALARM_NOTE:
             if (!state->lightOff) watch_set_led_green();
-            if (state->soundOff)
-                delay_ms(_delay_beep);
-            else
-               watch_buzzer_play_note(BUZZER_NOTE_C3, _delay_beep);
+            if (!state->soundOff) watch_buzzer_play_note(BUZZER_NOTE_C3, _delay_beep);
+            delay_ms(_delay_beep);
             break;
         case SIMON_WRONG_NOTE:
-            if (state->soundOff)
-                delay_ms(800);
-            else
-               watch_buzzer_play_note(BUZZER_NOTE_A1, 800);
+            if (!state->soundOff) watch_buzzer_play_note(BUZZER_NOTE_A1, 800);
+            delay_ms(800);
             break;
     }
     watch_set_led_off();
@@ -150,7 +142,7 @@ static void _simon_play_note(SimonNote note, simon_state_t *state, bool skip_res
     if (note != SIMON_WRONG_NOTE) {
         _simon_clear_display(state);
         if (!skip_rest) {
-            watch_buzzer_play_note(BUZZER_NOTE_REST, (_delay_beep * 2)/3);
+            delay_ms((_delay_beep * 2)/3);
         }
     }
 }
