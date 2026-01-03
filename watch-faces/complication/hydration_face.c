@@ -25,8 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hydration_face.h"
-#include "watch.h"
-#include "watch_utility.h"
 
 /* Display frequency */
 #define DISPLAY_FREQUENCY 1
