@@ -49,11 +49,11 @@ SRCS += \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
-  ./watch-faces/io/fesk_demo_lite_face.c \
   ./watch-faces/complication/blackjack_face.c \
   ./watch-faces/complication/endless_runner_face.c \
   ./watch-faces/complication/higher_lower_game_face.c \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
   ./watch-faces/complication/ping_face.c \
+  ./watch-faces/io/fesk_demo_lite_face.c \
 # New watch faces go above this line.
