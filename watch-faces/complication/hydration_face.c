@@ -31,6 +31,9 @@
 /* Display frequency */
 #define DISPLAY_FREQUENCY 1
 
+/* Maximum possible water intake (9.9l) */
+#define MAX_WATER_INTAKE 9900
+
 /* Settings */
 #define NUM_SETTINGS 5
 
@@ -360,15 +363,21 @@ static bool _tracking_loop(movement_event_t event, void *context)
             _tracking_display(state);
             break;
         case EVENT_ALARM_BUTTON_UP:
-            state->water_intake += state->water_glass;
+            /* Prevent overflow of water intake */
+            if (state->water_intake + state->water_glass > MAX_WATER_INTAKE) {
+                state->water_intake = MAX_WATER_INTAKE;
+            } else {
+                state->water_intake += state->water_glass;
+            }
             _tracking_display(state);
             _beep();
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if (state->water_intake >= state->water_glass) {
-                state->water_intake -= state->water_glass;
-            } else {
+            /* Prevent underflow of water intake */
+            if (state->water_intake - state->water_glass < 0) {
                 state->water_intake = 0;
+            } else {
+                state->water_intake -= state->water_glass;
             }
             _tracking_display(state);
             _beep();
