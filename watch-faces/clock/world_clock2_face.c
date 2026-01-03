@@ -28,7 +28,6 @@
 #include "world_clock2_face.h"
 #include "watch_utility.h"
 #include "watch_common_display.h"
-#include "watch.h"
 #include "zones.h"
 
 static bool refresh_face;
