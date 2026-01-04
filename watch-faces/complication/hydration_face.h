@@ -23,20 +23,26 @@
  */
 
 /*
- * This watch face tracks daily water intake.
+ * This watch face monitors daily hydration by tracking and logging water intake.
  * 
  * In tracking mode: Display current water intake and percentage
  * - Alarm button: +100ml (or configured glass size)
  * - Light button: -100ml (or configured glass size)
  * - Alarm long press: Display deviation from estimate
  * - Light long press: Switch to settings mode
+ * - Alarm really long press: Switch to log mode
  * 
  * In settings mode: Configure glass size, daily goal, wake time, sleep time, alert interval
  * - Light button: Switch to next setting
  * - Alarm button: Advance current setting
  * - Alarm long press: Reset to default value
  * - Mode button: Switch to tracking mode
- *
+
+ * In log mode: Display log entries of water intake, date and deviation from goal
+ * - Alarm button: Switch to next log entry
+ * - Light button: Cycle through intake, date and deviation
+ * - Mode button: Switch to tracking mode
+ * 
  * Background tasks:
  * - Automatic reset at wake time
  * - Alert if intake below estimate at sleep time
@@ -46,9 +52,16 @@
 
 #include "movement.h"
 
+/* Number of log entries */
+#define HYDRATION_LOG_ENTRIES 30
+
+/* Number of log types */
+#define HYDRATION_LOG_TYPES 3
+
 typedef enum {
     PAGE_HYDRATION_TRACKING,
     PAGE_HYDRATION_SETTINGS,
+    PAGE_HYDRATION_LOG
 } hydration_page_t;
 
 typedef enum {
@@ -59,10 +72,21 @@ typedef enum {
     HYDRATION_SETTING_ALERT_INTERVAL,
 } hydration_setting_t;
 
+typedef enum {
+    HYDRATION_LOG_INTAKE,
+    HYDRATION_LOG_DATE,
+    HYDRATION_LOG_DEVIATION,
+} hydration_log_type_t;
+
 typedef struct {
     void (*display)(void *, uint8_t);
     void (*advance)(void *);
 } hydration_settings_t;
+
+typedef struct {
+    uint8_t water_intake;       /* Logged intake (intake / 100) */
+    uint16_t date;              /* Logged date (ts / 86400) */
+} hydration_log_t;
 
 typedef struct {
     uint16_t water_intake;      /* Current water intake in ml */
@@ -75,6 +99,14 @@ typedef struct {
     uint8_t display_deviation;  /* Display deviation from estimate */
     bool alert_active;          /* Alert active */
     hydration_page_t page;      /* Current page */
+
+    /* Log */
+    hydration_log_t log[HYDRATION_LOG_ENTRIES]; /* Log entries */
+    hydration_log_type_t log_type;      /* Log type */
+    uint8_t log_index;          /* Log index */
+    uint8_t log_head;           /* Log head */
+
+    /* Settings */
     hydration_setting_t settings_page;  /* Current settings page */
     hydration_settings_t *settings;     /* Settings configuration */
 } hydration_state_t;
