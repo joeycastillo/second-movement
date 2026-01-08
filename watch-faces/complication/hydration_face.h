@@ -97,6 +97,7 @@ typedef struct {
     uint8_t alert_interval;     /* Alert interval in hours (default 2) */
     uint8_t face_index;         /* Face index */
     uint8_t display_deviation;  /* Display deviation from estimate */
+    bool alert_enabled;         /* Alert enabled */
     bool alert_active;          /* Alert active */
     hydration_page_t page;      /* Current page */
 

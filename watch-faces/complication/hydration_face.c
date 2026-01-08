@@ -65,7 +65,7 @@ static void _settings_title_display(hydration_state_t *state, char *buf1, char *
         watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, buf, buf);
     }
 
-    if (state->alert_active) {
+    if (state->alert_enabled) {
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     } else {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
@@ -234,6 +234,22 @@ static void _settings_alert_interval_advance(void *context)
     }
 }
 
+static void _hydration_start_sleep_animation(void)
+{
+    if (!watch_sleep_animation_is_running()) {
+        watch_start_sleep_animation(500);
+        watch_start_indicator_blink_if_possible(WATCH_INDICATOR_COLON, 500);
+    }
+}
+
+static void _hydration_stop_sleep_animation(void)
+{
+    if (watch_sleep_animation_is_running()) {
+        watch_stop_sleep_animation();
+        watch_stop_blink();
+    }
+}
+
 /* Play beep sound */
 static inline void _beep()
 {
@@ -269,7 +285,7 @@ static void _tracking_display(hydration_state_t *state)
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "HYDRA", "Hy");
 
-    if (state->alert_active) {
+    if (state->alert_enabled) {
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     } else {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
@@ -395,11 +411,10 @@ static void _switch_to_log(hydration_state_t *state)
 static void _check_hydration_alert(hydration_state_t *state)
 {
     watch_date_time_t now = movement_get_local_date_time();
-
-    /* Return if time is between sleep and wake */
-    uint8_t hour = now.unit.hour;
+    state->alert_active = false;
 
     /* Check if time is between sleep and wake */
+    uint8_t hour = now.unit.hour;
     if (state->sleep_hour == state->wake_hour) {
         /* Disable alerts completely */
         return;
@@ -416,19 +431,19 @@ static void _check_hydration_alert(hydration_state_t *state)
     }
 
     /* Check for alert at sleep time */
-    bool alert = (hour == state->sleep_hour);
+    state->alert_active |= (hour == state->sleep_hour);
 
     /* Check for alert at interval */
     uint8_t hours_since_wake = (hour + 24 - state->wake_hour) % 24;
-    alert |= (state->alert_interval > 0 && hours_since_wake % state->alert_interval == 0);
+    state->alert_active |= (state->alert_interval > 0 && hours_since_wake % state->alert_interval == 0);
 
-    if (!alert)
+    if (!state->alert_active)
         return;
 
     uint16_t expected_intake = _get_expected_intake(state, hours_since_wake);
     if (state->water_intake < expected_intake) {
-        movement_play_alarm();
         movement_move_to_face(state->face_index);
+        movement_play_alarm();
     }
 }
 
@@ -483,6 +498,14 @@ static bool _tracking_loop(movement_event_t event, void *context)
             state->display_deviation = 0;
             _switch_to_log(state);
             _beep();
+            break;
+        case EVENT_LOW_ENERGY_UPDATE:
+            _hydration_start_sleep_animation();
+            /* Wake up from sleep if alert is active */
+            if (state->alert_active) {
+                movement_request_wake();
+                state->alert_active = false;
+            }
             break;
         case EVENT_BACKGROUND_TASK:
             _check_hydration_alert(state);
@@ -583,7 +606,7 @@ static bool _settings_loop(movement_event_t event, void *context)
             state->settings[state->settings_page].display(context, event.subsecond);
             break;
         case EVENT_LIGHT_LONG_PRESS:
-            state->alert_active = !state->alert_active;
+            state->alert_enabled = !state->alert_enabled;
             state->settings[state->settings_page].display(context, event.subsecond);
             _beep();
             break;
@@ -603,10 +626,12 @@ static bool _settings_loop(movement_event_t event, void *context)
 void hydration_face_setup(uint8_t watch_face_index, void **context_ptr)
 {
     (void) watch_face_index;
-    if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(hydration_state_t));
-        memset(*context_ptr, 0, sizeof(hydration_state_t));
-    }
+    if (*context_ptr != NULL)
+        return; /* Skip setup if context available */
+
+    *context_ptr = malloc(sizeof(hydration_state_t));
+    memset(*context_ptr, 0, sizeof(hydration_state_t));
+
     hydration_state_t *state = (hydration_state_t *) * context_ptr;
 
     /* Default setup */
@@ -642,6 +667,8 @@ void hydration_face_setup(uint8_t watch_face_index, void **context_ptr)
 void hydration_face_activate(void *context)
 {
     hydration_state_t *state = (hydration_state_t *) context;
+
+    _hydration_stop_sleep_animation();
 
     /* Switch to tracking page. */
     _switch_to_tracking(state);
@@ -686,7 +713,7 @@ movement_watch_face_advisory_t hydration_face_advise(void *context)
     }
 
     /* Check for alert at every hour */
-    if (state->alert_active && now.unit.minute == 0) {
+    if (state->alert_enabled && now.unit.minute == 0) {
         retval.wants_background_task = true;
     }
 
