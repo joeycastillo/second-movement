@@ -40,7 +40,6 @@ SRCS += \
   ./watch-faces/complication/kitchen_conversions_face.c \
   ./watch-faces/complication/periodic_table_face.c \
   ./watch-faces/clock/ke_decimal_time_face.c \
-<<<<<<< HEAD
   ./watch-faces/complication/baby_kicks_face.c \
   ./watch-faces/complication/counter_face.c \
   ./watch-faces/complication/pulsometer_face.c \

@@ -73,7 +73,7 @@ typedef struct {
         uint16_t detection_ticks;
         uint8_t tap_count;
         uint32_t last_tap_time;
-        uint32_t intervals[8];
+        uint32_t intervals[4];
         uint8_t interval_index;
         uint8_t subsecond;
     } tap_tempo;

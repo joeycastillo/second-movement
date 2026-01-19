@@ -93,13 +93,13 @@ static void _metronome_calculate_bpm_from_taps(metronome_state_t *state) {
     uint32_t total_interval = 0;
     uint8_t valid_intervals = 0;
 
-    uint8_t intervals_to_use = (state->tap_tempo.tap_count - 1) < 8 ? (state->tap_tempo.tap_count - 1) : 8;
+    uint8_t intervals_to_use = (state->tap_tempo.tap_count - 1) < 4 ? (state->tap_tempo.tap_count - 1) : 4;
 
     printf("calculating BPM from %d taps (%d intervals):\n", state->tap_tempo.tap_count, intervals_to_use);
 
     // Sum the most recent intervals, going backwards from the last one
     for (uint8_t i = 1; i <= intervals_to_use; i++) {
-        uint8_t idx = (state->tap_tempo.interval_index - i + 8) % 8;
+        uint8_t idx = (state->tap_tempo.interval_index - i + 4) % 4;
         printf("  interval %d (idx %d): %u ms\n", i-1, idx, state->tap_tempo.intervals[idx]);
         total_interval += state->tap_tempo.intervals[idx];
         valid_intervals++;
@@ -140,7 +140,7 @@ static void _metronome_handle_tap(metronome_state_t *state) {
         if (interval > 100 && interval < 2000) {
             printf("valid interval, storing at index %d\n", state->tap_tempo.interval_index);
             state->tap_tempo.intervals[state->tap_tempo.interval_index] = interval;
-            state->tap_tempo.interval_index = (state->tap_tempo.interval_index + 1) % 8;
+            state->tap_tempo.interval_index = (state->tap_tempo.interval_index + 1) % 4;
         } else {
             printf("invalid interval (%u ms), ignoring\n", interval);
         }
@@ -182,14 +182,18 @@ void metronome_face_activate(void *context) {
 
 static void _metronome_start_stop(metronome_state_t *state) {
     if (state->mode != metRun) {
+        // Safety check: ensure BPM is valid
+        if (state->bpm == 0) {
+            state->bpm = 120;
+        }
         movement_request_tick_frequency(64);
         state->mode = metRun;
         watch_clear_display();
         double ticks = 3840.0 / (double)state->bpm;
         state->tick = (int) ticks;
-        state->curTick = (int) ticks;
+        state->curTick = 0;
         state->halfBeat = (int)(state->tick/2);
-        state->curCorrection = ticks - state->tick;
+        state->curCorrection = 0;
         state->correction = ticks - state->tick;
         state->curBeat = 1;
     } else {
@@ -208,32 +212,39 @@ static void _metronome_tick_beat(metronome_state_t *state) {
             watch_buzzer_play_sequence((int8_t *)_sound_seq_beat, NULL);
         }
     }
-    sprintf(buf, "MN %d %03d%s", state->count, state->bpm, "bp");    
+    sprintf(buf, "MN %d %03d%s", state->count, state->bpm, "bp");
     watch_display_string(buf, 0);
 }
 
 static void _metronome_event_tick(uint8_t subsecond, metronome_state_t *state) {
     (void) subsecond;
 
-    if (state->curCorrection >= 1) {
-        state->curCorrection -= 1;
-        state->curTick -= 1;
+    state->curTick++;
+
+    // Determine target: base tick count plus extension if error accumulated
+    // Use epsilon to handle floating-point rounding errors
+    int target = state->tick;
+    if (state->curCorrection >= 0.99) {
+        target++;
     }
-    int diff = state->curTick - state->tick;
-    if(diff == 0) {
+
+    if (state->curTick >= target) {
         _metronome_tick_beat(state);
         state->curTick = 0;
+
+        // After beat fires: subtract if we used the extension, then accumulate for next beat
+        if (state->curCorrection >= 0.99) {
+            state->curCorrection -= 1.0;
+        }
         state->curCorrection += state->correction;
-        if (state->curBeat < state->count ) {
+
+        if (state->curBeat < state->count) {
             state->curBeat += 1;
         } else {
             state->curBeat = 1;
         }
-    } else {
-        if (state->curTick == state->halfBeat)  {
-            watch_clear_display();
-        }
-        state->curTick += 1;
+    } else if (state->curTick == state->halfBeat) {
+        watch_clear_display();
     }
 }
 
@@ -303,6 +314,10 @@ static void _metronome_update_setting(metronome_state_t *state) {
         case alarm:
             state->soundOn = !state->soundOn;
             break;
+    }
+    // Ensure BPM never goes below 1 to prevent division by zero
+    if (state->bpm == 0) {
+        state->bpm = 1;
     }
     sprintf(buf, "MN %d %03d%s", state->count % 10, state->bpm, "bp"); 
     if (state->setCur == alarm) {

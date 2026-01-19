@@ -63,7 +63,6 @@
 #include "tally_face.h"
 #include "probability_face.h"
 #include "ke_decimal_time_face.h"
-<<<<<<< HEAD
 #include "baby_kicks_face.h"
 #include "counter_face.h"
 #include "pulsometer_face.h"
