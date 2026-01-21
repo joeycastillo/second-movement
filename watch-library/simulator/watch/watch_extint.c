@@ -39,10 +39,13 @@ static watch_cb_t external_interrupt_light_callback = NULL;
 static eic_interrupt_trigger_t external_interrupt_light_trigger = INTERRUPT_TRIGGER_NONE;
 static watch_cb_t external_interrupt_alarm_callback = NULL;
 static eic_interrupt_trigger_t external_interrupt_alarm_trigger = INTERRUPT_TRIGGER_NONE;
+static watch_cb_t external_interrupt_tap_callback = NULL;
+static eic_interrupt_trigger_t external_interrupt_tap_trigger = INTERRUPT_TRIGGER_NONE;
 
 #define BTN_ID_ALARM 3
 #define BTN_ID_LIGHT 1
 #define BTN_ID_MODE 2
+#define BTN_ID_TAP 4
 static const uint8_t BTN_IDS[] = { BTN_ID_ALARM, BTN_ID_LIGHT, BTN_ID_MODE };
 static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_interrupt_trigger_t trigger);
 
@@ -135,6 +138,16 @@ static void watch_install_button_callbacks(void) {
         emscripten_set_touchstart_callback(target, (void *)&BTN_IDS[i], EM_FALSE, watch_invoke_touch_callback);
         emscripten_set_touchend_callback(target, (void *)&BTN_IDS[i], EM_FALSE, watch_invoke_touch_callback);
     }
+
+    // Handle when tapping happens on the screen there. We set up listeners for
+    // both #light and #displays, since depending on exactly where on the screen
+    // you tap, it may or may not be on either of them.
+    static int BTN_ID_TAP_VALUE = BTN_ID_TAP;
+    emscripten_set_touchstart_callback("#light", (void *)&BTN_ID_TAP_VALUE, EM_FALSE, watch_invoke_touch_callback);
+    emscripten_set_mousedown_callback("#light", (void *)&BTN_ID_TAP_VALUE, EM_FALSE, watch_invoke_mouse_callback);
+    emscripten_set_touchstart_callback("#displays", (void *)&BTN_ID_TAP_VALUE, EM_FALSE, watch_invoke_touch_callback);
+    emscripten_set_mousedown_callback("#displays", (void *)&BTN_ID_TAP_VALUE, EM_FALSE, watch_invoke_mouse_callback);
+
 }
 
 void watch_enable_external_interrupts(void) {
@@ -171,12 +184,24 @@ static EM_BOOL watch_invoke_interrupt_callback(const uint8_t button_id, eic_inte
             callback = external_interrupt_alarm_callback;
             trigger = external_interrupt_alarm_trigger;
             break;
+        case BTN_ID_TAP:
+            // Write it to JS.
+            EM_ASM({
+                window.LIS2DW_INTERRUPT_SRC = 0x04;
+            });
+            callback = external_interrupt_tap_callback;
+            trigger = external_interrupt_tap_trigger;
+            break;
         default:
             return EM_FALSE;
     }
 
     EM_ASM({
-        const classList = document.querySelector('#btn' + $0).classList;
+        const el = document.querySelector('#btn' + $0);
+        if (!el) {
+            return;
+        }
+        const classList = el.classList;
         const highlight = 'highlight';
         $1 ? classList.add(highlight) : classList.remove(highlight);
     }, button_id, level);
@@ -203,5 +228,8 @@ void watch_register_interrupt_callback(const uint8_t pin, watch_cb_t callback, e
     } else if (pin == HAL_GPIO_BTN_ALARM_pin()) {
         external_interrupt_alarm_callback = callback;
         external_interrupt_alarm_trigger = trigger;
+    } else if (pin == HAL_GPIO_A3_pin()) {
+        external_interrupt_tap_callback = callback;
+        external_interrupt_tap_trigger = trigger;
     }
 }

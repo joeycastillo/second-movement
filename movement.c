@@ -1072,6 +1072,7 @@ void app_setup(void) {
                 break;
             }
         }
+        watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 #endif
     }
 
