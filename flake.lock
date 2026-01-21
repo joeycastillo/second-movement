@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "firmware": {
+      "flake": false,
+      "locked": {
+        "dirtyRev": "9637eae34d75a42660b1b79d4d95b7963d7743fe-dirty",
+        "dirtyShortRev": "9637eae-dirty",
+        "lastModified": 1754668627,
+        "narHash": "sha256-iOsyK2dR/OuhqcE/Piy7upxR3669STTjXeRJLR2ukhc=",
+        "submodules": false,
+        "type": "git",
+        "url": "file:./."
+      },
+      "original": {
+        "submodules": false,
+        "type": "git",
+        "url": "file:./."
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": [
@@ -38,6 +55,7 @@
     },
     "root": {
       "inputs": {
+        "firmware": "firmware",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "systems": "systems"
