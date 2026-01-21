@@ -44,7 +44,7 @@
 #endif
 
 typedef struct {
-    unsigned char labels[2];
+    const char* labels;
     hmac_alg algorithm;
     uint32_t period;
     size_t encoded_key_length;
@@ -65,7 +65,7 @@ typedef struct {
 
 static totp_t credentials[] = {
     CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30),
-    CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
+    CREDENTIAL(AAC, "JBSWY3DPEHPK3PXP", SHA1, 30),
 };
 
 // END OF KEY DATA.
@@ -120,15 +120,14 @@ static void totp_generate(totp_state_t *totp_state) {
 }
 
 static void totp_display_error(totp_state_t *totp_state) {
-    char buf[10 + 1];
     totp_t *totp = totp_current(totp_state);
-
-    snprintf(buf, sizeof(buf), "%c%c  ERROR ", totp->labels[0], totp->labels[1]);
-    watch_display_text(0, buf);
+    watch_clear_display();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, totp->labels, totp->labels);
+    watch_display_text(WATCH_POSITION_BOTTOM, "ERROR");
 }
 
 static void totp_display_code(totp_state_t *totp_state) {
-    char buf[14];
+    char buf[7];
     div_t result;
     uint8_t valid_for;
     totp_t *totp = totp_current(totp_state);
@@ -139,9 +138,15 @@ static void totp_display_code(totp_state_t *totp_state) {
         totp_state->steps = result.quot;
     }
     valid_for = totp->period - result.rem;
-    sprintf(buf, "%c%c%2d%06lu", totp->labels[0], totp->labels[1], valid_for, totp_state->current_code);
 
-    watch_display_text(0, buf);
+    watch_clear_display();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, totp->labels, totp->labels);
+
+    sprintf(buf, "%2d", valid_for);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+
+    sprintf(buf, "%06u", totp_state->current_code);
+    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 static void totp_display(totp_state_t *totp_state) {
