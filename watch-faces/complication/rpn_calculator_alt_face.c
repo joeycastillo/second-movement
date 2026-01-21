@@ -28,6 +28,14 @@
 
 #include "rpn_calculator_alt_face.h"
 
+#ifndef M_PI
+#define M_PI 3.14159
+#endif
+
+#ifndef M_E
+#define M_E 2.71828
+#endif
+
 static void show_fn(calculator_state_t *state, uint8_t subsecond);
 
 void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -39,6 +47,16 @@ void rpn_calculator_alt_face_setup(uint8_t watch_face_index, void ** context_ptr
         // Do any one-time tasks in here; the inside of this conditional happens only at boot.
     }
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
+}
+
+static void show_stack_index(uint8_t index) {
+    char buf[2];
+    sprintf(buf, "%2d", index);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
+}
+
+static void show_stack_size(calculator_state_t *state) {
+    show_stack_index(state->stack_size);
 }
 
 static void show_number(double num) {
@@ -132,6 +150,9 @@ void rpn_calculator_alt_face_activate(void *context) {
 static void change_mode(calculator_state_t *s, enum calculator_mode mode) {
     s->mode = mode;
     s->fn_index = 0;
+    if (mode == CALC_PEEK) {
+        s->peek_index = s->stack_size > 0 ? s->stack_size - 1 : 0;
+    }
     show_fn(s, 0);
     // Faster tick in operation mode so we can blink.
     movement_request_tick_frequency(mode == CALC_OPERATION ? 4 : 1);
@@ -258,6 +279,11 @@ static void fn_swap(calculator_state_t *s) {
     PUSH(b);
 }
 
+static void fn_over(calculator_state_t *s) {
+    double a = s->stack[s->stack_size - 2];
+    PUSH(a);
+}
+
 static void fn_duplicate(calculator_state_t *s) {
     double a = POP();
     PUSH(a);
@@ -296,13 +322,14 @@ struct {
     // Stack operations. Accessible via secondary_fn_index (i.e. alarm long press).
     {{'P', 'O'}, 1, 0, fn_pop},  // This ends up displaying the same as 'POW'. But at least it's in a different place.
     {{'S', 'W'}, 2, 2, fn_swap},
+    {{'O', 'v'}, 2, 1, fn_over},
     {{'d', 'u'}, 1, 1, fn_duplicate},  // Uppercase 'D' is a bit too 'O' for me.
     {{'C', 'L'}, 1, 0, fn_clear},  // Operation lie - takes _everything_ off the stack, but a check of 1 is sufficient.
     {{'L', 'E'}, 1, 0, fn_size},
 };
 
 #define FUNCTIONS_LEN (sizeof(functions) / sizeof(functions[0]))
-#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 4)
+#define SECONDARY_FN_INDEX (FUNCTIONS_LEN - 6)
 
 // Show the function name (using day display)
 static void show_fn(calculator_state_t *s, uint8_t subsecond) {
@@ -342,36 +369,39 @@ static void show_stack_top(calculator_state_t *s) {
     }
 }
 
-bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
-    calculator_state_t *s = (calculator_state_t *)context;
+// Show the stack value at peek_index
+static void show_peek_value(calculator_state_t *s) {
+    if (s->stack_size > 0 && s->peek_index < s->stack_size) {
+        show_number(s->stack[s->peek_index]);
+        show_stack_index(s->peek_index + 1);
+    }
+}
 
+// Show peek mode indicator and stack position
+static void show_peek_mode(calculator_state_t *s) {
+    watch_display_string("ST", 0);
+    show_peek_value(s);
+}
+
+// Handle events in operation mode
+static bool handle_operation_mode(movement_event_t event, calculator_state_t *s) {
     int proposed_stack_size;
 
     switch (event.event_type) {
-        case EVENT_ACTIVATE:
-            change_mode(s, CALC_OPERATION);
-            show_stack_top(s);
-            break;
         case EVENT_TICK:
-            if (s->mode == CALC_OPERATION) {
-                show_fn(s, event.subsecond);
+            show_fn(s, event.subsecond);
+            if (s->fn_index == 0) {
+                show_stack_top(s);
+            } else if (s->fn_index >= SECONDARY_FN_INDEX) {
+                show_stack_size(s);
             }
             break;
         case EVENT_MODE_BUTTON_UP:
-            if (s->mode == CALC_NUMBER) {
-                adjust_number(s, -1);
-                show_stack_top(s);
-            } else {
-                movement_move_to_next_face();
-                return false;
-            }
-            break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+            movement_move_to_next_face();
+            return false;
+        case EVENT_LIGHT_BUTTON_UP:
             proposed_stack_size = s->stack_size - functions[s->fn_index].input;
-
-            if (s->mode == CALC_NUMBER) {
-                change_mode(s, CALC_OPERATION);
-            } else if (proposed_stack_size < 0 || proposed_stack_size + functions[s->fn_index].output > CALC_MAX_STACK_SIZE) {
+            if (proposed_stack_size < 0 || proposed_stack_size + functions[s->fn_index].output > CALC_MAX_STACK_SIZE) {
                 movement_play_signal();
                 break;
             } else {
@@ -380,40 +410,113 @@ bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
                 s->fn_index = 0;
                 show_fn(s, 0);
             }
-
             break;
         case EVENT_ALARM_BUTTON_UP:
-            if (s->mode == CALC_NUMBER) {
-                adjust_number(s, 1);
-                show_stack_top(s);
-            } else {
-                s->fn_index = (s->fn_index + 1) % FUNCTIONS_LEN;
-                show_fn(s, 0);
+            s->fn_index = (s->fn_index + 1) % FUNCTIONS_LEN;
+            show_fn(s, 0);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            if (s->stack_size > 0) {
+                change_mode(s, CALC_PEEK);
+                show_peek_mode(s);
+                show_peek_value(s);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
-            if (s->mode == CALC_OPERATION) {
-                if (s->fn_index == 0) {
-                    s->fn_index = SECONDARY_FN_INDEX;
-                } else {
-                    s->fn_index = 0;
-                }
-                show_fn(s, 0);
+            if (s->fn_index == 0) {
+                s->fn_index = SECONDARY_FN_INDEX;
+            } else {
+                s->fn_index = 0;
+            }
+            show_fn(s, 0);
+            break;
+    }
+    return true;
+}
+
+// Handle events in number entry mode
+static bool handle_number_mode(movement_event_t event, calculator_state_t *s) {
+    switch (event.event_type) {
+        case EVENT_MODE_BUTTON_UP:
+            adjust_number(s, -1);
+            show_stack_top(s);
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
+            change_mode(s, CALC_OPERATION);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            adjust_number(s, 1);
+            show_stack_top(s);
+            break;
+    }
+    return true;
+}
+
+// Handle events in peek mode
+static bool handle_peek_mode(movement_event_t event, calculator_state_t *s) {
+    switch (event.event_type) {
+        case EVENT_TICK:
+            show_peek_mode(s);
+            show_peek_value(s);
+            break;
+        case EVENT_MODE_BUTTON_UP:
+            if (s->peek_index > 0) {
+                s->peek_index--;
+                show_peek_mode(s);
+                show_peek_value(s);
             }
             break;
+        case EVENT_LIGHT_BUTTON_UP:
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            break;
+        case EVENT_LIGHT_LONG_PRESS:
+            // Clear the stack
+            s->stack_size = 0;
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            break;
+        case EVENT_ALARM_BUTTON_UP:
+            if (s->peek_index < s->stack_size - 1) {
+                s->peek_index++;
+                show_peek_mode(s);
+                show_peek_value(s);
+            }
+            break;
+    }
+    return true;
+}
+
+bool rpn_calculator_alt_face_loop(movement_event_t event, void *context) {
+    calculator_state_t *s = (calculator_state_t *)context;
+
+    // Handle common events first
+    switch (event.event_type) {
+        case EVENT_ACTIVATE:
+            change_mode(s, CALC_OPERATION);
+            show_stack_top(s);
+            return true;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
-            break;
+            return true;
         case EVENT_LOW_ENERGY_UPDATE:
-            break;
+            return true;
         default:
-            movement_default_loop_handler(event);
             break;
     }
 
-    // return true if the watch can enter standby mode. If you are PWM'ing an LED or buzzing the buzzer here,
-    // you should return false since the PWM driver does not operate in standby mode.
-    return true;
+    // Delegate to mode-specific handlers
+    switch (s->mode) {
+        case CALC_OPERATION:
+            return handle_operation_mode(event, s);
+        case CALC_NUMBER:
+            return handle_number_mode(event, s);
+        case CALC_PEEK:
+            return handle_peek_mode(event, s);
+        default:
+            movement_default_loop_handler(event);
+            return true;
+    }
 }
 
 void rpn_calculator_alt_face_resign(void *context) {
@@ -421,4 +524,3 @@ void rpn_calculator_alt_face_resign(void *context) {
 
     // handle any cleanup before your watch face goes off-screen.
 }
-
