@@ -48,7 +48,13 @@ static void _metronome_face_update_lcd(metronome_state_t *state) {
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
     }
 
-    sprintf(buf, "MN %d %03d%s", state->count, state->bpm, "bp");
+    if (state->mode == tapTempo) {
+        // Alternate "b " and " p" on each tap for visual feedback
+        const char *tap_indicator = (state->tap_tempo.counter % 2 == 0) ? " b" : " p";
+        sprintf(buf, "MN %d %03d%s", state->count, state->bpm, tap_indicator);
+    } else {
+        sprintf(buf, "MN %d %03d%s", state->count, state->bpm, "bp");
+    }
     watch_display_string(buf, 0);
 }
 
@@ -56,8 +62,10 @@ static void _metronome_start_tap_tempo(metronome_state_t *state) {
     printf("starting tap tempo mode\n");
 
     state->mode = tapTempo;
-    state->tap_tempo.tap_count = 0;
-    state->tap_tempo.interval_index = 0;
+    state->tap_tempo.counter = 0;
+    state->tap_tempo.ground_zero = 0;
+    state->tap_tempo.last_tap = 0;
+    state->tap_tempo.previous_tap = 0;
 
     movement_request_tick_frequency(64);
     printf("requesting 64Hz tick frequency for tap timing\n");
@@ -87,76 +95,61 @@ static void _metronome_abort_tap_detection(metronome_state_t *state) {
     watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
-static void _metronome_calculate_bpm_from_taps(metronome_state_t *state) {
-    if (state->tap_tempo.tap_count < 2) return;
-
-    uint32_t total_interval = 0;
-    uint8_t valid_intervals = 0;
-
-    uint8_t intervals_to_use = (state->tap_tempo.tap_count - 1) < 4 ? (state->tap_tempo.tap_count - 1) : 4;
-
-    printf("calculating BPM from %d taps (%d intervals):\n", state->tap_tempo.tap_count, intervals_to_use);
-
-    // Sum the most recent intervals, going backwards from the last one
-    for (uint8_t i = 1; i <= intervals_to_use; i++) {
-        uint8_t idx = (state->tap_tempo.interval_index - i + 4) % 4;
-        printf("  interval %d (idx %d): %u ms\n", i-1, idx, state->tap_tempo.intervals[idx]);
-        total_interval += state->tap_tempo.intervals[idx];
-        valid_intervals++;
-    }
-
-    if (valid_intervals > 0) {
-        uint32_t avg_interval = total_interval / valid_intervals;
-        printf("average interval: %u ms\n", avg_interval);
-        if (avg_interval > 0) {
-            uint16_t new_bpm = 60000 / avg_interval;
-            printf("calculated BPM: %d\n", new_bpm);
-            if (new_bpm >= 30 && new_bpm <= 300) {
-                printf("setting BPM to %d (was %d)\n", new_bpm, state->bpm);
-                state->bpm = new_bpm;
-                _metronome_face_update_lcd(state);
-            } else {
-                printf("BPM %d out of range, ignoring\n", new_bpm);
-            }
-        }
-    }
-}
-
 static void _metronome_handle_tap(metronome_state_t *state) {
     watch_date_time_t dt = movement_get_utc_date_time();
-    // for 64Hz frequency, each tick is ~15.625ms
     uint32_t current_time = dt.unit.second * 1000 + (state->tap_tempo.subsecond * 1000) / 64;
 
-    printf("tap detected! Current time: %u ms (second: %d, subsec: %d)\n", 
+    printf("tap detected! Current time: %u ms (second: %d, subsec: %d)\n",
            current_time, dt.unit.second, state->tap_tempo.subsecond);
 
-    if (state->tap_tempo.tap_count > 0) {
-        uint32_t interval = current_time - state->tap_tempo.last_tap_time;
-        if (interval > 30000) {
-            interval = 60000 - state->tap_tempo.last_tap_time + current_time;
-        }
+    // If first tap, record ground zero
+    if (state->tap_tempo.last_tap == 0) {
+        state->tap_tempo.ground_zero = current_time;
+        state->tap_tempo.counter = 0;
+        printf("first tap, establishing ground zero at %u ms\n", current_time);
+    }
 
-        printf("tap interval: %u ms\n", interval);
-        if (interval > 100 && interval < 2000) {
-            printf("valid interval, storing at index %d\n", state->tap_tempo.interval_index);
-            state->tap_tempo.intervals[state->tap_tempo.interval_index] = interval;
-            state->tap_tempo.interval_index = (state->tap_tempo.interval_index + 1) % 4;
-        } else {
-            printf("invalid interval (%u ms), ignoring\n", interval);
-        }
+    state->tap_tempo.last_tap = current_time;
+
+    // Calculate elapsed time since previous tap, handling minute wrap-around
+    uint32_t elapsed;
+    if (current_time >= state->tap_tempo.previous_tap) {
+        elapsed = current_time - state->tap_tempo.previous_tap;
     } else {
-        printf("first tap, establishing baseline\n");
+        // Wrapped around the minute boundary
+        elapsed = (60000 - state->tap_tempo.previous_tap) + current_time;
     }
 
-    state->tap_tempo.last_tap_time = current_time;
-    state->tap_tempo.tap_count++;
+    state->tap_tempo.previous_tap = state->tap_tempo.last_tap;
+
+    // Calculate total time since ground zero, handling minute wrap-around
+    uint32_t tap_diff;
+    if (state->tap_tempo.last_tap >= state->tap_tempo.ground_zero) {
+        tap_diff = state->tap_tempo.last_tap - state->tap_tempo.ground_zero;
+    } else {
+        // Wrapped around the minute boundary
+        tap_diff = (60000 - state->tap_tempo.ground_zero) + state->tap_tempo.last_tap;
+    }
+
+    state->tap_tempo.counter++;
+
+    printf("tap %d: elapsed since last = %u ms, total time = %u ms\n",
+           state->tap_tempo.counter, elapsed, tap_diff);
+
+    if (tap_diff != 0 && state->tap_tempo.counter > 1) {
+        uint16_t avg_bpm = (uint16_t)((60000 * (state->tap_tempo.counter - 1)) / tap_diff);
+        printf("calculated BPM: %d\n", avg_bpm);
+
+        if (avg_bpm >= 30 && avg_bpm <= 255) {
+            printf("setting BPM to %d (was %d)\n", avg_bpm, state->bpm);
+            state->bpm = avg_bpm;
+            _metronome_face_update_lcd(state);
+        } else {
+            printf("BPM %d out of range, ignoring\n", avg_bpm);
+        }
+    }
+
     state->tap_tempo.detection_ticks = TAP_DETECTION_SECONDS * 64; // Reset timeout for 64Hz
-
-    printf("tap count now: %d\n", state->tap_tempo.tap_count);
-
-    if (state->tap_tempo.tap_count >= 2) {
-        _metronome_calculate_bpm_from_taps(state);
-    }
 }
 
 void metronome_face_setup(uint8_t watch_face_index, void ** context_ptr) {

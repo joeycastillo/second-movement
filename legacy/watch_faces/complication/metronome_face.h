@@ -71,10 +71,10 @@ typedef struct {
     // Tap tempo state
     struct {
         uint16_t detection_ticks;
-        uint8_t tap_count;
-        uint32_t last_tap_time;
-        uint32_t intervals[4];
-        uint8_t interval_index;
+        uint16_t counter;
+        uint32_t ground_zero;
+        uint32_t last_tap;
+        uint32_t previous_tap;
         uint8_t subsecond;
     } tap_tempo;
 } metronome_state_t;
