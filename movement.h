@@ -287,8 +287,9 @@ typedef struct {
     // backup register stuff
     uint8_t next_available_backup_register;
 
-    // temporary alarm enabled boolean, until we implement this in advisories
+    // temporary alarm and signal enabled boolean, until we implement this in advisories
     bool alarm_enabled;
+    bool signal_enabled;
 
     // boolean set if thermistor is detected
     bool has_thermistor;
@@ -391,6 +392,8 @@ void movement_store_settings(void);
 /// Worth considering a better way to handle this.
 bool movement_alarm_enabled(void);
 void movement_set_alarm_enabled(bool value);
+bool movement_signal_enabled(void);
+void movement_set_signal_enabled(bool value);
 
 // if the board has an accelerometer, these functions will enable or disable tap detection.
 bool movement_enable_tap_detection_if_available(void);
