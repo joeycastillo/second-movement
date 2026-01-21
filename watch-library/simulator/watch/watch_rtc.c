@@ -38,6 +38,8 @@ static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
 static uint32_t counter_interval;
 static uint32_t counter;
 static uint32_t reference_timestamp;
+static double next_tick_time;
+static double rtc_start_time;
 
 #define WATCH_RTC_N_COMP_CB 8
 
@@ -109,7 +111,18 @@ unix_timestamp_t watch_rtc_get_unix_time(void) {
 }
 
 rtc_counter_t watch_rtc_get_counter(void) {
-    return counter;
+    if (!counter_interval) {
+        return counter; // RTC not running
+    }
+
+    // Calculate current counter from high-precision time
+    double now = EM_ASM_DOUBLE({ return performance.now(); });
+    double elapsed_ms = now - rtc_start_time;
+
+    // Convert elapsed time to RTC ticks (RTC_CNT_HZ = 128 Hz)
+    double elapsed_ticks = (elapsed_ms * RTC_CNT_HZ) / 1000.0;
+
+    return (rtc_counter_t)elapsed_ticks;
 }
 
 uint32_t watch_rtc_get_frequency(void) {
@@ -164,6 +177,30 @@ void watch_rtc_disable_tick_callback(void) {
     watch_rtc_disable_periodic_callback(1);
 }
 
+static void _watch_increase_counter(void *userData);
+
+static void _watch_schedule_next_tick(void) {
+    if (!counter_interval) return;
+
+    double now = EM_ASM_DOUBLE({ return performance.now(); });
+    double drift = now - next_tick_time;
+
+    // Target interval in ms
+    double ms = 1000.0 / (double)RTC_CNT_HZ;
+
+    // Schedule next tick, correcting for drift
+    next_tick_time += ms;
+    double delay = next_tick_time - now;
+
+    // Ensure we don't schedule negative or zero delays
+    if (delay < 0.1) {
+        delay = 0.1;
+        next_tick_time = now + delay;
+    }
+
+    emscripten_async_call(_watch_increase_counter, NULL, (int)delay);
+}
+
 static void _watch_increase_counter(void *userData) {
     (void) userData;
 
@@ -174,6 +211,9 @@ static void _watch_increase_counter(void *userData) {
     _watch_process_comp_callbacks();
 
     resume_main_loop();
+
+    // Schedule the next tick with drift correction
+    _watch_schedule_next_tick();
 }
 
 static void _watch_process_periodic_callbacks(void) {
@@ -343,11 +383,13 @@ void watch_rtc_enable(bool en)
     }
 
     if (en) {
-        // Very bad way to keep time, but okay way to emulates the hardware.
-        double ms = 1000.0 / (double)RTC_CNT_HZ; // in msec
-        counter_interval = emscripten_set_interval(_watch_increase_counter, ms, NULL);
+        // Use drift-correcting timer instead of fixed setInterval
+        counter_interval = 1; // Non-zero to indicate enabled
+        rtc_start_time = EM_ASM_DOUBLE({ return performance.now(); });
+        next_tick_time = rtc_start_time;
+        counter = 0;
+        _watch_schedule_next_tick();
     } else {
-        emscripten_clear_interval(counter_interval);
         counter_interval = 0;
     }
 }
