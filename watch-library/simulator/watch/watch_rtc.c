@@ -180,9 +180,12 @@ static void _watch_schedule_next_tick(void) {
     next_tick_time += ms;
     double delay = next_tick_time - now;
 
-    // If we're behind, schedule immediately
+    // If we're behind, jump counter forward and reset timing
     if (delay < 0) {
-        delay = 0;
+        uint32_t missed_ticks = (uint32_t)((-delay) / ms);
+        counter += missed_ticks;
+        next_tick_time = now + ms;
+        delay = ms;
     }
 
     emscripten_async_call(_watch_increase_counter, NULL, delay);
