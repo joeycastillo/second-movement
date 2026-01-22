@@ -63,10 +63,14 @@ typedef struct {
 ////////////////////////////////////////////////////////////////////////////////
 // Enter your TOTP key data below
 
+#if __has_include("totp_face.secrets.h")
+#include "totp_face.secrets.h"
+#else
 static totp_t credentials[] = {
     CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30),
     CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
 };
+#endif
 
 // END OF KEY DATA.
 ////////////////////////////////////////////////////////////////////////////////
