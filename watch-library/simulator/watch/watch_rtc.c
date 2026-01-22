@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 #include <limits.h>
+#include <stdbool.h>
 
 #include "watch_rtc.h"
 #include "watch_main_loop.h"
@@ -35,7 +36,7 @@ static const uint32_t RTC_CNT_SUBSECOND_MASK = RTC_CNT_HZ - 1;
 static const uint32_t RTC_CNT_DIV = 7;
 static const uint32_t RTC_CNT_TICKS_PER_MINUTE = RTC_CNT_HZ * 60;
 
-static uint32_t counter_interval;
+static bool rtc_enabled;
 static uint32_t counter;
 static uint32_t reference_timestamp;
 static double next_tick_time;
@@ -67,7 +68,7 @@ static void _watch_process_periodic_callbacks(void);
 static void _watch_process_comp_callbacks(void);
 
 bool _watch_rtc_is_enabled(void) {
-    return counter_interval;
+    return rtc_enabled;
 }
 
 void _watch_rtc_init(void) {
@@ -83,7 +84,7 @@ void _watch_rtc_init(void) {
 
     scheduled_comp_counter = 0;
     counter = 0;
-    counter_interval = 0;
+    rtc_enabled = false;
 
     watch_rtc_set_date_time(watch_get_init_date_time());
     watch_rtc_enable(true);
@@ -168,7 +169,7 @@ void watch_rtc_disable_tick_callback(void) {
 static void _watch_increase_counter(void *userData);
 
 static void _watch_schedule_next_tick(void) {
-    if (!counter_interval) return;
+    if (!rtc_enabled) return;
 
     double now = EM_ASM_DOUBLE({ return performance.now(); });
 
@@ -364,17 +365,17 @@ void watch_rtc_schedule_next_comp(void) {
 void watch_rtc_enable(bool en)
 {
     // Nothing to do cases
-    if ((en && counter_interval) || (!en && !counter_interval)) {
+    if ((en && rtc_enabled) || (!en && !rtc_enabled)) {
         return;
     }
 
     if (en) {
         // Use drift-correcting timer instead of fixed setInterval
-        counter_interval = 1; // Non-zero to indicate enabled
+        rtc_enabled = true;
         next_tick_time = EM_ASM_DOUBLE({ return performance.now(); });
         _watch_schedule_next_tick();
     } else {
-        counter_interval = 0;
+        rtc_enabled = false;
     }
 }
 
