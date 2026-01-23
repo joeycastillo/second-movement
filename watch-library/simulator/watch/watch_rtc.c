@@ -166,8 +166,6 @@ void watch_rtc_disable_tick_callback(void) {
     watch_rtc_disable_periodic_callback(1);
 }
 
-static void _watch_increase_counter(void *userData);
-
 static void _watch_schedule_next_tick(void) {
     if (!rtc_enabled) return;
 
@@ -180,10 +178,8 @@ static void _watch_schedule_next_tick(void) {
     next_tick_time += ms;
     double delay = next_tick_time - now;
 
-    // If we're behind, jump counter forward and reset timing
+    // If we're behind, reset timing
     if (delay < 0) {
-        uint32_t missed_ticks = (uint32_t)((-delay) / ms);
-        counter += missed_ticks;
         next_tick_time = now + ms;
         delay = ms;
     }
