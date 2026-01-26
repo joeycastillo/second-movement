@@ -79,7 +79,7 @@ static void _pomodoro_face_update_lcd(pomodoro_state_t *state) {
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
   } else { // Ready display
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "POM", "PO");
-    char times[7];
+    char times[10];
 
     sprintf(times, "%02d%02d%02d", settings[state->setting][0],
             settings[state->setting][1], settings[state->setting][2]);
