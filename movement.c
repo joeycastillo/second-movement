@@ -113,7 +113,7 @@ static bool _movement_update_dst_offset_cache(void) {
             udate_time = _movement_convert_date_time_to_udate(date_time);
             uoffset_t offset;
             get_current_offset(&local_zone, &udate_time, &offset);
-            int8_t new_offset = (offset.hours * 60 + offset.minutes) / 15;
+            int8_t new_offset = (offset.hours * 60 + (offset.hours < 0 ? -offset.minutes : offset.minutes)) / 15;
             if (_movement_dst_offset_cache[i] != new_offset) {
                 _movement_dst_offset_cache[i] = new_offset;
                 dst_changed = true;
