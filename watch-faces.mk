@@ -22,6 +22,7 @@ SRCS += \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \
   ./watch-faces/demo/peek_memory_face.c \
+  ./watch-faces/demo/rtccount_face.c \
   ./watch-faces/sensor/accelerometer_status_face.c \
   ./watch-faces/sensor/temperature_display_face.c \
   ./watch-faces/sensor/temperature_logging_face.c \
@@ -54,4 +55,5 @@ SRCS += \
   ./watch-faces/complication/higher_lower_game_face.c \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
+  ./watch-faces/complication/ping_face.c \
 # New watch faces go above this line.

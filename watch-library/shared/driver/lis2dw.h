@@ -92,6 +92,12 @@ typedef enum {
   LIS2DW_FILTER_HIGH_PASS = 1,
 } lis2dw_filter_t;
 
+typedef enum
+{
+  LIS2DW12_INT_PULSED   = 0,
+  LIS2DW12_INT_LATCHED  = 1,
+} lis2dw12_lir_t;
+
 typedef enum {
   LIS2DW_RANGE_16_G = 0b11, // +/- 16g
   LIS2DW_RANGE_8_G = 0b10,  // +/- 8g
@@ -295,6 +301,8 @@ typedef enum {
 #define LIS2DW_CTRL7_VAL_HP_REF_MODE        0b00000010
 #define LIS2DW_CTRL7_VAL_LPASS_ON6D         0b00000001
 
+#define LIS2DW_FIFO_TIMEOUT                 100  // timeout is in terms of 1/RTC_CNT_HZ seconds (likely 128 timeouts is one second)
+
 bool lis2dw_begin(void);
 
 uint8_t lis2dw_get_device_id(void);
@@ -339,7 +347,7 @@ void lis2dw_enable_fifo(void);
 
 void lis2dw_disable_fifo(void);
 
-bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
+bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout);
 
 void lis2dw_clear_fifo(void);
 
@@ -367,6 +375,10 @@ void lis2dw_configure_tap_threshold(uint8_t threshold_x, uint8_t threshold_y, ui
 
 void lis2dw_configure_tap_duration(uint8_t latency, uint8_t quiet, uint8_t shock);
 
+void lis2dw12_int_notification_set(lis2dw12_lir_t val);
+
+lis2dw12_lir_t lis2dw12_int_notification_get(void);
+
 void lis2dw_configure_int1(uint8_t sources);
 
 void lis2dw_configure_int2(uint8_t sources);
@@ -374,6 +386,10 @@ void lis2dw_configure_int2(uint8_t sources);
 void lis2dw_enable_interrupts(void);
 
 void lis2dw_disable_interrupts(void);
+
+void lis2dw_pulsed_drdy_interrupts(void);
+
+void lis2dw_latched_drdy_interrupts(void);
 
 lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 
