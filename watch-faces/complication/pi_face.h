@@ -28,9 +28,16 @@
 /*
  * PI face
  *
- * Pi face prints out the first 800 characters of pi.
+ * Pi face prints out the first 800 digits of pi four digits at a time.
+ * Quiz yourself to see how many you can memorize!
  *
+ * ALARM - advance to next 4 digits
+ *
+ * LIGHT - reset back to beginning
  * 
+ * This is based off of the Beeler et al 1972, Item 120 algorithm
+ * converted into C by Dik T. Winter and further expanded here
+ * https://crypto.stanford.edu/pbc/notes/pi/code.html
  */
 
 #include "movement.h"
