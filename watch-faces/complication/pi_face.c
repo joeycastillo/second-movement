@@ -32,30 +32,25 @@ void pi_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(pi_state_t));
         memset(*context_ptr, 0, sizeof(pi_state_t));
-        pi_state_t *state = (pi_state_t *)*context_ptr;
     }
 }
 
 void pi_face_activate(void *context) {
     (void) context;
     pi_state_t *state = (pi_state_t *)context;
-    memset(state->r, 2000, sizeof(state->r));
-    memset(state->r, 2000, 2800);
-    state->r[2800] = 0;
-    state->k = 2800;
-    pi_calc(state);
-
+    reset_pi(state);
 }
 
 // https://crypto.stanford.edu/pbc/notes/pi/code.html
-void pi_calc(pi_state_t *state)
+int pi_calc(pi_state_t *state)
 {
+    int ret;
     int d = 0;
     int i = state->k;
     state->k -= 14;
     while(true)
     {
-        d += state->r[state->i] * 10000;
+        d += state->r[i] * 10000;
         int b = 2 * i - 1;
         state->r[i] = d % b;
         d /= b;
@@ -66,24 +61,25 @@ void pi_calc(pi_state_t *state)
         }
         d *= i;
     }
-    int digit = state->c + d / 10000;
-    state->c = d * 10000;
+    ret = state->c + d / 10000;
+    state->c = d % 10000;
+    return ret;
 }
 
 bool pi_face_loop(movement_event_t event, void *context) {
     pi_state_t *state = (pi_state_t *)context;
-    static bool using_led = false;
-
-
     switch (event.event_type) {
         case EVENT_ALARM_BUTTON_UP:
-            pi_calc(state);
-            break;
         case EVENT_ACTIVATE:
-            print_pi(state);
+            if (state->k > 0)
+            {
+                print_pi(state);
+            }
             break;
-        case EVENT_TIMEOUT:
-            // ignore timeout
+        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_LIGHT_BUTTON_UP:
+            reset_pi(state);
+            print_pi(state);
             break;
         default:
             movement_default_loop_handler(event);
@@ -93,23 +89,24 @@ bool pi_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-// print tally index at the center of display.
 void print_pi(pi_state_t *state) {
-    /*char buf[6];
-    int display_val = (int)(state->tally_idx);
-    
-    // Clamp to limits
-    if (display_val > TALLY_FACE_MAX) display_val = TALLY_FACE_MAX;
-    if (display_val < TALLY_FACE_MIN) display_val = TALLY_FACE_MIN;
-    
-    if (sound_on)
-        watch_set_indicator(WATCH_INDICATOR_BELL);
-    else
-        watch_clear_indicator(WATCH_INDICATOR_BELL);
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "TALLY", "TA");
-    sprintf(buf, "%4d", display_val);
+    char buf[6];
+    int num = pi_calc(state);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "PI", "PI");
+    sprintf(buf, "%04d", num);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
-    */
+}
+
+void reset_pi(pi_state_t * state)
+{
+    int i;
+    for (i = 0; i < 2800; i++)
+    {
+        state->r[i] = 2000;
+    }
+    state->r[i] = 0;
+    state->k = 2800;
+    state->c = 0;
 }
 
 void pi_face_resign(void *context) {

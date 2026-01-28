@@ -37,11 +37,9 @@
 
 typedef struct {
     int r[2800 + 1];
-    int i;
     int c;
     int k;
 } pi_state_t;
-
 
 
 void pi_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -50,14 +48,15 @@ bool pi_face_loop(movement_event_t event, void *context);
 void pi_face_resign(void *context);
 
 void print_pi(pi_state_t *state);
-void pi_calc(pi_state_t *state)
+int pi_calc(pi_state_t *state);
+void reset_pi(pi_state_t * state);
 
-#define tally_face ((const watch_face_t){ \
-    tally_face_setup, \
-    tally_face_activate, \
-    tally_face_loop, \
-    tally_face_resign, \
+#define pi_face ((const watch_face_t){ \
+    pi_face_setup, \
+    pi_face_activate, \
+    pi_face_loop, \
+    pi_face_resign, \
     NULL, \
 })
 
-#endif // TALLY_FACE_H_
+#endif // PI_FACE_H_
