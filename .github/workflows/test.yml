@@ -1,0 +1,56 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - gh-pages
+
+jobs:
+  discover-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      test_dirs: ${{ steps.find-tests.outputs.test_dirs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Find test directories
+        id: find-tests
+        run: |
+          echo "Auto-discovering test directories with Makefiles"
+          # Find all directories named 'test' that contain a Makefile inside lib
+          DIRS=$(find lib -type d -name "test" -exec test -f "{}/Makefile" \; -print | tr '\n' ',' | sed 's/,$//')
+
+          # Convert to JSON array for matrix
+          if [ -n "$DIRS" ]; then
+            JSON_ARRAY="[$(echo $DIRS | sed 's/,/","/g' | sed 's/^/"/;s/$/"/')]"
+          else
+            JSON_ARRAY="[]"
+          fi
+
+          echo "test_dirs=$JSON_ARRAY" >> $GITHUB_OUTPUT
+          echo "Found test directories: $JSON_ARRAY"
+
+  run-tests:
+    needs: discover-tests
+    if: needs.discover-tests.outputs.test_dirs != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_dir: ${{ fromJson(needs.discover-tests.outputs.test_dirs) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run tests in ${{ matrix.test_dir }}
+        run: |
+          echo "Running tests in: ${{ matrix.test_dir }}"
+          if [ ! -f "Makefile" ]; then
+            echo "Error: No Makefile found in ${{ matrix.test_dir }}"
+            exit 1
+          fi
+          make test
+        working-directory: ${{ matrix.test_dir }}
