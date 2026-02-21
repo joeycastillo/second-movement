@@ -28,8 +28,9 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
-    clock_face,
-    world_clock_face,
+  local_solar_time_face,
+  clock_face,
+    /* world_clock_face, */
     sunrise_sunset_face,
     moon_phase_face,
     fast_stopwatch_face,
