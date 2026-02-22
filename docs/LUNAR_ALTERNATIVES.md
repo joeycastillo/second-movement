@@ -148,9 +148,11 @@ Scientifically unproven, culturally resonant.
 
 ## Implementation Decision
 
-**Needs input from dlorp:**
-1. Keep lunar (esoteric twist)?
-2. Replace with something evidence-based?
-3. Remove entirely (simplify)?
+**Decision (2026-02-21):** **Keep lunar in EM** (preserves esoteric character)
 
-Vote here: _____________
+**SAD integration:** Move Seasonal Affect Factor to **Comfort metric** instead
+- Comfort already tracks environmental alignment (temp + light)
+- Adding seasonal baseline makes it personalized to homebase latitude
+- Better conceptual fit: "How comfortable are you relative to seasonal norms?"
+
+See COMFORT_SEASONAL_INTEGRATION.md for implementation details.
