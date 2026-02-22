@@ -41,6 +41,14 @@
  * Note: Jet Lag (JL) deferred to Phase 4 per PHASE3_PREWORK.md Section 3
  */
 
+// Metric view indices for Descent zone
+typedef enum {
+    DESCENT_VIEW_COMFORT = 0,  // Comfort (primary)
+    DESCENT_VIEW_EM = 1,       // Emotional
+    DESCENT_VIEW_SD = 2,       // Sleep Debt
+    DESCENT_VIEW_COUNT = 3
+} descent_view_index_t;
+
 typedef struct {
     uint8_t view_index;     // 0-2, cycles through metrics
     int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)

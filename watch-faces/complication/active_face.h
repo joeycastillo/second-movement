@@ -41,6 +41,14 @@
  * Zone weights: SD=15, EM=20, WK=5, NRG=40, CMF=10
  */
 
+// Metric view indices for Active zone
+typedef enum {
+    ACTIVE_VIEW_ENERGY = 0,  // Energy (primary)
+    ACTIVE_VIEW_EM = 1,      // Emotional
+    ACTIVE_VIEW_SD = 2,      // Sleep Debt
+    ACTIVE_VIEW_COUNT = 3
+} active_view_index_t;
+
 typedef struct {
     uint8_t view_index;     // 0-2, cycles through metrics
     int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)

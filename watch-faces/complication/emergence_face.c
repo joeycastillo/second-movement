@@ -15,6 +15,11 @@
 extern void metrics_get(const metrics_engine_t *engine, metrics_snapshot_t *out);
 
 static void _emergence_face_update_display(emergence_face_state_t *state) {
+    // Defensive bounds check
+    if (state->view_index >= EMERGENCE_VIEW_COUNT) {
+        state->view_index = 0;
+    }
+    
     char buf[11] = {0};
     
     // Get current metrics (engine param unused in current implementation)
@@ -83,7 +88,7 @@ bool emergence_face_loop(movement_event_t event, void *context) {
             
         case EVENT_ALARM_BUTTON_UP:
             // Cycle through metric views
-            state->view_index = (state->view_index + 1) % 3;
+            state->view_index = (state->view_index + 1) % EMERGENCE_VIEW_COUNT;
             _emergence_face_update_display(state);
             break;
         
