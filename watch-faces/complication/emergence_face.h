@@ -42,7 +42,8 @@
  */
 
 typedef struct {
-    uint8_t view_index;  // 0-2, cycles through metrics
+    uint8_t view_index;     // 0-2, cycles through metrics
+    uint8_t prev_value[3];  // Previous values for trend calculation (SD, EM, CF)
 } emergence_face_state_t;
 
 void emergence_face_setup(uint8_t watch_face_index, void **context_ptr);

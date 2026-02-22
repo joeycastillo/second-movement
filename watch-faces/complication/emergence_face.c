@@ -24,20 +24,35 @@ static void _emergence_face_update_display(emergence_face_state_t *state) {
     // Zone indicator in top-left
     watch_display_text(WATCH_POSITION_TOP_LEFT, "ER");
     
-    // Display metric based on current view
+    // Display metric based on current view (with trend)
+    uint8_t current_value = 0;
+    int8_t trend = 0;
+    
     switch (state->view_index) {
         case 0:  // Sleep Debt (primary)
-            snprintf(buf, sizeof(buf), "SD %+3d", metrics.sd);
+            current_value = (uint8_t)metrics.sd;
+            trend = (int8_t)(metrics.sd - (int8_t)state->prev_value[0]);
+            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
+            state->prev_value[0] = current_value;
             break;
         case 1:  // Emotional
-            snprintf(buf, sizeof(buf), "EM %3d", metrics.em);
+            current_value = metrics.em;
+            trend = (int8_t)(current_value - state->prev_value[1]);
+            snprintf(buf, sizeof(buf), "EM%d %+d", metrics.em, trend);
+            state->prev_value[1] = current_value;
             break;
         case 2:  // Comfort
-            snprintf(buf, sizeof(buf), "CF %3d", metrics.comfort);
+            current_value = metrics.comfort;
+            trend = (int8_t)(current_value - state->prev_value[2]);
+            snprintf(buf, sizeof(buf), "CF%d %+d", metrics.comfort, trend);
+            state->prev_value[2] = current_value;
             break;
         default:
             state->view_index = 0;
-            snprintf(buf, sizeof(buf), "SD %+3d", metrics.sd);
+            current_value = (uint8_t)metrics.sd;
+            trend = (int8_t)(metrics.sd - (int8_t)state->prev_value[0]);
+            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
+            state->prev_value[0] = current_value;
             break;
     }
     
