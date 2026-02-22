@@ -25,6 +25,50 @@
       "default_position": 1
     },
     {
+      "id": "emergence_face",
+      "name": "Emergence",
+      "category": "complication",
+      "source": "./watch-faces/complication/emergence_face.c",
+      "header": "./watch-faces/complication/emergence_face.h",
+      "description": "Displays metrics relevant to the Emergence phase (waking up): - View 0: Sleep Debt (SD) - Primary metric - View 1: Emotional (EM) - Mood state",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 2
+    },
+    {
+      "id": "momentum_face",
+      "name": "Momentum",
+      "category": "complication",
+      "source": "./watch-faces/complication/momentum_face.c",
+      "header": "./watch-faces/complication/momentum_face.h",
+      "description": "Displays metrics relevant to the Momentum phase (ramping up): - View 0: Wake Momentum (WK) - Primary metric (ramp to alertness) - View 1: Sleep Debt (SD) - Residual sleep pressure",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 3
+    },
+    {
+      "id": "active_face",
+      "name": "Active",
+      "category": "complication",
+      "source": "./watch-faces/complication/active_face.c",
+      "header": "./watch-faces/complication/active_face.h",
+      "description": "Displays metrics relevant to the Active phase (peak alertness): - View 0: Energy (NRG) - Primary metric (phase-aligned capacity) - View 1: Emotional (EM) - Mood state",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 4
+    },
+    {
+      "id": "descent_face",
+      "name": "Descent",
+      "category": "complication",
+      "source": "./watch-faces/complication/descent_face.c",
+      "header": "./watch-faces/complication/descent_face.h",
+      "description": "Displays metrics relevant to the Descent phase (winding down): - View 0: Comfort (CMF) - Primary metric (environmental alignment) - View 1: Emotional (EM) - Evening mood state",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 5
+    },
+    {
       "id": "sleep_tracker_face",
       "name": "Sleep Tracker",
       "category": "complication",
@@ -33,7 +77,7 @@
       "description": "Implements Cole-Kripke (1992) sleep/wake detection algorithm enhanced with light sensor disambiguation. Designed for Sensor Watch Pro hardware. Algorithm:",
       "requires_sensor": null,
       "default": true,
-      "default_position": 2
+      "default_position": 6
     },
     {
       "id": "circadian_score_face",
@@ -44,7 +88,7 @@
       "description": "Circadian Score (CS) Face Displays overall Circadian Score (0-100) with drill-down to 5 component subscores: - TI (Timing/SRI): Sleep Regularity Index (35% weight)",
       "requires_sensor": null,
       "default": true,
-      "default_position": 3
+      "default_position": 7
     },
     {
       "id": "comms_face",
@@ -55,7 +99,7 @@
       "description": "Bidirectional Communication (TX + RX): - TX mode: Acoustic data transmission via FESK (buzzer phone mic) - RX mode: Optical data reception (phone screen light sensor)",
       "requires_sensor": null,
       "default": true,
-      "default_position": 4
+      "default_position": 8
     },
     {
       "id": "world_clock_face",
@@ -66,7 +110,7 @@
       "description": "The World Clock watch face looks similar to the Simple Clock watch face, but youll notice that at first launch the day of week indicators are blank. Thats because this watch face does not display the day of the week.",
       "requires_sensor": null,
       "default": true,
-      "default_position": 5
+      "default_position": 9
     },
     {
       "id": "sunrise_sunset_face",
@@ -77,7 +121,7 @@
       "description": "SUNRISE & SUNSET FACE The Sunrise/Sunset face is designed to display the next sunrise or sunset for a given location. It also functions as an interface for setting the",
       "requires_sensor": null,
       "default": true,
-      "default_position": 6
+      "default_position": 10
     },
     {
       "id": "moon_phase_face",
@@ -88,7 +132,7 @@
       "description": "The Moon Phase face is similar to the Sunrise/Sunset face: it displays the current phase of the moon, along with the day of the month and a graphical representation of the moon on the top row.",
       "requires_sensor": null,
       "default": true,
-      "default_position": 7
+      "default_position": 11
     },
     {
       "id": "fast_stopwatch_face",
@@ -99,7 +143,7 @@
       "description": "The Stock Stopwatch face implements the original F-91W stopwatch functionality, including counting hundredths of seconds and lap timing. Use the ALARM button to start and stop the stopwatch.",
       "requires_sensor": null,
       "default": true,
-      "default_position": 8
+      "default_position": 12
     },
     {
       "id": "countdown_face",
@@ -110,7 +154,7 @@
       "description": "Slight extension of the original countdown face by Wesley Ellis. - Press the light button to enter setting mode and adjust the countdown timer.",
       "requires_sensor": null,
       "default": true,
-      "default_position": 9
+      "default_position": 13
     },
     {
       "id": "alarm_face",
@@ -121,7 +165,7 @@
       "description": "Daily ALARM face (formerly WAKE Face) Basic daily alarm clock face. Seems useful if nothing else in the interest of feature parity with the F-91Ws OEM module, 593.",
       "requires_sensor": null,
       "default": true,
-      "default_position": 10
+      "default_position": 14
     },
     {
       "id": "temperature_display_face",
@@ -132,7 +176,7 @@
       "description": "THERMISTOR READOUT (aka Temperature Display) This watch face is designed to work with either the Temperature + GPIO sensor board or the Temperature + Light sensor board. It reads the current",
       "requires_sensor": "sensor",
       "default": true,
-      "default_position": 11
+      "default_position": 15
     },
     {
       "id": "voltage_face",
@@ -143,7 +187,7 @@
       "description": "This watch face is very simple and has no controls to speak of. It displays the battery voltage as measured by the SAM L22s ADC. Note that the Simple Clock watch face includes a low battery warning, so you",
       "requires_sensor": "sensor",
       "default": true,
-      "default_position": 12
+      "default_position": 16
     },
     {
       "id": "settings_face",
@@ -154,7 +198,7 @@
       "description": "SETTINGS face (replaces old Preferences watch face) The Settings watch face allows you to configure various options on your Sensor Watch. Like all other screens, you advance the field youre setting",
       "requires_sensor": null,
       "default": true,
-      "default_position": 13
+      "default_position": 17
     },
     {
       "id": "set_time_face",
@@ -165,7 +209,7 @@
       "description": "The default method for adjusting Sensor Watch time. The Time Set watch face allows you to set the time on Sensor Watch. Use the LIGHT button to advance through the field you are setting, and the",
       "requires_sensor": null,
       "default": true,
-      "default_position": 14
+      "default_position": 18
     },
     {
       "id": "accelerometer_status_face",
@@ -175,17 +219,6 @@
       "header": "./watch-faces/sensor/accelerometer_status_face.h",
       "description": "Meant to be used in conjunction with the activity_logging_face. Shows the current status of the accelerometer active/still status pin, and allows adjusting the motion threshold via a long press of ALARM. Note that this will not work without",
       "requires_sensor": "sensor",
-      "default": false,
-      "default_position": null
-    },
-    {
-      "id": "active_face",
-      "name": "Active",
-      "category": "complication",
-      "source": "./watch-faces/complication/active_face.c",
-      "header": "./watch-faces/complication/active_face.h",
-      "description": "Displays metrics relevant to the Active phase (peak alertness): - View 0: Energy (NRG) - Primary metric (phase-aligned capacity) - View 1: Emotional (EM) - Mood state",
-      "requires_sensor": null,
       "default": false,
       "default_position": null
     },
@@ -333,28 +366,6 @@
       "default_position": null
     },
     {
-      "id": "descent_face",
-      "name": "Descent",
-      "category": "complication",
-      "source": "./watch-faces/complication/descent_face.c",
-      "header": "./watch-faces/complication/descent_face.h",
-      "description": "Displays metrics relevant to the Descent phase (winding down): - View 0: Comfort (CMF) - Primary metric (environmental alignment) - View 1: Emotional (EM) - Evening mood state",
-      "requires_sensor": null,
-      "default": false,
-      "default_position": null
-    },
-    {
-      "id": "emergence_face",
-      "name": "Emergence",
-      "category": "complication",
-      "source": "./watch-faces/complication/emergence_face.c",
-      "header": "./watch-faces/complication/emergence_face.h",
-      "description": "Displays metrics relevant to the Emergence phase (waking up): - View 0: Sleep Debt (SD) - Primary metric - View 1: Emotional (EM) - Mood state",
-      "requires_sensor": null,
-      "default": false,
-      "default_position": null
-    },
-    {
       "id": "endless_runner_face",
       "name": "Endless Runner",
       "category": "complication",
@@ -493,17 +504,6 @@
       "source": "./watch-faces/clock/mars_time_face.c",
       "header": "./watch-faces/clock/mars_time_face.h",
       "description": "This watch face is dedicated to Martian timekeeping. It has several modes, and can display either a time or a date. Pressing the ALARM button cycles through different time zones on Mars:",
-      "requires_sensor": null,
-      "default": false,
-      "default_position": null
-    },
-    {
-      "id": "momentum_face",
-      "name": "Momentum",
-      "category": "complication",
-      "source": "./watch-faces/complication/momentum_face.c",
-      "header": "./watch-faces/complication/momentum_face.h",
-      "description": "Displays metrics relevant to the Momentum phase (ramping up): - View 0: Wake Momentum (WK) - Primary metric (ramp to alertness) - View 1: Sleep Debt (SD) - Residual sleep pressure",
       "requires_sensor": null,
       "default": false,
       "default_position": null
