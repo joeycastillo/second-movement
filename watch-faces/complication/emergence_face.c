@@ -71,13 +71,18 @@ bool emergence_face_loop(movement_event_t event, void *context) {
             state->view_index = (state->view_index + 1) % 3;
             _emergence_face_update_display(state);
             break;
+        
+        case EVENT_MODE_LONG_PRESS:
+            // Long-press MODE → exit playlist mode, return to clock
+            movement_move_to_face(1);  // Clock face (index 1)
+            break;
             
         case EVENT_LIGHT_BUTTON_UP:
             movement_illuminate_led();
             break;
             
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);  // Return to watch face
+            movement_move_to_face(1);  // Timeout → return to clock
             break;
             
         default:

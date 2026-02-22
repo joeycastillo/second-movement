@@ -25,8 +25,6 @@
 #ifndef MOVEMENT_CONFIG_H_
 #define MOVEMENT_CONFIG_H_
 
-#include "movement_faces.h"
-
 /* ===== EXPERIMENTAL FEATURES ===== */
 
 /* Phase Engine: Context-aware circadian rhythm tracking
@@ -40,15 +38,24 @@
  * See lib/phase/README.md for documentation.
  * 
  * NOTE: Disabled by default for backward compatibility.
- *       Uncomment to enable:
+ *       Enable via Makefile: make BOARD=... DISPLAY=... PHASE_ENGINE_ENABLED=1
+ *       Or uncomment below:
  */
 // #define PHASE_ENGINE_ENABLED
 
 /* ===== END EXPERIMENTAL FEATURES ===== */
 
+#include "movement_faces.h"
+
 const watch_face_t watch_faces[] = {
     wyoscan_face,
     clock_face,
+#ifdef PHASE_ENGINE_ENABLED
+    emergence_face,
+    momentum_face,
+    active_face,
+    descent_face,
+#endif
     sleep_tracker_face,
     circadian_score_face,
     comms_face,

@@ -206,6 +206,10 @@ void cb_accelerometer_wake(void);
 static bool is_sleep_window(void);
 static bool is_confirmed_asleep(void);
 
+#ifdef PHASE_ENGINE_ENABLED
+static uint8_t _movement_get_zone_face_index(phase_zone_t zone);
+#endif
+
 // Expose sleep tracker state for smart alarm integration
 sleep_tracker_state_t* movement_get_sleep_tracker_state(void) {
     return &global_sleep_tracker;
@@ -559,10 +563,22 @@ static void _movement_handle_top_of_minute(void) {
         // Update playlist controller
         metrics_snapshot_t snapshot;
         metrics_get(&movement_state.metrics, &snapshot);
+        
+        // Get previous zone before update
+        phase_zone_t prev_zone = playlist_get_zone(&movement_state.playlist);
+        
         playlist_update(&movement_state.playlist, phase_score, &snapshot);
         
-        // If playlist mode is active, switch to the recommended face
-        // (This will be implemented in zone face integration)
+        // Phase 4B: If playlist mode is active and zone changed, switch to zone face
+        if (movement_state.playlist_mode_active) {
+            phase_zone_t new_zone = playlist_get_zone(&movement_state.playlist);
+            
+            // Only switch faces on zone changes (debounced by playlist hysteresis)
+            if (new_zone != prev_zone) {
+                uint8_t zone_face_idx = _movement_get_zone_face_index(new_zone);
+                movement_move_to_face(zone_face_idx);
+            }
+        }
     }
 #endif
 }
@@ -675,12 +691,22 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
 #ifdef PHASE_ENGINE_ENABLED
+        case EVENT_ALARM_LONG_PRESS:
+            // Phase 4B: Long-press ALARM from clock → enter phase playlist mode
+            if (movement_state.current_face_idx == 1) {  // Clock face (index 1)
+                movement_state.playlist_mode_active = true;
+                
+                // Jump to zone face for current zone
+                phase_zone_t zone = playlist_get_zone(&movement_state.playlist);
+                uint8_t zone_face_idx = _movement_get_zone_face_index(zone);
+                movement_move_to_face(zone_face_idx);
+            }
+            break;
         case EVENT_ALARM_BUTTON_UP:
-            // Phase 3: If playlist mode is active, advance to next face in rotation
+            // Phase 4B: If in playlist mode, short-press ALARM cycles through zone metrics
             if (movement_state.playlist_mode_active) {
                 playlist_advance(&movement_state.playlist);
-                // The face will be updated in the next tick cycle
-                // TODO: Implement zone face dispatch to switch to playlist-selected face
+                // Stay on the same zone face, metric changes internally via ALARM button
             }
             break;
 #endif
@@ -693,23 +719,21 @@ bool movement_default_loop_handler(movement_event_t event) {
 
 #ifdef PHASE_ENGINE_ENABLED
 /**
- * Get the watch face index for a given metric and zone.
- * Maps metric indices (0-4: SD, EM, WK, Energy, Comfort) to actual watch face indices.
- * Returns 0 (default face) if the zone face is not available.
+ * Get the watch face index for the current zone.
+ * Maps zones to their corresponding zone face indices.
+ * 
+ * Zone faces are positioned at indices 2-5 (after wyoscan and clock):
+ * - Index 2: emergence_face (ZONE_EMERGENCE)
+ * - Index 3: momentum_face (ZONE_MOMENTUM)
+ * - Index 4: active_face (ZONE_ACTIVE)
+ * - Index 5: descent_face (ZONE_DESCENT)
+ * 
+ * @param zone Current zone (0-3)
+ * @return Face index (2-5)
  */
-static uint8_t _movement_get_zone_face_index(uint8_t metric_index, phase_zone_t zone) {
-    // TODO: This mapping needs to be configured based on which zone faces are included
-    // in the build. For now, return the default face as a safe fallback.
-    // 
-    // When zone faces are integrated, this should map to face indices like:
-    // - ZONE_EMERGENCE -> emergence_face_index (shows SD, EM priority)
-    // - ZONE_MOMENTUM -> momentum_face_index (shows WK, Energy priority)
-    // - ZONE_ACTIVE -> active_face_index (shows Energy, comfort priority)
-    // - ZONE_DESCENT -> descent_face_index (shows comfort, SD priority)
-    
-    (void)metric_index;
-    (void)zone;
-    return 0;  // Default to clock face for now
+static uint8_t _movement_get_zone_face_index(phase_zone_t zone) {
+    // Zone faces start at index 2 (after wyoscan[0] and clock[1])
+    return 2 + zone;
 }
 #endif
 
