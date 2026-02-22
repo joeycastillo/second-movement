@@ -15,6 +15,7 @@
 #ifdef PHASE_ENGINE_ENABLED
 
 #include "homebase.h"
+#include "watch.h"
 #include <string.h>
 
 /*
@@ -133,17 +134,20 @@ uint16_t phase_compute(phase_state_t *state,
     uint8_t old_score = state->phase_history[state->history_index];
     state->phase_history[state->history_index] = (uint8_t)score;
     
-    // Update cumulative sum with overflow protection
+    // Update cumulative sum with proper saturating arithmetic
+    // Saturating subtract
     if (state->cumulative_phase >= old_score) {
         state->cumulative_phase -= old_score;
     } else {
         state->cumulative_phase = 0;
     }
     
-    if (state->cumulative_phase <= UINT16_MAX - score) {
-        state->cumulative_phase += score;
-    } else {
+    // Saturating add
+    uint32_t temp = (uint32_t)state->cumulative_phase + score;
+    if (temp > UINT16_MAX) {
         state->cumulative_phase = UINT16_MAX;
+    } else {
+        state->cumulative_phase = (uint16_t)temp;
     }
     
     // THEN increment index
@@ -234,6 +238,89 @@ uint8_t phase_get_recommendation(uint16_t phase_score, uint8_t hour) {
     if (phase_score < 50) return 1;
     if (phase_score < 70) return 2;
     return 3;
+}
+
+// Helper: Check if current hour is within active hours
+static bool is_active_hours(uint8_t hour, 
+                           bool enabled, 
+                           uint8_t start, 
+                           uint8_t end) {
+    if (!enabled) {
+        return true;  // If disabled, always active
+    }
+    
+    // Handle wraparound case (e.g., 22:00 - 06:00)
+    if (start < end) {
+        return (hour >= start && hour < end);
+    } else if (start > end) {
+        return (hour >= start || hour < end);
+    } else {
+        // start == end: 24-hour active
+        return true;
+    }
+}
+
+void phase_detect_anomalies(phase_state_t *state,
+                            int16_t sd,
+                            uint8_t em,
+                            uint8_t energy,
+                            uint8_t comfort,
+                            uint8_t hour,
+                            bool active_hours_enabled,
+                            uint8_t active_start,
+                            uint8_t active_end) {
+    if (!state || !state->initialized) {
+        return;
+    }
+    
+    // Check if we're in active hours
+    bool in_active_hours = is_active_hours(hour, active_hours_enabled, 
+                                          active_start, active_end);
+    
+    // Store previous anomaly flags to detect new anomalies
+    uint8_t prev_flags = state->anomaly_flags;
+    uint8_t new_flags = ANOMALY_NONE;
+    
+    // Detect Sleep Debt anomalies (midpoint 30, threshold ±20)
+    // SD range: -60 to +120, midpoint = 30
+    if (sd >= 50) {  // 30 + 20
+        new_flags |= ANOMALY_SD_HIGH;
+    } else if (sd <= 10) {  // 30 - 20
+        new_flags |= ANOMALY_SD_LOW;
+    }
+    
+    // Detect Emotional anomalies (midpoint 50, threshold ±20)
+    if (em >= 70) {  // 50 + 20
+        new_flags |= ANOMALY_EM_HIGH;
+    } else if (em <= 30) {  // 50 - 20
+        new_flags |= ANOMALY_EM_LOW;
+    }
+    
+    // Detect Energy anomalies (midpoint 50, threshold ±20)
+    if (energy >= 70) {
+        new_flags |= ANOMALY_ENERGY_HIGH;
+    } else if (energy <= 30) {
+        new_flags |= ANOMALY_ENERGY_LOW;
+    }
+    
+    // Detect Comfort anomalies (midpoint 50, threshold ±20)
+    if (comfort >= 70) {
+        new_flags |= ANOMALY_COMFORT_HIGH;
+    } else if (comfort <= 30) {
+        new_flags |= ANOMALY_COMFORT_LOW;
+    }
+    
+    // Update state
+    state->anomaly_flags = new_flags;
+    
+    // Trigger soft chime if new anomalies detected during active hours
+    // Only chime if there are new flags that weren't present before
+    uint8_t newly_detected = new_flags & ~prev_flags;
+    
+    if (in_active_hours && newly_detected != ANOMALY_NONE) {
+        // Soft chime: C7 @ 80ms
+        watch_buzzer_play_note(BUZZER_NOTE_C7, 80);
+    }
 }
 
 #endif // PHASE_ENGINE_ENABLED

@@ -43,7 +43,8 @@
 
 typedef struct {
     uint8_t view_index;     // 0-2, cycles through metrics
-    uint8_t prev_value[3];  // Previous values for trend calculation (WK, SD, EM)
+    int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)
+    uint8_t prev_other[2];  // Previous values for other metrics (WK, EM)
 } momentum_face_state_t;
 
 void momentum_face_setup(uint8_t watch_face_index, void **context_ptr);

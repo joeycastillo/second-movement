@@ -29,30 +29,30 @@ static void _emergence_face_update_display(emergence_face_state_t *state) {
     int8_t trend = 0;
     
     switch (state->view_index) {
-        case 0:  // Sleep Debt (primary)
+        case 0:  // Sleep Debt (primary) - use signed field
             current_value = (uint8_t)metrics.sd;
-            trend = (int8_t)(metrics.sd - (int8_t)state->prev_value[0]);
+            trend = (int8_t)(metrics.sd - state->prev_sd);
             snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
-            state->prev_value[0] = current_value;
+            state->prev_sd = metrics.sd;
             break;
         case 1:  // Emotional
             current_value = metrics.em;
-            trend = (int8_t)(current_value - state->prev_value[1]);
+            trend = (int8_t)(current_value - state->prev_other[0]);
             snprintf(buf, sizeof(buf), "EM%d %+d", metrics.em, trend);
-            state->prev_value[1] = current_value;
+            state->prev_other[0] = current_value;
             break;
         case 2:  // Comfort
             current_value = metrics.comfort;
-            trend = (int8_t)(current_value - state->prev_value[2]);
+            trend = (int8_t)(current_value - state->prev_other[1]);
             snprintf(buf, sizeof(buf), "CF%d %+d", metrics.comfort, trend);
-            state->prev_value[2] = current_value;
+            state->prev_other[1] = current_value;
             break;
         default:
             state->view_index = 0;
             current_value = (uint8_t)metrics.sd;
-            trend = (int8_t)(metrics.sd - (int8_t)state->prev_value[0]);
+            trend = (int8_t)(metrics.sd - state->prev_sd);
             snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
-            state->prev_value[0] = current_value;
+            state->prev_sd = metrics.sd;
             break;
     }
     

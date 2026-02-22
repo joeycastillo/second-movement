@@ -27,6 +27,50 @@
 #include "metric_comfort.h"
 #include "phase_engine.h"
 
+// Conway's lunar approximation (±1 day accuracy)
+// Returns moon age in days (0-29)
+static uint8_t lunar_age_conway(uint16_t year, uint8_t month, uint8_t day) {
+    // Conway's formula for moon age
+    // r = year % 100
+    // r = r % 19
+    // if (month < 3) { month += 12; year -= 1; }
+    // age = ((r * 11) % 30 + month * 2 + day) % 30
+    
+    uint16_t r = year % 100;
+    r = r % 19;
+    
+    // Adjust for Jan/Feb (treat as months 13/14 of previous year)
+    uint8_t adj_month = month;
+    if (month < 3) {
+        adj_month += 12;
+        // Don't modify year for calculation - only affects r
+    }
+    
+    // Conway's magic formula
+    uint8_t age = ((r * 11) % 30 + adj_month * 2 + day) % 30;
+    
+    return age;
+}
+
+// Map lunar phase (0-29 days) to comfort modifier (0-100)
+// Full moon (day 15) = 100 (peak comfort)
+// New moon (day 0/29) = 0 (lowest comfort)
+// Linear interpolation between
+static uint8_t lunar_comfort_score(uint8_t lunar_age) {
+    // Map 0-29 to comfort score
+    // Full moon at day 15 → 100
+    // New moon at day 0/29 → 0
+    
+    if (lunar_age <= 15) {
+        // Waxing: 0→15 maps to 0→100
+        return (lunar_age * 100) / 15;
+    } else {
+        // Waning: 16→29 maps to 93→0
+        uint8_t days_past_full = lunar_age - 15;  // 1-14
+        return 100 - ((days_past_full * 100) / 15);
+    }
+}
+
 // Safe absolute value wrapper to handle INT16_MIN edge case
 static inline int16_t safe_abs16(int16_t x) {
     return (x == INT16_MIN) ? INT16_MAX : ((x < 0) ? -x : x);
@@ -40,13 +84,16 @@ static inline uint16_t min16(uint16_t a, uint16_t b) {
 uint8_t metric_comfort_compute(int16_t temp_c10,
                                 uint16_t light_lux,
                                 uint8_t hour,
-                                const homebase_entry_t *baseline) {
+                                const homebase_entry_t *baseline,
+                                uint16_t year,
+                                uint8_t month,
+                                uint8_t day) {
     if (!baseline) {
         // No baseline data - return neutral score
         return 50;
     }
     
-    // Temp comfort (60%): deviation from seasonal baseline
+    // Temp comfort (48%): deviation from seasonal baseline
     // Use int32_t to prevent overflow in subtraction
     int32_t temp_diff = (int32_t)temp_c10 - (int32_t)baseline->avg_temp_c10;
     int32_t temp_dev = (temp_diff < 0) ? -temp_diff : temp_diff;
@@ -60,7 +107,7 @@ uint8_t metric_comfort_compute(int16_t temp_c10,
         temp_comfort = 100 - (uint8_t)(temp_dev / 3);
     }
     
-    // Light comfort (40%): expected vs actual for hour
+    // Light comfort (32%): expected vs actual for hour
     uint8_t light_comfort;
     if (hour >= 6 && hour <= 18) {
         // Daytime (6 AM - 6 PM): expect bright light (>= 200 lux)
@@ -83,8 +130,15 @@ uint8_t metric_comfort_compute(int16_t temp_c10,
         }
     }
     
-    // Blend: 60% temp + 40% light
-    uint16_t comfort = (temp_comfort * 60 + light_comfort * 40) / 100;
+    // Lunar comfort (20%): Conway approximation
+    uint8_t lunar_age = lunar_age_conway(year, month, day);
+    uint8_t lunar_comfort = lunar_comfort_score(lunar_age);
+    
+    // Blend: 48% temp + 32% light + 20% lunar
+    // Scale to avoid overflow: use (a*48 + b*32 + c*20) / 100
+    uint32_t comfort = ((uint32_t)temp_comfort * 48 + 
+                       (uint32_t)light_comfort * 32 + 
+                       (uint32_t)lunar_comfort * 20) / 100;
     
     return (uint8_t)comfort;
 }

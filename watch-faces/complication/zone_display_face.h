@@ -34,7 +34,7 @@ void zone_display_face_activate(void *context);
 bool zone_display_face_loop(movement_event_t event, void *context);
 void zone_display_face_resign(void *context);
 
-#define zone_display_face ((watch_face_t){ \
+#define zone_display_face ((const watch_face_t){ \
     zone_display_face_setup, \
     zone_display_face_activate, \
     zone_display_face_loop, \

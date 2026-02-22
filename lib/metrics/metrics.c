@@ -98,13 +98,20 @@ void metrics_update(metrics_engine_t *engine,
     // Update cadence tracking
     engine->last_update_hour = hour;
     
+    // Get current date for lunar calculation
+    watch_date_time_t now = watch_rtc_get_date_time();
+    uint16_t year = 2020 + now.unit.year;  // Convert from offset to absolute year
+    uint8_t month = now.unit.month;
+    uint8_t day = now.unit.day;
+    
     // --- Sleep Debt (SD) ---
     // Compute from sleep history and store deficits
     _current_metrics.sd = metric_sd_compute(sleep_data, engine->sd_deficits);
     
     // --- Comfort ---
-    // Compute from current sensors + homebase
-    _current_metrics.comfort = metric_comfort_compute(temp_c10, light_lux, hour, homebase);
+    // Phase 4D: Now includes lunar component (20% weight)
+    _current_metrics.comfort = metric_comfort_compute(temp_c10, light_lux, hour, homebase,
+                                                     year, month, day);
     
     // --- Emotional (EM) ---
     // Compute from circadian cycle, lunar cycle, and activity variance

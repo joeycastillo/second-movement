@@ -45,16 +45,29 @@
 /**
  * Compute Comfort score from current sensors and homebase.
  * 
+ * Phase 4D: Now includes lunar component (20% weight) via Conway approximation.
+ * 
+ * Weighting:
+ * - Temperature: 48% (deviation from homebase avg_temp_c10)
+ * - Light: 32% (expected vs actual for hour)
+ * - Lunar: 20% (Conway approximation, ±1 day accuracy)
+ * 
  * @param temp_c10 Current temperature (celsius * 10)
  * @param light_lux Current light level (lux)
  * @param hour Current hour (0-23)
  * @param baseline Homebase entry for current day (NULL for neutral)
+ * @param year Current year (e.g., 2026)
+ * @param month Current month (1-12)
+ * @param day Current day (1-31)
  * @return Comfort score (0-100)
  */
 uint8_t metric_comfort_compute(int16_t temp_c10,
                                 uint16_t light_lux,
                                 uint8_t hour,
-                                const homebase_entry_t *baseline);
+                                const homebase_entry_t *baseline,
+                                uint16_t year,
+                                uint8_t month,
+                                uint8_t day);
 
 #endif // PHASE_ENGINE_ENABLED
 

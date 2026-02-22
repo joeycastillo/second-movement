@@ -35,6 +35,7 @@
 #include "metrics.h"
 #include "playlist.h"
 #include "sensors.h"
+#include "phase_engine.h"
 #endif
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
@@ -327,6 +328,9 @@ typedef struct {
     // Phase 3: Metrics engine and playlist controller
     metrics_engine_t metrics;
     playlist_state_t playlist;
+    
+    // Phase 4D: Phase engine state (for anomaly detection)
+    phase_state_t phase;
     
     // Playlist integration state
     uint16_t metric_tick_count;     // Counter for 15-minute metric updates
