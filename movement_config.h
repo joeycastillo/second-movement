@@ -51,10 +51,10 @@ const watch_face_t watch_faces[] = {
     wyoscan_face,
     clock_face,
 #ifdef PHASE_ENGINE_ENABLED
-    zone_display_face,  // Index 2: Emergence zone
-    zone_display_face,  // Index 3: Momentum zone
-    zone_display_face,  // Index 4: Active zone
-    zone_display_face,  // Index 5: Descent zone
+    emergence_face,
+    momentum_face,
+    active_face,
+    descent_face,
 #endif
     sleep_tracker_face,
     circadian_score_face,
