@@ -22,6 +22,19 @@
 
 #ifdef PHASE_ENGINE_ENABLED
 
+// Anomaly flags (bitmask for active anomalies)
+typedef enum {
+    ANOMALY_NONE = 0,
+    ANOMALY_SD_HIGH = (1 << 0),      // Sleep Debt ≥ 20 above 50
+    ANOMALY_SD_LOW = (1 << 1),       // Sleep Debt ≤ 20 below 50
+    ANOMALY_EM_HIGH = (1 << 2),      // Emotional ≥ 70 (very high)
+    ANOMALY_EM_LOW = (1 << 3),       // Emotional ≤ 30 (very low)
+    ANOMALY_ENERGY_HIGH = (1 << 4),  // Energy ≥ 70
+    ANOMALY_ENERGY_LOW = (1 << 5),   // Energy ≤ 30
+    ANOMALY_COMFORT_HIGH = (1 << 6), // Comfort ≥ 70
+    ANOMALY_COMFORT_LOW = (1 << 7)   // Comfort ≤ 30
+} anomaly_flags_t;
+
 // Phase engine state (≤64 bytes RAM budget)
 typedef struct {
     uint16_t last_phase_score;      // Most recent phase score (0-100)
@@ -30,6 +43,7 @@ typedef struct {
     uint16_t cumulative_phase;      // Rolling 24h sum for trends
     uint8_t phase_history[24];      // Hourly phase scores (circular buffer)
     uint8_t history_index;          // Current position in circular buffer
+    uint8_t anomaly_flags;          // Active anomalies (bitmask)
     bool initialized;               // Has engine been initialized?
 } phase_state_t;
 
@@ -81,6 +95,35 @@ int16_t phase_get_trend(const phase_state_t *state, uint8_t hours);
  * @return Action code: 0=rest, 1=moderate, 2=active, 3=peak performance
  */
 uint8_t phase_get_recommendation(uint16_t phase_score, uint8_t hour);
+
+/**
+ * Detect anomalies in metrics (values deviating ±20 from midpoint).
+ * Updates state->anomaly_flags bitmask and triggers soft chime during active hours.
+ * 
+ * Algorithm:
+ * - Threshold: |metric - 50| ≥ 20 (integer math)
+ * - Active hours gating: only chimes during configured active hours (6-22 default)
+ * - Soft chime: C7 @ 80ms
+ * 
+ * @param state Engine state (updated in-place with anomaly_flags)
+ * @param sd Sleep Debt (-60 to +120, midpoint 30)
+ * @param em Emotional (0-100, midpoint 50)
+ * @param energy Energy (0-100, midpoint 50)
+ * @param comfort Comfort (0-100, midpoint 50)
+ * @param hour Current hour (0-23) for active hours gating
+ * @param active_hours_enabled True if active hours feature is enabled
+ * @param active_start Active hours start (hour, 0-23)
+ * @param active_end Active hours end (hour, 0-23)
+ */
+void phase_detect_anomalies(phase_state_t *state,
+                            int16_t sd,
+                            uint8_t em,
+                            uint8_t energy,
+                            uint8_t comfort,
+                            uint8_t hour,
+                            bool active_hours_enabled,
+                            uint8_t active_start,
+                            uint8_t active_end);
 
 #endif // PHASE_ENGINE_ENABLED
 

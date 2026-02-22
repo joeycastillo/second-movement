@@ -15,6 +15,11 @@
 extern void metrics_get(const metrics_engine_t *engine, metrics_snapshot_t *out);
 
 static void _emergence_face_update_display(emergence_face_state_t *state) {
+    // Defensive bounds check
+    if (state->view_index >= EMERGENCE_VIEW_COUNT) {
+        state->view_index = 0;
+    }
+    
     char buf[11] = {0};
     
     // Get current metrics (engine param unused in current implementation)
@@ -24,20 +29,35 @@ static void _emergence_face_update_display(emergence_face_state_t *state) {
     // Zone indicator in top-left
     watch_display_text(WATCH_POSITION_TOP_LEFT, "ER");
     
-    // Display metric based on current view
+    // Display metric based on current view (with trend)
+    uint8_t current_value = 0;
+    int8_t trend = 0;
+    
     switch (state->view_index) {
-        case 0:  // Sleep Debt (primary)
-            snprintf(buf, sizeof(buf), "SD %+3d", metrics.sd);
+        case 0:  // Sleep Debt (primary) - use signed field
+            current_value = (uint8_t)metrics.sd;
+            trend = (int8_t)(metrics.sd - state->prev_sd);
+            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
+            state->prev_sd = metrics.sd;
             break;
         case 1:  // Emotional
-            snprintf(buf, sizeof(buf), "EM %3d", metrics.em);
+            current_value = metrics.em;
+            trend = (int8_t)(current_value - state->prev_other[0]);
+            snprintf(buf, sizeof(buf), "EM%d %+d", metrics.em, trend);
+            state->prev_other[0] = current_value;
             break;
         case 2:  // Comfort
-            snprintf(buf, sizeof(buf), "CF %3d", metrics.comfort);
+            current_value = metrics.comfort;
+            trend = (int8_t)(current_value - state->prev_other[1]);
+            snprintf(buf, sizeof(buf), "CF%d %+d", metrics.comfort, trend);
+            state->prev_other[1] = current_value;
             break;
         default:
             state->view_index = 0;
-            snprintf(buf, sizeof(buf), "SD %+3d", metrics.sd);
+            current_value = (uint8_t)metrics.sd;
+            trend = (int8_t)(metrics.sd - state->prev_sd);
+            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
+            state->prev_sd = metrics.sd;
             break;
     }
     
@@ -68,7 +88,7 @@ bool emergence_face_loop(movement_event_t event, void *context) {
             
         case EVENT_ALARM_BUTTON_UP:
             // Cycle through metric views
-            state->view_index = (state->view_index + 1) % 3;
+            state->view_index = (state->view_index + 1) % EMERGENCE_VIEW_COUNT;
             _emergence_face_update_display(state);
             break;
         

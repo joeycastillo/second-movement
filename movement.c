@@ -61,6 +61,7 @@
 // Placeholder - will wire to face dispatch in PR 4
 // For now, just verify playlist compiles and links
 #include "playlist.h"
+#include "phase_engine.h"
 #endif
 
 #if __EMSCRIPTEN__
@@ -579,6 +580,30 @@ static void _movement_handle_top_of_minute(void) {
                 movement_move_to_face(zone_face_idx);
             }
         }
+        
+        // Phase 4D: Detect anomalies and trigger chimes if needed
+        // Get active hours configuration for gating
+        movement_active_hours_t active_hours = movement_get_active_hours();
+        
+        // Clamp to valid range before division (96 quarter-hours = 24 hours)
+        uint8_t start_qh = active_hours.bit.start_quarter_hours;
+        uint8_t end_qh = active_hours.bit.end_quarter_hours;
+        
+        if (start_qh > 95) start_qh = 95;
+        if (end_qh > 95) end_qh = 95;
+        
+        uint8_t active_start = start_qh / 4;  // Convert to hours
+        uint8_t active_end = end_qh / 4;      // Convert to hours
+        
+        phase_detect_anomalies(&movement_state.phase,
+                              snapshot.sd,
+                              snapshot.em,
+                              snapshot.energy,
+                              snapshot.comfort,
+                              hour,
+                              active_hours.bit.enabled,
+                              active_start,
+                              active_end);
     }
 #endif
 }
@@ -684,6 +709,14 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
         case EVENT_MODE_LONG_PRESS:
+#ifdef PHASE_ENGINE_ENABLED
+            // Phase 4D: Long-press MODE from any face → exit playlist mode if active
+            if (movement_state.playlist_mode_active) {
+                movement_state.playlist_mode_active = false;
+                movement_move_to_face(1);  // Return to clock (index 1)
+                break;
+            }
+#endif
             if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
                 movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
             } else {
@@ -1443,6 +1476,10 @@ void app_setup(void) {
         movement_state.metric_tick_count = 0;
         movement_state.cumulative_activity = 0;
         movement_state.playlist_mode_active = false;  // Disabled by default; enable via watch face
+        
+        // Phase 4D: Initialize phase engine (for anomaly detection)
+        memset(&movement_state.phase, 0, sizeof(phase_state_t));
+        phase_engine_init(&movement_state.phase);
         
         // Phase 4A: Initialize sensor state (PR #65 + #66)
         sensors_init(&movement_state.sensors, movement_state.has_lis2dw);

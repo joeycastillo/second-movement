@@ -41,8 +41,18 @@
  * Zone weights: SD=20, EM=20, WK=30, NRG=10, CMF=10
  */
 
+// Metric view indices for Momentum zone
+typedef enum {
+    MOMENTUM_VIEW_WK = 0,  // Wake Momentum (primary)
+    MOMENTUM_VIEW_SD = 1,  // Sleep Debt
+    MOMENTUM_VIEW_EM = 2,  // Emotional
+    MOMENTUM_VIEW_COUNT = 3
+} momentum_view_index_t;
+
 typedef struct {
-    uint8_t view_index;  // 0-2, cycles through metrics
+    uint8_t view_index;     // 0-2, cycles through metrics
+    int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)
+    uint8_t prev_other[2];  // Previous values for other metrics (WK, EM)
 } momentum_face_state_t;
 
 void momentum_face_setup(uint8_t watch_face_index, void **context_ptr);

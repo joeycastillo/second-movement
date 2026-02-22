@@ -90,6 +90,7 @@
 #include "momentum_face.h"
 #include "active_face.h"
 #include "descent_face.h"
+#include "zone_display_face.h"
 #endif
 
 // New includes go above this line.

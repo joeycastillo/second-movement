@@ -41,8 +41,18 @@
  * Zone weights: SD=30, EM=25, WK=5, NRG=10, CMF=20
  */
 
+// Metric view indices for Emergence zone
+typedef enum {
+    EMERGENCE_VIEW_SD = 0,      // Sleep Debt (primary)
+    EMERGENCE_VIEW_EM = 1,      // Emotional
+    EMERGENCE_VIEW_COMFORT = 2, // Comfort
+    EMERGENCE_VIEW_COUNT = 3
+} emergence_view_index_t;
+
 typedef struct {
-    uint8_t view_index;  // 0-2, cycles through metrics
+    uint8_t view_index;     // 0-2, cycles through metrics
+    int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)
+    uint8_t prev_other[2];  // Previous values for other metrics (EM, CF)
 } emergence_face_state_t;
 
 void emergence_face_setup(uint8_t watch_face_index, void **context_ptr);

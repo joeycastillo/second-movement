@@ -67,4 +67,5 @@ SRCS += \
   ./watch-faces/complication/momentum_face.c \
   ./watch-faces/complication/active_face.c \
   ./watch-faces/complication/descent_face.c \
+  ./watch-faces/complication/zone_display_face.c \
 # New watch faces go above this line.
