@@ -148,11 +148,17 @@ Scientifically unproven, culturally resonant.
 
 ## Implementation Decision
 
-**Decision (2026-02-21):** **Keep lunar in EM** (preserves esoteric character)
+**Decision (2026-02-21, revised):** **Option B - Reversed Configuration**
 
-**SAD integration:** Move Seasonal Affect Factor to **Comfort metric** instead
-- Comfort already tracks environmental alignment (temp + light)
-- Adding seasonal baseline makes it personalized to homebase latitude
-- Better conceptual fit: "How comfortable are you relative to seasonal norms?"
+**EM (Emotional):** Circadian + **SAD** + Variance
+- SAD is about mood/affect (belongs with emotional state)
+- Evidence-based, actionable (low winter mood → bright light therapy)
+- See EM_SAD_INTEGRATION.md
 
-See COMFORT_SEASONAL_INTEGRATION.md for implementation details.
+**Comfort:** Temp + Light + **Lunar**
+- Lunar becomes "cosmic environmental alignment" (esoteric interpretation)
+- Preserves mystical character of chronomantic instrument
+- Not about physical comfort, but alignment with natural/celestial cycles
+- See COMFORT_LUNAR_INTEGRATION.md
+
+**Rationale:** SAD is fundamentally about emotional state (it's literally "Seasonal AFFECTIVE Disorder"). Moving it to EM makes scientific sense. Lunar shifts to Comfort to preserve esoteric element — interpreted as cosmic rhythm alignment rather than direct physical comfort.

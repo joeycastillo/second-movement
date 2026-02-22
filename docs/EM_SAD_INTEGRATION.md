@@ -1,27 +1,28 @@
-# Comfort Metric: Seasonal Affect Integration
+# EM Metric: Seasonal Affect Disorder (SAD) Integration
 
-> **Goal:** Enhance Comfort metric with latitude-based seasonal expectations to account for Seasonal Affective Disorder (SAD) patterns.
+> **Goal:** Enhance EM (Emotional) metric with latitude-based seasonal mood expectations to account for Seasonal Affective Disorder patterns.
 
 ---
 
-## Current Comfort Metric
+## Current EM Metric
 
-**Range:** 0 = extreme deviation from norms, 100 = perfectly aligned
+**Range:** 0 = low/disrupted mood, 100 = aligned/elevated mood
 
 **Components (before integration):**
-- **Temperature (60%):** `100 - min(100, abs(current_temp - expected_temp) / 3)`
-- **Light (40%):** Compare lux against expected for hour (500+ day, <50 night)
+- **Circadian (40%):** Hour-of-day cosine curve (peaks 2 PM, troughs 2 AM)
+- **Lunar (20%):** 29-day cycle approximation (peaks near full moon)
+- **Variance (40%):** Activity variance penalty (low activity when expected high, or vice versa)
 
-**Data sources:** Thermistor, lux sensor (Pro board), homebase seasonal table
+**Data sources:** Hour-of-day, day-of-year, accelerometer variance
 
 ---
 
-## Enhanced Comfort Metric (With SAD)
+## Enhanced EM Metric (With SAD)
 
 **New breakdown:**
-- **Temperature (50%):** Current temp vs homebase seasonal norm ← reduced from 60%
-- **Light (30%):** Current lux vs hour-of-day expectation ← reduced from 40%
-- **Seasonal (20%):** Latitude-adjusted seasonal baseline ← **NEW**
+- **Circadian (40%):** Hour-of-day mood rhythm ← unchanged
+- **Seasonal (20%):** Latitude-adjusted SAD baseline ← **NEW** (replaces Lunar)
+- **Variance (40%):** Activity-mood mismatch ← unchanged
 
 ---
 
@@ -75,11 +76,11 @@ int16_t calculate_seasonal_comfort(uint16_t day_of_year, int16_t latitude) {
 
 ---
 
-## Updated Comfort Calculation
+## Updated EM Calculation
 
 **Full formula:**
 ```c
-uint8_t calculate_comfort(
+uint8_t calculate_em(
     int16_t current_temp_c10,
     uint16_t current_lux,
     uint16_t day_of_year,
@@ -87,23 +88,22 @@ uint8_t calculate_comfort(
     int16_t latitude,
     const homebase_entry_t* baseline
 ) {
-    // 1. Temperature comfort (50%)
-    int16_t temp_dev = abs(current_temp_c10 - baseline->avg_temp_c10);
-    uint8_t temp_comfort = (temp_dev > 300) ? 0 : (100 - (temp_dev / 3));
+    // 1. Circadian rhythm (40%)
+    int16_t circadian_curve = cosine_lut_24[hour];  // -1000 to +1000
+    uint8_t circadian_score = (circadian_curve + 1000) / 20;  // Map to 0-100
     
-    // 2. Light comfort (30%)
-    uint16_t expected_lux = (hour >= 6 && hour < 18) ? 500 : 50;
-    int16_t light_dev = abs((int16_t)current_lux - (int16_t)expected_lux);
-    uint8_t light_comfort = (light_dev > 1000) ? 0 : (100 - (light_dev / 10));
+    // 2. Seasonal affect (20%) - NEW
+    uint8_t seasonal_score = calculate_seasonal_affect(day_of_year, latitude);
     
-    // 3. Seasonal comfort (20%) - NEW
-    uint8_t seasonal_comfort = calculate_seasonal_comfort(day_of_year, latitude);
+    // 3. Activity variance (40%)
+    uint8_t variance_penalty = calculate_variance_penalty(activity_variance, expected_activity);
+    uint8_t variance_score = 100 - variance_penalty;
     
     // Weighted blend
-    uint16_t weighted_sum = (temp_comfort * 50) + (light_comfort * 30) + (seasonal_comfort * 20);
-    uint8_t comfort = weighted_sum / 100;
+    uint16_t weighted_sum = (circadian_score * 40) + (seasonal_score * 20) + (variance_score * 40);
+    uint8_t em = weighted_sum / 100;
     
-    return comfort;  // 0-100 scale
+    return em;  // 0-100 scale
 }
 ```
 
