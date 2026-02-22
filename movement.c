@@ -713,7 +713,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             // Phase 4D: Long-press MODE from any face → exit playlist mode if active
             if (movement_state.playlist_mode_active) {
                 movement_state.playlist_mode_active = false;
-                movement_move_to_face(1);  // Return to clock (index 1)
+                movement_move_to_face(0);  // Return to face 0 (wyoscan)
                 break;
             }
 #endif
@@ -782,7 +782,18 @@ void movement_move_to_next_face(void) {
     } else {
         face_max = MOVEMENT_NUM_FACES;
     }
-    movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
+    
+    uint8_t next_idx = (movement_state.current_face_idx + 1) % face_max;
+    
+#ifdef PHASE_ENGINE_ENABLED
+    // Skip tertiary zone faces (2-5) during normal MODE cycling
+    // These are only accessible via long-press ALARM from clock (playlist mode)
+    if (next_idx >= 2 && next_idx <= 5) {
+        next_idx = 6;  // Jump past zone faces to fast_stopwatch
+    }
+#endif
+    
+    movement_move_to_face(next_idx);
 }
 
 void movement_schedule_background_task(watch_date_time_t date_time) {
