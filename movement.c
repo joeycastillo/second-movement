@@ -765,7 +765,7 @@ bool movement_default_loop_handler(movement_event_t event) {
  * @return Face index (2-5)
  */
 static uint8_t _movement_get_zone_face_index(phase_zone_t zone) {
-    // Zone faces start at index 2 (after wyoscan[0] and clock[1])
+    // Zone faces start at index 2 (right after wyoscan[0] and clock[1])
     return 2 + zone;
 }
 #endif
@@ -789,7 +789,7 @@ void movement_move_to_next_face(void) {
     // Skip tertiary zone faces (2-5) during normal MODE cycling
     // These are only accessible via long-press ALARM from clock (playlist mode)
     if (next_idx >= 2 && next_idx <= 5) {
-        next_idx = 6;  // Jump past zone faces to fast_stopwatch
+        next_idx = 6;  // Jump past zone faces to timer
     }
 #endif
     

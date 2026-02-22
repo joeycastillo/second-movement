@@ -48,32 +48,34 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
-    // PRIMARY FACES (MODE cycles through 0 → 13)
+    // PRIMARY FACES (MODE cycles through 0 → 13, skipping 2-5)
     wyoscan_face,               // 0: Always visible
     clock_face,                 // 1: Main clock (long-press ALARM → playlist)
     
 #ifdef PHASE_ENGINE_ENABLED
-    // Zone faces (in normal rotation + playlist accessible)
+    // TERTIARY (Zone faces - skipped in MODE rotation, after clocks)
     emergence_face,             // 2: Emergence (0-25)
     momentum_face,              // 3: Momentum (26-50)
     active_face,                // 4: Active (51-75)
     descent_face,               // 5: Descent (76-100)
 #endif
     
-    fast_stopwatch_face,        // 6: Quick timing
-    timer_face,                 // 7: Countdown
+    timer_face,                 // 6: Countdown
+    fast_stopwatch_face,        // 7: Quick timing
     advanced_alarm_face,        // 8: 16 alarms with day modes
     sleep_tracker_face,         // 9: Sleep review
     circadian_score_face,       // 10: Circadian alignment
     world_clock_face,           // 11: Timezone
     moon_phase_face,            // 12: Lunar phase
     sunrise_sunset_face,        // 13: Solar timing
+    // End of PRIMARY faces (MODE cycles 0→1→6→7→...→13)
     
     // SECONDARY FACES (Long-press MODE from face 0 → 14)
     comms_face,                 // 14: Phase telemetry export
     lis2dw_monitor_face,        // 15: Accelerometer data
-    voltage_face,               // 16: Battery voltage
-    settings_face,              // 17: Configuration
+    light_sensor_face,          // 16: Light sensor data
+    voltage_face,               // 17: Battery voltage
+    settings_face,              // 18: Configuration
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
@@ -84,7 +86,7 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)  // Last 4 faces: comms, lis2dw, voltage, settings
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)  // Last 5 faces: comms, lis2dw, light_sensor, voltage, settings
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT

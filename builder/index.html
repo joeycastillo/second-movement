@@ -563,6 +563,36 @@
             border-radius: 0;
         }
 
+        /* ---- LED CRT GLOW PREVIEW ---- */
+        .led-preview {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .crt-tube {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .crt-tube .glow {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 0 10px currentColor,
+                0 0 20px currentColor,
+                0 0 30px currentColor,
+                inset 0 0 10px currentColor;
+        }
+
         /* ---- CRT QUALITY TOGGLE ---- */
         .setting-group {
             display: flex;
@@ -1075,7 +1105,7 @@
         <div style="margin-bottom: 16px;">
             <details style="background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px; border-radius: 3px;">
                 <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber); user-select: none;">
-                    ℹ️ WHAT IS HOMEBASE?
+                    WHAT IS HOMEBASE?
                 </summary>
                 <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
                     <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">Homebase</strong> is your primary location for circadian-aware features.</p>
@@ -1135,12 +1165,12 @@
 
     <!-- ZONE CONFIGURATION (PHASE 3) -->
     <section id="zone-config" class="section" style="display:none">
-        <div class="section-title">◆ ZONE CONFIGURATION</div>
+        <div class="section-title">ZONE CONFIGURATION</div>
         <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Customize phase zone boundaries (optional - defaults work for most users)</p>
         
         <details style="margin-bottom: 16px; background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px;">
             <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber-mid); user-select: none;">
-                ℹ️ WHAT ARE ZONES?
+                WHAT ARE ZONES?
             </summary>
             <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
                 <p style="margin: 0 0 8px 0;">The phase engine divides your day into 4 zones based on your phase score (0-100):</p>
@@ -1201,10 +1231,10 @@
         
         <details style="margin-top: 20px; background: var(--color-bg-recessed); border: 1px solid var(--color-amber-dim); padding: 12px;">
             <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-alert); user-select: none;">
-                ⚙️ ADVANCED: METRIC WEIGHTS (EXPERTS ONLY)
+                ADVANCED: METRIC WEIGHTS (EXPERTS ONLY)
             </summary>
             <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
-                <p style="margin: 0; color: var(--color-critical); font-style: italic;"><strong>⚠ Warning:</strong> Only modify if you understand the metric system. Incorrect weights can break face rotation.</p>
+                <p style="margin: 0; color: var(--color-critical); font-style: italic;"><strong>Warning:</strong> Only modify if you understand the metric system. Incorrect weights can break face rotation.</p>
                 <p style="margin: 8px 0 0 0; color: var(--color-amber-trace);">Weight editor deferred to Phase 4. Use zone thresholds above for customization.</p>
             </div>
         </details>
@@ -1264,6 +1294,18 @@
             <div class="setting-control slider-wrap">
                 <input type="range" id="ledBlue" min="0" max="15" value="0" aria-label="LED blue brightness">
                 <span class="slider-val" id="ledBlueVal">0</span>
+            </div>
+        </div>
+
+        <!-- LED PREVIEW (CRT Glow Visualization) -->
+        <div class="setting-row">
+            <span class="setting-label">LED PREVIEW</span>
+            <div class="setting-control">
+                <div class="led-preview">
+                    <div class="crt-tube" id="led-preview-tube">
+                        <div class="glow" id="led-glow"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1331,28 +1373,71 @@
 
     </div>
 
-    <!-- SIGNAL TUNE -->
-    <section class="panel" id="signalTunePanel">
-        <button class="panel-header" id="signalTunePanelBtn" aria-expanded="true" aria-controls="signalTunePanelBody">
-            <span>[ SIGNAL TUNE ]</span>
-            <span class="panel-chevron" id="signalTuneChevron">-</span>
+    <!-- ALARM TUNES -->
+    <section class="panel" id="alarmTunesPanel">
+        <button class="panel-header" id="alarmTunesPanelBtn" aria-expanded="true" aria-controls="alarmTunesPanelBody">
+            <span>[ ALARM TUNES ]</span>
+            <span class="panel-chevron" id="alarmTunesChevron">-</span>
         </button>
-        <div class="panel-body" id="signalTunePanelBody">
-            <div class="signal-tune-row">
-                <select id="signalTune" aria-label="Signal tune selection">
-                    <option value="SIGNAL_TUNE_DEFAULT">Default</option>
-                    <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
-                    <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
-                    <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
-                    <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
-                    <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
-                    <option value="SIGNAL_TUNE_LAYLA">Layla (Derek &amp; Dominos)</option>
-                    <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
-                    <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
-                    <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
-                    <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angel&#39;s Thesis (NGE)</option>
-                </select>
-                <button id="signalTunePreviewBtn" class="preview-btn" aria-label="Preview signal tune">&#9654; PREVIEW</button>
+        <div class="panel-body" id="alarmTunesPanelBody">
+            <div style="margin-bottom: 12px;">
+                <label for="hourlyChimeTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">HOURLY CHIME TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="hourlyChimeTune" aria-label="Hourly chime tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                    </select>
+                    <button id="hourlyChimePreviewBtn" class="preview-btn" aria-label="Preview hourly chime tune">PREVIEW</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label for="alarmTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">ALARM TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="alarmTune" aria-label="Alarm tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                    </select>
+                    <button id="alarmTunePreviewBtn" class="preview-btn" aria-label="Preview alarm tune">PREVIEW</button>
+                </div>
+            </div>
+
+            <div>
+                <label for="smartAlarmTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">SMART ALARM TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="smartAlarmTune" aria-label="Smart alarm tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                    </select>
+                    <button id="smartAlarmTunePreviewBtn" class="preview-btn" aria-label="Preview smart alarm tune">PREVIEW</button>
+                </div>
             </div>
         </div>
     </section>
@@ -1414,7 +1499,7 @@
 
     <!-- OPTICAL COMMS -->
     <div class="share-section" style="border-top: 1px solid var(--color-amber-trace);">
-        <div class="share-title">◆ OPTICAL COMMS</div>
+        <div class="share-title">OPTICAL COMMS</div>
         <div style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 8px; letter-spacing: 0.06em;">TIME SYNC VIA SCREEN FLASH (TIMEX DATALINK-STYLE)</div>
         <a href="../companion-app/index.html" class="copy-btn" style="display: block; text-align: center; text-decoration: none; line-height: 44px;">OPEN COMPANION APP →</a>
     </div>
@@ -2084,6 +2169,44 @@ function updateTokenStatus(result) {
 
 const PRESET_TEMPLATES = [
     {
+        id: 'preset_phase_engine',
+        name: 'Phase Engine (Default)',
+        description: 'Phase 4D dogfooding: circadian tracking with zone playlist',
+        preset: true,
+        state: {
+            board: 'pro',
+            display: 'classic',
+            activeFaces: [
+                'wyoscan_face',
+                'clock_face',
+                'emergence_face',
+                'momentum_face',
+                'active_face',
+                'descent_face',
+                'timer_face',
+                'fast_stopwatch_face',
+                'advanced_alarm_face',
+                'sleep_tracker_face',
+                'circadian_score_face',
+                'world_clock_face',
+                'moon_phase_face',
+                'sunrise_sunset_face',
+                '__secondary__',
+                'comms_face',
+                'lis2dw_monitor_face',
+                'light_sensor_face',
+                'voltage_face',
+                'settings_face'
+            ],
+            clock24h: false,
+            ledRed: 0, ledGreen: 15, ledBlue: 0,
+            btnSound: true,
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT'
+        }
+    },
+    {
         id: 'preset_standard',
         name: 'Standard Edition',
         description: 'Classic setup: clock, alarm, stopwatch, tools',
@@ -2106,7 +2229,9 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT'
         }
     },
     {
@@ -2130,7 +2255,9 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT'
         }
     },
     {
@@ -2150,7 +2277,9 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT'
         }
     }
 ];
@@ -2187,7 +2316,9 @@ let state = {
     ledGreen: 15,
     ledBlue: 0,
     btnSound: false,
-    signalTune: 'SIGNAL_TUNE_DEFAULT',
+    hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+    alarmTune: 'SIGNAL_TUNE_DEFAULT',
+    smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
     // First-boot defaults (BKUP[2]: active hours)
     activeHoursEnabled: true,
     activeHoursStart: 16,  // 04:00
@@ -2250,7 +2381,9 @@ function loadTemplate(tmplState) {
     if (tmplState.ledGreen !== undefined) state.ledGreen = tmplState.ledGreen;
     if (tmplState.ledBlue !== undefined) state.ledBlue = tmplState.ledBlue;
     if (tmplState.btnSound !== undefined) state.btnSound = tmplState.btnSound;
-    if (tmplState.signalTune) state.signalTune = tmplState.signalTune;
+    if (tmplState.hourlyChimeTune) state.hourlyChimeTune = tmplState.hourlyChimeTune;
+    if (tmplState.alarmTune) state.alarmTune = tmplState.alarmTune;
+    if (tmplState.smartAlarmTune) state.smartAlarmTune = tmplState.smartAlarmTune;
     if (tmplState.activeHoursEnabled !== undefined) state.activeHoursEnabled = !!tmplState.activeHoursEnabled;
     if (tmplState.activeHoursStart !== undefined) {
         const v = parseInt(tmplState.activeHoursStart, 10);
@@ -2291,9 +2424,12 @@ function loadTemplate(tmplState) {
     document.getElementById('ledGreenVal').textContent = state.ledGreen;
     document.getElementById('ledBlue').value = state.ledBlue;
     document.getElementById('ledBlueVal').textContent = state.ledBlue;
-    document.getElementById('signalTune').value = state.signalTune;
+    document.getElementById('hourlyChimeTune').value = state.hourlyChimeTune;
+    document.getElementById('alarmTune').value = state.alarmTune;
+    document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    updateLEDPreview();
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
     document.getElementById('ahStart').innerHTML = buildTimeOptions(state.activeHoursStart);
     document.getElementById('ahEnd').innerHTML = buildTimeOptions(state.activeHoursEnd);
@@ -2398,7 +2534,7 @@ async function loadRegistry() {
 // ============================================================
 // AUDIO PREVIEW
 // ============================================================
-function playSignalTune(tuneId) {
+function playSignalTune(tuneId, buttonId) {
     const tune = SIGNAL_TUNES.find(t => t.id === tuneId);
     if (!tune) return;
 
@@ -2428,18 +2564,18 @@ function playSignalTune(tuneId) {
     });
 
     // show "playing" state on button
-    const btn = document.getElementById('signalTunePreviewBtn');
+    const btn = buttonId ? document.getElementById(buttonId) : null;
+    const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
+    
     if (btn) {
         btn.classList.add('playing');
         btn.disabled = true;
-        const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
         setTimeout(() => {
             btn.classList.remove('playing');
             btn.disabled = false;
             try { audioCtx.close(); } catch(e) {}
         }, totalMs + 200);
     } else {
-        const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
         setTimeout(() => { try { audioCtx.close(); } catch(e) {} }, totalMs + 200);
     }
 }
@@ -2601,9 +2737,14 @@ async function init() {
     document.getElementById('ledGreenVal').textContent = state.ledGreen;
     document.getElementById('ledBlue').value = state.ledBlue;
     document.getElementById('ledBlueVal').textContent = state.ledBlue;
-    document.getElementById('signalTune').value = state.signalTune;
+    document.getElementById('hourlyChimeTune').value = state.hourlyChimeTune;
+    document.getElementById('alarmTune').value = state.alarmTune;
+    document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    
+    // Initialize LED preview
+    updateLEDPreview();
 
     // restore active hours first-boot defaults
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
@@ -2656,11 +2797,21 @@ async function init() {
         pollBuild();
     }
 
-    wireSlider('ledRed', 'ledRedVal', v => { state.ledRed = +v; updateHash(); });
-    wireSlider('ledGreen', 'ledGreenVal', v => { state.ledGreen = +v; updateHash(); });
-    wireSlider('ledBlue', 'ledBlueVal', v => { state.ledBlue = +v; updateHash(); });
-    document.getElementById('signalTune').addEventListener('change', e => {
-        state.signalTune = e.target.value;
+    wireSlider('ledRed', 'ledRedVal', v => { state.ledRed = +v; updateLEDPreview(); updateHash(); });
+    wireSlider('ledGreen', 'ledGreenVal', v => { state.ledGreen = +v; updateLEDPreview(); updateHash(); });
+    wireSlider('ledBlue', 'ledBlueVal', v => { state.ledBlue = +v; updateLEDPreview(); updateHash(); });
+    
+    // Alarm tune dropdowns
+    document.getElementById('hourlyChimeTune').addEventListener('change', e => {
+        state.hourlyChimeTune = e.target.value;
+        updateHash();
+    });
+    document.getElementById('alarmTune').addEventListener('change', e => {
+        state.alarmTune = e.target.value;
+        updateHash();
+    });
+    document.getElementById('smartAlarmTune').addEventListener('change', e => {
+        state.smartAlarmTune = e.target.value;
         updateHash();
     });
     // Debounced token validation (500ms delay to prevent API rate limiting)
@@ -2746,12 +2897,14 @@ async function init() {
     document.getElementById('homebase-lat').addEventListener('input', e => {
         const lat = parseFloat(e.target.value);
         state.homebaseLat = (Number.isFinite(lat) && lat >= -90 && lat <= 90) ? lat : null;
+        checkPhaseEngineAutoPopulate();
         updateHash();
     });
     
     document.getElementById('homebase-lon').addEventListener('input', e => {
         const lon = parseFloat(e.target.value);
         state.homebaseLon = (Number.isFinite(lon) && lon >= -180 && lon <= 180) ? lon : null;
+        checkPhaseEngineAutoPopulate();
         updateHash();
     });
     
@@ -2844,25 +2997,34 @@ async function init() {
             document.getElementById('homebase-tz').value = tzString;
             state.homebaseTz = tzString;
             
+            // Trigger Phase Engine auto-populate
+            checkPhaseEngineAutoPopulate();
+            
             updateHash();
         }, function(error) {
             alert('Geolocation failed: ' + error.message);
         });
     });
 
-    // Signal tune panel toggle
-    document.getElementById('signalTunePanelBtn').addEventListener('click', function() {
-        const body = document.getElementById('signalTunePanelBody');
-        const chevron = document.getElementById('signalTuneChevron');
+    // Alarm tunes panel toggle
+    document.getElementById('alarmTunesPanelBtn').addEventListener('click', function() {
+        const body = document.getElementById('alarmTunesPanelBody');
+        const chevron = document.getElementById('alarmTunesChevron');
         const expanded = this.getAttribute('aria-expanded') === 'true';
         this.setAttribute('aria-expanded', String(!expanded));
         body.style.display = expanded ? 'none' : 'block';
         chevron.textContent = expanded ? '+' : '-';
     });
 
-    // Signal tune preview button
-    document.getElementById('signalTunePreviewBtn').addEventListener('click', () => {
-        playSignalTune(state.signalTune);
+    // Alarm tune preview buttons
+    document.getElementById('hourlyChimePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.hourlyChimeTune, 'hourlyChimePreviewBtn');
+    });
+    document.getElementById('alarmTunePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.alarmTune, 'alarmTunePreviewBtn');
+    });
+    document.getElementById('smartAlarmTunePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.smartAlarmTune, 'smartAlarmTunePreviewBtn');
     });
 
     // Templates panel toggle
@@ -2895,6 +3057,84 @@ function updateClock() {
     const h = now.getHours().toString().padStart(2, '0');
     const m = now.getMinutes().toString().padStart(2, '0');
     document.getElementById('sysStatus').textContent = h + ':' + m + ' | READY';
+}
+
+// ============================================================
+// LED PREVIEW (CRT GLOW VISUALIZATION)
+// ============================================================
+function updateLEDPreview() {
+    const red = parseInt(document.getElementById('ledRed').value || '0', 10);
+    const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+    const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+    
+    // Convert 0-15 hex to 0-255
+    const r = red * 17;
+    const g = green * 17;
+    const b = blue * 17;
+    
+    const color = `rgb(${r}, ${g}, ${b})`;
+    const glowEl = document.getElementById('led-glow');
+    if (glowEl) {
+        glowEl.style.backgroundColor = color;
+        glowEl.style.color = color; // for box-shadow currentColor
+    }
+}
+
+// ============================================================
+// PHASE ENGINE AUTO-POPULATE
+// ============================================================
+let phaseEngineAutoPopulated = false; // Track if we've already auto-populated
+
+function checkPhaseEngineAutoPopulate() {
+    // Only auto-populate once when both lat and lon are valid
+    if (phaseEngineAutoPopulated) return;
+    
+    if (state.homebaseLat !== null && state.homebaseLon !== null) {
+        // Phase Engine enabled - auto-populate dogfooding config
+        const defaultFaces = [
+            'wyoscan_face',
+            'clock_face',
+            'timer_face',
+            'emergence_face',
+            'momentum_face',
+            'active_face',
+            'descent_face',
+            'fast_stopwatch_face',
+            'advanced_alarm_face',
+            'sleep_tracker_face',
+            'circadian_score_face',
+            'world_clock_face',
+            'moon_phase_face',
+            'sunrise_sunset_face',
+            'comms_face',
+            'lis2dw_monitor_face',
+            'voltage_face',
+            '__secondary__',
+            'settings_face'
+        ];
+        
+        // Only auto-populate if user hasn't customized faces yet (still has default config)
+        const currentFaceCount = state.activeFaces.filter(id => id !== '__secondary__').length;
+        if (currentFaceCount <= 5) { // Assume <5 faces means they haven't customized yet
+            state.activeFaces = defaultFaces;
+            renderActiveFaces();
+            renderAvailFaces();
+            updateHash();
+            phaseEngineAutoPopulated = true;
+            
+            // Show a subtle notification
+            const statusEl = document.getElementById('buildStatus');
+            const prevText = statusEl.textContent;
+            statusEl.textContent = 'PHASE ENGINE ENABLED - LOADED 18-FACE DOGFOODING CONFIG';
+            statusEl.className = 'build-status success active';
+            setTimeout(() => {
+                statusEl.className = 'build-status';
+                if (statusEl.textContent === 'PHASE ENGINE ENABLED - LOADED 18-FACE DOGFOODING CONFIG') {
+                    statusEl.textContent = prevText;
+                }
+            }, 3000);
+        }
+    }
 }
 
 // ============================================================
@@ -3047,12 +3287,12 @@ function updateFlashUsage() {
     if (totalKB > limitKB) {
         // Over limit - disable build
         buildBtn.disabled = true;
-        statusEl.textContent = `⚠️ TOO MANY FACES: ${totalKB} KB / ${limitKB} KB LIMIT - REMOVE ${Math.ceil((totalKB - limitKB) / 15)} FACES`;
+        statusEl.textContent = `WARNING: TOO MANY FACES: ${totalKB} KB / ${limitKB} KB LIMIT - REMOVE ${Math.ceil((totalKB - limitKB) / 15)} FACES`;
         statusEl.className = 'build-status error active';
     } else if (totalKB > warningKB) {
         // Near limit - warn but allow
         buildBtn.disabled = false;
-        statusEl.textContent = `⚠️ NEAR FLASH LIMIT: ${totalKB} KB / ${limitKB} KB - BUILD MAY FAIL`;
+        statusEl.textContent = `WARNING: NEAR FLASH LIMIT: ${totalKB} KB / ${limitKB} KB - BUILD MAY FAIL`;
         statusEl.className = 'build-status error active';
     } else {
         // Normal - clear warning if not building
@@ -3210,7 +3450,9 @@ function updateHash() {
         'led_g=' + state.ledGreen,
         'led_b=' + state.ledBlue,
         'btn=' + state.btnSound,
-        'tune=' + encodeURIComponent(state.signalTune),
+        'hc_tune=' + encodeURIComponent(state.hourlyChimeTune),
+        'al_tune=' + encodeURIComponent(state.alarmTune),
+        'sa_tune=' + encodeURIComponent(state.smartAlarmTune),
         'ah_en=' + state.activeHoursEnabled,
         'ah_start=' + state.activeHoursStart,
         'ah_end=' + state.activeHoursEnd
@@ -3261,8 +3503,10 @@ function parseHash() {
     // Validate display against allowlist
     const display = VALID_DISPLAYS.includes(params.display) ? params.display : 'classic';
 
-    // Validate signal_tune against allowlist
-    const signalTune = VALID_SIGNAL_TUNES.includes(params.tune) ? params.tune : 'SIGNAL_TUNE_DEFAULT';
+    // Validate alarm tunes against allowlist
+    const hourlyChimeTune = VALID_SIGNAL_TUNES.includes(params.hc_tune) ? params.hc_tune : 'SIGNAL_TUNE_DEFAULT';
+    const alarmTune = VALID_SIGNAL_TUNES.includes(params.al_tune) ? params.al_tune : 'SIGNAL_TUNE_DEFAULT';
+    const smartAlarmTune = VALID_SIGNAL_TUNES.includes(params.sa_tune) ? params.sa_tune : 'SIGNAL_TUNE_DEFAULT';
 
     // Clamp LED values to valid integer range 0-15
     const clampLed = (val, def) => {
@@ -3338,7 +3582,9 @@ function parseHash() {
         ledGreen: clampLed(params.led_g, 15),
         ledBlue: clampLed(params.led_b, 0),
         btnSound: params.btn === 'true',
-        signalTune,
+        hourlyChimeTune,
+        alarmTune,
+        smartAlarmTune,
         activeHoursEnabled: params.ah_en !== undefined ? params.ah_en === 'true' : true,
         activeHoursStart: clampQh(params.ah_start, 16),
         activeHoursEnd: clampQh(params.ah_end, 92),
@@ -3412,7 +3658,9 @@ async function triggerBuild() {
         led_green: String(state.ledGreen),
         led_blue: String(state.ledBlue),
         button_sound: String(state.btnSound),
-        signal_tune: state.signalTune,
+        hourly_chime_tune: state.hourlyChimeTune,
+        alarm_tune: state.alarmTune,
+        smart_alarm_tune: state.smartAlarmTune,
         active_hours_enabled: String(state.activeHoursEnabled),
         active_hours_start: String(state.activeHoursStart),
         active_hours_end: String(state.activeHoursEnd),
