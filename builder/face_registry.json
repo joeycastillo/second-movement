@@ -738,6 +738,17 @@
       "requires_sensor": null,
       "default": false,
       "default_position": null
+    },
+    {
+      "id": "zone_display_face",
+      "name": "Zone Display",
+      "category": "complication",
+      "source": "./watch-faces/complication/zone_display_face.c",
+      "header": "./watch-faces/complication/zone_display_face.h",
+      "description": "",
+      "requires_sensor": null,
+      "default": false,
+      "default_position": null
     }
   ],
   "categories": [
