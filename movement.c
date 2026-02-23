@@ -617,13 +617,8 @@ static void _movement_handle_top_of_minute(void) {
         // Get recent movement for all-nighter detection
         uint16_t movement_this_minute = sensors_get_hourly_movement_count(&movement_state.sensors);
         
-        // Phase 4F: Default hysteresis count (can be made configurable via settings)
-        uint8_t hysteresis_count = 3;  // TODO: Load from settings when UI is implemented
-        
-        // Update playlist with sleep mode enforcement
-        playlist_update(&movement_state.playlist, phase_score, &snapshot,
-                       hour, active_hours.bit.enabled, active_start, active_end,
-                       movement_this_minute, hysteresis_count);
+        // Update playlist (simplified - sleep mode logic removed from Phase 4F)
+        playlist_update(&movement_state.playlist, phase_score, &snapshot);
         
         // Phase 4B: If playlist mode is active and zone changed, switch to zone face
         if (movement_state.playlist_mode_active) {
@@ -668,8 +663,8 @@ static void _movement_handle_top_of_minute(void) {
             // Calculate dominant metric based on deviation from neutral
             dominant_metric_t dominant = (dominant_metric_t)metrics_get_dominant(&snapshot, current_zone);
             
-            // Check if anomaly fired this hour
-            bool anomaly_fired = movement_state.phase.anomaly_fired;
+            // Check if any anomaly fired this hour
+            bool anomaly_fired = (movement_state.phase.anomaly_flags != ANOMALY_NONE);
             
             // Accumulate telemetry
             if (prev_snapshot_valid) {
