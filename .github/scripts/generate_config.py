@@ -395,6 +395,9 @@ def main():
     # Build face list for the C array
     face_list_lines = []
     for face_id in face_ids:
+        # Skip divider markers (__secondary__, __tertiary__, etc.)
+        if face_id.startswith('__'):
+            continue
         face_list_lines.append("    {},".format(face_id))
     # Strip trailing comma from last entry
     if face_list_lines:
