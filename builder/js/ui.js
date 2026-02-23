@@ -221,15 +221,19 @@ export function buildTimeOptions(selectedVal) {
  * Update active hours time picker visibility
  */
 export function updateAhTimeVisibility() {
-    const timeRow = document.getElementById('ahTimeRow');
-    const barRow = document.getElementById('ahBarRow');
+    const startRow = document.getElementById('ahStartRow');
+    const endRow = document.getElementById('ahEndRow');
+    const visualContainer = document.getElementById('ahVisual');
+    
     if (state.activeHoursEnabled) {
-        timeRow.style.display = 'grid';
-        barRow.style.display = 'block';
+        if (startRow) startRow.style.display = 'flex';
+        if (endRow) endRow.style.display = 'flex';
+        if (visualContainer) visualContainer.classList.add('active');
         updateAhVisualBar();
     } else {
-        timeRow.style.display = 'none';
-        barRow.style.display = 'none';
+        if (startRow) startRow.style.display = 'none';
+        if (endRow) endRow.style.display = 'none';
+        if (visualContainer) visualContainer.classList.remove('active');
     }
 }
 

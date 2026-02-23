@@ -15,6 +15,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Phase 2: Hybrid 3D Layout CSS -->
+    <link rel="stylesheet" href="css/hybrid-layout.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js" integrity="sha384-/jkFGhPVLS9HIUzX09xB5W3coE5q1X5NXZA/PuOAdOaRxUPczlZmKzYEq9QcJnW0" crossorigin="anonymous"></script>
     
     <!-- Three.js CDN Security Note:
@@ -1089,10 +1093,11 @@
     </style>
 </head>
 <body>
-<!-- RetroPass 3D Background Canvas (layered behind UI) -->
-<canvas id="retro-canvas"></canvas>
-
-<div class="terminal-app">
+<!-- Phase 2: Hybrid 3D Builder Layout -->
+<div id="hybrid-container">
+    <!-- Left Panel: Configuration (scrollable on desktop) -->
+    <div id="config-panel">
+        <div class="terminal-app">
 
     <div class="system-bar">
         <span>SECOND MOVEMENT BUILDER</span>
@@ -1625,9 +1630,16 @@
     </div>
 
     <div class="footer-pad"></div>
-</div>
+        </div><!-- .terminal-app -->
+    </div><!-- #config-panel -->
 
-<!-- RetroPass Background Renderer -->
+    <!-- Right Panel: 3D Canvas (desktop only) -->
+    <div id="canvas-container">
+        <canvas id="scene-canvas"></canvas>
+    </div>
+</div><!-- #hybrid-container -->
+
+<!-- RetroPass Background Renderer (Phase 1 - will be replaced by scene-canvas in Phase 2) -->
 <script type="module">
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';

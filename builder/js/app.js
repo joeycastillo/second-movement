@@ -133,13 +133,20 @@ async function init() {
     // Wire event listeners
     wireEventListeners();
 
-    // Initialize Three.js scene manager (Phase 1: placeholder only)
-    const canvas = document.getElementById('retro-canvas');
+    // Initialize Three.js scene manager (Phase 2: Active 3D rendering)
+    const canvas = document.getElementById('scene-canvas');
     if (canvas) {
         sceneManager = new SceneManager(canvas);
         sceneManager.init();
-        console.log('✅ Three.js scene initialized (placeholder mode)');
+        console.log('✅ Three.js scene initialized (Phase 2: Active rendering with cube + grid)');
     }
+
+    // Clean disposal on page unload
+    window.addEventListener('beforeunload', () => {
+        if (sceneManager) {
+            sceneManager.dispose();
+        }
+    });
 
     console.log('✅ Builder initialized successfully');
 }
