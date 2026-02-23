@@ -33,6 +33,7 @@
 
 // Sleep orientation tracking constants (used by movement.c, always available)
 #define SLEEP_BINS_PER_NIGHT 32         // 32 × 15-minute bins for 8-hour night
+#define SLEEP_BIN_MINUTES 15            // Minutes per bin (60 min/hour ÷ 4 bins/hour)
 #define SLEEP_BYTES_PER_NIGHT 8         // 32 bins × 2 bits / 8 bits per byte
 #define SLEEP_NIGHTS_STORED 7           // 7-day rolling window
 #define SLEEP_STORAGE_ROW 30            // Flash storage row for sleep orientation data
