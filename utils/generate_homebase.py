@@ -199,15 +199,15 @@ static const homebase_entry_t homebase_table[365] = {{
     header += """  // Day 365
 };
 
-// Accessor functions
-const homebase_entry_t* homebase_get_entry(uint16_t day_of_year) {
+// Accessor functions (static inline to avoid linker errors)
+static inline const homebase_entry_t* homebase_get_entry(uint16_t day_of_year) {
     if (day_of_year < 1 || day_of_year > 365) {
         return &homebase_table[0];  // Safe fallback
     }
     return &homebase_table[day_of_year - 1];
 }
 
-const homebase_metadata_t* homebase_get_metadata(void) {
+static inline const homebase_metadata_t* homebase_get_metadata(void) {
     return &homebase_metadata;
 }
 
