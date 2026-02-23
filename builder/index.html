@@ -1129,8 +1129,27 @@
     <div class="section">
         <div class="section-title">WATCH FACES</div>
 
-        <div class="faces-active-header">ACTIVE (drag to reorder)</div>
-        <ul class="face-list" id="activeList" aria-label="Active watch faces"></ul>
+        <div style="margin-bottom: 16px;">
+            <details style="background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px; border-radius: 3px;">
+                <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber); user-select: none;">
+                    THREE-TIER NAVIGATION
+                </summary>
+                <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">PRIMARY:</strong> MODE button cycles through these faces</p>
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">SECONDARY:</strong> Long-press MODE from clock face to access</p>
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">TERTIARY:</strong> Long-press ALARM from clock face (hidden from MODE rotation)</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="faces-active-header">PRIMARY (drag to reorder)</div>
+        <ul class="face-list" id="primaryList" aria-label="Primary watch faces"></ul>
+
+        <div class="faces-active-header" style="margin-top: 16px;">SECONDARY (drag to reorder)</div>
+        <ul class="face-list" id="secondaryList" aria-label="Secondary watch faces"></ul>
+
+        <div class="faces-active-header" style="margin-top: 16px;">TERTIARY (drag to reorder)</div>
+        <ul class="face-list" id="tertiaryList" aria-label="Tertiary watch faces"></ul>
 
         <div class="avail-header">AVAILABLE (tap to add)</div>
         <div id="availList"></div>
@@ -3522,84 +3541,127 @@ function renderBranches() {
 // RENDER ACTIVE FACES
 // ============================================================
 function renderActiveFaces() {
-    const ul = document.getElementById('activeList');
-    ul.innerHTML = '';
-    let faceNum = 1;
+    // Split faces into three tiers based on dividers
+    const secondaryIdx = state.activeFaces.indexOf('__secondary__');
+    const tertiaryIdx = state.activeFaces.indexOf('__tertiary__');
+    
+    const primaryFaces = secondaryIdx >= 0 
+        ? state.activeFaces.slice(0, secondaryIdx)
+        : (tertiaryIdx >= 0 ? state.activeFaces.slice(0, tertiaryIdx) : state.activeFaces);
+    
+    const secondaryFaces = secondaryIdx >= 0
+        ? (tertiaryIdx >= 0 ? state.activeFaces.slice(secondaryIdx + 1, tertiaryIdx) : state.activeFaces.slice(secondaryIdx + 1))
+        : [];
+    
+    const tertiaryFaces = tertiaryIdx >= 0
+        ? state.activeFaces.slice(tertiaryIdx + 1)
+        : [];
 
-    state.activeFaces.forEach((id, idx) => {
-        const li = document.createElement('li');
-        li.setAttribute('data-id', id);
+    // Render each tier
+    renderFaceTier('primaryList', primaryFaces, 1);
+    renderFaceTier('secondaryList', secondaryFaces, primaryFaces.length + 1);
+    renderFaceTier('tertiaryList', tertiaryFaces, primaryFaces.length + secondaryFaces.length + 1);
 
-        if (id === '__secondary__') {
-            li.className = 'secondary-divider';
-            const handleSpan = document.createElement('span');
-            handleSpan.className = 'face-handle';
-            handleSpan.textContent = ':::::';
-            const secLabel = document.createElement('span');
-            secLabel.textContent = '-- SECONDARY --';
-            li.appendChild(handleSpan);
-            li.appendChild(secLabel);
-        } else {
-            const face = registry.faces.find(f => f.id === id);
-            const name = face ? face.name.toUpperCase() : id.toUpperCase();
-            li.className = 'face-item';
-            const numSpan = document.createElement('span');
-            numSpan.className = 'face-num';
-            numSpan.textContent = faceNum;
-            const handleSpan = document.createElement('span');
-            handleSpan.className = 'face-handle';
-            handleSpan.textContent = ':::::';
-            // Wireframe icon (hash face ID to wireframe 1-30)
-            const wireframeNum = (id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 30) + 1;
-            const iconImg = document.createElement('img');
-            iconImg.className = 'face-icon';
-            iconImg.src = `assets/wireframes/${wireframeNum}.png`;
-            iconImg.alt = '';
-            iconImg.loading = 'lazy';
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'face-name';
-            nameSpan.textContent = name;
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'face-remove';
-            removeBtn.setAttribute('aria-label', 'Remove ' + name);
-            removeBtn.setAttribute('data-idx', String(idx));
-            removeBtn.textContent = 'x';
-            li.appendChild(numSpan);
-            li.appendChild(handleSpan);
-            li.appendChild(iconImg);
-            li.appendChild(nameSpan);
-            li.appendChild(removeBtn);
-            faceNum++;
-        }
-
-        ul.appendChild(li);
-    });
-
-    // wire remove buttons
-    ul.querySelectorAll('.face-remove').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const idx = parseInt(btn.getAttribute('data-idx'), 10);
-            removeFace(idx);
-        });
-    });
-
-    // init SortableJS
-    if (window._sortable) { try { window._sortable.destroy(); } catch(e) {} }
-    window._sortable = Sortable.create(ul, {
+    // Setup drag-and-drop for all three lists with shared group
+    if (window._sortablePrimary) { try { window._sortablePrimary.destroy(); } catch(e) {} }
+    if (window._sortableSecondary) { try { window._sortableSecondary.destroy(); } catch(e) {} }
+    if (window._sortableTertiary) { try { window._sortableTertiary.destroy(); } catch(e) {} }
+    
+    const sortableOptions = {
         animation: 120,
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         handle: '.face-handle',
+        group: 'faces',
         onEnd: function() {
-            const newOrder = Array.from(ul.children).map(li => li.getAttribute('data-id'));
-            state.activeFaces = newOrder;
+            // Reconstruct activeFaces from three lists
+            const primary = Array.from(document.getElementById('primaryList').children).map(li => li.getAttribute('data-id'));
+            const secondary = Array.from(document.getElementById('secondaryList').children).map(li => li.getAttribute('data-id'));
+            const tertiary = Array.from(document.getElementById('tertiaryList').children).map(li => li.getAttribute('data-id'));
+            
+            state.activeFaces = [...primary];
+            if (secondary.length > 0) {
+                state.activeFaces.push('__secondary__', ...secondary);
+            }
+            if (tertiary.length > 0) {
+                state.activeFaces.push('__tertiary__', ...tertiary);
+            }
+            
             renderActiveFaces();
             renderAvailFaces();
             updateHash();
         }
+    };
+    
+    window._sortablePrimary = Sortable.create(document.getElementById('primaryList'), sortableOptions);
+    window._sortableSecondary = Sortable.create(document.getElementById('secondaryList'), sortableOptions);
+    window._sortableTertiary = Sortable.create(document.getElementById('tertiaryList'), sortableOptions);
+
+    // Calculate flash usage
+}
+
+function renderFaceTier(listId, faces, startNum) {
+    const ul = document.getElementById(listId);
+    ul.innerHTML = '';
+    let faceNum = startNum;
+
+    faces.forEach((id, idx) => {
+        const face = registry.faces.find(f => f.id === id);
+        const name = face ? face.name.toUpperCase() : id.toUpperCase();
+        
+        const li = document.createElement('li');
+        li.setAttribute('data-id', id);
+        li.className = 'face-item';
+        
+        const numSpan = document.createElement('span');
+        numSpan.className = 'face-num';
+        numSpan.textContent = faceNum;
+        
+        const handleSpan = document.createElement('span');
+        handleSpan.className = 'face-handle';
+        handleSpan.textContent = ':::::';
+        
+        // Wireframe icon (hash face ID to wireframe 1-30)
+        const wireframeNum = (id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 30) + 1;
+        const iconImg = document.createElement('img');
+        iconImg.className = 'face-icon';
+        iconImg.src = `assets/wireframes/${wireframeNum}.png`;
+        iconImg.alt = '';
+        iconImg.loading = 'lazy';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'face-name';
+        nameSpan.textContent = name;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'face-remove';
+        removeBtn.setAttribute('aria-label', 'Remove ' + name);
+        removeBtn.setAttribute('data-tier', listId);
+        removeBtn.setAttribute('data-idx', String(idx));
+        removeBtn.textContent = 'x';
+        
+        li.appendChild(numSpan);
+        li.appendChild(handleSpan);
+        li.appendChild(iconImg);
+        li.appendChild(nameSpan);
+        li.appendChild(removeBtn);
+        
+        ul.appendChild(li);
+        faceNum++;
     });
 
+    // Wire remove buttons for this tier
+    ul.querySelectorAll('.face-remove').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const faceId = btn.parentElement.getAttribute('data-id');
+            const globalIdx = state.activeFaces.indexOf(faceId);
+            if (globalIdx >= 0) {
+                removeFace(globalIdx);
+            }
+        });
+    });
+    
     // Calculate flash usage
     updateFlashUsage();
     
