@@ -69,7 +69,7 @@ void active_face_activate(void *context) {
     state->display_mode = 0;  // Start with word 1
     
     // Get current date for global streak tracking
-    watch_date_time date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = watch_rtc_get_date_time();
     uint16_t day_of_year = (date_time.unit.month - 1) * 30 + date_time.unit.day;
     
     // Update global zone check streak
