@@ -1458,6 +1458,13 @@
                         <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
                         <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
                         <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
+                        <option value="SIGNAL_TUNE_TRITONE">iPhone Tri-Tone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Mac Sosumi</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
                     </select>
                     <button id="hourlyChimePreviewBtn" class="preview-btn" aria-label="Preview hourly chime tune">PREVIEW</button>
                 </div>
@@ -1483,6 +1490,13 @@
                         <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
                         <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
                         <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
+                        <option value="SIGNAL_TUNE_TRITONE">iPhone Tri-Tone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Mac Sosumi</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
                     </select>
                     <button id="alarmTunePreviewBtn" class="preview-btn" aria-label="Preview alarm tune">PREVIEW</button>
                 </div>
@@ -1508,6 +1522,13 @@
                         <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
                         <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
                         <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
+                        <option value="SIGNAL_TUNE_TRITONE">iPhone Tri-Tone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Mac Sosumi</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
                     </select>
                     <button id="smartAlarmTunePreviewBtn" class="preview-btn" aria-label="Preview smart alarm tune">PREVIEW</button>
                 </div>
@@ -2139,7 +2160,14 @@ const VALID_SIGNAL_TUNES = [
     'SIGNAL_TUNE_TETRIS',
     'SIGNAL_TUNE_IMPERIAL',
     'SIGNAL_TUNE_POKEMON',
-    'SIGNAL_TUNE_VICTORY'
+    'SIGNAL_TUNE_VICTORY',
+    'SIGNAL_TUNE_TRITONE',
+    'SIGNAL_TUNE_SOSUMI',
+    'SIGNAL_TUNE_OLDPHONE',
+    'SIGNAL_TUNE_MGS_ALERT',
+    'SIGNAL_TUNE_SONIC',
+    'SIGNAL_TUNE_PACMAN',
+    'SIGNAL_TUNE_WINERROR'
 ];
 
 // Note frequencies (Hz) — from BUZZER_NOTE_* in watch_tcc.h
@@ -2165,7 +2193,7 @@ const NOTE_FREQUENCIES = {
     'F#G6':1479.98, 'A#B5':932.33, 'D#E6':1244.51, 'A#B7':3729.31,
     'F#G4':369.99, 'G#A6':1661.22, 'A#B6':1864.66, 'D#E4':311.13,
     'A#B4':466.16, 'F#G3':185, 'G#A3':207.65,
-    'C#D5':554.37, 'C#D4':277.18
+    'C#D5':554.37, 'C#D4':277.18, 'C#D6':1108.73
 };
 
 // Signal tune data — note sequences from movement_custom_signal_tunes.h
@@ -2202,7 +2230,21 @@ const SIGNAL_TUNES = [
     { id:'SIGNAL_TUNE_POKEMON',          name:'Pokémon Center',
       notes:[['C6',6],['E6',6],['G6',6],['C7',6],['E7',6],['REST',4],['G6',6],['E6',6],['C6',10]] },
     { id:'SIGNAL_TUNE_VICTORY',          name:'Final Fantasy Victory',
-      notes:[['C5',6],['C5',6],['C5',6],['C5',12],['REST',4],['G#A4',6],['A#B4',6],['C5',6],['REST',2],['A#B4',6],['C5',20]] }
+      notes:[['C5',6],['C5',6],['C5',6],['C5',12],['REST',4],['G#A4',6],['A#B4',6],['C5',6],['REST',2],['A#B4',6],['C5',20]] },
+    { id:'SIGNAL_TUNE_TRITONE',          name:'iPhone Tri-Tone',
+      notes:[['E6',8],['C#D6',8],['F#G5',16],['REST',4],['E6',8],['C#D6',8],['F#G5',16],['REST',4],['E6',8],['C#D6',8],['A5',16]] },
+    { id:'SIGNAL_TUNE_SOSUMI',           name:'Mac Sosumi',
+      notes:[['C6',4],['E6',4],['G6',4],['C7',8]] },
+    { id:'SIGNAL_TUNE_OLDPHONE',         name:'Old Phone Ring',
+      notes:[['E5',8],['G5',8],['E5',8],['G5',8],['REST',8],['E5',8],['G5',8],['E5',8],['G5',8]] },
+    { id:'SIGNAL_TUNE_MGS_ALERT',        name:'MGS Alert (!)',
+      notes:[['G4',2],['G#A4',2],['A4',2],['A#B4',2],['B4',2],['C5',2],['C#D5',2],['D5',2],['D#E5',2],['E5',8]] },
+    { id:'SIGNAL_TUNE_SONIC',            name:'Sonic Ring',
+      notes:[['E6',3],['G6',3],['E7',6]] },
+    { id:'SIGNAL_TUNE_PACMAN',           name:'Pac-Man Death',
+      notes:[['B5',6],['A#B5',6],['A5',6],['G#A5',6],['G5',6],['F#G5',6],['F5',6],['E5',6],['D#E5',6],['D5',6],['C#D5',6],['C5',10]] },
+    { id:'SIGNAL_TUNE_WINERROR',         name:'Windows Error',
+      notes:[['C4',10],['G3',10],['C4',10]] }
 ];
 
 // ============================================================
