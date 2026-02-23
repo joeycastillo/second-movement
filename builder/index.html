@@ -2641,15 +2641,31 @@ async function loadRegistry() {
 // ============================================================
 function playSignalTune(tuneId, buttonId) {
     const tune = SIGNAL_TUNES.find(t => t.id === tuneId);
-    if (!tune) return;
+    if (!tune) {
+        console.error('Tune not found:', tuneId);
+        return;
+    }
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
+    if (!AudioCtx) {
+        console.error('Web Audio API not supported');
+        return;
+    }
 
     const audioCtx = new AudioCtx();
+    
+    // Resume AudioContext if suspended (browser autoplay policy)
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+            console.log('AudioContext resumed');
+        });
+    }
+    
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.3;
+    gainNode.gain.value = 0.7; // Increased from 0.3 to 0.7 for better audibility
     gainNode.connect(audioCtx.destination);
+    
+    console.log('Playing tune:', tune.name, '| Notes:', tune.notes.length, '| Context state:', audioCtx.state);
 
     const TICK_SEC = 0.016; // 16 ms per tick
     let t = audioCtx.currentTime;
