@@ -194,13 +194,21 @@ jobs:
 
       - name: Compile firmware
         run: |
+          MAKE_FLAGS=""
+          
+          # Add Phase Engine flag if homebase configured
           if [ "${{ github.event.inputs.homebase_lat }}" != "" ] && \
              [ "${{ github.event.inputs.homebase_lon }}" != "" ] && \
              [ "${{ github.event.inputs.homebase_tz }}" != "" ]; then
-            make PHASE_ENGINE_ENABLED=1
-          else
-            make
+            MAKE_FLAGS="$MAKE_FLAGS PHASE_ENGINE_ENABLED=1"
           fi
+          
+          # Add smooth LED fade flag if enabled
+          if [ "${{ github.event.inputs.smooth_led_fade }}" == "true" ]; then
+            MAKE_FLAGS="$MAKE_FLAGS SMOOTH_LED_FADE=1"
+          fi
+          
+          make $MAKE_FLAGS
 
       - name: Rename UF2 artifact
         run: |
