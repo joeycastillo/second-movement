@@ -139,6 +139,10 @@ def main():
     missing = []
 
     for face_id in face_ids:
+        # Skip divider markers (__secondary__, __tertiary__, etc.)
+        if face_id.startswith('__'):
+            continue
+        
         path = resolve_face_path(face_id, registry)
         if path is None:
             missing.append(face_id)
