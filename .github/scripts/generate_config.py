@@ -65,9 +65,10 @@ TEMPLATE = """\
 #ifndef MOVEMENT_CONFIG_H_
 #define MOVEMENT_CONFIG_H_
 
+{phase_engine_define}
+
 #include "movement_faces.h"
 
-{phase_engine_define}
 const watch_face_t watch_faces[] = {{
 {face_list}
 }};
