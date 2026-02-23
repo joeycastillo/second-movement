@@ -2707,6 +2707,27 @@ async function loadRegistry() {
 // ============================================================
 // AUDIO PREVIEW
 // ============================================================
+// Single persistent AudioContext — required for mobile browsers.
+// iOS Safari and Android Chrome require AudioContext.resume() to be
+// called from a user-gesture handler. Creating a new AudioContext per
+// play does NOT work because resume() is async but notes are scheduled
+// synchronously — the context is still suspended when oscillators start.
+// Solution: one global context, resumed synchronously on every click.
+let _audioCtx = null;
+function getAudioContext() {
+    if (!_audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        _audioCtx = new AudioCtx();
+    }
+    // Always call resume — it's a no-op if already running, and on mobile
+    // it unlocks audio when called inside a user gesture handler.
+    if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume();
+    }
+    return _audioCtx;
+}
+
 function playSignalTune(tuneId, buttonId) {
     const tune = SIGNAL_TUNES.find(t => t.id === tuneId);
     if (!tune) {
@@ -2714,23 +2735,14 @@ function playSignalTune(tuneId, buttonId) {
         return;
     }
 
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) {
+    const audioCtx = getAudioContext();
+    if (!audioCtx) {
         console.error('Web Audio API not supported');
         return;
     }
-
-    const audioCtx = new AudioCtx();
-    
-    // Resume AudioContext if suspended (browser autoplay policy)
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume().then(() => {
-            console.log('AudioContext resumed');
-        });
-    }
     
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.7; // Increased from 0.3 to 0.7 for better audibility
+    gainNode.gain.value = 0.7;
     gainNode.connect(audioCtx.destination);
     
     console.log('Playing tune:', tune.name, '| Notes:', tune.notes.length, '| Context state:', audioCtx.state);
@@ -2762,10 +2774,7 @@ function playSignalTune(tuneId, buttonId) {
         setTimeout(() => {
             btn.classList.remove('playing');
             btn.disabled = false;
-            try { audioCtx.close(); } catch(e) {}
         }, totalMs + 200);
-    } else {
-        setTimeout(() => { try { audioCtx.close(); } catch(e) {} }, totalMs + 200);
     }
 }
 
@@ -3217,15 +3226,18 @@ async function init() {
     });
 
     // Mobile audio unlock
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Detect mobile + iPadOS (which reports as Mac with touch support)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (isMobile) {
         document.getElementById('audioUnlockNotice').style.display = 'block';
     }
     
     document.getElementById('audioUnlockBtn').addEventListener('click', () => {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-            const ctx = new AudioCtx();
+        // Unlock the shared AudioContext with a user gesture
+        const ctx = getAudioContext();
+        if (ctx) {
+            // Play a silent tone to fully unlock on iOS Safari
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             gain.gain.value = 0;
@@ -3233,11 +3245,8 @@ async function init() {
             gain.connect(ctx.destination);
             osc.start();
             osc.stop(ctx.currentTime + 0.01);
-            setTimeout(() => {
-                try { ctx.close(); } catch(e) {}
-                document.getElementById('audioUnlockNotice').style.display = 'none';
-            }, 100);
         }
+        document.getElementById('audioUnlockNotice').style.display = 'none';
     });
 
     // Alarm tune preview buttons
