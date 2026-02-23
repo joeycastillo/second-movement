@@ -24,7 +24,7 @@ let sceneManager = null;
  * Main initialization function
  */
 async function init() {
-    console.log('🚀 Second Movement Builder - Phase 1: Foundation');
+//     console.log('🚀 Second Movement Builder - Phase 1: Foundation');
 
     // Start clock
     updateClock();
@@ -138,7 +138,7 @@ async function init() {
     if (canvas) {
         sceneManager = new SceneManager(canvas);
         sceneManager.init();
-        console.log('✅ Three.js scene initialized (Phase 2: Active rendering with cube + grid)');
+//         console.log('✅ Three.js scene initialized (Phase 2: Active rendering with cube + grid)');
     }
 
     // Clean disposal on page unload
@@ -148,7 +148,7 @@ async function init() {
         }
     });
 
-    console.log('✅ Builder initialized successfully');
+//     console.log('✅ Builder initialized successfully');
 }
 
 /**
@@ -376,7 +376,7 @@ function wireEventListeners() {
     // Phase 3: Scene controls
     wireSceneControls();
 
-    console.log('✅ Event listeners wired');
+//     console.log('✅ Event listeners wired');
 }
 
 /**
@@ -403,7 +403,7 @@ function wireSceneControls() {
                 controls.dataset.scene = sceneMode;
             }
 
-            console.log('🎬 Scene switched to:', sceneMode);
+//             console.log('🎬 Scene switched to:', sceneMode);
         });
     });
 
@@ -413,7 +413,7 @@ function wireSceneControls() {
         cameraResetBtn.addEventListener('click', () => {
             if (sceneManager) {
                 sceneManager.resetCamera();
-                console.log('📷 Camera reset');
+//                 console.log('📷 Camera reset');
             }
         });
     }
@@ -462,7 +462,7 @@ function populateCategoryFilters() {
         container.appendChild(item);
     });
 
-    console.log('✅ Category filters populated:', categories.join(', '));
+//     console.log('✅ Category filters populated:', categories.join(', '));
 }
 
 /**
@@ -577,7 +577,7 @@ function loadTemplate(tmplState) {
 function renderActiveFaces() {
     updateFlashUsage();
     // Full implementation requires Sortable.js integration
-    console.log('Active faces:', state.activeFaces);
+//     console.log('Active faces:', state.activeFaces);
 }
 
 /**
@@ -585,7 +585,7 @@ function renderActiveFaces() {
  */
 function renderAvailFaces() {
     // Full implementation requires face registry iteration and Sortable.js
-    console.log('Available faces loaded from registry');
+//     console.log('Available faces loaded from registry');
 }
 
 // Bootstrap the application

@@ -108,10 +108,10 @@ export class SceneManager {
         // Setup mouse event handlers
         this.setupMouseHandlers();
 
-        console.log('✅ Three.js Scene Manager initialized (Phase 3 - Face Gallery)');
-        console.log('   - Gallery Manager: Face cards loaded');
-        console.log('   - Raycasting: Mouse interaction enabled');
-        console.log('   - Scene modes: Gallery | Build Status | RetroPass');
+//         console.log('✅ Three.js Scene Manager initialized (Phase 3 - Face Gallery)');
+//         console.log('   - Gallery Manager: Face cards loaded');
+//         console.log('   - Raycasting: Mouse interaction enabled');
+//         console.log('   - Scene modes: Gallery | Build Status | RetroPass');
 
         // Setup resize handler
         window.addEventListener('resize', () => this.onWindowResize());
@@ -261,7 +261,7 @@ export class SceneManager {
         // Frame limiting (DoS prevention)
         this.frameCount++;
         if (this.frameCount >= this.frameLimit) {
-            console.log('⚠️  Frame limit reached, resetting counter');
+//             console.log('⚠️  Frame limit reached, resetting counter');
             this.frameCount = 0;
         }
 
@@ -299,7 +299,7 @@ export class SceneManager {
     setSceneMode(mode) {
         if (this.currentScene === mode) return;
 
-        console.log(`🎬 Switching scene: ${this.currentScene} → ${mode}`);
+//         console.log(`🎬 Switching scene: ${this.currentScene} → ${mode}`);
         this.currentScene = mode;
 
         // Hide all scene objects
@@ -323,7 +323,7 @@ export class SceneManager {
             this.controls.update();
         } else if (mode === 'retropass') {
             // RetroPass scene (Phase 5)
-            console.log('⏰ RetroPass scene not yet implemented');
+//             console.log('⏰ RetroPass scene not yet implemented');
         }
 
         // Clear hover state when switching
@@ -405,7 +405,7 @@ export class SceneManager {
         // Remove event listeners
         window.removeEventListener('resize', () => this.onWindowResize());
         
-        console.log('✅ Scene Manager disposed');
+//         console.log('✅ Scene Manager disposed');
     }
 }
 
@@ -420,12 +420,12 @@ export function getDeviceTier() {
     const isTablet = /iPad|Android.*Tablet/i.test(ua);
 
     if (isMobile) {
-        console.log('🔍 Device: Mobile → LOW tier');
+//         console.log('🔍 Device: Mobile → LOW tier');
         return 'low';
     }
 
     if (isTablet) {
-        console.log('🔍 Device: Tablet → MEDIUM tier');
+//         console.log('🔍 Device: Tablet → MEDIUM tier');
         return 'medium';
     }
 
@@ -433,10 +433,10 @@ export function getDeviceTier() {
     const cores = navigator.hardwareConcurrency || 4;
 
     if (memory < 4 || cores < 4) {
-        console.log('🔍 Device: Desktop (low-spec) → MEDIUM tier');
+//         console.log('🔍 Device: Desktop (low-spec) → MEDIUM tier');
         return 'medium';
     }
 
-    console.log('🔍 Device: Desktop (high-spec) → HIGH tier');
+//     console.log('🔍 Device: Desktop (high-spec) → HIGH tier');
     return 'high';
 }

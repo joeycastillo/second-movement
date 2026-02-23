@@ -53,7 +53,7 @@ export class GalleryManager {
             return;
         }
 
-        console.log('🎨 Gallery Manager: Initializing with', registry.faces.length, 'faces');
+//         console.log('🎨 Gallery Manager: Initializing with', registry.faces.length, 'faces');
 
         // Group faces by category
         const facesByCategory = this.groupByCategory(registry.faces);
@@ -67,8 +67,8 @@ export class GalleryManager {
         // Create 3D cards with spatial layout
         this.createGalleryLayout(facesByCategory, categoryOrder);
         
-        console.log('✅ Gallery Manager: Created', this.faceCards.length, 'face cards');
-        console.log('   - Categories:', categoryOrder.join(', '));
+//         console.log('✅ Gallery Manager: Created', this.faceCards.length, 'face cards');
+//         console.log('   - Categories:', categoryOrder.join(', '));
     }
 
     /**
@@ -207,7 +207,7 @@ export class GalleryManager {
     selectCard(card) {
         if (!card) return;
         
-        console.log('🎯 Gallery: Selected face:', card.getFaceId());
+//         console.log('🎯 Gallery: Selected face:', card.getFaceId());
         
         // Add to active face list
         addFace(card.getFaceId());
@@ -317,7 +317,7 @@ export class GalleryManager {
             cards.forEach(card => card.setVisible(visible));
         }
         
-        console.log(`🔍 Gallery: ${category} ${visible ? 'shown' : 'hidden'}`);
+//         console.log(`🔍 Gallery: ${category} ${visible ? 'shown' : 'hidden'}`);
     }
 
     /**
@@ -381,6 +381,6 @@ export class GalleryManager {
         this.visibleCategories.clear();
         this.selectedCard = null;
         
-        console.log('✅ Gallery Manager disposed');
+//         console.log('✅ Gallery Manager disposed');
     }
 }
