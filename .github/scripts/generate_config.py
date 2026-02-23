@@ -195,6 +195,9 @@ def load_registry(registry_path):
 
 def validate_face(face_id, registry):
     """Return True if face_id is valid according to the registry."""
+    # Allow divider markers (__secondary__, __tertiary__, etc.)
+    if face_id.startswith('__'):
+        return True
     if registry is None:
         return True
     faces = registry.get("faces", registry)
