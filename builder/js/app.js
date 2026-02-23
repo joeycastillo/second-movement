@@ -373,7 +373,96 @@ function wireEventListeners() {
         document.getElementById('audioUnlockNotice').style.display = 'none';
     });
 
+    // Phase 3: Scene controls
+    wireSceneControls();
+
     console.log('✅ Event listeners wired');
+}
+
+/**
+ * Wire Phase 3 scene controls (scene switching, category filters)
+ */
+function wireSceneControls() {
+    // Scene selector buttons
+    const sceneButtons = document.querySelectorAll('.scene-btn');
+    sceneButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sceneMode = btn.dataset.scene;
+            if (!sceneManager) return;
+
+            // Update active button
+            sceneButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Switch scene
+            sceneManager.setSceneMode(sceneMode);
+
+            // Update scene controls data attribute (for CSS)
+            const controls = document.getElementById('scene-controls');
+            if (controls) {
+                controls.dataset.scene = sceneMode;
+            }
+
+            console.log('🎬 Scene switched to:', sceneMode);
+        });
+    });
+
+    // Camera reset button
+    const cameraResetBtn = document.getElementById('camera-reset');
+    if (cameraResetBtn) {
+        cameraResetBtn.addEventListener('click', () => {
+            if (sceneManager) {
+                sceneManager.resetCamera();
+                console.log('📷 Camera reset');
+            }
+        });
+    }
+
+    // Populate category checkboxes (after gallery is initialized)
+    setTimeout(() => {
+        populateCategoryFilters();
+    }, 500);
+}
+
+/**
+ * Populate category filter checkboxes
+ */
+function populateCategoryFilters() {
+    if (!sceneManager) return;
+
+    const categories = sceneManager.getCategories();
+    const container = document.getElementById('category-checkboxes');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    categories.forEach(category => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        const safeCategoryId = category.replace(/[^a-z0-9-]/gi, '_');
+        checkbox.id = `category-${safeCategoryId}`;
+        checkbox.checked = true; // All visible by default
+
+        const label = document.createElement('label');
+        label.htmlFor = `category-${safeCategoryId}`;
+        label.textContent = escapeHTML(category);
+
+        // Category filter handler
+        checkbox.addEventListener('change', () => {
+            if (sceneManager) {
+                sceneManager.setCategoryVisible(category, checkbox.checked);
+            }
+        });
+
+        item.appendChild(checkbox);
+        item.appendChild(label);
+        container.appendChild(item);
+    });
+
+    console.log('✅ Category filters populated:', categories.join(', '));
 }
 
 /**

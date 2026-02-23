@@ -1635,6 +1635,35 @@
 
     <!-- Right Panel: 3D Canvas (desktop only) -->
     <div id="canvas-container">
+        <!-- Phase 3: Scene Controls -->
+        <div id="scene-controls">
+            <!-- Scene Selector -->
+            <div class="scene-selector">
+                <button id="scene-gallery" class="scene-btn active" data-scene="gallery">
+                    Face Gallery
+                </button>
+                <button id="scene-build" class="scene-btn" data-scene="build">
+                    Build Status
+                </button>
+                <button id="scene-retropass" class="scene-btn" data-scene="retropass">
+                    RetroPass
+                </button>
+            </div>
+
+            <!-- Category Filter (Gallery mode only) -->
+            <div id="category-filter" class="category-filter">
+                <div class="filter-header">CATEGORIES</div>
+                <div id="category-checkboxes" class="category-list">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Camera Reset -->
+            <button id="camera-reset" class="camera-reset-btn" title="Reset Camera">
+                ⟲
+            </button>
+        </div>
+
         <canvas id="scene-canvas"></canvas>
     </div>
 </div><!-- #hybrid-container -->
