@@ -1453,6 +1453,11 @@
                         <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
                         <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
                         <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia (Grande Valse)</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris (Korobeiniki)</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
                     </select>
                     <button id="hourlyChimePreviewBtn" class="preview-btn" aria-label="Preview hourly chime tune">PREVIEW</button>
                 </div>
@@ -1473,6 +1478,11 @@
                         <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
                         <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
                         <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia (Grande Valse)</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris (Korobeiniki)</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
                     </select>
                     <button id="alarmTunePreviewBtn" class="preview-btn" aria-label="Preview alarm tune">PREVIEW</button>
                 </div>
@@ -1493,6 +1503,11 @@
                         <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
                         <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
                         <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia (Grande Valse)</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris (Korobeiniki)</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokémon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Final Fantasy Victory</option>
                     </select>
                     <button id="smartAlarmTunePreviewBtn" class="preview-btn" aria-label="Preview smart alarm tune">PREVIEW</button>
                 </div>
@@ -2119,7 +2134,12 @@ const VALID_SIGNAL_TUNES = [
     'SIGNAL_TUNE_HARRY_POTTER_SHORT',
     'SIGNAL_TUNE_HARRY_POTTER_LONG',
     'SIGNAL_TUNE_JURASSIC_PARK',
-    'SIGNAL_TUNE_EVANGELION'
+    'SIGNAL_TUNE_EVANGELION',
+    'SIGNAL_TUNE_NOKIA',
+    'SIGNAL_TUNE_TETRIS',
+    'SIGNAL_TUNE_IMPERIAL',
+    'SIGNAL_TUNE_POKEMON',
+    'SIGNAL_TUNE_VICTORY'
 ];
 
 // Note frequencies (Hz) — from BUZZER_NOTE_* in watch_tcc.h
@@ -2144,7 +2164,8 @@ const NOTE_FREQUENCIES = {
     'F#G5':739.99, 'D#E5':622.25, 'G#A4':415.30, 'G#A5':830.61,
     'F#G6':1479.98, 'A#B5':932.33, 'D#E6':1244.51, 'A#B7':3729.31,
     'F#G4':369.99, 'G#A6':1661.22, 'A#B6':1864.66, 'D#E4':311.13,
-    'A#B4':466.16, 'F#G3':185, 'G#A3':207.65
+    'A#B4':466.16, 'F#G3':185, 'G#A3':207.65,
+    'C#D5':554.37, 'C#D4':277.18
 };
 
 // Signal tune data — note sequences from movement_custom_signal_tunes.h
@@ -2171,7 +2192,17 @@ const SIGNAL_TUNES = [
     { id:'SIGNAL_TUNE_JURASSIC_PARK',    name:'Jurassic Park',
       notes:[['B5',7],['REST',7],['A#B5',7],['REST',7],['B5',13],['REST',13],['F#G5',13],['REST',13],['E5',13],['REST',13]] },
     { id:'SIGNAL_TUNE_EVANGELION',       name:"A Cruel Angel's Thesis (NGE)",
-      notes:[['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['C6',8],['D6',8],['REST',8],['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['E6',16]] }
+      notes:[['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['C6',8],['D6',8],['REST',8],['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['E6',16]] },
+    { id:'SIGNAL_TUNE_NOKIA',            name:'Nokia (Grande Valse)',
+      notes:[['E5',8],['D5',8],['F#G4',16],['G#A4',16],['REST',4],['C#D5',8],['B4',8],['D4',16],['E4',16],['REST',4],['B4',8],['A4',8],['C#D4',16],['E4',16],['REST',4],['A4',20]] },
+    { id:'SIGNAL_TUNE_TETRIS',           name:'Tetris (Korobeiniki)',
+      notes:[['E5',12],['B4',6],['C5',6],['D5',12],['C5',6],['B4',6],['A4',12],['REST',2],['A4',6],['C5',6],['E5',12],['D5',6],['C5',6],['B4',12],['REST',2],['C5',6],['D5',12],['E5',12],['C5',12],['A4',12],['A4',16]] },
+    { id:'SIGNAL_TUNE_IMPERIAL',         name:'Imperial March (Star Wars)',
+      notes:[['G4',12],['G4',12],['G4',12],['REST',2],['D#E4',10],['A#B4',4],['G4',12],['REST',2],['D#E4',10],['A#B4',4],['G4',20]] },
+    { id:'SIGNAL_TUNE_POKEMON',          name:'Pokémon Center',
+      notes:[['C6',6],['E6',6],['G6',6],['C7',6],['E7',6],['REST',4],['G6',6],['E6',6],['C6',10]] },
+    { id:'SIGNAL_TUNE_VICTORY',          name:'Final Fantasy Victory',
+      notes:[['C5',6],['C5',6],['C5',6],['C5',12],['REST',4],['G#A4',6],['A#B4',6],['C5',6],['REST',2],['A#B4',6],['C5',20]] }
 ];
 
 // ============================================================
