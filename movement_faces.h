@@ -92,6 +92,8 @@
 #include "active_face.h"
 #include "descent_face.h"
 #include "zone_display_face.h"
+#include "sleep_score_face.h"
+#include "smart_alarm_face.h"
 #endif
 
 // New includes go above this line.
