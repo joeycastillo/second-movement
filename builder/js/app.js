@@ -3,7 +3,7 @@
 // Phase 1: Modularized architecture with Three.js foundation
 // ============================================================
 
-import { state, registry, setRegistry } from './state.js';
+import { state, registry, setRegistry, getAudioContext } from './state.js';
 import { debounce, copyLink } from './utils.js';
 import { parseHash, updateHash, PRESET_TEMPLATES, loadUserTemplates, saveCurrentAsTemplate, deleteUserTemplate, saveUserTemplates } from './template.js';
 import { loadRegistry, addFace, removeFace, updateFlashUsage } from './faces.js';
