@@ -37,7 +37,41 @@
 #include "sensors.h"
 #include "phase_engine.h"
 #include "sleep_data.h"
-#endif
+#include "circadian_score.h"
+
+// Sleep orientation tracking constants
+#define SLEEP_BINS_PER_NIGHT 32         // 32 × 15-minute bins for 8-hour night
+#define SLEEP_BYTES_PER_NIGHT 8         // 32 bins × 2 bits / 8 bits per byte
+#define SLEEP_NIGHTS_STORED 7           // 7-day rolling window
+#define SLEEP_STORAGE_ROW 30            // Flash storage row for sleep orientation data
+
+// Orientation constants (2-bit values)
+#define SLEEP_ORIENTATION_UNKNOWN 0
+#define SLEEP_ORIENTATION_FACE_UP 1
+#define SLEEP_ORIENTATION_FACE_DOWN 2
+#define SLEEP_ORIENTATION_TILTED 3
+
+// Sleep orientation tracking types
+typedef struct {
+    uint8_t night_data[SLEEP_BYTES_PER_NIGHT];  // 32 bins × 2 bits = 8 bytes
+    uint16_t date_code;                          // Date code for this night
+} sleep_night_t;
+
+typedef struct {
+    sleep_night_t nights[SLEEP_NIGHTS_STORED];  // 7 nights × (8 bytes + 2 bytes) = 70 bytes
+    uint8_t current_index;                       // Current night index (0-6)
+} sleep_data_t;
+
+// Sleep tracking function declarations
+void sleep_tracking_init(void);
+void sleep_tracking_load_from_flash(void);
+void sleep_tracking_save_to_flash(void);
+uint8_t sleep_tracking_get_current_bin(void);
+void sleep_tracking_log_orientation(uint8_t orientation);
+bool sleep_tracking_get_night_data(uint8_t days_ago, sleep_night_t *out_night);
+uint8_t sleep_tracking_count_orientation_changes(const sleep_night_t *night);
+
+#endif // PHASE_ENGINE_ENABLED
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
