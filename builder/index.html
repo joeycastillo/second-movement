@@ -593,6 +593,34 @@
                 inset 0 0 10px currentColor;
         }
 
+        /* ---- LED FADE ANIMATION PREVIEW ---- */
+        #ledFadePreview {
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid var(--color-amber-trace);
+            background: var(--color-bg-recessed);
+            display: none;
+        }
+
+        #ledFadePreview.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #ledCanvas {
+            border: 1px solid var(--color-border);
+            background: var(--color-bg);
+        }
+
+        .preview-label {
+            font-size: 9px;
+            color: var(--color-amber-dim);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         /* ---- CRT QUALITY TOGGLE ---- */
         .setting-group {
             display: flex;
@@ -1308,6 +1336,12 @@
                     <span class="toggle-label" id="labelSmoothLED">OFF</span>
                 </label>
             </div>
+        </div>
+
+        <!-- LED FADE ANIMATION PREVIEW -->
+        <div id="ledFadePreview" style="display: none;">
+            <canvas id="ledCanvas" width="100" height="100"></canvas>
+            <span class="preview-label">PREVIEW</span>
         </div>
 
         <!-- LED PREVIEW (CRT Glow Visualization) -->
@@ -2028,6 +2062,9 @@ window.addEventListener('beforeunload', () => {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
+    if (ledAnimationFrame) {
+        cancelAnimationFrame(ledAnimationFrame);
+    }
 });
 </script>
 
@@ -2446,6 +2483,7 @@ function loadTemplate(tmplState) {
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
     setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
     updateLEDPreview();
+    updateLEDFadePreview();
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
     document.getElementById('ahStart').innerHTML = buildTimeOptions(state.activeHoursStart);
     document.getElementById('ahEnd').innerHTML = buildTimeOptions(state.activeHoursEnd);
@@ -2762,6 +2800,9 @@ async function init() {
     
     // Initialize LED preview
     updateLEDPreview();
+    
+    // Initialize LED fade preview
+    updateLEDFadePreview();
 
     // restore active hours first-boot defaults
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
@@ -2894,6 +2935,7 @@ async function init() {
     document.getElementById('toggleSmoothLED').addEventListener('click', () => {
         state.smoothLEDFade = !state.smoothLEDFade;
         setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
+        updateLEDFadePreview(); // Show/hide animation preview
         updateHash();
     });
     document.getElementById('toggleAhEn').addEventListener('click', () => {
@@ -3099,6 +3141,147 @@ function updateLEDPreview() {
     if (glowEl) {
         glowEl.style.backgroundColor = color;
         glowEl.style.color = color; // for box-shadow currentColor
+    }
+    
+    // Update fade preview if running
+    updateLEDFadePreview();
+}
+
+// ============================================================
+// LED FADE ANIMATION PREVIEW
+// ============================================================
+const FADE_IN_STEPS = 20;
+const FADE_OUT_STEPS = 32;
+const STEP_MS = 1000 / 64; // 15.625ms per step @ 64 Hz
+
+let ledAnimationFrame = null;
+
+// Quadratic gamma curve (matches firmware)
+function calcBrightness(step, maxSteps, target) {
+    const stepSq = step * step;
+    const maxSq = maxSteps * maxSteps;
+    return (stepSq * target) / maxSq;
+}
+
+// Draw LED on canvas with glow effect
+function drawLED(ctx, r, g, b, brightness) {
+    const centerX = 50;
+    const centerY = 50;
+    const radius = 30;
+    
+    // Apply brightness
+    const br = Math.floor(r * brightness);
+    const bg = Math.floor(g * brightness);
+    const bb = Math.floor(b * brightness);
+    
+    // Draw glow (radial gradient)
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, `rgba(${br}, ${bg}, ${bb}, 1)`);
+    gradient.addColorStop(0.7, `rgba(${br}, ${bg}, ${bb}, 0.5)`);
+    gradient.addColorStop(1, `rgba(${br}, ${bg}, ${bb}, 0)`);
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 100, 100);
+    
+    // Draw LED circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.7, 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
+    ctx.fill();
+}
+
+// Start LED fade animation loop
+function startLEDPreview() {
+    const canvas = document.getElementById('ledCanvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Get LED color from state (0-15 range)
+    const r = (state.ledRed << 4) | state.ledRed; // Convert to 0-255
+    const g = (state.ledGreen << 4) | state.ledGreen;
+    const b = (state.ledBlue << 4) | state.ledBlue;
+    
+    let phase = 'fade-in';
+    let step = 0;
+    let startTime = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        
+        // Clear canvas (dark background)
+        ctx.fillStyle = '#0B0900';
+        ctx.fillRect(0, 0, 100, 100);
+        
+        let brightness = 0;
+        
+        if (phase === 'fade-in') {
+            step = Math.min(FADE_IN_STEPS, Math.floor(elapsed / STEP_MS));
+            brightness = calcBrightness(step, FADE_IN_STEPS, 1.0);
+            
+            if (step >= FADE_IN_STEPS) {
+                phase = 'hold-on';
+                startTime = Date.now();
+            }
+        } else if (phase === 'hold-on') {
+            brightness = 1.0;
+            
+            if (elapsed > 1000) { // Hold 1 second
+                phase = 'fade-out';
+                step = 0;
+                startTime = Date.now();
+            }
+        } else if (phase === 'fade-out') {
+            step = Math.min(FADE_OUT_STEPS, Math.floor(elapsed / STEP_MS));
+            const remaining = FADE_OUT_STEPS - step;
+            brightness = calcBrightness(remaining, FADE_OUT_STEPS, 1.0);
+            
+            if (step >= FADE_OUT_STEPS) {
+                phase = 'hold-off';
+                startTime = Date.now();
+            }
+        } else if (phase === 'hold-off') {
+            brightness = 0;
+            
+            if (elapsed > 1000) { // Hold 1 second
+                phase = 'fade-in';
+                step = 0;
+                startTime = Date.now();
+            }
+        }
+        
+        drawLED(ctx, r, g, b, brightness);
+        
+        ledAnimationFrame = requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+// Stop LED fade animation
+function stopLEDPreview() {
+    if (ledAnimationFrame) {
+        cancelAnimationFrame(ledAnimationFrame);
+        ledAnimationFrame = null;
+    }
+}
+
+// Update LED fade preview visibility and restart animation with new colors
+function updateLEDFadePreview() {
+    const previewEl = document.getElementById('ledFadePreview');
+    if (!previewEl) return;
+    
+    if (state.smoothLEDFade) {
+        previewEl.style.display = 'flex';
+        previewEl.classList.add('active');
+        
+        // Restart animation with updated colors
+        stopLEDPreview();
+        startLEDPreview();
+    } else {
+        previewEl.style.display = 'none';
+        previewEl.classList.remove('active');
+        stopLEDPreview();
     }
 }
 
