@@ -31,15 +31,7 @@
 #include "utz.h"
 #include "lis2dw.h"
 
-#ifdef PHASE_ENGINE_ENABLED
-#include "metrics.h"
-#include "playlist.h"
-#include "sensors.h"
-#include "phase_engine.h"
-#include "sleep_data.h"
-#include "circadian_score.h"
-
-// Sleep orientation tracking constants
+// Sleep orientation tracking constants (used by movement.c, always available)
 #define SLEEP_BINS_PER_NIGHT 32         // 32 × 15-minute bins for 8-hour night
 #define SLEEP_BYTES_PER_NIGHT 8         // 32 bins × 2 bits / 8 bits per byte
 #define SLEEP_NIGHTS_STORED 7           // 7-day rolling window
@@ -51,7 +43,7 @@
 #define SLEEP_ORIENTATION_FACE_DOWN 2
 #define SLEEP_ORIENTATION_TILTED 3
 
-// Sleep orientation tracking types
+// Sleep orientation tracking types (used by movement.c, always available)
 typedef struct {
     uint8_t night_data[SLEEP_BYTES_PER_NIGHT];  // 32 bins × 2 bits = 8 bytes
     uint16_t date_code;                          // Date code for this night
@@ -71,6 +63,13 @@ void sleep_tracking_log_orientation(uint8_t orientation);
 bool sleep_tracking_get_night_data(uint8_t days_ago, sleep_night_t *out_night);
 uint8_t sleep_tracking_count_orientation_changes(const sleep_night_t *night);
 
+#ifdef PHASE_ENGINE_ENABLED
+#include "metrics.h"
+#include "playlist.h"
+#include "sensors.h"
+#include "phase_engine.h"
+#include "sleep_data.h"
+#include "circadian_score.h"
 #endif // PHASE_ENGINE_ENABLED
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
