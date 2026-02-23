@@ -59,6 +59,7 @@ SRCS += \
   ./watch-faces/complication/smart_alarm_face.c \
   ./watch-faces/complication/sleep_tracker_face.c \
   ./watch-faces/complication/circadian_score_face.c \
+  ./watch-faces/complication/oracle_face.c \
   ./watch-faces/io/comms_face.c \
   ./watch-faces/complication/sleep_score_face.c \
   ./watch-faces/io/comms_rx.c \

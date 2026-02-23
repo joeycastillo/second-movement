@@ -110,8 +110,14 @@ uint16_t phase_compute(phase_state_t *state,
     temp_dev = (temp_dev > 300) ? 30 : (temp_dev / 10);
     
     // Light deviation (simplified scoring)
-    // Expected light during day (6-18), darkness at night
-    uint16_t expected_light = (hour >= 6 && hour < 18) ? 500 : 50;
+    // Use homebase daylight data to determine day/night
+    // Approximate sunrise: 12:00 - (daylight_min / 120) hours
+    // Approximate sunset: 12:00 + (daylight_min / 120) hours
+    uint16_t daylight_min = baseline->expected_daylight_min;
+    uint8_t sunrise_hour = 12 - (daylight_min / 120);
+    uint8_t sunset_hour = 12 + (daylight_min / 120);
+    
+    uint16_t expected_light = (hour >= sunrise_hour && hour < sunset_hour) ? 500 : 50;
     int16_t light_dev = (light_lux > expected_light)
                        ? (light_lux - expected_light)
                        : (expected_light - light_lux);
@@ -211,33 +217,86 @@ int16_t phase_get_trend(const phase_state_t *state, uint8_t hours) {
     return trend;
 }
 
-uint8_t phase_get_recommendation(uint16_t phase_score, uint8_t hour) {
+uint8_t phase_get_recommendation(uint16_t phase_score, 
+                                 uint8_t hour,
+                                 bool active_hours_enabled,
+                                 uint8_t active_start,
+                                 uint8_t active_end) {
     // Recommendation codes:
     // 0 = rest
     // 1 = moderate activity
     // 2 = active
     // 3 = peak performance
     
-    // Night hours (22-5): prefer rest/moderate
-    if (hour >= 22 || hour <= 5) {
-        if (phase_score < 30) return 0;  // Rest
-        if (phase_score < 70) return 1;  // Moderate
-        return 1;  // Even high scores -> moderate at night
+    // Check if we're within active hours
+    bool in_active_hours;
+    if (!active_hours_enabled) {
+        in_active_hours = true;  // If disabled, always active
+    } else if (active_start < active_end) {
+        in_active_hours = (hour >= active_start && hour < active_end);
+    } else if (active_start > active_end) {
+        // Wraparound case (e.g., 22:00-06:00)
+        in_active_hours = (hour >= active_start || hour < active_end);
+    } else {
+        // start == end: 24-hour active
+        in_active_hours = true;
     }
     
-    // Early morning (6-11): gradual ramp
-    if (hour >= 6 && hour <= 11) {
+    // Outside active hours: prefer rest/moderate only
+    if (!in_active_hours) {
+        if (phase_score < 30) return 0;  // Rest
+        if (phase_score < 70) return 1;  // Moderate
+        return 1;  // Even high scores -> moderate when resting
+    }
+    
+    // Within active hours: calculate activity periods
+    // Calculate active duration (handling wraparound)
+    uint8_t active_duration;
+    if (active_start < active_end) {
+        active_duration = active_end - active_start;
+    } else {
+        active_duration = (24 - active_start) + active_end;
+    }
+    
+    // Calculate position within active hours (0 to active_duration-1)
+    uint8_t hours_into_active;
+    if (active_start < active_end) {
+        hours_into_active = hour - active_start;
+    } else {
+        // Wraparound case
+        if (hour >= active_start) {
+            hours_into_active = hour - active_start;
+        } else {
+            hours_into_active = (24 - active_start) + hour;
+        }
+    }
+    
+    // Define activity periods:
+    // First 25% = early morning (gradual ramp)
+    // Middle 50% = peak activity window
+    // Last 25% = wind-down period
+    uint8_t early_morning_end = active_duration / 4;  // First 25%
+    uint8_t wind_down_start = (active_duration * 3) / 4;  // Last 25%
+    
+    if (hours_into_active < early_morning_end) {
+        // Early active hours: gradual ramp
+        if (phase_score < 30) return 0;
+        if (phase_score < 50) return 1;
+        if (phase_score < 70) return 2;
+        return 3;
+    } else if (hours_into_active >= wind_down_start) {
+        // Wind-down period: moderate activity preferred
+        if (phase_score < 30) return 0;
+        if (phase_score < 50) return 1;
+        if (phase_score < 70) return 2;
+        return 2;  // Cap at active, not peak
+    } else {
+        // Peak activity window: full range available
         if (phase_score < 30) return 0;
         if (phase_score < 50) return 1;
         if (phase_score < 70) return 2;
         return 3;
     }
-    
-    // Afternoon/evening (12-21): peak activity window
-    if (phase_score < 30) return 0;
-    if (phase_score < 50) return 1;
-    if (phase_score < 70) return 2;
-    return 3;
 }
 
 // Helper: Check if current hour is within active hours

@@ -108,9 +108,16 @@ uint8_t metric_comfort_compute(int16_t temp_c10,
     }
     
     // Light comfort (32%): expected vs actual for hour
+    // Use homebase daylight data to determine sunrise/sunset
+    // Approximate sunrise: 12:00 - (daylight_min / 120) hours
+    // Approximate sunset: 12:00 + (daylight_min / 120) hours
+    uint16_t daylight_min = baseline->expected_daylight_min;
+    uint8_t sunrise_hour = 12 - (daylight_min / 120);
+    uint8_t sunset_hour = 12 + (daylight_min / 120);
+    
     uint8_t light_comfort;
-    if (hour >= 6 && hour <= 18) {
-        // Daytime (6 AM - 6 PM): expect bright light (>= 200 lux)
+    if (hour >= sunrise_hour && hour <= sunset_hour) {
+        // Daytime: expect bright light (>= 200 lux)
         if (light_lux >= 200) {
             light_comfort = 100;
         } else {

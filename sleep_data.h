@@ -40,9 +40,9 @@
 #define SLEEP_BIN_MINUTES 15      // Each bin represents 15 minutes
 #define SLEEP_STORAGE_ROW 30      // Use row 30 of flash storage (rows 0-31 available)
 
-// Sleep window: 23:00 to 07:00 (8 hours)
-#define SLEEP_START_HOUR 23
-#define SLEEP_END_HOUR 7
+// Sleep window: Dynamically calculated from active hours
+// Sleep start = end of active hours, sleep end = start of active hours
+#define SLEEP_END_HOUR 7  // Kept for backward compatibility, overridden by active hours
 
 // Data structure for one night of sleep (8 bytes + 2 bytes timestamp = 10 bytes)
 typedef struct {

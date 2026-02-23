@@ -65,17 +65,20 @@ const watch_face_t watch_faces[] = {
     advanced_alarm_face,        // 8: 16 alarms with day modes
     sleep_tracker_face,         // 9: Sleep review
     circadian_score_face,       // 10: Circadian alignment
-    world_clock_face,           // 11: Timezone
-    moon_phase_face,            // 12: Lunar phase
-    sunrise_sunset_face,        // 13: Solar timing
-    // End of PRIMARY faces (MODE cycles 0→1→6→7→...→13)
+    oracle_face,                // 11: Daily 2-word reading
+    world_clock_face,           // 12: Timezone
+    moon_phase_face,            // 13: Lunar phase
+    sunrise_sunset_face,        // 14: Solar timing
+    // End of PRIMARY faces (MODE cycles 0→1→6→7→...→14)
     
-    // SECONDARY FACES (Long-press MODE from face 0 → 14)
-    comms_face,                 // 14: Phase telemetry export
-    lis2dw_monitor_face,        // 15: Accelerometer data
-    light_sensor_face,          // 16: Light sensor data
-    voltage_face,               // 17: Battery voltage
-    settings_face,              // 18: Configuration
+    // SECONDARY FACES (Long-press MODE from face 0 → 15)
+    comms_face,                 // 15: Phase telemetry export
+    lis2dw_monitor_face,        // 16: Accelerometer data
+#ifdef HAS_IR_SENSOR
+    light_sensor_face,          // 17: Light sensor data
+#endif
+    voltage_face,               // 18: Battery voltage
+    settings_face,              // 19: Configuration
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
@@ -86,7 +89,11 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
+#ifdef HAS_IR_SENSOR
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)  // Last 5 faces: comms, lis2dw, light_sensor, voltage, settings
+#else
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)  // Last 4 faces: comms, lis2dw, voltage, settings
+#endif
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT

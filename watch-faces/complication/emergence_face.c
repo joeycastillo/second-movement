@@ -10,58 +10,50 @@
 
 #ifdef PHASE_ENGINE_ENABLED
 #include "../../lib/metrics/metrics.h"
+#include "../../lib/phase/zone_words.h"
 
-// Forward declaration - metrics_get will be called from the metrics module
+// Forward declarations
 extern void metrics_get(const metrics_engine_t *engine, metrics_snapshot_t *out);
+extern movement_state_t movement_state;
 
 static void _emergence_face_update_display(emergence_face_state_t *state) {
-    // Defensive bounds check
-    if (state->view_index >= EMERGENCE_VIEW_COUNT) {
-        state->view_index = 0;
-    }
-    
     char buf[11] = {0};
     
-    // Get current metrics (engine param unused in current implementation)
-    metrics_snapshot_t metrics = {0};  // Zero-initialize
+    // Get current metrics
+    metrics_snapshot_t metrics = {0};
     metrics_get(NULL, &metrics);
     
-    // Zone indicator in top-left
-    watch_display_text(WATCH_POSITION_TOP_LEFT, "ER");
-    
-    // Display metric based on current view (with trend)
-    uint8_t current_value = 0;
-    int8_t trend = 0;
-    
-    switch (state->view_index) {
-        case 0:  // Sleep Debt (primary) - use signed field
-            current_value = (uint8_t)metrics.sd;
-            trend = (int8_t)(metrics.sd - state->prev_sd);
-            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
-            state->prev_sd = metrics.sd;
+    // Display based on mode
+    switch (state->display_mode) {
+        case 0:  // Word 1
+            watch_display_text(WATCH_POSITION_TOP, "          ");  // Clear top
+            watch_display_text(WATCH_POSITION_BOTTOM, state->selected_words[0]);
             break;
-        case 1:  // Emotional
-            current_value = metrics.em;
-            trend = (int8_t)(current_value - state->prev_other[0]);
-            snprintf(buf, sizeof(buf), "EM%d %+d", metrics.em, trend);
-            state->prev_other[0] = current_value;
+            
+        case 1:  // Word 2
+            watch_display_text(WATCH_POSITION_TOP, "          ");  // Clear top
+            watch_display_text(WATCH_POSITION_BOTTOM, state->selected_words[1]);
             break;
-        case 2:  // Comfort
-            current_value = metrics.comfort;
-            trend = (int8_t)(current_value - state->prev_other[1]);
-            snprintf(buf, sizeof(buf), "CF%d %+d", metrics.comfort, trend);
-            state->prev_other[1] = current_value;
+            
+        case 2: {  // Stats: "ER     Lv2" (top) + "EM  45" (bottom)
+            word_level_t level = zone_words_get_level(metrics.em);
+            
+            // Top row: ER (positions 0-1) + Lv2 (positions 2-3)
+            snprintf(buf, sizeof(buf), "ER     Lv%d", level);
+            watch_display_text(WATCH_POSITION_TOP, buf);
+            
+            // Bottom row: EM + metric value
+            snprintf(buf, sizeof(buf), "EM  %d      ", metrics.em);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
+        }
+            
         default:
-            state->view_index = 0;
-            current_value = (uint8_t)metrics.sd;
-            trend = (int8_t)(metrics.sd - state->prev_sd);
-            snprintf(buf, sizeof(buf), "SD%d %+d", metrics.sd, trend);
-            state->prev_sd = metrics.sd;
+            state->display_mode = 0;
+            watch_display_text(WATCH_POSITION_TOP, "          ");
+            watch_display_text(WATCH_POSITION_BOTTOM, state->selected_words[0]);
             break;
     }
-    
-    watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
 void emergence_face_setup(uint8_t watch_face_index, void **context_ptr) {
@@ -74,7 +66,41 @@ void emergence_face_setup(uint8_t watch_face_index, void **context_ptr) {
 
 void emergence_face_activate(void *context) {
     emergence_face_state_t *state = (emergence_face_state_t *)context;
-    state->view_index = 0;  // Always start with primary metric (SD)
+    state->display_mode = 0;  // Start with word 1
+    
+    // Get current date for global streak tracking
+    watch_date_time date_time = watch_rtc_get_date_time();
+    // Calculate day of year (simplified: assumes 30-day months)
+    uint16_t day_of_year = (date_time.unit.month - 1) * 30 + date_time.unit.day;
+    
+    // Update global zone check streak
+    if (movement_state.phase.zone_last_check_day != day_of_year) {
+        // New day - check if consecutive
+        uint16_t prev_day = movement_state.phase.zone_last_check_day;
+        movement_state.phase.zone_last_check_day = day_of_year;
+        
+        // Consecutive check (doesn't handle year rollover perfectly, but good enough)
+        if (day_of_year == prev_day + 1 || prev_day == 0) {
+            // Consecutive day or first activation
+            movement_state.phase.zone_check_streak++;
+        } else {
+            // Streak broken, reset
+            movement_state.phase.zone_check_streak = 1;
+        }
+    }
+    
+    // Get current EM metric for word level
+    metrics_snapshot_t metrics = {0};
+    metrics_get(NULL, &metrics);
+    word_level_t level = zone_words_get_level(metrics.em);
+    
+    // Generate random seed from current time
+    uint32_t seed = (date_time.reg << 16) | (date_time.unit.hour << 8) | date_time.unit.minute;
+    
+    // Select words for this activation
+    zone_words_select(ZONE_EM, level, seed, 
+                     state->selected_words[0], 
+                     state->selected_words[1]);
 }
 
 bool emergence_face_loop(movement_event_t event, void *context) {
@@ -87,8 +113,8 @@ bool emergence_face_loop(movement_event_t event, void *context) {
             break;
             
         case EVENT_ALARM_BUTTON_UP:
-            // Cycle through metric views
-            state->view_index = (state->view_index + 1) % EMERGENCE_VIEW_COUNT;
+            // Cycle through display modes: word1 → word2 → stats → word1
+            state->display_mode = (state->display_mode + 1) % 3;
             _emergence_face_update_display(state);
             break;
         
