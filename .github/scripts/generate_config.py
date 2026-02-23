@@ -28,6 +28,18 @@ VALID_SIGNAL_TUNES = {
     'SIGNAL_TUNE_MGS_CODEC',
     'SIGNAL_TUNE_POWER_RANGERS',
     'SIGNAL_TUNE_ZELDA_SECRET',
+    'SIGNAL_TUNE_NOKIA',
+    'SIGNAL_TUNE_TETRIS',
+    'SIGNAL_TUNE_IMPERIAL',
+    'SIGNAL_TUNE_POKEMON',
+    'SIGNAL_TUNE_VICTORY',
+    'SIGNAL_TUNE_TRITONE',
+    'SIGNAL_TUNE_SOSUMI',
+    'SIGNAL_TUNE_OLDPHONE',
+    'SIGNAL_TUNE_MGS_ALERT',
+    'SIGNAL_TUNE_SONIC',
+    'SIGNAL_TUNE_PACMAN',
+    'SIGNAL_TUNE_WINERROR',
 }
 
 DEFAULTS_TEMPLATE = """\
@@ -278,6 +290,21 @@ def main():
         help="Signal tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
     )
     parser.add_argument(
+        "--hourly-chime-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Hourly chime tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
+        "--alarm-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Alarm tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
+        "--smart-alarm-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Smart alarm tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
         "--active-hours-start",
         default="16",
         help="Active hours start, quarter-hours 0-95 (default 16 = 04:00).",
@@ -332,6 +359,18 @@ def main():
     # Validate signal_tune against allowlist
     try:
         signal_tune = validate_signal_tune(args.signal_tune)
+    except ValueError as exc:
+        print("ERROR: {}".format(exc), file=sys.stderr)
+        sys.exit(1)
+
+    # Validate three-tune parameters (hourly chime, alarm, smart alarm)
+    # NOTE: Firmware currently uses only one global SIGNAL_TUNE define.
+    # For backward compatibility, we use hourly_chime_tune as the single tune.
+    # Separate alarm tunes (alarm_tune, smart_alarm_tune) are for future firmware support.
+    try:
+        hourly_chime_tune = validate_signal_tune(args.hourly_chime_tune)
+        alarm_tune = validate_signal_tune(args.alarm_tune)
+        smart_alarm_tune = validate_signal_tune(args.smart_alarm_tune)
     except ValueError as exc:
         print("ERROR: {}".format(exc), file=sys.stderr)
         sys.exit(1)
@@ -417,11 +456,14 @@ def main():
         smooth_led_fade_define = "#define SMOOTH_LED_FADE"
 
     # Render template
+    # NOTE: Currently using hourly_chime_tune as the single SIGNAL_TUNE define
+    # for backward compatibility. Future firmware will support separate tunes
+    # for hourly chime, alarm, and smart alarm.
     output = TEMPLATE.format(
         phase_engine_define=phase_engine_define,
         face_list=face_list,
         secondary_index=secondary_index,
-        signal_tune=signal_tune,
+        signal_tune=hourly_chime_tune,
         led_red_hex=int_to_hex(led_red),
         led_green_hex=int_to_hex(led_green),
         led_blue_hex=int_to_hex(led_blue),

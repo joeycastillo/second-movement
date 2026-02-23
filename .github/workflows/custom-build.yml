@@ -64,6 +64,21 @@ on:
         required: false
         default: "SIGNAL_TUNE_DEFAULT"
         type: string
+      hourly_chime_tune:
+        description: "Hourly chime tune (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
+      alarm_tune:
+        description: "Alarm tune (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
+      smart_alarm_tune:
+        description: "Smart alarm tune (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
       active_hours_enabled:
         description: 'Active hours enabled (first boot default)'
         type: boolean
@@ -141,6 +156,9 @@ jobs:
           INPUT_SMOOTH_LED_FADE: ${{ github.event.inputs.smooth_led_fade }}
           INPUT_BUTTON_SOUND: ${{ github.event.inputs.button_sound }}
           INPUT_SIGNAL_TUNE: ${{ github.event.inputs.signal_tune }}
+          INPUT_HOURLY_CHIME_TUNE: ${{ github.event.inputs.hourly_chime_tune }}
+          INPUT_ALARM_TUNE: ${{ github.event.inputs.alarm_tune }}
+          INPUT_SMART_ALARM_TUNE: ${{ github.event.inputs.smart_alarm_tune }}
           INPUT_ACTIVE_HOURS_ENABLED: ${{ inputs.active_hours_enabled }}
           INPUT_ACTIVE_HOURS_START: ${{ inputs.active_hours_start }}
           INPUT_ACTIVE_HOURS_END: ${{ inputs.active_hours_end }}
@@ -156,6 +174,9 @@ jobs:
             --smooth-led-fade "$INPUT_SMOOTH_LED_FADE" \
             --button-sound "$INPUT_BUTTON_SOUND" \
             --signal-tune "$INPUT_SIGNAL_TUNE" \
+            --hourly-chime-tune "$INPUT_HOURLY_CHIME_TUNE" \
+            --alarm-tune "$INPUT_ALARM_TUNE" \
+            --smart-alarm-tune "$INPUT_SMART_ALARM_TUNE" \
             --active-hours-enabled "$INPUT_ACTIVE_HOURS_ENABLED" \
             --active-hours-start "$INPUT_ACTIVE_HOURS_START" \
             --active-hours-end "$INPUT_ACTIVE_HOURS_END" \
