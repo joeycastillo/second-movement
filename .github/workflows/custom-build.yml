@@ -193,7 +193,14 @@ jobs:
             --output watch-faces.mk
 
       - name: Compile firmware
-        run: make
+        run: |
+          if [ "${{ github.event.inputs.homebase_lat }}" != "" ] && \
+             [ "${{ github.event.inputs.homebase_lon }}" != "" ] && \
+             [ "${{ github.event.inputs.homebase_tz }}" != "" ]; then
+            make PHASE_ENGINE_ENABLED=1
+          else
+            make
+          fi
 
       - name: Rename UF2 artifact
         run: |
