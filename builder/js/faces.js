@@ -85,18 +85,20 @@ export function updateFlashUsage() {
     const warningEl = document.getElementById('flashWarning');
     
     if (unresolvedFaces.length > 0) {
-        usageEl.textContent = 'UNKNOWN';
-        warningEl.style.display = 'none';
+        if (usageEl) usageEl.textContent = 'UNKNOWN';
+        if (warningEl) warningEl.style.display = 'none';
         return;
     }
 
     const kb = (totalBytes / 1024).toFixed(1);
-    usageEl.textContent = kb + ' KB';
+    if (usageEl) usageEl.textContent = kb + ' KB';
 
     const FLASH_LIMIT = 230 * 1024; // 230 KB safe limit
-    if (totalBytes > FLASH_LIMIT) {
-        warningEl.style.display = 'block';
-    } else {
-        warningEl.style.display = 'none';
+    if (warningEl) {
+        if (totalBytes > FLASH_LIMIT) {
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
     }
 }
