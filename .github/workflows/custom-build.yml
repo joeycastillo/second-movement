@@ -49,6 +49,11 @@ on:
         required: false
         default: "0"
         type: string
+      smooth_led_fade:
+        description: "Enable smooth LED fade animation (PR #71)"
+        required: false
+        default: false
+        type: boolean
       button_sound:
         description: "Enable button click sound by default"
         required: false
@@ -133,6 +138,7 @@ jobs:
           INPUT_LED_RED: ${{ github.event.inputs.led_red }}
           INPUT_LED_GREEN: ${{ github.event.inputs.led_green }}
           INPUT_LED_BLUE: ${{ github.event.inputs.led_blue }}
+          INPUT_SMOOTH_LED_FADE: ${{ github.event.inputs.smooth_led_fade }}
           INPUT_BUTTON_SOUND: ${{ github.event.inputs.button_sound }}
           INPUT_SIGNAL_TUNE: ${{ github.event.inputs.signal_tune }}
           INPUT_ACTIVE_HOURS_ENABLED: ${{ inputs.active_hours_enabled }}
@@ -147,6 +153,7 @@ jobs:
             --led-red "$INPUT_LED_RED" \
             --led-green "$INPUT_LED_GREEN" \
             --led-blue "$INPUT_LED_BLUE" \
+            --smooth-led-fade "$INPUT_SMOOTH_LED_FADE" \
             --button-sound "$INPUT_BUTTON_SOUND" \
             --signal-tune "$INPUT_SIGNAL_TUNE" \
             --active-hours-enabled "$INPUT_ACTIVE_HOURS_ENABLED" \

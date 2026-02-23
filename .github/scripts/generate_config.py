@@ -78,6 +78,9 @@ const watch_face_t watch_faces[] = {{
 #define MOVEMENT_DEFAULT_GREEN_COLOR {led_green_hex}
 #define MOVEMENT_DEFAULT_BLUE_COLOR {led_blue_hex}
 
+/* Enable smooth LED fade animation (PR #71 - optional feature) */
+{smooth_led_fade_define}
+
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE {clock_24h_bool}
 
@@ -260,6 +263,11 @@ def main():
         help="Default LED blue intensity (0-15).",
     )
     parser.add_argument(
+        "--smooth-led-fade",
+        default="false",
+        help="Enable smooth LED fade animation (PR #71) (true/false).",
+    )
+    parser.add_argument(
         "--button-sound",
         default="true",
         help="Enable button click sound by default (true/false).",
@@ -379,6 +387,7 @@ def main():
             sys.exit(1)
 
     clock_24h = parse_bool(args.clock_24h)
+    smooth_led_fade = parse_bool(args.smooth_led_fade)
     button_sound = parse_bool(args.button_sound)
 
     # Validate active hours inputs
@@ -402,6 +411,11 @@ def main():
     if phase_engine_enabled:
         phase_engine_define = "#define PHASE_ENGINE_ENABLED\n"
 
+    # Generate smooth LED fade define if enabled (PR #71)
+    smooth_led_fade_define = ""
+    if smooth_led_fade:
+        smooth_led_fade_define = "#define SMOOTH_LED_FADE"
+
     # Render template
     output = TEMPLATE.format(
         phase_engine_define=phase_engine_define,
@@ -411,6 +425,7 @@ def main():
         led_red_hex=int_to_hex(led_red),
         led_green_hex=int_to_hex(led_green),
         led_blue_hex=int_to_hex(led_blue),
+        smooth_led_fade_define=smooth_led_fade_define,
         clock_24h_bool="true" if clock_24h else "false",
         button_sound_bool="true" if button_sound else "false",
     )

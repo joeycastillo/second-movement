@@ -1297,6 +1297,19 @@
             </div>
         </div>
 
+        <!-- SMOOTH LED FADE (PR #71) -->
+        <div class="setting-row">
+            <span class="setting-label">SMOOTH FADE</span>
+            <div class="setting-control">
+                <label class="toggle-wrap" aria-label="Smooth LED fade animation">
+                    <div class="toggle-track" id="toggleSmoothLED" role="switch" aria-checked="false">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label" id="labelSmoothLED">OFF</span>
+                </label>
+            </div>
+        </div>
+
         <!-- LED PREVIEW (CRT Glow Visualization) -->
         <div class="setting-row">
             <span class="setting-label">LED PREVIEW</span>
@@ -2315,6 +2328,7 @@ let state = {
     ledRed: 0,
     ledGreen: 15,
     ledBlue: 0,
+    smoothLEDFade: false,  // PR #71: Smooth LED fade animation (optional)
     btnSound: false,
     hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
     alarmTune: 'SIGNAL_TUNE_DEFAULT',
@@ -2380,6 +2394,7 @@ function loadTemplate(tmplState) {
     if (tmplState.ledRed !== undefined) state.ledRed = tmplState.ledRed;
     if (tmplState.ledGreen !== undefined) state.ledGreen = tmplState.ledGreen;
     if (tmplState.ledBlue !== undefined) state.ledBlue = tmplState.ledBlue;
+    if (tmplState.smoothLEDFade !== undefined) state.smoothLEDFade = tmplState.smoothLEDFade;
     if (tmplState.btnSound !== undefined) state.btnSound = tmplState.btnSound;
     if (tmplState.hourlyChimeTune) state.hourlyChimeTune = tmplState.hourlyChimeTune;
     if (tmplState.alarmTune) state.alarmTune = tmplState.alarmTune;
@@ -2429,6 +2444,7 @@ function loadTemplate(tmplState) {
     document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
     updateLEDPreview();
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
     document.getElementById('ahStart').innerHTML = buildTimeOptions(state.activeHoursStart);
@@ -2742,6 +2758,7 @@ async function init() {
     document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
     
     // Initialize LED preview
     updateLEDPreview();
@@ -2872,6 +2889,11 @@ async function init() {
     document.getElementById('toggleBtn').addEventListener('click', () => {
         state.btnSound = !state.btnSound;
         setToggle('toggleBtn', 'labelBtn', state.btnSound);
+        updateHash();
+    });
+    document.getElementById('toggleSmoothLED').addEventListener('click', () => {
+        state.smoothLEDFade = !state.smoothLEDFade;
+        setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
         updateHash();
     });
     document.getElementById('toggleAhEn').addEventListener('click', () => {
@@ -3449,6 +3471,7 @@ function updateHash() {
         'led_r=' + state.ledRed,
         'led_g=' + state.ledGreen,
         'led_b=' + state.ledBlue,
+        'smooth_fade=' + state.smoothLEDFade,
         'btn=' + state.btnSound,
         'hc_tune=' + encodeURIComponent(state.hourlyChimeTune),
         'al_tune=' + encodeURIComponent(state.alarmTune),
@@ -3581,6 +3604,7 @@ function parseHash() {
         ledRed: clampLed(params.led_r, 0),
         ledGreen: clampLed(params.led_g, 15),
         ledBlue: clampLed(params.led_b, 0),
+        smoothLEDFade: params.smooth_fade === 'true',
         btnSound: params.btn === 'true',
         hourlyChimeTune,
         alarmTune,
@@ -3657,6 +3681,7 @@ async function triggerBuild() {
         led_red: String(state.ledRed),
         led_green: String(state.ledGreen),
         led_blue: String(state.ledBlue),
+        smooth_led_fade: String(state.smoothLEDFade),
         button_sound: String(state.btnSound),
         hourly_chime_tune: state.hourlyChimeTune,
         alarm_tune: state.alarmTune,
