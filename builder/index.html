@@ -1116,6 +1116,15 @@
         <div class="radio-group" id="displayRadio" role="radiogroup" aria-label="Display selection"></div>
     </div>
 
+    <!-- BRANCH SELECTION -->
+    <div class="section">
+        <div class="section-title">BUILD BRANCH</div>
+        <div class="radio-group" id="branchRadio" role="radiogroup" aria-label="Branch selection"></div>
+        <div style="font-size: 10px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+            Choose firmware branch to build from
+        </div>
+    </div>
+
     <!-- WATCH FACES -->
     <div class="section">
         <div class="section-title">WATCH FACES</div>
@@ -2091,8 +2100,14 @@ const DISPLAYS = [
     { id: 'custom', name: 'CUSTOM' }
 ];
 
+const BRANCHES = [
+    { id: 'main', name: 'MAIN', description: 'Stable release branch' },
+    { id: 'phase4bc-playlist-dispatch', name: 'PHASE4BC', description: 'Dogfooding: Phase 4E/4F + LED fade' }
+];
+
 const VALID_BOARDS = BOARDS.map(b => b.id);
 const VALID_DISPLAYS = DISPLAYS.map(d => d.id);
+const VALID_BRANCHES = BRANCHES.map(b => b.id);
 const VALID_SIGNAL_TUNES = [
     'SIGNAL_TUNE_DEFAULT',
     'SIGNAL_TUNE_ZELDA_SECRET',
@@ -2362,6 +2377,7 @@ let registry = null;
 let state = {
     board: 'red',
     display: 'classic',
+    branch: 'main',  // Build branch (main or phase4bc-playlist-dispatch)
     activeFaces: [], // array of face ids (includes '__secondary__' divider sentinel)
     clock24h: false,
     ledRed: 0,
@@ -2428,6 +2444,7 @@ function deleteUserTemplate(id) {
 function loadTemplate(tmplState) {
     if (tmplState.board) state.board = tmplState.board;
     if (tmplState.display) state.display = tmplState.display;
+    if (tmplState.branch) state.branch = tmplState.branch;
     if (tmplState.activeFaces) state.activeFaces = [...tmplState.activeFaces];
     if (tmplState.clock24h !== undefined) state.clock24h = tmplState.clock24h;
     if (tmplState.ledRed !== undefined) state.ledRed = tmplState.ledRed;
@@ -2503,6 +2520,7 @@ function loadTemplate(tmplState) {
     updateZonePreview();
     renderBoards();
     renderDisplays();
+    renderBranches();
     renderActiveFaces();
     renderAvailFaces();
     updateHash();
@@ -2840,6 +2858,7 @@ async function init() {
 
     renderBoards();
     renderDisplays();
+    renderBranches();
     renderActiveFaces();
     renderAvailFaces();
 
@@ -3389,6 +3408,28 @@ function renderDisplays() {
 }
 
 // ============================================================
+// RENDER BRANCHES
+// ============================================================
+function renderBranches() {
+    const el = document.getElementById('branchRadio');
+    el.innerHTML = '';
+    BRANCHES.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'radio-btn' + (state.branch === b.id ? ' active' : '');
+        btn.setAttribute('role', 'radio');
+        btn.setAttribute('aria-checked', state.branch === b.id ? 'true' : 'false');
+        btn.setAttribute('aria-label', 'Branch: ' + b.name);
+        btn.innerHTML = '<span class="dot">' + (state.branch === b.id ? '*' : ' ') + '</span> ' + b.name;
+        btn.onclick = () => {
+            state.branch = b.id;
+            renderBranches();
+            updateHash();
+        };
+        el.appendChild(btn);
+    });
+}
+
+// ============================================================
 // RENDER ACTIVE FACES
 // ============================================================
 function renderActiveFaces() {
@@ -3650,6 +3691,7 @@ function updateHash() {
     const params = [
         'board=' + state.board,
         'display=' + state.display,
+        'branch=' + encodeURIComponent(state.branch),
         'faces=' + encodeURIComponent(faces),
         'secondary=' + secondaryAt,
         '24h=' + state.clock24h,
@@ -3710,6 +3752,9 @@ function parseHash() {
 
     // Validate display against allowlist
     const display = VALID_DISPLAYS.includes(params.display) ? params.display : 'classic';
+
+    // Validate branch against allowlist
+    const branch = VALID_BRANCHES.includes(params.branch) ? params.branch : 'main';
 
     // Validate alarm tunes against allowlist
     const hourlyChimeTune = VALID_SIGNAL_TUNES.includes(params.hc_tune) ? params.hc_tune : 'SIGNAL_TUNE_DEFAULT';
@@ -3784,6 +3829,7 @@ function parseHash() {
     return {
         board,
         display,
+        branch,
         activeFaces,
         clock24h: params['24h'] === 'true',
         ledRed: clampLed(params.led_r, 0),
@@ -3913,7 +3959,7 @@ async function triggerBuild() {
                     'Accept': 'application/vnd.github+json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ref: 'phase4bc-playlist-dispatch', inputs })
+                body: JSON.stringify({ ref: state.branch, inputs })
             }
         );
 
