@@ -119,6 +119,17 @@ typedef struct {
 
     // button events that will not be passed to the current face loop, but will instead passed directly to the default loop handler.
     volatile uint32_t passthrough_events;
+
+#ifdef SMOOTH_LED_FADE
+    // LED fade state (7 bytes) - MR-G inspired premium animation
+    struct {
+        uint8_t mode;       // 0=off, 1=fade-in (20 steps), 2=fade-out (32 steps)
+        uint8_t step;       // current step in fade sequence
+        uint8_t target_r;   // target red value (0-255)
+        uint8_t target_g;   // target green value (0-255)
+        uint8_t target_b;   // target blue value (0-255)
+    } led_fade;
+#endif
 } movement_volatile_state_t;
 
 movement_volatile_state_t movement_volatile_state;
@@ -201,6 +212,10 @@ void cb_resign_timeout_interrupt(void);
 void cb_sleep_timeout_interrupt(void);
 void cb_buzzer_start(void);
 void cb_buzzer_stop(void);
+
+#ifdef SMOOTH_LED_FADE
+void cb_led_fade_step(void);
+#endif
 
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
@@ -740,9 +755,24 @@ void movement_request_tick_frequency(uint8_t freq) {
 void movement_illuminate_led(void) {
     if (movement_state.settings.bit.led_duration != 0b111) {
         movement_state.light_on = true;
+        
+#ifdef SMOOTH_LED_FADE
+        // Start premium fade-in animation (300ms, 20 steps @ 64 Hz)
+        movement_volatile_state.led_fade.mode = 1;  // fade-in
+        movement_volatile_state.led_fade.step = 0;
+        movement_volatile_state.led_fade.target_r = movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4;
+        movement_volatile_state.led_fade.target_g = movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4;
+        movement_volatile_state.led_fade.target_b = movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4;
+        
+        // Kick off first step immediately
+        watch_set_led_color_rgb(0, 0, 0);
+#else
+        // Instant-on (original behavior)
         watch_set_led_color_rgb(movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4,
                                 movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4,
                                 movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4);
+#endif
+        
         if (movement_state.settings.bit.led_duration == 0) {
             // Do nothing it'll be turned off on button release
         } else {
@@ -769,11 +799,28 @@ void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 void movement_force_led_off(void) {
-    movement_state.light_on = false;
     // The led timeout probably already triggered, but still disable just in case we are switching off the light by other means
     watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
     movement_volatile_state.schedule_next_comp = true;
+    
+#ifdef SMOOTH_LED_FADE
+    if (movement_state.light_on) {
+        // Start premium fade-out animation (500ms, 32 steps @ 64 Hz)
+        movement_volatile_state.led_fade.mode = 2;  // fade-out
+        movement_volatile_state.led_fade.step = 0;
+        // Capture current color as fade-out target
+        movement_volatile_state.led_fade.target_r = movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4;
+        movement_volatile_state.led_fade.target_g = movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4;
+        movement_volatile_state.led_fade.target_b = movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4;
+        // Note: movement_state.light_on will be set to false by cb_led_fade_step when fade completes
+    } else {
+        watch_set_led_off();
+    }
+#else
+    // Instant-off (original behavior)
+    movement_state.light_on = false;
     watch_set_led_off();
+#endif
 }
 
 bool movement_default_loop_handler(movement_event_t event) {
@@ -1432,6 +1479,11 @@ void app_init(void) {
     // this is so movement can be notified even when triggered by a face bypassing movement
     watch_buzzer_register_global_callbacks(cb_buzzer_start, cb_buzzer_stop);
 
+#ifdef SMOOTH_LED_FADE
+    // Register LED fade callback for premium animation (64 Hz via TC0)
+    watch_register_led_fade_callback(cb_led_fade_step);
+#endif
+
     // populate the DST offset cache
     _movement_update_dst_offset_cache();
 
@@ -1983,7 +2035,12 @@ void cb_alarm_btn_timeout_interrupt(void) {
 }
 
 void cb_led_timeout_interrupt(void) {
+#ifdef SMOOTH_LED_FADE
+    // Trigger smooth fade-out instead of instant off
     movement_volatile_state.turn_led_off = true;
+#else
+    movement_volatile_state.turn_led_off = true;
+#endif
 }
 
 void cb_resign_timeout_interrupt(void) {
@@ -1993,6 +2050,56 @@ void cb_resign_timeout_interrupt(void) {
 void cb_sleep_timeout_interrupt(void) {
     movement_request_sleep();
 }
+
+#ifdef SMOOTH_LED_FADE
+void cb_led_fade_step(void) {
+    // Advances LED fade animation one step (called at 64 Hz by TC0)
+    if (movement_volatile_state.led_fade.mode == 0) return;
+    
+    movement_volatile_state.led_fade.step++;
+    
+    uint8_t max_steps = (movement_volatile_state.led_fade.mode == 1) ? 20 : 32;
+    
+    if (movement_volatile_state.led_fade.step >= max_steps) {
+        // Fade complete
+        if (movement_volatile_state.led_fade.mode == 1) {
+            // Fade-in complete - hold at target color
+            watch_set_led_color_rgb(
+                movement_volatile_state.led_fade.target_r,
+                movement_volatile_state.led_fade.target_g,
+                movement_volatile_state.led_fade.target_b
+            );
+        } else {
+            // Fade-out complete - turn off
+            watch_set_led_off();
+            movement_state.light_on = false;
+        }
+        movement_volatile_state.led_fade.mode = 0;
+        return;
+    }
+    
+    // Quadratic gamma curve: brightness = (step² × target) / max_steps²
+    uint16_t step_sq = movement_volatile_state.led_fade.step * movement_volatile_state.led_fade.step;
+    uint16_t max_sq = max_steps * max_steps;
+    
+    uint8_t r, g, b;
+    if (movement_volatile_state.led_fade.mode == 1) {
+        // Fade-in
+        r = (step_sq * movement_volatile_state.led_fade.target_r) / max_sq;
+        g = (step_sq * movement_volatile_state.led_fade.target_g) / max_sq;
+        b = (step_sq * movement_volatile_state.led_fade.target_b) / max_sq;
+    } else {
+        // Fade-out (reverse)
+        uint16_t remaining_sq = (max_steps - movement_volatile_state.led_fade.step) * 
+                                (max_steps - movement_volatile_state.led_fade.step);
+        r = (remaining_sq * movement_volatile_state.led_fade.target_r) / max_sq;
+        g = (remaining_sq * movement_volatile_state.led_fade.target_g) / max_sq;
+        b = (remaining_sq * movement_volatile_state.led_fade.target_b) / max_sq;
+    }
+    
+    watch_set_led_color_rgb(r, g, b);
+}
+#endif
 
 void cb_alarm_btn_extwake(void) {
     // wake up!

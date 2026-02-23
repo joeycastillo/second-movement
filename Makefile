@@ -63,6 +63,16 @@ ifdef PHASE_ENGINE_ENABLED
     DEFINES += -DPHASE_ENGINE_ENABLED
 endif
 
+# SMOOTH_LED_FADE: Enable premium LED fade-in/fade-out animation (MR-G inspired)
+#   - Fade-in: 300ms (20 steps @ 64 Hz), fade-out: 500ms (32 steps @ 64 Hz)
+#   - Quadratic gamma curve for smooth perceived brightness
+#   - Cost: ~250 bytes flash, 7 bytes RAM
+#   - Uses TC0 timer (shared with buzzer)
+#   Usage: make BOARD=your_board DISPLAY=your_display SMOOTH_LED_FADE=1
+ifdef SMOOTH_LED_FADE
+    DEFINES += -DSMOOTH_LED_FADE
+endif
+
 # Emscripten targets are now handled in rules.mk in gossamer
 
 # Add your include directories here.

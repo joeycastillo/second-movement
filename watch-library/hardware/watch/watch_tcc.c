@@ -37,6 +37,10 @@ static void (*_cb_tc0)(void) = NULL;
 static void cb_watch_buzzer_seq(void);
 static void cb_watch_buzzer_raw_source(void);
 
+#ifdef SMOOTH_LED_FADE
+static void (*_cb_led_fade)(void) = NULL;
+#endif
+
 static uint16_t _seq_position;
 static int8_t _tone_ticks, _repeat_counter;
 static int8_t *_sequence;
@@ -234,11 +238,27 @@ void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_s
     _cb_stop_global = cb_stop;
 }
 
+#ifdef SMOOTH_LED_FADE
+void watch_register_led_fade_callback(watch_cb_t callback) {
+    _cb_led_fade = callback;
+    if (callback && !tc_is_enabled(0)) {
+        // TC0 needs to be running for LED fade
+        _tc0_initialize();
+        _tc0_start();
+    }
+}
+#endif
+
 void irq_handler_tc0(void) {
     // interrupt handler for TC0 (globally!)
     if (_cb_tc0) {
         _cb_tc0();
     }
+#ifdef SMOOTH_LED_FADE
+    if (_cb_led_fade) {
+        _cb_led_fade();
+    }
+#endif
     TC0->COUNT8.INTFLAG.reg |= TC_INTFLAG_OVF;
 }
 
