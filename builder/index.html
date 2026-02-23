@@ -1457,6 +1457,12 @@
             <span class="panel-chevron" id="alarmTunesChevron">-</span>
         </button>
         <div class="panel-body" id="alarmTunesPanelBody">
+            <!-- Audio unlock for mobile -->
+            <div id="audioUnlockNotice" style="margin-bottom: 12px; padding: 8px; background: var(--color-bg-recessed); border: 1px solid var(--color-amber-dim); display: none;">
+                <div style="font-size: 10px; color: var(--color-amber); margin-bottom: 4px; letter-spacing: 0.08em;">MOBILE AUDIO</div>
+                <button id="audioUnlockBtn" style="width: 100%; padding: 8px; background: var(--color-amber-dim); color: var(--color-bg); border: none; font-family: var(--font-mono); font-size: 11px; cursor: pointer; letter-spacing: 0.05em;">TAP TO ENABLE PREVIEW SOUNDS</button>
+            </div>
+
             <div style="margin-bottom: 12px;">
                 <label for="hourlyChimeTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">HOURLY CHIME TUNE</label>
                 <div class="signal-tune-row">
@@ -3207,6 +3213,30 @@ async function init() {
         this.setAttribute('aria-expanded', String(!expanded));
         body.style.display = expanded ? 'none' : 'block';
         chevron.textContent = expanded ? '+' : '-';
+    });
+
+    // Mobile audio unlock
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        document.getElementById('audioUnlockNotice').style.display = 'block';
+    }
+    
+    document.getElementById('audioUnlockBtn').addEventListener('click', () => {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.01);
+            setTimeout(() => {
+                try { ctx.close(); } catch(e) {}
+                document.getElementById('audioUnlockNotice').style.display = 'none';
+            }, 100);
+        }
     });
 
     // Alarm tune preview buttons
