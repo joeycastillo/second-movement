@@ -85,3 +85,13 @@ void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(v
         callback_on_end();
     }
 }
+
+void watch_buzzer_play_raw_source(bool (*raw_source)(uint16_t, void*, uint16_t*, uint16_t*),
+                                   void* userdata,
+                                   void (*done_callback)(void)) {
+    (void)raw_source;
+    (void)userdata;
+    if (done_callback) {
+        done_callback();
+    }
+}

@@ -99,6 +99,8 @@ typedef struct {
     uint8_t countdown_seconds;                  /**< Countdown duration (default: 3 seconds) */
     bool countdown_beep;                        /**< Play beep during countdown */
     bool show_bell_indicator;                   /**< Show bell icon during countdown/transmission */
+    fesk_mode_t mode;                           /**< Modulation mode (default: FESK_MODE_4FSK) */
+    bool auto_base32_encode;                    /**< Auto base32-encode payloads with invalid characters (default: true) */
     const char *static_message;                 /**< Static message to transmit (or NULL if using provide_payload) */
     fesk_session_payload_cb provide_payload;    /**< Dynamic payload callback (overrides static_message) */
     fesk_session_simple_cb on_countdown_begin;  /**< Called when countdown starts */
@@ -119,7 +121,7 @@ typedef enum {
     FESK_SESSION_TRANSMITTING,      /**< Transmitting audio */
 } fesk_session_phase_t;
 
-// State for raw source generation (when WATCH_BUZZER_PERIOD_REST is available)
+// State for raw source generation.
 typedef enum {
     FESK_RAW_PHASE_START_MARKER = 0,
     FESK_RAW_PHASE_DATA,
@@ -135,17 +137,16 @@ typedef struct fesk_session_s {
     uint8_t seconds_remaining;      /**< Countdown seconds remaining */
     int8_t *sequence;               /**< Encoded sequence (managed internally) */
     size_t sequence_entries;        /**< Number of sequence entries */
-#ifdef WATCH_BUZZER_PERIOD_REST
-    // Raw source generation state (4-FSK dibits)
+    char *encoded_payload;          /**< Base32-encoded payload (NULL if not used) */
+    // Raw source generation state (supports 2-FSK bits and 4-FSK dibits)
     const char *raw_payload;
     size_t raw_payload_length;
     fesk_raw_phase_t raw_phase;
     size_t raw_char_pos;       // Current character position in payload
-    uint8_t raw_dibit_pos;     // Current dibit position (0-2 for 6-bit codes, 0-3 for CRC)
+    uint8_t raw_symbol_pos;    // Current symbol position within current phase
     uint8_t raw_current_code;  // Current code being transmitted
     uint8_t raw_crc;           // CRC accumulator
     bool raw_is_tone;          // true = tone, false = rest
-#endif
 } fesk_session_t;
 
 /**

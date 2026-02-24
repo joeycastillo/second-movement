@@ -58,5 +58,8 @@ void watch_set_buzzer_on(void);
 void watch_set_buzzer_off(void);
 void watch_buzzer_abort_sequence(void);
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void));
+void watch_buzzer_play_raw_source(bool (*raw_source)(uint16_t, void*, uint16_t*, uint16_t*),
+                                   void* userdata,
+                                   void (*done_callback)(void));
 
 #endif // WATCH_H

@@ -106,8 +106,8 @@ SRCS += \
   ./lib/TOTP/sha512.c \
   ./lib/TOTP/TOTP.c \
   ./lib/chirpy_tx/chirpy_tx.c \
-  ./lib/fesk_tx/fesk_session.c \
   ./lib/fesk_tx/fesk_tx.c \
+  ./lib/fesk_tx/fesk_session.c \
   ./lib/base64/base64.c \
   ./lib/embedded_pedometer/count_steps.c \
   ./watch-library/shared/driver/thermistor_driver.c \

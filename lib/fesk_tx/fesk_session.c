@@ -25,8 +25,11 @@
 #include "fesk_session.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
+#include "base32.h"
 #include "movement.h"
 #include "watch.h"
 #include "watch_tcc.h"
@@ -106,6 +109,8 @@ fesk_session_config_t fesk_session_config_defaults(void) {
     config.countdown_seconds = FESK_SESSION_DEFAULT_COUNTDOWN_SECONDS;
     config.countdown_beep = true;
     config.show_bell_indicator = true;
+    config.mode = FESK_MODE_4FSK;
+    config.auto_base32_encode = true;
     config.on_countdown_tick = _fesk_default_on_countdown_tick;
     config.on_countdown_complete = _fesk_default_on_countdown_complete;
     config.on_transmission_start = _fesk_default_on_transmission_start;
@@ -134,15 +139,6 @@ static void _call_countdown(fesk_session_countdown_cb cb,
                             void *user_data) {
     if (cb) {
         cb(seconds, user_data);
-    }
-}
-
-static void _call_sequence(fesk_session_sequence_cb cb,
-                           const int8_t *sequence,
-                           size_t entries,
-                           void *user_data) {
-    if (cb) {
-        cb(sequence, entries, user_data);
     }
 }
 
@@ -175,6 +171,13 @@ static void _finish_session(fesk_session_t *session, bool notify) {
     watch_set_buzzer_off();
 
     _clear_sequence(session);
+
+    // Free encoded payload if allocated
+    if (session->encoded_payload) {
+        free(session->encoded_payload);
+        session->encoded_payload = NULL;
+    }
+
     session->phase = FESK_SESSION_IDLE;
     session->seconds_remaining = 0;
 
@@ -183,54 +186,10 @@ static void _finish_session(fesk_session_t *session, bool notify) {
     }
 }
 
-static bool _build_sequence(fesk_session_t *session) {
-    const char *payload = session->config.static_message;
-    size_t payload_length = 0;
-
-    if (session->config.provide_payload) {
-        fesk_result_t callback_result = session->config.provide_payload(&payload,
-                                                                        &payload_length,
-                                                                        session->config.user_data);
-        if (callback_result != FESK_OK) {
-            _call_error(session->config.on_error, callback_result, session->config.user_data);
-            return false;
-        }
-    }
-
-    if (payload && payload_length == 0) {
-        payload_length = strlen(payload);
-    }
-
-    if (!payload || payload_length == 0) {
-        _call_error(session->config.on_error, FESK_ERR_INVALID_ARGUMENT, session->config.user_data);
-        return false;
-    }
-
-    int8_t *sequence = NULL;
-    size_t entries = 0;
-    fesk_result_t encode_result = fesk_encode(payload,
-                                              &sequence,
-                                              &entries);
-    if (encode_result != FESK_OK) {
-        _call_error(session->config.on_error, encode_result, session->config.user_data);
-        return false;
-    }
-
-    _clear_sequence(session);
-    session->sequence = sequence;
-    session->sequence_entries = entries;
-    _call_sequence(session->config.on_sequence_ready,
-                   sequence,
-                   entries,
-                   session->config.user_data);
-    return true;
-}
-
 static void _fesk_transmission_complete(void);
 static void _fesk_countdown_step_done(void);
 
-#ifdef WATCH_BUZZER_PERIOD_REST
-// Raw source callback for 4-FSK on-the-fly dibit generation
+// Raw source callback for 2-FSK/4-FSK on-the-fly symbol generation
 // Returns: true = done/stop, false = continue playing
 static bool _fesk_raw_source(uint16_t position, void* userdata, uint16_t* period, uint16_t* duration) {
     (void)position;
@@ -239,43 +198,48 @@ static bool _fesk_raw_source(uint16_t position, void* userdata, uint16_t* period
         return true; // Error - stop playing
     }
 
+    fesk_mode_t mode = session->config.mode;
+    int bits_per_symbol = (mode == FESK_MODE_2FSK) ? 1 : 2;
+    uint8_t symbol_mask = (mode == FESK_MODE_2FSK) ? 0x01u : 0x03u;
+    const watch_buzzer_note_t *tone_map = (mode == FESK_MODE_2FSK) ? fesk_tone_map_2fsk : fesk_tone_map_4fsk;
+
     // Alternate between tone and rest
     if (session->raw_is_tone) {
-        // Generate tone based on current dibit
-        uint8_t dibit = 0;
+        // Generate tone based on current symbol (bit for 2FSK, dibit for 4FSK)
+        uint8_t symbol = 0;
         uint8_t code = 0;
         uint8_t shift = 0;
 
         switch (session->raw_phase) {
             case FESK_RAW_PHASE_START_MARKER:
-                // 6-bit code = 3 dibits (positions 0,1,2 -> shifts 4,2,0)
-                shift = (2 - session->raw_dibit_pos) * 2;
-                dibit = (FESK_START_MARKER >> shift) & 0x03;
+                // 6-bit code: 2FSK=6 symbols, 4FSK=3 symbols
+                shift = (6 - bits_per_symbol) - (session->raw_symbol_pos * bits_per_symbol);
+                symbol = (FESK_START_MARKER >> shift) & symbol_mask;
                 break;
 
             case FESK_RAW_PHASE_DATA:
                 code = session->raw_current_code;
-                shift = (2 - session->raw_dibit_pos) * 2;
-                dibit = (code >> shift) & 0x03;
+                shift = (6 - bits_per_symbol) - (session->raw_symbol_pos * bits_per_symbol);
+                symbol = (code >> shift) & symbol_mask;
                 break;
 
             case FESK_RAW_PHASE_CRC:
-                // 8-bit CRC = 4 dibits (positions 0,1,2,3 -> shifts 6,4,2,0)
-                shift = (3 - session->raw_dibit_pos) * 2;
-                dibit = (session->raw_crc >> shift) & 0x03;
+                // 8-bit CRC: 2FSK=8 symbols, 4FSK=4 symbols
+                shift = (8 - bits_per_symbol) - (session->raw_symbol_pos * bits_per_symbol);
+                symbol = (session->raw_crc >> shift) & symbol_mask;
                 break;
 
             case FESK_RAW_PHASE_END_MARKER:
-                shift = (2 - session->raw_dibit_pos) * 2;
-                dibit = (FESK_END_MARKER >> shift) & 0x03;
+                shift = (6 - bits_per_symbol) - (session->raw_symbol_pos * bits_per_symbol);
+                symbol = (FESK_END_MARKER >> shift) & symbol_mask;
                 break;
 
             case FESK_RAW_PHASE_DONE:
                 return true; // Done - stop playing
         }
 
-        // Set the tone period based on the dibit value
-        *period = NotePeriods[fesk_tone_map[dibit]];
+        // Set the tone period based on the symbol value
+        *period = NotePeriods[tone_map[symbol]];
         *duration = FESK_TICKS_PER_SYMBOL;
         session->raw_is_tone = false; // Next call will be rest
 
@@ -285,24 +249,28 @@ static bool _fesk_raw_source(uint16_t position, void* userdata, uint16_t* period
         *duration = FESK_TICKS_PER_REST;
         session->raw_is_tone = true; // Next call will be tone
 
-        // Advance to next dibit
-        session->raw_dibit_pos++;
+        // Advance to next symbol
+        session->raw_symbol_pos++;
+
+        // Calculate symbols per code/CRC based on mode
+        uint8_t symbols_per_code = (mode == FESK_MODE_2FSK) ? 6 : 3;
+        uint8_t symbols_per_crc = (mode == FESK_MODE_2FSK) ? 8 : 4;
 
         // Check if we've finished the current phase
         bool advance_phase = false;
 
         switch (session->raw_phase) {
             case FESK_RAW_PHASE_START_MARKER:
-                if (session->raw_dibit_pos >= FESK_DIBITS_PER_CODE) {
+                if (session->raw_symbol_pos >= symbols_per_code) {
                     advance_phase = true;
                 }
                 break;
 
             case FESK_RAW_PHASE_DATA:
-                if (session->raw_dibit_pos >= FESK_DIBITS_PER_CODE) {
+                if (session->raw_symbol_pos >= symbols_per_code) {
                     // Finished current character, move to next
                     session->raw_char_pos++;
-                    session->raw_dibit_pos = 0;
+                    session->raw_symbol_pos = 0;
 
                     if (session->raw_char_pos >= session->raw_payload_length) {
                         // Finished all data
@@ -320,13 +288,13 @@ static bool _fesk_raw_source(uint16_t position, void* userdata, uint16_t* period
                 break;
 
             case FESK_RAW_PHASE_CRC:
-                if (session->raw_dibit_pos >= FESK_DIBITS_PER_CRC) {
+                if (session->raw_symbol_pos >= symbols_per_crc) {
                     advance_phase = true;
                 }
                 break;
 
             case FESK_RAW_PHASE_END_MARKER:
-                if (session->raw_dibit_pos >= FESK_DIBITS_PER_CODE) {
+                if (session->raw_symbol_pos >= symbols_per_code) {
                     advance_phase = true;
                 }
                 break;
@@ -336,7 +304,7 @@ static bool _fesk_raw_source(uint16_t position, void* userdata, uint16_t* period
         }
 
         if (advance_phase) {
-            session->raw_dibit_pos = 0;
+            session->raw_symbol_pos = 0;
             session->raw_phase++;
             if (session->raw_phase == FESK_RAW_PHASE_DONE) {
                 return true; // Transmission complete - stop playing
@@ -371,13 +339,52 @@ static bool _init_raw_source(fesk_session_t *session) {
         return false;
     }
 
-    // Validate all characters can be encoded
+    // Validate all characters can be encoded, or auto-encode if enabled
+    bool has_invalid_chars = false;
     for (size_t i = 0; i < payload_length; i++) {
         uint8_t code;
         if (!fesk_lookup_char_code((unsigned char)payload[i], &code)) {
+            has_invalid_chars = true;
+            break;
+        }
+    }
+
+    // If invalid characters found and auto-encoding enabled, base32 encode the payload
+    if (has_invalid_chars) {
+        if (!session->config.auto_base32_encode) {
             _call_error(session->config.on_error, FESK_ERR_UNSUPPORTED_CHARACTER, session->config.user_data);
             return false;
         }
+
+        // Calculate base32 encoded length
+        size_t encoded_len = BASE32_LEN(payload_length);
+
+        // Allocate buffer for encoded payload (+1 for null terminator)
+        session->encoded_payload = (char *)malloc(encoded_len + 1);
+        if (!session->encoded_payload) {
+            _call_error(session->config.on_error, FESK_ERR_ALLOCATION_FAILED, session->config.user_data);
+            return false;
+        }
+
+        // Encode to base32
+        base32_encode((const unsigned char *)payload, payload_length,
+                      (unsigned char *)session->encoded_payload);
+        session->encoded_payload[encoded_len] = '\0';
+
+        // Convert to lowercase and remove padding characters
+        size_t write_pos = 0;
+        for (size_t i = 0; i < encoded_len; i++) {
+            char ch = session->encoded_payload[i];
+            if (ch == '=') {
+                continue; // Skip padding
+            }
+            session->encoded_payload[write_pos++] = tolower((unsigned char)ch);
+        }
+        session->encoded_payload[write_pos] = '\0';
+
+        // Update payload reference to encoded version
+        payload = session->encoded_payload;
+        payload_length = write_pos;
     }
 
     // Initialize state
@@ -385,7 +392,7 @@ static bool _init_raw_source(fesk_session_t *session) {
     session->raw_payload_length = payload_length;
     session->raw_phase = FESK_RAW_PHASE_START_MARKER;
     session->raw_char_pos = 0;
-    session->raw_dibit_pos = 0;
+    session->raw_symbol_pos = 0;
     session->raw_crc = 0;
     session->raw_is_tone = true; // Start with a tone
 
@@ -399,10 +406,8 @@ static bool _init_raw_source(fesk_session_t *session) {
 
     return true;
 }
-#endif
 
 static bool _start_transmission(fesk_session_t *session) {
-#ifdef WATCH_BUZZER_PERIOD_REST
     // Use raw source for memory-efficient on-the-fly generation
     if (!_init_raw_source(session)) {
         _finish_session(session, false);
@@ -423,28 +428,6 @@ static bool _start_transmission(fesk_session_t *session) {
     _call_simple(session->config.on_transmission_start, session->config.user_data);
     watch_buzzer_play_raw_source(_fesk_raw_source, session, _fesk_transmission_complete);
     return true;
-#else
-    // Fallback to precomputed sequence for old buzzer code
-    if (!_build_sequence(session)) {
-        _finish_session(session, false);
-        return false;
-    }
-
-    session->phase = FESK_SESSION_TRANSMITTING;
-
-    if (session->config.show_bell_indicator) {
-        watch_set_indicator(WATCH_INDICATOR_BELL);
-    }
-
-    if (_fesk_active_session && _fesk_active_session != session) {
-        _finish_session(_fesk_active_session, false);
-    }
-    _fesk_active_session = session;
-
-    _call_simple(session->config.on_transmission_start, session->config.user_data);
-    watch_buzzer_play_sequence(session->sequence, _fesk_transmission_complete);
-    return true;
-#endif
 }
 
 static void _start_countdown(fesk_session_t *session) {

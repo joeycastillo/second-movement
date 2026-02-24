@@ -33,8 +33,8 @@ int main(void) {
 
         // Find which tribit this tone represents
         int tribit = -1;
-        for (int t = 0; t < FESK_TONE_COUNT; t++) {
-            if (fesk_tone_map[t] == tone) {
+        for (int t = 0; t < FESK_4FSK_TONE_COUNT; t++) {
+            if (fesk_tone_map_4fsk[t] == tone) {
                 tribit = t;
                 break;
             }
@@ -47,8 +47,8 @@ int main(void) {
     printf("\nTribit sequence: ");
     for (size_t i = 0; i < entries; i += 4) {
         int8_t tone = sequence[i];
-        for (int t = 0; t < FESK_TONE_COUNT; t++) {
-            if (fesk_tone_map[t] == tone) {
+        for (int t = 0; t < FESK_4FSK_TONE_COUNT; t++) {
+            if (fesk_tone_map_4fsk[t] == tone) {
                 printf("%d ", t);
                 break;
             }
