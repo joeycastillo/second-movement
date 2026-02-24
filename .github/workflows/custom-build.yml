@@ -204,7 +204,7 @@ jobs:
           fi
           
           # Add smooth LED fade flag if enabled
-          if [ "${{ github.event.inputs.smooth_led_fade }}" == "true" ]; then
+          if [ "${{ github.event.inputs.smooth_led_fade }}" = "true" ]; then
             MAKE_FLAGS="$MAKE_FLAGS SMOOTH_LED_FADE=1"
           fi
           
