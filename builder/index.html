@@ -882,21 +882,21 @@
             position: relative;
             width: 100%;
             height: 80px;
-            display: flex;
             border: 1px solid var(--color-border);
             overflow: hidden;
         }
 
         .zone-segment {
-            position: relative;
-            flex-grow: 1;
+            position: absolute;
+            top: 0;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
             padding: 8px 4px;
-            transition: flex-grow 0.3s ease;
+            transition: left 0.3s ease, width 0.3s ease;
+            box-sizing: border-box;
         }
 
         .zone-emergence {
@@ -3102,29 +3102,73 @@ function updateZoneBar() {
     const m = state.zoneMomentumMax || 50;
     const a = state.zoneActiveMax || 75;
     
-    // Update segment widths (as percentages)
+    // Get active hours (quarter-hours: 0-95)
+    const ahStart = state.activeHoursStart || 16; // default 04:00
+    const ahEnd = state.activeHoursEnd || 92;     // default 23:00
+    
+    // Calculate active hours duration in minutes
+    let ahDurationMin;
+    if (ahStart < ahEnd) {
+        ahDurationMin = (ahEnd - ahStart) * 15;
+    } else {
+        // Wrapped midnight
+        ahDurationMin = ((96 - ahStart) + ahEnd) * 15;
+    }
+    
+    // Helper: quarter-hours to HH:MM
+    function qhToTime(qh) {
+        const normalizedQh = qh % 96;
+        const h = Math.floor(normalizedQh / 4);
+        const m = (normalizedQh % 4) * 15;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+    
+    // Calculate zone transition times
+    const eMin = Math.round(ahDurationMin * (e / 100));
+    const mMin = Math.round(ahDurationMin * (m / 100));
+    const aMin = Math.round(ahDurationMin * (a / 100));
+    
+    const eTime = qhToTime(ahStart + Math.round(eMin / 15));
+    const mTime = qhToTime(ahStart + Math.round(mMin / 15));
+    const aTime = qhToTime(ahStart + Math.round(aMin / 15));
+    const endTime = qhToTime(ahEnd);
+    
+    // Update segment positions (absolute positioning)
     const segEmergence = document.getElementById('segmentEmergence');
     const segMomentum = document.getElementById('segmentMomentum');
     const segActive = document.getElementById('segmentActive');
     const segDescent = document.getElementById('segmentDescent');
     
-    if (segEmergence) segEmergence.style.flexGrow = e;
-    if (segMomentum) segMomentum.style.flexGrow = (m - e);
-    if (segActive) segActive.style.flexGrow = (a - m);
-    if (segDescent) segDescent.style.flexGrow = (100 - a);
+    if (segEmergence) {
+        segEmergence.style.left = '0%';
+        segEmergence.style.width = `${e}%`;
+    }
+    if (segMomentum) {
+        segMomentum.style.left = `${e}%`;
+        segMomentum.style.width = `${m - e}%`;
+    }
+    if (segActive) {
+        segActive.style.left = `${m}%`;
+        segActive.style.width = `${a - m}%`;
+    }
+    if (segDescent) {
+        segDescent.style.left = `${a}%`;
+        segDescent.style.width = `${100 - a}%`;
+    }
     
-    // Update range labels
+    // Update range labels with times
     const rangeEmergence = document.getElementById('rangeEmergence');
     const rangeMomentum = document.getElementById('rangeMomentum');
     const rangeActive = document.getElementById('rangeActive');
     const rangeDescent = document.getElementById('rangeDescent');
     
-    if (rangeEmergence) rangeEmergence.textContent = `0-${e}`;
-    if (rangeMomentum) rangeMomentum.textContent = `${e + 1}-${m}`;
-    if (rangeActive) rangeActive.textContent = `${m + 1}-${a}`;
-    if (rangeDescent) rangeDescent.textContent = `${a + 1}-100`;
+    const startTime = qhToTime(ahStart);
+    if (rangeEmergence) rangeEmergence.textContent = `${startTime}-${eTime}`;
+    if (rangeMomentum) rangeMomentum.textContent = `${eTime}-${mTime}`;
+    if (rangeActive) rangeActive.textContent = `${mTime}-${aTime}`;
+    if (rangeDescent) rangeDescent.textContent = `${aTime}-${endTime}`;
     
-    // Update handle positions
+    // Update handle positions and tooltips
     const handle1 = document.getElementById('handle1');
     const handle2 = document.getElementById('handle2');
     const handle3 = document.getElementById('handle3');
@@ -3132,17 +3176,17 @@ function updateZoneBar() {
     if (handle1) {
         handle1.style.left = `${e}%`;
         const tooltip1 = handle1.querySelector('.handle-tooltip');
-        if (tooltip1) tooltip1.textContent = e;
+        if (tooltip1) tooltip1.textContent = eTime;
     }
     if (handle2) {
         handle2.style.left = `${m}%`;
         const tooltip2 = handle2.querySelector('.handle-tooltip');
-        if (tooltip2) tooltip2.textContent = m;
+        if (tooltip2) tooltip2.textContent = mTime;
     }
     if (handle3) {
         handle3.style.left = `${a}%`;
         const tooltip3 = handle3.querySelector('.handle-tooltip');
-        if (tooltip3) tooltip3.textContent = a;
+        if (tooltip3) tooltip3.textContent = aTime;
     }
     
     // Check if matches any preset
@@ -3423,12 +3467,14 @@ async function init() {
         const v = parseInt(e.target.value, 10);
         state.activeHoursStart = (Number.isFinite(v) && v >= 0 && v <= 95) ? v : 16;
         updateAhVisualBar();
+        updateZoneBar(); // Update zone times when active hours change
         updateHash();
     });
     document.getElementById('ahEnd').addEventListener('change', e => {
         const v = parseInt(e.target.value, 10);
         state.activeHoursEnd = (Number.isFinite(v) && v >= 0 && v <= 95) ? v : 92;
         updateAhVisualBar();
+        updateZoneBar(); // Update zone times when active hours change
         updateHash();
     });
 
