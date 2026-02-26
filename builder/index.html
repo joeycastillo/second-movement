@@ -571,7 +571,7 @@
             display: inline-block;
         }
 
-        #led-color-swatch {
+        #led-color-ring {
             position: absolute;
             top: 0;
             left: 0;
@@ -584,21 +584,17 @@
             z-index: 1;
         }
 
-        #led-color-swatch::before {
-            content: '';
+        #led-color-center {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;  /* 50% of container */
+            width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: inherit;
+            background-color: rgb(0, 150, 0);
             z-index: 2;
-            opacity: 1;
+            opacity: 1;  /* Always full opacity */
         }
 
-        #led-color-swatch.animating {
+        #led-color-ring.animating {
             animation: led-pulse 2.5s infinite;
         }
 
@@ -1717,7 +1713,8 @@
 
             <!-- Live Color Preview -->
             <div class="led-preview-container">
-                <div id="led-color-swatch"></div>
+                <div id="led-color-ring"></div>
+                <div id="led-color-center"></div>
             </div>
         </div>
 
@@ -3790,9 +3787,9 @@ async function init() {
         setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
         updateLEDFadePreview(); // Show/hide animation preview
         // Toggle animation on LED preview
-        const swatch = document.getElementById('led-color-swatch');
-        if (swatch) {
-            swatch.classList.toggle('animating', state.smoothLEDFade);
+        const ring = document.getElementById('led-color-ring');
+        if (ring) {
+            ring.classList.toggle('animating', state.smoothLEDFade);
         }
         updateHash();
     });
@@ -4034,10 +4031,10 @@ function updateLEDPreview() {
     const b = blue * 10;
     
     const color = `rgb(${r}, ${g}, ${b})`;
-    const swatchEl = document.getElementById('led-color-swatch');
-    if (swatchEl) {
-        swatchEl.style.backgroundColor = color;
-    }
+    const ring = document.getElementById('led-color-ring');
+    const center = document.getElementById('led-color-center');
+    if (ring) ring.style.backgroundColor = color;
+    if (center) center.style.backgroundColor = color;
     
     // Update fade preview if running
     updateLEDFadePreview();
