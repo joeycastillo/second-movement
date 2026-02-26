@@ -1129,6 +1129,60 @@
             gap: 8px;
         }
 
+        /* ---- RECENT FACES ---- */
+        .recent-faces-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .recent-face-item {
+            padding: 6px 8px;
+            background: var(--color-bg-recessed);
+            border: 1px solid var(--color-border);
+            font-size: 10px;
+            letter-spacing: 0.05em;
+            color: var(--color-amber-mid);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recent-face-item:hover {
+            border-color: var(--color-amber-mid);
+            background: var(--color-bg-elevated);
+            color: var(--color-amber-bright);
+        }
+
+        .recent-face-name {
+            flex: 1;
+        }
+
+        .recent-face-count {
+            font-size: 9px;
+            color: var(--color-amber-dim);
+            margin-left: 8px;
+        }
+
+        .template-clear-btn {
+            width: 100%;
+            min-height: 32px;
+            border: 1px solid var(--color-border);
+            background: var(--color-bg);
+            color: var(--color-amber-dim);
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-clear-btn:hover {
+            border-color: var(--color-critical);
+            color: var(--color-critical);
+        }
+
         /* ---- MISC ---- */
         .glow {
             color: var(--color-amber-bright);
@@ -1202,6 +1256,65 @@
             Choose firmware branch to build from
         </div>
     </div>
+
+    <!-- TEMPLATES -->
+    <section class="panel" id="templatesPanel">
+        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
+            <span>[ TEMPLATES ]</span>
+            <span class="panel-chevron" id="templatesChevron">+</span>
+        </button>
+        <div class="panel-body" id="templatesPanelBody" style="display:none">
+            <!-- Presets -->
+            <div class="templates-group-label">-- PRESETS --</div>
+            <div id="preset-templates"></div>
+
+            <!-- User saved -->
+            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
+            <div id="user-templates-section">
+                <div id="user-templates"></div>
+                <div id="no-saved-templates" class="template-empty">no saved templates</div>
+            </div>
+
+            <!-- Save current -->
+            <div class="templates-save-row" style="margin-top:12px">
+                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
+                <button id="saveTemplateBtn">[save]</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- RECENTLY BUILT FACES -->
+    <section class="panel" id="recentFacesPanel">
+        <button class="panel-header" id="recentFacesPanelBtn" aria-expanded="false" aria-controls="recentFacesPanelBody">
+            <span>[ RECENT BUILDS ]</span>
+            <span class="panel-chevron" id="recentFacesChevron">+</span>
+        </button>
+        <div class="panel-body" id="recentFacesPanelBody" style="display:none">
+            <div id="recent-faces-list" class="recent-faces-list">
+                <div class="template-empty">no builds yet</div>
+            </div>
+            <button id="clearRecentBtn" class="template-clear-btn" style="margin-top: 8px;">[clear history]</button>
+        </div>
+    </section>
+
+    <!-- CRT EFFECTS -->
+    <section class="panel" id="crtEffectsPanel">
+        <button class="panel-header" id="crtEffectsPanelBtn" aria-expanded="false" aria-controls="crtEffectsPanelBody">
+            <span>[ CRT EFFECTS ]</span>
+            <span class="panel-chevron" id="crtEffectsChevron">+</span>
+        </button>
+        <div class="panel-body" id="crtEffectsPanelBody" style="display:none">
+            <div class="setting-options" id="crtQualityOptions">
+                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
+                <button class="setting-option" data-crt-quality="off">OFF</button>
+                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
+                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
+            </div>
+            <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+                CRT shader quality (AUTO detects device performance)
+            </div>
+        </div>
+    </section>
 
     <!-- WATCH FACES -->
     <div class="section">
@@ -1393,19 +1506,6 @@
                 </label>
             </div>
         </div>
-
-        <!-- CRT EFFECTS QUALITY -->
-        <details class="setting-collapsible">
-            <summary class="setting-summary">
-                CRT EFFECTS <span id="crtQualityLabel">▸ AUTO</span>
-            </summary>
-            <div class="setting-options" id="crtQualityOptions">
-                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
-                <button class="setting-option" data-crt-quality="off">OFF</button>
-                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
-                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
-            </div>
-        </details>
 
         <!-- LED COLOR SECTION -->
         <div class="led-color-section">
@@ -1650,32 +1750,6 @@
             </div>
         </div>
     </div>
-
-    <!-- TEMPLATES -->
-    <section class="panel" id="templatesPanel">
-        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
-            <span>[ TEMPLATES ]</span>
-            <span class="panel-chevron" id="templatesChevron">+</span>
-        </button>
-        <div class="panel-body" id="templatesPanelBody" style="display:none">
-            <!-- Presets -->
-            <div class="templates-group-label">-- PRESETS --</div>
-            <div id="preset-templates"></div>
-
-            <!-- User saved -->
-            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
-            <div id="user-templates-section">
-                <div id="user-templates"></div>
-                <div id="no-saved-templates" class="template-empty">no saved templates</div>
-            </div>
-
-            <!-- Save current -->
-            <div class="templates-save-row" style="margin-top:12px">
-                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
-                <button id="saveTemplateBtn">[save]</button>
-            </div>
-        </div>
-    </section>
 
     <!-- BUILD -->
     <div class="build-section">

@@ -7,7 +7,7 @@ import { state, registry, setRegistry, getAudioContext } from './state.js';
 import { debounce, copyLink } from './utils.js';
 import { parseHash, updateHash, PRESET_TEMPLATES, loadUserTemplates, saveCurrentAsTemplate, deleteUserTemplate, saveUserTemplates } from './template.js';
 import { loadRegistry, addFace, removeFace, updateFlashUsage } from './faces.js';
-import { triggerBuild, pollBuild, validateToken, updateTokenStatus, startCooldownUI } from './build.js';
+import { triggerBuild, pollBuild, validateToken, updateTokenStatus, startCooldownUI, trackRecentBuild, updateRecentFacesList, clearRecentFaces } from './build.js';
 import {
     updateClock, wireSlider, setToggle, updateLEDPreview, updateLEDFadePreview,
     buildTimeOptions, updateAhTimeVisibility, updateAhVisualBar,
@@ -113,6 +113,7 @@ async function init() {
     renderActiveFaces();
     renderAvailFaces();
     renderTemplates();
+    updateRecentFacesList();
 
     // Check cooldown
     const cooldownStored = parseInt(localStorage.getItem('sm_cooldown_end') || '0', 10);
@@ -358,6 +359,43 @@ function wireEventListeners() {
             input.value = '';
             renderTemplates();
         }
+    });
+
+    // Recent faces panel toggle
+    document.getElementById('recentFacesPanelBtn').addEventListener('click', function() {
+        const body = document.getElementById('recentFacesPanelBody');
+        const chevron = document.getElementById('recentFacesChevron');
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        body.style.display = expanded ? 'none' : 'block';
+        chevron.textContent = expanded ? '+' : '-';
+    });
+
+    // Clear recent faces button
+    document.getElementById('clearRecentBtn').addEventListener('click', () => {
+        if (confirm('Clear recent build history?')) {
+            clearRecentFaces();
+        }
+    });
+
+    // Listen for loadRecentBuild events
+    window.addEventListener('loadRecentBuild', (e) => {
+        // Load the faces configuration
+        state.activeFaces = [...e.detail.faces];
+        renderActiveFaces();
+        updateHash();
+        // Scroll to watch faces section
+        document.querySelector('#config-panel').scrollTop = document.querySelector('.section-title').offsetTop;
+    });
+
+    // CRT Effects panel toggle
+    document.getElementById('crtEffectsPanelBtn').addEventListener('click', function() {
+        const body = document.getElementById('crtEffectsPanelBody');
+        const chevron = document.getElementById('crtEffectsChevron');
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        body.style.display = expanded ? 'none' : 'block';
+        chevron.textContent = expanded ? '+' : '-';
     });
 
     // Alarm tunes panel toggle

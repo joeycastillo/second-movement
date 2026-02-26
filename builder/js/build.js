@@ -147,6 +147,7 @@ export async function triggerBuild() {
 
         if (resp.status === 204) {
             showStatus('BUILD QUEUED. WAITING FOR RUNNER...', '');
+            trackRecentBuild(faces);
             setTimeout(pollBuild, 4000);
         } else {
             const body = await resp.text();
@@ -252,4 +253,87 @@ export function startCooldownUI(durationMs) {
         bar.classList.remove('active');
         document.getElementById('buildBtn').disabled = false;
     }, durationMs);
+}
+
+/**
+ * Track recently built face combinations
+ */
+export function trackRecentBuild(faces) {
+    const MAX_RECENT = 10;
+    const recent = JSON.parse(localStorage.getItem('sm_recent_faces') || '[]');
+    
+    // Create face signature (sorted list)
+    const signature = faces.filter(f => f !== '__secondary__').sort().join(',');
+    
+    // Find existing entry
+    const existing = recent.find(r => r.signature === signature);
+    if (existing) {
+        existing.count++;
+        existing.lastBuilt = Date.now();
+    } else {
+        recent.unshift({
+            signature,
+            faces,
+            count: 1,
+            lastBuilt: Date.now()
+        });
+    }
+    
+    // Sort by last built, keep top MAX_RECENT
+    recent.sort((a, b) => b.lastBuilt - a.lastBuilt);
+    recent.splice(MAX_RECENT);
+    
+    localStorage.setItem('sm_recent_faces', JSON.stringify(recent));
+    updateRecentFacesList();
+}
+
+/**
+ * Load recent faces into a build
+ */
+export function loadRecentBuild(signature) {
+    const recent = JSON.parse(localStorage.getItem('sm_recent_faces') || '[]');
+    const build = recent.find(r => r.signature === signature);
+    if (!build) return;
+    
+    // Dispatch custom event for app.js to handle
+    window.dispatchEvent(new CustomEvent('loadRecentBuild', { detail: { faces: build.faces } }));
+}
+
+/**
+ * Update recent faces list UI
+ */
+export function updateRecentFacesList() {
+    const recent = JSON.parse(localStorage.getItem('sm_recent_faces') || '[]');
+    const container = document.getElementById('recent-faces-list');
+    
+    if (recent.length === 0) {
+        container.innerHTML = '<div class="template-empty">no builds yet</div>';
+        return;
+    }
+    
+    container.innerHTML = recent.map(r => {
+        const faceCount = r.faces.filter(f => f !== '__secondary__').length;
+        const label = faceCount === 1 ? 'face' : 'faces';
+        return `
+            <div class="recent-face-item" data-signature="${r.signature}">
+                <span class="recent-face-name">${faceCount} ${label}</span>
+                <span class="recent-face-count">×${r.count}</span>
+            </div>
+        `;
+    }).join('');
+    
+    // Add click handlers
+    container.querySelectorAll('.recent-face-item').forEach(item => {
+        item.addEventListener('click', () => {
+            loadRecentBuild(item.dataset.signature);
+        });
+    });
+}
+
+/**
+ * Clear recent faces history
+ */
+export function clearRecentFaces() {
+    localStorage.removeItem('sm_recent_faces');
+    updateRecentFacesList();
 }
