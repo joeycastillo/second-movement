@@ -574,12 +574,23 @@
         }
 
         #led-color-swatch.animating {
-            animation: led-pulse 1.3s ease-in-out infinite;
+            animation: led-pulse 4s infinite;
         }
 
         @keyframes led-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+            /* Match watch hardware timing: 64 Hz, 20 steps fade-in (312ms), 32 steps fade-out (500ms) */
+            /* Fade in: 0-300ms (0-7.5%) - quadratic ease */
+            0% { opacity: 0; animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+            7.5% { opacity: 1; }
+            
+            /* Hold bright: 300-500ms (7.5-12.5%) */
+            12.5% { opacity: 1; animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+            
+            /* Fade out: 500-1000ms (12.5-25%) - quadratic ease */
+            25% { opacity: 0; }
+            
+            /* Long pause: 1000-4000ms (25-100%) */
+            100% { opacity: 0; }
         }
 
         /* ---- LED FADE ANIMATION PREVIEW ---- */
