@@ -1657,6 +1657,22 @@
                     Active Hours: <span id="led-ah-range">08:00-22:00</span>
                 </div>
                 
+                <!-- Zone Swap Toggle -->
+                <div class="setting-row" style="margin-top: 12px;">
+                    <span class="setting-label">SWAP ORDER</span>
+                    <div class="setting-control">
+                        <label class="toggle-wrap" aria-label="Swap Active/Momentum zones">
+                            <div class="toggle-track" id="toggleZoneSwap" role="switch" aria-checked="false">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                            <span class="toggle-label" id="labelZoneSwap">OFF</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 4px; text-align: center;">
+                    Enable for early peak schedules (Active → Momentum)
+                </div>
+                
             <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: 36px; font-size: 9px;">[RESET TO BALANCED]</button>
         </div>
     </section>
@@ -2763,7 +2779,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 20,
             zoneMomentumMax: 45,
-            zoneActiveMax: 70
+            zoneActiveMax: 70,
+            zoneSwapEnabled: false
         }
     },
     {
@@ -2804,7 +2821,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 15,
             zoneMomentumMax: 40,
-            zoneActiveMax: 80
+            zoneActiveMax: 80,
+            zoneSwapEnabled: true  // Early peak for morning workouts
         }
     },
     {
@@ -2845,7 +2863,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 25,
             zoneMomentumMax: 50,
-            zoneActiveMax: 75
+            zoneActiveMax: 75,
+            zoneSwapEnabled: false
         }
     },
     {
@@ -2884,7 +2903,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 35,
             zoneMomentumMax: 60,
-            zoneActiveMax: 85
+            zoneActiveMax: 85,
+            zoneSwapEnabled: false
         }
     },
     {
@@ -2924,7 +2944,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 20,
             zoneMomentumMax: 45,
-            zoneActiveMax: 80
+            zoneActiveMax: 80,
+            zoneSwapEnabled: false
         }
     },
     {
@@ -2965,7 +2986,8 @@ const PRESET_TEMPLATES = [
             homebaseTz: null,
             zoneEmergenceMax: 25,
             zoneMomentumMax: 50,
-            zoneActiveMax: 75
+            zoneActiveMax: 75,
+            zoneSwapEnabled: false
         }
     }
 ];
@@ -3014,7 +3036,9 @@ let state = {
     // Phase 3: Zone thresholds
     zoneEmergenceMax: 25,
     zoneMomentumMax: 50,
-    zoneActiveMax: 75
+    zoneActiveMax: 75,
+    // Phase 4: Zone swap toggle
+    zoneSwapEnabled: false
 };
 
 let buildId = null;
@@ -3129,6 +3153,8 @@ function loadTemplate(tmplState) {
     document.getElementById('homebase-lat').value = state.homebaseLat !== null ? state.homebaseLat : '';
     document.getElementById('homebase-lon').value = state.homebaseLon !== null ? state.homebaseLon : '';
     document.getElementById('homebase-tz').value = state.homebaseTz !== null ? state.homebaseTz : '';
+    // Restore zone swap toggle state
+    setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled || false);
     // Sync zone threshold UI (new multi-handle bar)
     updateZoneBar();
     updateZonePreview();
@@ -3382,12 +3408,20 @@ function updateZonePreview() {
     const emergenceMax = state.zoneEmergenceMax || 25;
     const momentumMax = state.zoneMomentumMax || 50;
     const activeMax = state.zoneActiveMax || 75;
+    const isSwapped = state.zoneSwapEnabled || false;
     
     let zoneName;
-    if (score <= emergenceMax) zoneName = 'EMERGENCE';
-    else if (score <= momentumMax) zoneName = 'MOMENTUM';
-    else if (score <= activeMax) zoneName = 'ACTIVE';
-    else zoneName = 'DESCENT';
+    if (score <= emergenceMax) {
+        zoneName = 'EMERGENCE';
+    } else if (score <= momentumMax) {
+        // When swapped: second zone is ACTIVE
+        zoneName = isSwapped ? 'ACTIVE' : 'MOMENTUM';
+    } else if (score <= activeMax) {
+        // When swapped: third zone is MOMENTUM
+        zoneName = isSwapped ? 'MOMENTUM' : 'ACTIVE';
+    } else {
+        zoneName = 'DESCENT';
+    }
     
     document.getElementById('zone-preview-name').textContent = zoneName;
     document.getElementById('zone-preview-score-display').textContent = score;
@@ -3472,6 +3506,9 @@ function updateZoneBar() {
     const aTime = qhToTime(ahStart + Math.round(aMin / 15));
     const endTime = qhToTime(ahEnd);
     
+    // Check if zones are swapped
+    const isSwapped = state.zoneSwapEnabled || false;
+    
     // Update segment positions (absolute positioning)
     const segEmergence = document.getElementById('segmentEmergence');
     const segMomentum = document.getElementById('segmentMomentum');
@@ -3482,14 +3519,38 @@ function updateZoneBar() {
         segEmergence.style.left = '0%';
         segEmergence.style.width = `${e}%`;
     }
+    
+    // When swapped: E → A → M → D (segment 2 becomes Active, segment 3 becomes Momentum)
     if (segMomentum) {
         segMomentum.style.left = `${e}%`;
         segMomentum.style.width = `${m - e}%`;
+        // Swap visual classes
+        if (isSwapped) {
+            segMomentum.className = 'zone-segment zone-active';
+            const label = segMomentum.querySelector('.zone-label');
+            if (label) label.textContent = 'ACTIVE';
+        } else {
+            segMomentum.className = 'zone-segment zone-momentum';
+            const label = segMomentum.querySelector('.zone-label');
+            if (label) label.textContent = 'MOMENTUM';
+        }
     }
+    
     if (segActive) {
         segActive.style.left = `${m}%`;
         segActive.style.width = `${a - m}%`;
+        // Swap visual classes
+        if (isSwapped) {
+            segActive.className = 'zone-segment zone-momentum';
+            const label = segActive.querySelector('.zone-label');
+            if (label) label.textContent = 'MOMENTUM';
+        } else {
+            segActive.className = 'zone-segment zone-active';
+            const label = segActive.querySelector('.zone-label');
+            if (label) label.textContent = 'ACTIVE';
+        }
     }
+    
     if (segDescent) {
         segDescent.style.left = `${a}%`;
         segDescent.style.width = `${100 - a}%`;
@@ -3866,6 +3927,19 @@ async function init() {
             e.target.style.borderColor = 'var(--color-critical)';
         }
     });
+    
+    // Zone swap toggle (Phase 4)
+    const toggleZoneSwap = document.getElementById('toggleZoneSwap');
+    if (toggleZoneSwap) {
+        toggleZoneSwap.addEventListener('click', function() {
+            state.zoneSwapEnabled = !state.zoneSwapEnabled;
+            setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled);
+            // Update zone bar segments and preview
+            updateZoneBar();
+            updateZonePreview();
+            updateHash();
+        });
+    }
     
     // Zone configuration - Presets + Multi-Handle Bar (Phase 3)
     // Preset card clicks
@@ -4681,6 +4755,11 @@ function updateHash() {
         params.push('zam=' + encodeURIComponent(state.zoneActiveMax));
     }
     
+    // Add zone swap flag if enabled (Phase 4)
+    if (state.zoneSwapEnabled) {
+        params.push('zswap=1');
+    }
+    
     history.replaceState(null, '', '#' + params.join('&'));
 }
 
@@ -4799,7 +4878,8 @@ function parseHash() {
         homebaseTz,
         zoneEmergenceMax,
         zoneMomentumMax,
-        zoneActiveMax
+        zoneActiveMax,
+        zoneSwapEnabled: params.zswap === '1'
     };
 }
 
@@ -4894,6 +4974,11 @@ async function triggerBuild() {
     }
     if (zam !== 75) {
         inputs.zone_active_max = String(zam);
+    }
+    
+    // Add zone swap flag (Phase 4)
+    if (state.zoneSwapEnabled) {
+        inputs.zone_swap_enabled = '1';
     }
 
     showStatus('DISPATCHING BUILD ' + buildId + '...', '');
