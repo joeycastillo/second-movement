@@ -4058,7 +4058,20 @@ function updateLEDPreview(red, green, blue) {
     const color = `rgb(${r}, ${g}, ${b})`;
     const ring = document.getElementById('led-color-ring');
     const center = document.getElementById('led-color-center');
-    if (ring) ring.style.backgroundColor = color;
+    
+    if (ring) {
+        ring.style.backgroundColor = color;
+        
+        // Restart animation to show new color immediately
+        const wasAnimating = ring.classList.contains('animating');
+        if (wasAnimating) {
+            ring.classList.remove('animating');
+            // Force reflow to restart animation
+            void ring.offsetWidth;
+            ring.classList.add('animating');
+        }
+    }
+    
     if (center) center.style.backgroundColor = color;
     
     // Update fade preview if running
