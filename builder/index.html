@@ -3713,9 +3713,30 @@ async function init() {
         pollBuild();
     }
 
-    wireSlider('ledRed', 'ledRedVal', v => { state.ledRed = +v; updateLEDPreview(); updateHash(); });
-    wireSlider('ledGreen', 'ledGreenVal', v => { state.ledGreen = +v; updateLEDPreview(); updateHash(); });
-    wireSlider('ledBlue', 'ledBlueVal', v => { state.ledBlue = +v; updateLEDPreview(); updateHash(); });
+    wireSlider('ledRed', 'ledRedVal', v => { 
+        state.ledRed = +v; 
+        const red = parseInt(v, 10);
+        const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+        const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
+    wireSlider('ledGreen', 'ledGreenVal', v => { 
+        state.ledGreen = +v; 
+        const red = parseInt(document.getElementById('ledRed').value || '0', 10);
+        const green = parseInt(v, 10);
+        const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
+    wireSlider('ledBlue', 'ledBlueVal', v => { 
+        state.ledBlue = +v; 
+        const red = parseInt(document.getElementById('ledRed').value || '0', 10);
+        const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+        const blue = parseInt(v, 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
     
     // Alarm tune dropdowns
     document.getElementById('hourlyChimeTune').addEventListener('change', e => {
@@ -4022,10 +4043,11 @@ function updateClock() {
 // ============================================================
 // LED PREVIEW (CRT GLOW VISUALIZATION)
 // ============================================================
-function updateLEDPreview() {
-    const red = parseInt(document.getElementById('ledRed').value || '0', 10);
-    const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
-    const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+function updateLEDPreview(red, green, blue) {
+    // Use passed values if provided, otherwise read from DOM
+    if (red === undefined) red = parseInt(document.getElementById('ledRed').value || '0', 10);
+    if (green === undefined) green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+    if (blue === undefined) blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
     
     // Convert 0-15 to 0-150 (dimmer to match actual watch LED brightness)
     // Watch LEDs are much less saturated than full RGB (17*15=255)
