@@ -1550,7 +1550,7 @@
             <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber-mid); user-select: none;">
                 WHAT ARE THE ZONES?
             </summary>
-            <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
+            <div id="zone-descriptions-content" style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
                 <p style="margin: 0 0 8px 0;"><strong style="color: #4A90E2;">EMERGENCE</strong> — Waking up, gentle start, low energy activities, building momentum slowly</p>
                 <p style="margin: 0 0 8px 0;"><strong style="color: #7ED321;">MOMENTUM</strong> — Energy building, light work, warm-up tasks, preparation for peak hours</p>
                 <p style="margin: 0 0 8px 0;"><strong style="color: #F5A623;">ACTIVE</strong> — Peak performance, deep work, complex tasks, maximum output and focus</p>
@@ -3152,6 +3152,7 @@ function loadTemplate(tmplState) {
     // Sync zone threshold UI (new multi-handle bar)
     updateZoneBar();
     updateZonePreview();
+    updateZoneDescriptions();
     renderBoards();
     renderDisplays();
     renderBranches();
@@ -3590,6 +3591,33 @@ function updateZoneBar() {
     });
 }
 
+// Update zone descriptions dropdown based on swap state
+function updateZoneDescriptions() {
+    const isSwapped = state.zoneSwapEnabled || false;
+    
+    // Find the dropdown content container
+    const dropdown = document.getElementById('zone-descriptions-content');
+    if (!dropdown) return;
+    
+    if (isSwapped) {
+        // SWAPPED ORDER: E → A → M → D
+        dropdown.innerHTML = `
+            <p style="margin: 0 0 8px 0;"><strong style="color: #4A90E2;">EMERGENCE</strong> — Waking up, gentle start, low energy activities, building momentum slowly</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #F5A623;">ACTIVE</strong> — Peak output early. High energy from the start. Deep work, complex tasks, maximum focus.</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #7ED321;">MOMENTUM</strong> — Sustaining momentum, maintaining the day's energy. Light work, preparation for evening.</p>
+            <p style="margin: 0 0 0 0;"><strong style="color: #D0021B;">DESCENT</strong> — Winding down, reflection, administrative tasks, preparation for rest</p>
+        `;
+    } else {
+        // STANDARD ORDER: E → M → A → D
+        dropdown.innerHTML = `
+            <p style="margin: 0 0 8px 0;"><strong style="color: #4A90E2;">EMERGENCE</strong> — Waking up, gentle start, low energy activities, building momentum slowly</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #7ED321;">MOMENTUM</strong> — Energy building, light work, warm-up tasks, preparation for peak hours</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #F5A623;">ACTIVE</strong> — Peak performance, deep work, complex tasks, maximum output and focus</p>
+            <p style="margin: 0 0 0 0;"><strong style="color: #D0021B;">DESCENT</strong> — Winding down, reflection, administrative tasks, preparation for rest</p>
+        `;
+    }
+}
+
 // Handle dragging
 function initZoneHandleDragging() {
     const handles = document.querySelectorAll('.zone-handle');
@@ -3743,6 +3771,7 @@ async function init() {
     // restore zone thresholds (Phase 3)
     // Values are stored in state and will be applied by updateZoneBar()
     updateZonePreview();
+    updateZoneDescriptions();
 
     renderBoards();
     renderDisplays();
@@ -3927,6 +3956,7 @@ async function init() {
             // Update zone bar segments and preview
             updateZoneBar();
             updateZonePreview();
+            updateZoneDescriptions();
             updateHash();
         });
     }
