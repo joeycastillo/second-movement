@@ -827,20 +827,38 @@
 
         .download-btn {
             width: 100%;
-            min-height: 48px;
+            min-height: 56px;
             margin-top: 10px;
-            border: 1px solid var(--color-border-active);
+            border: 2px solid var(--color-amber-mid);
             background: var(--color-bg);
             color: var(--color-amber-hot);
-            font-size: 13px;
-            letter-spacing: 0.12em;
+            font-size: 14px;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
+            text-decoration: none;
             cursor: pointer;
-            text-shadow: 0 0 8px rgba(255,208,96,0.4);
+            text-shadow: 0 0 12px rgba(255,208,96,0.5);
             display: none;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
 
-        .download-btn.active { display: block; }
+        .download-btn.active { 
+            display: flex;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+
+        .download-btn:hover {
+            border-color: var(--color-amber-bright);
+            background: rgba(255,208,96,0.05);
+            box-shadow: 0 0 20px rgba(255,176,0,0.4);
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--color-amber-mid); }
+            50% { border-color: var(--color-amber-bright); }
+        }
 
         .cooldown-bar {
             height: 3px;

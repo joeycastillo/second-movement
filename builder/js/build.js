@@ -199,7 +199,7 @@ export async function pollBuild() {
 
         if (status === 'completed') {
             if (conclusion === 'success') {
-                const buildName = 'second-movement-' + buildId;
+                const buildName = state.board + '-' + state.display + '-' + buildId;
                 const uf2Url = 'https://github.com/' + REPO + '/releases/download/custom-builds/' + buildName + '.uf2';
                 localStorage.setItem('sm_build_result_' + buildId, 'success:' + uf2Url);
                 showStatus('[OK] BUILD COMPLETE' + elapsed + ' - READY TO DOWNLOAD', 'success');
