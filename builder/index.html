@@ -2826,13 +2826,8 @@ function loadTemplate(tmplState) {
     document.getElementById('homebase-lat').value = state.homebaseLat !== null ? state.homebaseLat : '';
     document.getElementById('homebase-lon').value = state.homebaseLon !== null ? state.homebaseLon : '';
     document.getElementById('homebase-tz').value = state.homebaseTz !== null ? state.homebaseTz : '';
-    // Sync zone threshold UI
-    document.getElementById('zone-emergence-max').value = state.zoneEmergenceMax;
-    document.getElementById('zone-emergence-val').textContent = state.zoneEmergenceMax;
-    document.getElementById('zone-momentum-max').value = state.zoneMomentumMax;
-    document.getElementById('zone-momentum-val').textContent = state.zoneMomentumMax;
-    document.getElementById('zone-active-max').value = state.zoneActiveMax;
-    document.getElementById('zone-active-val').textContent = state.zoneActiveMax;
+    // Sync zone threshold UI (new multi-handle bar)
+    updateZoneBar();
     updateZonePreview();
     renderBoards();
     renderDisplays();
