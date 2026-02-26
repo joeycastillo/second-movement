@@ -971,6 +971,35 @@
             pointer-events: none;
         }
 
+        /* Preview Indicator */
+        .zone-preview-indicator {
+            position: absolute;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--color-amber-hot);
+            transform: translateX(-50%);
+            transition: left 0.2s ease;
+            z-index: 5;
+            opacity: 0.8;
+            box-shadow: 0 0 8px var(--color-amber-bright);
+        }
+
+        .preview-tooltip {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-bg);
+            border: 1px solid var(--color-amber-hot);
+            padding: 2px 6px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            color: var(--color-amber-hot);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
         /* Mobile adjustments */
         @media (max-width: 640px) {
             .zone-presets {
@@ -1575,34 +1604,35 @@
                         <div class="zone-handle" id="handle3" data-boundary="3" style="left: 75%;">
                             <div class="handle-tooltip">75</div>
                         </div>
+                        
+                        <!-- Preview Indicator -->
+                        <div class="zone-preview-indicator" id="zonePreviewIndicator" style="left: 50%;">
+                            <div class="preview-tooltip">50</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Slider -->
+                <div style="margin-top: 12px;">
+                    <div class="slider-wrap" style="width: 100%;">
+                        <input type="range" id="zone-preview-score" min="0" max="100" value="50" aria-label="Zone preview score">
+                        <span class="slider-val" id="zone-preview-val">50</span>
+                    </div>
+                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
+                        <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
+                        <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
+                        <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
+                        <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
+                        <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
+                        Active Hours: <span id="led-ah-range">08:00-22:00</span>
                     </div>
                 </div>
                 
                 <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: 36px; font-size: 9px;">[RESET TO BALANCED]</button>
             </div>
         </details>
-        
-        <!-- Preview -->
-        <div style="margin-top: 16px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
-            <div style="font-size: 10px; color: var(--color-amber-dim); letter-spacing: 0.08em; margin-bottom: 8px;">PREVIEW</div>
-            <div style="margin-bottom: 12px;">
-                <span style="font-size: 10px; color: var(--color-amber-mid); margin-bottom: 6px; display: block;">Phase score preview</span>
-                <div class="slider-wrap" style="width: 100%;">
-                    <input type="range" id="zone-preview-score" min="0" max="100" value="50" aria-label="Zone preview score">
-                    <span class="slider-val" id="zone-preview-val">50</span>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
-                <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
-                <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
-                <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
-                <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
-                <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
-            </div>
-            <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
-                Active Hours: <span id="led-ah-range">08:00-22:00</span>
-            </div>
-        </div>
     </section>
 
     <!-- SETTINGS -->
@@ -3061,6 +3091,14 @@ function updateZonePreview() {
     document.getElementById('zone-preview-name').textContent = zoneName;
     document.getElementById('zone-preview-val').textContent = score;
     document.getElementById('zone-preview-score-display').textContent = score;
+    
+    // Update visual indicator on zone bar
+    const indicator = document.getElementById('zonePreviewIndicator');
+    if (indicator) {
+        indicator.style.left = `${score}%`;
+        const tooltip = indicator.querySelector('.preview-tooltip');
+        if (tooltip) tooltip.textContent = score;
+    }
 }
 
 // ============================================================
