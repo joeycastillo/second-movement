@@ -890,17 +890,14 @@
 
         .zone-emergence {
             background: rgba(74, 144, 226, 0.3);
-            border-right: 1px solid rgba(74, 144, 226, 0.5);
         }
 
         .zone-momentum {
             background: rgba(126, 211, 33, 0.3);
-            border-right: 1px solid rgba(126, 211, 33, 0.5);
         }
 
         .zone-active {
             background: rgba(245, 166, 35, 0.3);
-            border-right: 1px solid rgba(245, 166, 35, 0.5);
         }
 
         .zone-descent {
@@ -1590,6 +1587,9 @@
                 <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
                 <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
             </div>
+            <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
+                Active Hours: <span id="led-ah-range">08:00-22:00</span>
+            </div>
         </div>
     </section>
 
@@ -1649,9 +1649,6 @@
             <!-- Live Color Preview -->
             <div class="led-preview-container">
                 <div id="led-color-swatch"></div>
-                <div id="led-active-hours-info" style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
-                    Active Hours: <span id="led-ah-range">08:00-22:00</span>
-                </div>
             </div>
         </div>
 
