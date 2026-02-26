@@ -789,6 +789,193 @@
             padding: 8px;
         }
 
+        /* Zone Preset Cards */
+        .zone-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .zone-preset-card {
+            padding: 10px;
+            border: 2px solid var(--color-border);
+            background: var(--color-bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .zone-preset-card:hover {
+            border-color: var(--color-amber-mid);
+        }
+
+        .zone-preset-card.active {
+            border-color: var(--color-amber-bright);
+            background: var(--color-bg-elevated);
+        }
+
+        .preset-name {
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--color-amber-mid);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .zone-preset-card.active .preset-name {
+            color: var(--color-amber-hot);
+        }
+
+        .preset-mini-bar {
+            display: flex;
+            height: 16px;
+            width: 100%;
+            border: 1px solid var(--color-border);
+        }
+
+        .preset-segment {
+            transition: width 0.3s ease;
+        }
+
+        .preset-values {
+            font-size: 9px;
+            color: var(--color-amber-dim);
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+
+        .zone-preset-card.active .preset-values {
+            color: var(--color-amber-bright);
+        }
+
+        /* Multi-Handle Zone Bar */
+        .zone-bar-container {
+            position: relative;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .zone-bar {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            border: 1px solid var(--color-border);
+        }
+
+        .zone-segment {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            transition: flex-grow 0.3s ease;
+        }
+
+        .zone-emergence {
+            background: rgba(74, 144, 226, 0.3);
+            border-right: 1px solid rgba(74, 144, 226, 0.5);
+        }
+
+        .zone-momentum {
+            background: rgba(126, 211, 33, 0.3);
+            border-right: 1px solid rgba(126, 211, 33, 0.5);
+        }
+
+        .zone-active {
+            background: rgba(245, 166, 35, 0.3);
+            border-right: 1px solid rgba(245, 166, 35, 0.5);
+        }
+
+        .zone-descent {
+            background: rgba(208, 2, 27, 0.3);
+        }
+
+        .zone-label {
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            color: var(--color-amber-hot);
+            text-shadow: 0 0 4px rgba(0,0,0,0.8);
+        }
+
+        .zone-range {
+            font-size: 8px;
+            color: var(--color-amber-mid);
+            font-family: var(--font-mono);
+            margin-top: 4px;
+        }
+
+        /* Draggable Handles */
+        .zone-handle {
+            position: absolute;
+            top: -4px;
+            width: 20px;
+            height: 88px;
+            background: var(--color-amber-bright);
+            border: 2px solid var(--color-amber-hot);
+            cursor: ew-resize;
+            transform: translateX(-50%);
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .zone-handle:hover {
+            background: var(--color-amber-hot);
+            box-shadow: 0 0 8px var(--color-amber-bright);
+        }
+
+        .zone-handle.dragging {
+            background: var(--color-amber-hot);
+            box-shadow: 0 0 12px var(--color-amber-bright);
+            cursor: grabbing;
+        }
+
+        .handle-tooltip {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-bg);
+            border: 1px solid var(--color-amber-mid);
+            padding: 2px 6px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            color: var(--color-amber-bright);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            .zone-presets {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .zone-bar {
+                height: 60px;
+            }
+            
+            .zone-handle {
+                width: 28px;
+                height: 68px;
+                top: -4px;
+            }
+            
+            .zone-label {
+                font-size: 8px;
+            }
+            
+            .zone-range {
+                font-size: 7px;
+            }
+        }
+
         /* ---- BUILD SECTION ---- */
         .build-section {
             padding: 16px 12px;
@@ -1259,59 +1446,103 @@
         </div>
     </div>
 
-    <!-- ZONE CONFIGURATION (PHASE 3) -->
+    <!-- ZONE CONFIGURATION (PHASE 3) - Option B: Presets + Multi-Handle Bar -->
     <section id="zone-config" class="section" style="display:none">
         <div class="section-title">ZONE CONFIGURATION</div>
-        <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Customize phase zone boundaries (optional - defaults work for most users)</p>
+        <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Choose a preset or customize zone boundaries</p>
         
-        <details style="margin-bottom: 16px; background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px;">
-            <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber-mid); user-select: none;">
-                WHAT ARE ZONES?
+        <!-- Zone Presets -->
+        <div class="zone-presets">
+            <div class="zone-preset-card active" data-preset="balanced">
+                <div class="preset-name">⚖ BALANCED</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 25%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">25 / 50 / 75</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="early-bloom">
+                <div class="preset-name">🌱 EARLY BLOOM</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 15%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">15 / 40 / 70</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="late-surge">
+                <div class="preset-name">🔥 LATE SURGE</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 30%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 20%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 20%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">30 / 60 / 80</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="narrow-active">
+                <div class="preset-name">⚡ NARROW ACTIVE</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 30%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 15%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 10%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 45%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">30 / 45 / 55</div>
+            </div>
+        </div>
+        
+        <!-- Customize Section (Collapsible) -->
+        <details class="zone-customize" id="zoneCustomizeSection">
+            <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber-mid); user-select: none; margin-top: 12px;">
+                ▼ CUSTOMIZE
             </summary>
-            <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
-                <p style="margin: 0 0 8px 0;">The phase engine divides your day into 4 zones based on your phase score (0-100):</p>
-                <ul style="margin: 4px 0 8px 20px; padding: 0;">
-                    <li><strong style="color: var(--color-amber-bright);">Emergence</strong> (0-25): Waking, orienting - focus on rest quality</li>
-                    <li><strong style="color: var(--color-amber-bright);">Momentum</strong> (26-50): Building energy - wake momentum key</li>
-                    <li><strong style="color: var(--color-amber-bright);">Active</strong> (51-75): Peak output - energy dominates</li>
-                    <li><strong style="color: var(--color-amber-bright);">Descent</strong> (76-100): Winding down - comfort priority</li>
-                </ul>
+            
+            <div style="margin-top: 12px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
+                <!-- Multi-Handle Segmented Bar -->
+                <div class="zone-bar-container">
+                    <div class="zone-bar" id="zoneBar">
+                        <div class="zone-segment zone-emergence" id="segmentEmergence">
+                            <span class="zone-label">EMERGENCE</span>
+                            <span class="zone-range" id="rangeEmergence">0-25</span>
+                        </div>
+                        <div class="zone-segment zone-momentum" id="segmentMomentum">
+                            <span class="zone-label">MOMENTUM</span>
+                            <span class="zone-range" id="rangeMomentum">26-50</span>
+                        </div>
+                        <div class="zone-segment zone-active" id="segmentActive">
+                            <span class="zone-label">ACTIVE</span>
+                            <span class="zone-range" id="rangeActive">51-75</span>
+                        </div>
+                        <div class="zone-segment zone-descent" id="segmentDescent">
+                            <span class="zone-label">DESCENT</span>
+                            <span class="zone-range" id="rangeDescent">76-100</span>
+                        </div>
+                        
+                        <!-- Draggable Handles -->
+                        <div class="zone-handle" id="handle1" data-boundary="1" style="left: 25%;">
+                            <div class="handle-tooltip">25</div>
+                        </div>
+                        <div class="zone-handle" id="handle2" data-boundary="2" style="left: 50%;">
+                            <div class="handle-tooltip">50</div>
+                        </div>
+                        <div class="zone-handle" id="handle3" data-boundary="3" style="left: 75%;">
+                            <div class="handle-tooltip">75</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: 36px; font-size: 9px;">[RESET TO BALANCED]</button>
             </div>
         </details>
         
-        <div class="setting-row">
-            <span class="setting-label">EMERGENCE/MOMENTUM</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-emergence-max" min="15" max="35" value="25" step="1" aria-label="Emergence/Momentum threshold">
-                <span class="slider-val" id="zone-emergence-val">25</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Emergence and Momentum zones (default: 25)
-        </div>
-        
-        <div class="setting-row">
-            <span class="setting-label">MOMENTUM/ACTIVE</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-momentum-max" min="40" max="60" value="50" step="1" aria-label="Momentum/Active threshold">
-                <span class="slider-val" id="zone-momentum-val">50</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Momentum and Active zones (default: 50)
-        </div>
-        
-        <div class="setting-row">
-            <span class="setting-label">ACTIVE/DESCENT</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-active-max" min="65" max="85" value="75" step="1" aria-label="Active/Descent threshold">
-                <span class="slider-val" id="zone-active-val">75</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Active and Descent zones (default: 75)
-        </div>
-        
+        <!-- Preview -->
         <div style="margin-top: 16px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
             <div style="font-size: 10px; color: var(--color-amber-dim); letter-spacing: 0.08em; margin-bottom: 8px;">PREVIEW</div>
             <div style="margin-bottom: 12px;">
@@ -1329,18 +1560,6 @@
                 <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
             </div>
         </div>
-        
-        <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: var(--touch-min);">[RESET TO DEFAULTS]</button>
-        
-        <details style="margin-top: 20px; background: var(--color-bg-recessed); border: 1px solid var(--color-amber-dim); padding: 12px;">
-            <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-alert); user-select: none;">
-                ADVANCED: METRIC WEIGHTS (EXPERTS ONLY)
-            </summary>
-            <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
-                <p style="margin: 0; color: var(--color-critical); font-style: italic;"><strong>Warning:</strong> Only modify if you understand the metric system. Incorrect weights can break face rotation.</p>
-                <p style="margin: 8px 0 0 0; color: var(--color-amber-trace);">Weight editor deferred to Phase 4. Use zone thresholds above for customization.</p>
-            </div>
-        </details>
     </section>
 
     <!-- SETTINGS -->
@@ -2790,6 +3009,174 @@ function updateZonePreview() {
 }
 
 // ============================================================
+// Zone Configuration - Presets + Multi-Handle Bar
+// ============================================================
+
+const ZONE_PRESETS = {
+    'balanced': { emergence: 25, momentum: 50, active: 75, name: '⚖ BALANCED' },
+    'early-bloom': { emergence: 15, momentum: 40, active: 70, name: '🌱 EARLY BLOOM' },
+    'late-surge': { emergence: 30, momentum: 60, active: 80, name: '🔥 LATE SURGE' },
+    'narrow-active': { emergence: 30, momentum: 45, active: 55, name: '⚡ NARROW ACTIVE' }
+};
+
+let zoneDragging = null;
+let zoneStartX = 0;
+let zoneStartValue = 0;
+
+// Apply preset
+function applyZonePreset(presetName) {
+    const preset = ZONE_PRESETS[presetName];
+    if (!preset) return;
+    
+    state.zoneEmergenceMax = preset.emergence;
+    state.zoneMomentumMax = preset.momentum;
+    state.zoneActiveMax = preset.active;
+    
+    updateZoneBar();
+    updateZonePreview();
+    updateHash();
+    
+    // Update active preset card
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.preset === presetName);
+    });
+}
+
+// Update the visual zone bar
+function updateZoneBar() {
+    const e = state.zoneEmergenceMax || 25;
+    const m = state.zoneMomentumMax || 50;
+    const a = state.zoneActiveMax || 75;
+    
+    // Update segment widths (as percentages)
+    const segEmergence = document.getElementById('segmentEmergence');
+    const segMomentum = document.getElementById('segmentMomentum');
+    const segActive = document.getElementById('segmentActive');
+    const segDescent = document.getElementById('segmentDescent');
+    
+    if (segEmergence) segEmergence.style.flexGrow = e;
+    if (segMomentum) segMomentum.style.flexGrow = (m - e);
+    if (segActive) segActive.style.flexGrow = (a - m);
+    if (segDescent) segDescent.style.flexGrow = (100 - a);
+    
+    // Update range labels
+    const rangeEmergence = document.getElementById('rangeEmergence');
+    const rangeMomentum = document.getElementById('rangeMomentum');
+    const rangeActive = document.getElementById('rangeActive');
+    const rangeDescent = document.getElementById('rangeDescent');
+    
+    if (rangeEmergence) rangeEmergence.textContent = `0-${e}`;
+    if (rangeMomentum) rangeMomentum.textContent = `${e + 1}-${m}`;
+    if (rangeActive) rangeActive.textContent = `${m + 1}-${a}`;
+    if (rangeDescent) rangeDescent.textContent = `${a + 1}-100`;
+    
+    // Update handle positions
+    const handle1 = document.getElementById('handle1');
+    const handle2 = document.getElementById('handle2');
+    const handle3 = document.getElementById('handle3');
+    
+    if (handle1) {
+        handle1.style.left = `${e}%`;
+        const tooltip1 = handle1.querySelector('.handle-tooltip');
+        if (tooltip1) tooltip1.textContent = e;
+    }
+    if (handle2) {
+        handle2.style.left = `${m}%`;
+        const tooltip2 = handle2.querySelector('.handle-tooltip');
+        if (tooltip2) tooltip2.textContent = m;
+    }
+    if (handle3) {
+        handle3.style.left = `${a}%`;
+        const tooltip3 = handle3.querySelector('.handle-tooltip');
+        if (tooltip3) tooltip3.textContent = a;
+    }
+    
+    // Check if matches any preset
+    const matchingPreset = Object.keys(ZONE_PRESETS).find(key => {
+        const preset = ZONE_PRESETS[key];
+        return preset.emergence === e && preset.momentum === m && preset.active === a;
+    });
+    
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.classList.toggle('active', matchingPreset && card.dataset.preset === matchingPreset);
+    });
+}
+
+// Handle dragging
+function initZoneHandleDragging() {
+    const handles = document.querySelectorAll('.zone-handle');
+    
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', startZoneDrag);
+        handle.addEventListener('touchstart', startZoneDrag);
+    });
+    
+    document.addEventListener('mousemove', zoneHandleMove);
+    document.addEventListener('touchmove', zoneHandleMove);
+    document.addEventListener('mouseup', endZoneDrag);
+    document.addEventListener('touchend', endZoneDrag);
+}
+
+function startZoneDrag(e) {
+    e.preventDefault();
+    zoneDragging = e.target.closest('.zone-handle');
+    if (!zoneDragging) return;
+    
+    zoneDragging.classList.add('dragging');
+    const boundary = parseInt(zoneDragging.dataset.boundary);
+    
+    if (boundary === 1) zoneStartValue = state.zoneEmergenceMax;
+    else if (boundary === 2) zoneStartValue = state.zoneMomentumMax;
+    else if (boundary === 3) zoneStartValue = state.zoneActiveMax;
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    zoneStartX = clientX;
+}
+
+function zoneHandleMove(e) {
+    if (!zoneDragging) return;
+    e.preventDefault();
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const bar = document.getElementById('zoneBar');
+    const barRect = bar.getBoundingClientRect();
+    const barWidth = barRect.width;
+    
+    // Calculate new value (0-100)
+    const relativeX = clientX - barRect.left;
+    let newValue = Math.round((relativeX / barWidth) * 100);
+    newValue = Math.max(0, Math.min(100, newValue));
+    
+    const boundary = parseInt(zoneDragging.dataset.boundary);
+    
+    // Apply constraints (handles can't cross, min 5pt gap)
+    if (boundary === 1) {
+        // Emergence max: can't exceed momentum - 5
+        newValue = Math.max(10, Math.min(newValue, state.zoneMomentumMax - 5));
+        state.zoneEmergenceMax = newValue;
+    } else if (boundary === 2) {
+        // Momentum max: between emergence + 5 and active - 5
+        newValue = Math.max(state.zoneEmergenceMax + 5, Math.min(newValue, state.zoneActiveMax - 5));
+        state.zoneMomentumMax = newValue;
+    } else if (boundary === 3) {
+        // Active max: above momentum + 5, below 95
+        newValue = Math.max(state.zoneMomentumMax + 5, Math.min(newValue, 95));
+        state.zoneActiveMax = newValue;
+    }
+    
+    updateZoneBar();
+    updateZonePreview();
+}
+
+function endZoneDrag(e) {
+    if (zoneDragging) {
+        zoneDragging.classList.remove('dragging');
+        zoneDragging = null;
+        updateHash();
+    }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 async function init() {
@@ -2866,18 +3253,7 @@ async function init() {
     }
     
     // restore zone thresholds (Phase 3)
-    if (state.zoneEmergenceMax !== undefined) {
-        document.getElementById('zone-emergence-max').value = state.zoneEmergenceMax;
-        document.getElementById('zone-emergence-val').textContent = state.zoneEmergenceMax;
-    }
-    if (state.zoneMomentumMax !== undefined) {
-        document.getElementById('zone-momentum-max').value = state.zoneMomentumMax;
-        document.getElementById('zone-momentum-val').textContent = state.zoneMomentumMax;
-    }
-    if (state.zoneActiveMax !== undefined) {
-        document.getElementById('zone-active-max').value = state.zoneActiveMax;
-        document.getElementById('zone-active-val').textContent = state.zoneActiveMax;
-    }
+    // Values are stored in state and will be applied by updateZoneBar()
     updateZonePreview();
 
     renderBoards();
@@ -3026,33 +3402,27 @@ async function init() {
         }
     });
     
-    // Zone configuration sliders (Phase 3)
-    document.getElementById('zone-emergence-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 15 || val > 35) val = 25;  // Clamp to safe range
-        state.zoneEmergenceMax = val;
-        document.getElementById('zone-emergence-val').textContent = val;
-        updateZonePreview();
-        updateHash();
+    // Zone configuration - Presets + Multi-Handle Bar (Phase 3)
+    // Preset card clicks
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.addEventListener('click', () => {
+            applyZonePreset(card.dataset.preset);
+        });
     });
     
-    document.getElementById('zone-momentum-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 40 || val > 60) val = 50;  // Clamp to safe range
-        state.zoneMomentumMax = val;
-        document.getElementById('zone-momentum-val').textContent = val;
-        updateZonePreview();
-        updateHash();
-    });
+    // Reset button
+    const zoneResetBtn = document.getElementById('zone-reset');
+    if (zoneResetBtn) {
+        zoneResetBtn.addEventListener('click', () => {
+            applyZonePreset('balanced');
+        });
+    }
     
-    document.getElementById('zone-active-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 65 || val > 85) val = 75;  // Clamp to safe range
-        state.zoneActiveMax = val;
-        document.getElementById('zone-active-val').textContent = val;
-        updateZonePreview();
-        updateHash();
-    });
+    // Initialize dragging
+    initZoneHandleDragging();
+    
+    // Initial render of zone bar
+    updateZoneBar();
     
     // Zone preview score slider
     document.getElementById('zone-preview-score').addEventListener('input', e => {
@@ -3062,21 +3432,6 @@ async function init() {
         document.getElementById('zone-preview-score-display').textContent = score;
         e.target.value = score;  // Clamp input
         updateZonePreview();
-    });
-    
-    // Zone reset button
-    document.getElementById('zone-reset').addEventListener('click', () => {
-        state.zoneEmergenceMax = 25;
-        state.zoneMomentumMax = 50;
-        state.zoneActiveMax = 75;
-        document.getElementById('zone-emergence-max').value = 25;
-        document.getElementById('zone-momentum-max').value = 50;
-        document.getElementById('zone-active-max').value = 75;
-        document.getElementById('zone-emergence-val').textContent = '25';
-        document.getElementById('zone-momentum-val').textContent = '50';
-        document.getElementById('zone-active-val').textContent = '75';
-        updateZonePreview();
-        updateHash();
     });
     
     // Use browser location button
