@@ -564,32 +564,57 @@
         }
 
         /* ---- LED CRT GLOW PREVIEW ---- */
+        .led-preview-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+        }
+
         #led-color-swatch {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 80px;
             height: 80px;
             border-radius: 50%;
             border: 2px solid var(--color-border);
             background-color: rgb(0, 150, 0); /* default green */
             transition: background-color 0.1s ease;
+            z-index: 1;
+        }
+
+        #led-color-swatch::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;  /* 50% of container */
+            height: 40px;
+            border-radius: 50%;
+            background-color: inherit;
+            z-index: 2;
+            opacity: 1;
         }
 
         #led-color-swatch.animating {
-            animation: led-pulse 4s infinite;
+            animation: led-pulse 2.5s infinite;
         }
 
         @keyframes led-pulse {
             /* Match watch hardware timing: 64 Hz, 20 steps fade-in (312ms), 32 steps fade-out (500ms) */
-            /* Fade in: 0-300ms (0-7.5%) - quadratic ease */
+            /* Fade in: 0-300ms (0-12%) - quadratic ease */
             0% { opacity: 0; animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-            7.5% { opacity: 1; }
+            12% { opacity: 1; }
             
-            /* Hold bright: 300-500ms (7.5-12.5%) */
-            12.5% { opacity: 1; animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+            /* Hold bright: 300-500ms (12-20%) */
+            20% { opacity: 1; animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
             
-            /* Fade out: 500-1000ms (12.5-25%) - quadratic ease */
-            25% { opacity: 0; }
+            /* Fade out: 500-1000ms (20-40%) - quadratic ease */
+            40% { opacity: 0; }
             
-            /* Long pause: 1000-4000ms (25-100%) */
+            /* Shorter pause: 1000-2500ms (40-100%) */
             100% { opacity: 0; }
         }
 
