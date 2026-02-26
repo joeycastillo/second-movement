@@ -1312,9 +1312,16 @@
         
         <div style="margin-top: 16px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
             <div style="font-size: 10px; color: var(--color-amber-dim); letter-spacing: 0.08em; margin-bottom: 8px;">PREVIEW</div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 10px; color: var(--color-amber-mid);">At phase score</span>
-                <input type="number" id="zone-preview-score" value="50" min="0" max="100" style="width: 60px; min-height: 36px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-amber-bright); padding: 4px 6px; font-family: var(--font-mono); font-size: 11px; text-align: center;">
+            <div style="margin-bottom: 12px;">
+                <span style="font-size: 10px; color: var(--color-amber-mid); margin-bottom: 6px; display: block;">Phase score preview</span>
+                <div class="slider-wrap" style="width: 100%;">
+                    <input type="range" id="zone-preview-score" min="0" max="100" value="50" aria-label="Zone preview score">
+                    <span class="slider-val" id="zone-preview-val">50</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
+                <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
+                <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
                 <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
                 <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
                 <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
@@ -2793,6 +2800,8 @@ function updateZonePreview() {
     else zoneName = 'DESCENT';
     
     document.getElementById('zone-preview-name').textContent = zoneName;
+    document.getElementById('zone-preview-val').textContent = score;
+    document.getElementById('zone-preview-score-display').textContent = score;
 }
 
 // ============================================================
@@ -3065,10 +3074,12 @@ async function init() {
         updateHash();
     });
     
-    // Zone preview score input
+    // Zone preview score slider
     document.getElementById('zone-preview-score').addEventListener('input', e => {
         let score = parseInt(e.target.value, 10);
         if (isNaN(score) || score < 0 || score > 100) score = 50;
+        document.getElementById('zone-preview-val').textContent = score;
+        document.getElementById('zone-preview-score-display').textContent = score;
         e.target.value = score;  // Clamp input
         updateZonePreview();
     });
