@@ -884,6 +884,7 @@
             height: 80px;
             border: 1px solid var(--color-border);
             overflow: hidden;
+            cursor: crosshair;
         }
 
         .zone-segment {
@@ -1612,22 +1613,16 @@
                     </div>
                 </div>
                 
-                <!-- Preview Slider -->
-                <div style="margin-top: 12px;">
-                    <div class="slider-wrap" style="width: 100%;">
-                        <input type="range" id="zone-preview-score" min="0" max="100" value="50" aria-label="Zone preview score">
-                        <span class="slider-val" id="zone-preview-val">50</span>
-                    </div>
-                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
-                        <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
-                        <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
-                        <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
-                        <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
-                        <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
-                    </div>
-                    <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
-                        Active Hours: <span id="led-ah-range">08:00-22:00</span>
-                    </div>
+                <!-- Preview Info -->
+                <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
+                    <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
+                    <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
+                </div>
+                <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
+                    Active Hours: <span id="led-ah-range">08:00-22:00</span>
                 </div>
                 
                 <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: 36px; font-size: 9px;">[RESET TO BALANCED]</button>
@@ -3077,7 +3072,8 @@ function updateZoneConfigVisibility() {
 }
 
 function updateZonePreview() {
-    const score = parseInt(document.getElementById('zone-preview-score').value) || 50;
+    const scoreEl = document.getElementById('zone-preview-score');
+    const score = scoreEl ? parseInt(scoreEl.value) || 50 : 50;
     const emergenceMax = state.zoneEmergenceMax || 25;
     const momentumMax = state.zoneMomentumMax || 50;
     const activeMax = state.zoneActiveMax || 75;
@@ -3089,7 +3085,6 @@ function updateZonePreview() {
     else zoneName = 'DESCENT';
     
     document.getElementById('zone-preview-name').textContent = zoneName;
-    document.getElementById('zone-preview-val').textContent = score;
     document.getElementById('zone-preview-score-display').textContent = score;
     
     // Update visual indicator on zone bar
@@ -3568,14 +3563,59 @@ async function init() {
     // Initial render of zone bar
     updateZoneBar();
     
-    // Zone preview score slider
-    document.getElementById('zone-preview-score').addEventListener('input', e => {
-        let score = parseInt(e.target.value, 10);
-        if (isNaN(score) || score < 0 || score > 100) score = 50;
-        document.getElementById('zone-preview-val').textContent = score;
+    // Zone bar click/drag for preview
+    const zoneBar = document.getElementById('zoneBar');
+    let previewDragging = false;
+    
+    function updatePreviewFromBar(e) {
+        const rect = zoneBar.getBoundingClientRect();
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const relativeX = clientX - rect.left;
+        let score = Math.round((relativeX / rect.width) * 100);
+        score = Math.max(0, Math.min(100, score));
+        
+        // Update hidden state
+        if (!document.getElementById('zone-preview-score')) {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'zone-preview-score';
+            hiddenInput.value = score;
+            zoneBar.appendChild(hiddenInput);
+        } else {
+            document.getElementById('zone-preview-score').value = score;
+        }
+        
         document.getElementById('zone-preview-score-display').textContent = score;
-        e.target.value = score;  // Clamp input
         updateZonePreview();
+    }
+    
+    zoneBar.addEventListener('mousedown', e => {
+        // Don't interfere with handle dragging
+        if (e.target.closest('.zone-handle')) return;
+        previewDragging = true;
+        updatePreviewFromBar(e);
+    });
+    
+    zoneBar.addEventListener('touchstart', e => {
+        if (e.target.closest('.zone-handle')) return;
+        previewDragging = true;
+        updatePreviewFromBar(e);
+    });
+    
+    document.addEventListener('mousemove', e => {
+        if (previewDragging) updatePreviewFromBar(e);
+    });
+    
+    document.addEventListener('touchmove', e => {
+        if (previewDragging) updatePreviewFromBar(e);
+    });
+    
+    document.addEventListener('mouseup', () => {
+        previewDragging = false;
+    });
+    
+    document.addEventListener('touchend', () => {
+        previewDragging = false;
     });
     
     // Use browser location button
