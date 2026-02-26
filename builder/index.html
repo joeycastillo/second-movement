@@ -652,7 +652,7 @@
             display: none;
         }
 
-        .setting-summary #crtQualityLabel {
+        .setting-summary-unused #crtQualityLabel {
             color: var(--color-amber-bright);
         }
 
@@ -1180,6 +1180,25 @@
         </div>
     </section>
 
+    <!-- CRT EFFECTS -->
+    <section class="panel" id="crtEffectsPanel">
+        <button class="panel-header" id="crtEffectsPanelBtn" aria-expanded="false" aria-controls="crtEffectsPanelBody">
+            <span>[ CRT EFFECTS ]</span>
+            <span class="panel-chevron" id="crtEffectsChevron">+</span>
+        </button>
+        <div class="panel-body" id="crtEffectsPanelBody" style="display:none">
+            <div class="setting-options" id="crtQualityOptions">
+                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
+                <button class="setting-option" data-crt-quality="off">OFF</button>
+                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
+                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
+            </div>
+            <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+                CRT shader quality (AUTO detects device performance)
+            </div>
+        </div>
+    </section>
+
     <!-- WATCH FACES -->
     <div class="section">
         <div class="section-title">WATCH FACES</div>
@@ -1357,19 +1376,6 @@
                 </label>
             </div>
         </div>
-
-        <!-- CRT EFFECTS QUALITY -->
-        <details class="setting-collapsible">
-            <summary class="setting-summary">
-                CRT EFFECTS <span id="crtQualityLabel">▸ AUTO</span>
-            </summary>
-            <div class="setting-options" id="crtQualityOptions">
-                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
-                <button class="setting-option" data-crt-quality="off">OFF</button>
-                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
-                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
-            </div>
-        </details>
 
         <!-- LED COLOR SECTION HEADER -->
         <div class="setting-section-header">
@@ -2967,8 +2973,6 @@ async function init() {
             button.classList.add('active');
             
             // Update label
-            document.getElementById('crtQualityLabel').textContent = '▸ ' + quality.toUpperCase();
-            
             // Notify user to reload (console only, no alert)
             console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- reload page to apply');
         });
@@ -2983,9 +2987,6 @@ async function init() {
             button.classList.remove('active');
         }
     });
-    
-    // Initialize label with saved quality
-    document.getElementById('crtQualityLabel').textContent = '▸ ' + savedCrtQuality.toUpperCase();
     
     document.getElementById('toggleBtn').addEventListener('click', () => {
         state.btnSound = !state.btnSound;
@@ -3163,6 +3164,16 @@ async function init() {
         chevron.textContent = expanded ? '+' : '-';
     });
 
+    // CRT Effects panel toggle
+    document.getElementById('crtEffectsPanelBtn').addEventListener('click', function() {
+        const body = document.getElementById('crtEffectsPanelBody');
+        const chevron = document.getElementById('crtEffectsChevron');
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        body.style.display = expanded ? 'none' : 'block';
+        chevron.textContent = expanded ? '+' : '-';
+    });
+
     // Save template button
     document.getElementById('saveTemplateBtn').addEventListener('click', function() {
         const input = document.getElementById('templateNameInput');
@@ -3193,10 +3204,11 @@ function updateLEDPreview() {
     const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
     const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
     
-    // Convert 0-15 hex to 0-255
-    const r = red * 17;
-    const g = green * 17;
-    const b = blue * 17;
+    // Convert 0-15 to 0-150 (dimmer to match actual watch LED brightness)
+    // Watch LEDs are much less saturated than full RGB (17*15=255)
+    const r = red * 10;
+    const g = green * 10;
+    const b = blue * 10;
     
     const color = `rgb(${r}, ${g}, ${b})`;
     const glowEl = document.getElementById('led-glow');
