@@ -166,6 +166,24 @@ function wireEventListeners() {
     wireSlider('ledGreen', 'ledGreenVal', v => { state.ledGreen = +v; updateLEDPreview(); updateHash(); });
     wireSlider('ledBlue', 'ledBlueVal', v => { state.ledBlue = +v; updateLEDPreview(); updateHash(); });
 
+    // LED preview button
+    document.getElementById('ledPreviewBtn').addEventListener('click', () => {
+        if (state.smoothLEDFade) {
+            // Show fade animation
+            import('./ui.js').then(({ startLEDPreview, stopLEDPreview }) => {
+                stopLEDPreview();
+                startLEDPreview();
+            });
+        } else {
+            // Flash instant preview
+            const glowEl = document.getElementById('led-glow');
+            if (glowEl) {
+                glowEl.style.opacity = '0';
+                setTimeout(() => { glowEl.style.opacity = '1'; }, 50);
+            }
+        }
+    });
+
     // Alarm tune dropdowns
     document.getElementById('hourlyChimeTune').addEventListener('change', e => {
         state.hourlyChimeTune = e.target.value;

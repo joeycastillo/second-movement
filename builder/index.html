@@ -568,14 +568,69 @@
         }
 
         /* ---- LED CRT GLOW PREVIEW ---- */
+        /* ---- LED COLOR SECTION LAYOUT ---- */
+        .led-color-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid var(--color-amber-trace);
+            background: var(--color-bg-recessed);
+        }
+
+        .led-sliders {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-row.compact {
+            padding: 4px 0;
+        }
+
+        .setting-row.compact .setting-label {
+            font-size: 9px;
+            min-width: 50px;
+        }
+
+        .led-preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .preview-btn {
+            width: 80px;
+            height: 28px;
+            border: 1px solid var(--color-amber-mid);
+            background: var(--color-bg);
+            color: var(--color-amber-hot);
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preview-btn:hover {
+            border-color: var(--color-amber-bright);
+            box-shadow: 0 0 8px rgba(255,176,0,0.3);
+        }
+
+        .preview-btn:active {
+            background: rgba(255,208,96,0.1);
+        }
+
         .led-preview {
             display: inline-block;
             vertical-align: middle;
         }
 
         .crt-tube {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: #1a1a1a;
             border: 2px solid #333;
@@ -586,8 +641,8 @@
         }
 
         .crt-tube .glow {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             transition: all 0.3s ease;
             box-shadow: 
@@ -1352,36 +1407,52 @@
             </div>
         </details>
 
-        <!-- LED RED -->
-        <div class="setting-row">
-            <span class="setting-label">LED RED</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledRed" min="0" max="15" value="0" aria-label="LED red brightness">
-                <span class="slider-val" id="ledRedVal">0</span>
+        <!-- LED COLOR SECTION -->
+        <div class="led-color-section">
+            <!-- RGB Sliders -->
+            <div class="led-sliders">
+                <!-- LED RED -->
+                <div class="setting-row compact">
+                    <span class="setting-label">RED</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledRed" min="0" max="15" value="0" aria-label="LED red brightness">
+                        <span class="slider-val" id="ledRedVal">0</span>
+                    </div>
+                </div>
+
+                <!-- LED GREEN -->
+                <div class="setting-row compact">
+                    <span class="setting-label">GREEN</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledGreen" min="0" max="15" value="15" aria-label="LED green brightness">
+                        <span class="slider-val" id="ledGreenVal">15</span>
+                    </div>
+                </div>
+
+                <!-- LED BLUE -->
+                <div class="setting-row compact">
+                    <span class="setting-label">BLUE</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledBlue" min="0" max="15" value="0" aria-label="LED blue brightness">
+                        <span class="slider-val" id="ledBlueVal">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="led-preview-container">
+                <div class="led-preview">
+                    <div class="crt-tube" id="led-preview-tube">
+                        <div class="glow" id="led-glow"></div>
+                    </div>
+                </div>
+                <button class="preview-btn" id="ledPreviewBtn" aria-label="Preview LED animation">PREVIEW</button>
             </div>
         </div>
 
-        <!-- LED GREEN -->
+        <!-- LED ANIMATION OPTIONS -->
         <div class="setting-row">
-            <span class="setting-label">LED GREEN</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledGreen" min="0" max="15" value="15" aria-label="LED green brightness">
-                <span class="slider-val" id="ledGreenVal">15</span>
-            </div>
-        </div>
-
-        <!-- LED BLUE -->
-        <div class="setting-row">
-            <span class="setting-label">LED BLUE</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledBlue" min="0" max="15" value="0" aria-label="LED blue brightness">
-                <span class="slider-val" id="ledBlueVal">0</span>
-            </div>
-        </div>
-
-        <!-- SMOOTH LED FADE (PR #71) -->
-        <div class="setting-row">
-            <span class="setting-label">SMOOTH FADE</span>
+            <span class="setting-label">FADE ANIM</span>
             <div class="setting-control">
                 <label class="toggle-wrap" aria-label="Smooth LED fade animation">
                     <div class="toggle-track" id="toggleSmoothLED" role="switch" aria-checked="false">
@@ -1389,24 +1460,6 @@
                     </div>
                     <span class="toggle-label" id="labelSmoothLED">OFF</span>
                 </label>
-            </div>
-        </div>
-
-        <!-- LED FADE ANIMATION PREVIEW -->
-        <div id="ledFadePreview" style="display: none;">
-            <canvas id="ledCanvas" width="100" height="100"></canvas>
-            <span class="preview-label">PREVIEW</span>
-        </div>
-
-        <!-- LED PREVIEW (CRT Glow Visualization) -->
-        <div class="setting-row">
-            <span class="setting-label">LED PREVIEW</span>
-            <div class="setting-control">
-                <div class="led-preview">
-                    <div class="crt-tube" id="led-preview-tube">
-                        <div class="glow" id="led-glow"></div>
-                    </div>
-                </div>
             </div>
         </div>
 
