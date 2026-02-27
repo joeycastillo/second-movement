@@ -3162,6 +3162,10 @@ function loadTemplate(tmplState) {
     if (tmplState.zoneSwapEnabled !== undefined) {
         state.zoneSwapEnabled = !!tmplState.zoneSwapEnabled;
     }
+    // Load phase engine toggle state
+    if (tmplState.phaseEngineEnabled !== undefined) {
+        state.phaseEngineEnabled = !!tmplState.phaseEngineEnabled;
+    }
     // sync sliders/toggles to loaded state
     document.getElementById('ledRed').value = state.ledRed;
     document.getElementById('ledRedVal').textContent = state.ledRed;
@@ -3816,6 +3820,14 @@ async function init() {
     // Values are stored in state and will be applied by updateZoneBar()
     updateZonePreview();
     updateZoneDescriptions();
+    
+    // Restore phase engine toggle state and zone config visibility
+    setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled || false);
+    setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled || false);
+    const zoneConfigSection = document.getElementById('zone-config');
+    if (zoneConfigSection) {
+        zoneConfigSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
 
     renderBoards();
     renderDisplays();
