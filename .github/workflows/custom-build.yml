@@ -125,11 +125,6 @@ on:
         required: false
         default: '0'
         type: string
-      phase_engine:
-        description: 'Enable phase engine (true/false)'
-        required: false
-        default: 'false'
-        type: string
 
 jobs:
   build:
@@ -185,7 +180,7 @@ jobs:
           INPUT_ACTIVE_HOURS_ENABLED: ${{ inputs.active_hours_enabled }}
           INPUT_ACTIVE_HOURS_START: ${{ inputs.active_hours_start }}
           INPUT_ACTIVE_HOURS_END: ${{ inputs.active_hours_end }}
-          INPUT_PHASE_ENGINE: ${{ github.event.inputs.phase_engine }}
+          INPUT_PHASE_ENGINE: ${{ github.event.inputs.homebase_lat != '' && github.event.inputs.homebase_lon != '' && github.event.inputs.homebase_tz != '' }}
           INPUT_ZONE_EMERGENCE_MAX: ${{ github.event.inputs.zone_emergence_max }}
           INPUT_ZONE_MOMENTUM_MAX: ${{ github.event.inputs.zone_momentum_max }}
           INPUT_ZONE_ACTIVE_MAX: ${{ github.event.inputs.zone_active_max }}

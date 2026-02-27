@@ -432,6 +432,18 @@ def main():
         )
         sys.exit(1)
 
+    # Build face list for the C array
+    face_list_lines = []
+    for face_id in face_ids:
+        # Skip divider markers (__secondary__, __tertiary__, etc.)
+        if face_id.startswith('__'):
+            continue
+        face_list_lines.append("    {},".format(face_id))
+    # Strip trailing comma from last entry
+    if face_list_lines:
+        face_list_lines[-1] = face_list_lines[-1].rstrip(",")
+    face_list = "\n".join(face_list_lines)
+
     # Parse and validate numeric/boolean inputs
     try:
         secondary_index = int(args.secondary_index)
@@ -443,7 +455,6 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
-
 
     try:
         led_red = int(args.led_red)
@@ -480,77 +491,6 @@ def main():
 
     active_hours_enabled = parse_bool(args.active_hours_enabled)
     phase_engine_enabled = parse_bool(args.phase_engine)
-    
-    # Adjust secondary_index if phase engine is enabled
-    # Zone faces will be extracted and placed at indices 2-5
-    # We need to recalculate secondary_index based on non-zone face count
-    if phase_engine_enabled:
-        zone_face_names_for_calc = ['emergence_face', 'momentum_face', 'active_face', 'descent_face']
-        # Count non-zone faces before the original secondary_index position
-        faces_before_secondary = face_ids[:secondary_index]
-        non_zone_before_secondary = [f for f in faces_before_secondary 
-                                     if not f.startswith('__') and f not in zone_face_names_for_calc]
-        non_zone_count = len(non_zone_before_secondary)
-        
-        # Recalculate secondary_index based on rearranged positions
-        # Formula: if non_zone_count <= 2: new_index = non_zone_count
-        #          if non_zone_count > 2: new_index = non_zone_count + 4
-        if non_zone_count <= 2:
-            secondary_index = non_zone_count
-        else:
-            secondary_index = non_zone_count + 4
-
-    # Build face list for the C array
-    # If Phase Engine is enabled, extract zone faces and insert at indices 2-5
-    zone_face_names = ['emergence_face', 'momentum_face', 'active_face', 'descent_face']
-    
-    if phase_engine_enabled:
-        # Extract zone faces from the face list
-        zone_faces = []
-        non_zone_faces = []
-        for face_id in face_ids:
-            if face_id.startswith('__'):
-                continue
-            if face_id in zone_face_names:
-                zone_faces.append(face_id)
-            else:
-                non_zone_faces.append(face_id)
-        
-        # Build the final face list: first 2 faces, then 4 zone faces, then remaining faces
-        face_list_lines = []
-        
-        # Add first 2 faces (indices 0-1)
-        for i in range(min(2, len(non_zone_faces))):
-            face_list_lines.append("    {},".format(non_zone_faces[i]))
-        
-        # Add zone faces wrapped in #ifdef (indices 2-5)
-        face_list_lines.append("#ifdef PHASE_ENGINE_ENABLED")
-        for zone_face in zone_faces[:4]:  # Ensure we only add up to 4 zone faces
-            face_list_lines.append("    {},".format(zone_face))
-        face_list_lines.append("#endif")
-        
-        # Add remaining non-zone faces (index 6 onward, or 2 onward if no phase engine)
-        for i in range(2, len(non_zone_faces)):
-            face_list_lines.append("    {},".format(non_zone_faces[i]))
-        
-        # Strip trailing comma from last entry
-        if face_list_lines and not face_list_lines[-1].startswith('#'):
-            face_list_lines[-1] = face_list_lines[-1].rstrip(",")
-        
-        face_list = "\n".join(face_list_lines)
-    else:
-        # Original logic for non-Phase Engine builds
-        face_list_lines = []
-        for face_id in face_ids:
-            # Skip divider markers (__secondary__, __tertiary__, etc.)
-            if face_id.startswith('__'):
-                continue
-            face_list_lines.append("    {},".format(face_id))
-        # Strip trailing comma from last entry
-        if face_list_lines:
-            face_list_lines[-1] = face_list_lines[-1].rstrip(",")
-        face_list = "\n".join(face_list_lines)
-
 
     # Validate zone boundary inputs
     try:
