@@ -199,19 +199,21 @@
         /* CRT Menu Button in Header */
         .crt-menu-button {
             cursor: pointer;
-            padding: 3px 6px;
+            padding: 2px 6px;
             margin-right: 8px;
-            color: var(--color-amber-mid);
-            font-size: 9px;
-            border: 1px solid var(--color-amber-dim);
+            color: var(--color-amber-dim);
+            font-size: 8px;
+            border: 1px solid var(--color-border);
+            opacity: 0.7;
             transition: all 0.2s ease;
             display: inline-block;
         }
 
         .crt-menu-button:hover {
-            color: var(--color-amber-hot);
-            border-color: var(--color-amber-bright);
-            background: rgba(245, 166, 35, 0.1);
+            color: var(--color-amber-bright);
+            border-color: var(--color-amber-mid);
+            opacity: 1;
+            background: rgba(245, 166, 35, 0.05);
         }
 
         /* Floating Menu */
@@ -3514,8 +3516,11 @@ function updateAhVisualBar() {
 // ZONE CONFIGURATION (PHASE 3)
 // ============================================================
 function updateZoneConfigVisibility() {
-    // Always show zone configuration section
-    document.getElementById('zone-config').style.display = 'block';
+    const zoneSection = document.getElementById('zone-config');
+    if (zoneSection) {
+        // Only show when phase engine is enabled
+        zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
 }
 
 function updateZonePreview() {
