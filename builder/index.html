@@ -1540,8 +1540,30 @@
         </div>
     </div>
 
+    <!-- PHASE ENGINE -->
+    <section class="section" id="phaseEngineSection">
+        <div class="section-title">PHASE ENGINE</div>
+        
+        <div class="setting-row">
+            <span class="setting-label">ENABLED</span>
+            <div class="setting-control">
+                <label class="toggle-wrap" aria-label="Phase engine enabled toggle">
+                    <div class="toggle-track" id="togglePhaseEngine" role="switch" aria-checked="false">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label" id="labelPhaseEngine">OFF</span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px;">
+            Enable circadian rhythm tracking with zone-based face playlist.
+            Requires sensor board (Pro) for full functionality.
+        </div>
+    </section>
+
     <!-- ZONE CONFIGURATION (PHASE 3) - Option B: Presets + Multi-Handle Bar -->
-    <section id="zone-config" class="section">
+    <section id="zone-config" class="section" style="display: none;">
         <div class="section-title">ZONE CONFIGURATION</div>
         <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Choose a preset or customize zone boundaries</p>
         
@@ -2631,10 +2653,6 @@ const PRESET_TEMPLATES = [
             activeFaces: [
                 'wyoscan_face',
                 'clock_face',
-                'emergence_face',
-                'momentum_face',
-                'active_face',
-                'descent_face',
                 'timer_face',
                 'fast_stopwatch_face',
                 'advanced_alarm_face',
@@ -2648,7 +2666,12 @@ const PRESET_TEMPLATES = [
                 'lis2dw_monitor_face',
                 'light_sensor_face',
                 'voltage_face',
-                'settings_face'
+                'settings_face',
+                '__tertiary__',
+                'emergence_face',
+                'active_face',
+                'momentum_face',
+                'descent_face'
             ],
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
@@ -2658,7 +2681,8 @@ const PRESET_TEMPLATES = [
             smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
             activeHoursEnabled: true,
             activeHoursStart: 16,
-            activeHoursEnd: 92
+            activeHoursEnd: 92,
+            phaseEngineEnabled: true
         }
     },
     {
@@ -3042,7 +3066,9 @@ let state = {
     zoneMomentumMax: 50,
     zoneActiveMax: 75,
     // Phase 4: Zone swap toggle
-    zoneSwapEnabled: false
+    zoneSwapEnabled: false,
+    // Phase Engine toggle
+    phaseEngineEnabled: false
 };
 
 let buildId = null;
@@ -3163,6 +3189,13 @@ function loadTemplate(tmplState) {
     document.getElementById('homebase-tz').value = state.homebaseTz !== null ? state.homebaseTz : '';
     // Restore zone swap toggle state
     setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled || false);
+    // Restore phase engine toggle state
+    setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled || false);
+    // Show/hide zone configuration based on phase engine state
+    const zoneSection = document.getElementById('zone-config');
+    if (zoneSection) {
+        zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
     // Sync zone threshold UI (new multi-handle bar)
     updateZoneBar();
     updateZonePreview();
@@ -3961,6 +3994,30 @@ async function init() {
         }
     });
     
+    // Phase Engine toggle
+    const togglePhaseEngine = document.getElementById('togglePhaseEngine');
+    if (togglePhaseEngine) {
+        togglePhaseEngine.addEventListener('click', function() {
+            state.phaseEngineEnabled = !state.phaseEngineEnabled;
+            setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled);
+            
+            // Show/hide zone configuration
+            const zoneSection = document.getElementById('zone-config');
+            if (zoneSection) {
+                zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+            }
+            
+            // Add/remove phase faces when toggled
+            if (state.phaseEngineEnabled) {
+                addPhaseFacesToTertiary();
+            } else {
+                removePhaseFacesFromTertiary();
+            }
+            
+            updateHash();
+        });
+    }
+    
     // Zone swap toggle (Phase 4)
     const toggleZoneSwap = document.getElementById('toggleZoneSwap');
     if (toggleZoneSwap) {
@@ -4440,6 +4497,87 @@ function renderBranches() {
 }
 
 // ============================================================
+// PHASE FACE MANAGEMENT
+// ============================================================
+function addPhaseFacesToTertiary() {
+    const phaseFaces = [
+        'emergence_face',
+        'active_face',
+        'momentum_face',
+        'descent_face'
+    ];
+    
+    // Get current active faces
+    const activeFaces = state.activeFaces.slice();
+    
+    // Remove phase faces from any position and dividers
+    const filtered = activeFaces.filter(f => 
+        !phaseFaces.includes(f) && 
+        f !== '__secondary__' && 
+        f !== '__tertiary__'
+    );
+    
+    // Find or add divider positions
+    let secondaryIdx = activeFaces.indexOf('__secondary__');
+    let tertiaryIdx = activeFaces.indexOf('__tertiary__');
+    
+    // Ensure secondary divider exists
+    if (secondaryIdx === -1) {
+        // Place secondary after first few faces (reasonable default)
+        const insertPoint = Math.min(filtered.length, 3);
+        filtered.splice(insertPoint, 0, '__secondary__');
+        secondaryIdx = insertPoint;
+    } else {
+        // Re-insert secondary at its relative position
+        const beforeSecondary = activeFaces.slice(0, secondaryIdx).filter(f => 
+            !phaseFaces.includes(f) && f !== '__secondary__' && f !== '__tertiary__'
+        ).length;
+        filtered.splice(beforeSecondary, 0, '__secondary__');
+        secondaryIdx = beforeSecondary;
+    }
+    
+    // Add tertiary divider right after secondary if not present
+    if (tertiaryIdx === -1) {
+        filtered.splice(secondaryIdx + 1, 0, '__tertiary__');
+        tertiaryIdx = secondaryIdx + 1;
+    } else {
+        // Re-insert tertiary at its relative position
+        const beforeTertiary = activeFaces.slice(0, tertiaryIdx).filter(f => 
+            !phaseFaces.includes(f) && f !== '__secondary__' && f !== '__tertiary__'
+        ).length;
+        // Adjust for secondary divider
+        const adjustedTertiaryIdx = beforeTertiary + (beforeTertiary > secondaryIdx ? 1 : 0);
+        filtered.splice(adjustedTertiaryIdx, 0, '__tertiary__');
+        tertiaryIdx = adjustedTertiaryIdx;
+    }
+    
+    // Add phase faces after __tertiary__
+    phaseFaces.forEach((face, idx) => {
+        filtered.splice(tertiaryIdx + 1 + idx, 0, face);
+    });
+    
+    // Update state and UI
+    state.activeFaces = filtered;
+    renderActiveFaces();
+    renderAvailFaces();
+}
+
+function removePhaseFacesFromTertiary() {
+    const phaseFaces = [
+        'emergence_face',
+        'active_face',
+        'momentum_face',
+        'descent_face'
+    ];
+    
+    const filtered = state.activeFaces.filter(f => !phaseFaces.includes(f));
+    
+    state.activeFaces = filtered;
+    renderActiveFaces();
+    renderAvailFaces();
+}
+
+// ============================================================
 // RENDER ACTIVE FACES
 // ============================================================
 function renderActiveFaces() {
@@ -4786,6 +4924,11 @@ function updateHash() {
         params.push('zswap=1');
     }
     
+    // Add phase engine flag if enabled
+    if (state.phaseEngineEnabled) {
+        params.push('phase_engine=1');
+    }
+    
     history.replaceState(null, '', '#' + params.join('&'));
 }
 
@@ -4905,7 +5048,8 @@ function parseHash() {
         zoneEmergenceMax,
         zoneMomentumMax,
         zoneActiveMax,
-        zoneSwapEnabled: params.zswap === '1'
+        zoneSwapEnabled: params.zswap === '1',
+        phaseEngineEnabled: params.phase_engine === '1'
     };
 }
 
