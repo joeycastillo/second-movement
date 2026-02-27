@@ -1692,6 +1692,12 @@
                     <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
                     <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
                 </div>
+                
+                <!-- Zone Time Ranges & Descriptions -->
+                <div id="zone-time-details" style="margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--color-amber-trace); font-family: var(--font-mono);">
+                    <!-- Content populated by updateZonePreview() -->
+                </div>
+                
                 <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
                     Active Hours: <span id="led-ah-range">08:00-22:00</span>
                 </div>
@@ -3592,6 +3598,96 @@ function updateZonePreview() {
         const tooltip = indicator.querySelector('.preview-tooltip');
         if (tooltip) tooltip.textContent = score;
     }
+    
+    // Update time ranges and descriptions
+    updateZoneTimeDetails();
+}
+
+// Helper: convert quarter-hours to 12-hour format with AM/PM
+function qhTo12Hour(qh) {
+    const normalizedQh = qh % 96;
+    const totalMinutes = normalizedQh * 15;
+    let h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+// Update zone time details section
+function updateZoneTimeDetails() {
+    const e = state.zoneEmergenceMax || 25;
+    const m = state.zoneMomentumMax || 50;
+    const a = state.zoneActiveMax || 75;
+    const ahStart = state.activeHoursStart || 16; // default 04:00 (16 quarter-hours)
+    const ahEnd = state.activeHoursEnd || 92;     // default 23:00 (92 quarter-hours)
+    const isSwapped = state.zoneSwapEnabled || false;
+    
+    // Calculate active hours duration in minutes
+    let ahDurationMin = (ahEnd - ahStart) * 15;
+    if (ahEnd < ahStart) ahDurationMin = (96 - ahStart + ahEnd) * 15;
+    
+    // Calculate zone transition times (in quarter-hours from start)
+    const eMin = Math.round(ahDurationMin * (e / 100));
+    const mMin = Math.round(ahDurationMin * (m / 100));
+    const aMin = Math.round(ahDurationMin * (a / 100));
+    
+    const eEndQh = ahStart + Math.round(eMin / 15);
+    const mEndQh = ahStart + Math.round(mMin / 15);
+    const aEndQh = ahStart + Math.round(aMin / 15);
+    
+    // Zone descriptions
+    const descriptions = {
+        EMERGENCE: 'Gentle wake-up, building energy',
+        ACTIVE: 'Peak performance, high focus',
+        MOMENTUM: isSwapped ? 'Sustaining momentum, maintaining energy' : 'Sustaining energy, maintaining flow',
+        DESCENT: 'Wind-down, prepare for sleep'
+    };
+    
+    // Build zone list (respect swap order)
+    const zones = [
+        {
+            name: 'EMERGENCE',
+            start: qhTo12Hour(ahStart),
+            end: qhTo12Hour(eEndQh),
+            desc: descriptions.EMERGENCE,
+            color: 'var(--color-amber-dim)'
+        },
+        {
+            name: isSwapped ? 'ACTIVE' : 'MOMENTUM',
+            start: qhTo12Hour(eEndQh),
+            end: qhTo12Hour(mEndQh),
+            desc: isSwapped ? descriptions.ACTIVE : descriptions.MOMENTUM,
+            color: isSwapped ? 'var(--color-amber-bright)' : 'var(--color-amber-hot)'
+        },
+        {
+            name: isSwapped ? 'MOMENTUM' : 'ACTIVE',
+            start: qhTo12Hour(mEndQh),
+            end: qhTo12Hour(aEndQh),
+            desc: isSwapped ? descriptions.MOMENTUM : descriptions.ACTIVE,
+            color: isSwapped ? 'var(--color-amber-hot)' : 'var(--color-amber-bright)'
+        },
+        {
+            name: 'DESCENT',
+            start: qhTo12Hour(aEndQh),
+            end: qhTo12Hour(ahEnd),
+            desc: descriptions.DESCENT,
+            color: 'var(--color-amber-trace)'
+        }
+    ];
+    
+    // Render zone details
+    const detailsEl = document.getElementById('zone-time-details');
+    if (detailsEl) {
+        detailsEl.innerHTML = zones.map(zone => `
+            <div style="font-size: 9px; line-height: 1.6; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span style="color: ${zone.color}; font-weight: bold; letter-spacing: 0.05em; min-width: 85px;">${zone.name}</span>
+                <span style="color: var(--color-amber-mid); white-space: nowrap;">(${zone.start} - ${zone.end}):</span>
+                <span style="color: var(--color-amber-dim); flex: 1; text-align: right; font-style: italic;">${zone.desc}</span>
+            </div>
+        `).join('');
+    }
 }
 
 // ============================================================
@@ -3757,6 +3853,9 @@ function updateZoneBar() {
     document.querySelectorAll('.zone-preset-card').forEach(card => {
         card.classList.toggle('active', matchingPreset && card.dataset.preset === matchingPreset);
     });
+    
+    // Update zone preview with time details
+    updateZonePreview();
 }
 
 // Update zone descriptions dropdown based on swap state
