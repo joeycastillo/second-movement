@@ -196,6 +196,77 @@
             z-index: 10;
         }
 
+        /* CRT Menu Button in Header */
+        .crt-menu-button {
+            cursor: pointer;
+            padding: 3px 6px;
+            margin-right: 8px;
+            color: var(--color-amber-mid);
+            font-size: 9px;
+            border: 1px solid var(--color-amber-dim);
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .crt-menu-button:hover {
+            color: var(--color-amber-hot);
+            border-color: var(--color-amber-bright);
+            background: rgba(245, 166, 35, 0.1);
+        }
+
+        /* Floating Menu */
+        .crt-effects-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+        }
+
+        .crt-menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .crt-menu-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-bg);
+            border: 2px solid var(--color-amber-bright);
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(245, 166, 35, 0.3);
+        }
+
+        .crt-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .crt-menu-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--color-amber-mid);
+            transition: color 0.2s;
+        }
+
+        .crt-menu-close:hover {
+            color: var(--color-amber-hot);
+        }
+
         /* ---- SECTIONS ---- */
         .section {
             border-bottom: 1px solid var(--color-amber-trace);
@@ -1368,8 +1439,33 @@
 <div class="terminal-app">
 
     <div class="system-bar">
-        <span>SECOND MOVEMENT BUILDER</span>
+        <span>
+            <span id="crtMenuButton" class="crt-menu-button" title="CRT Effects">[ CRT EFFECTS ]</span>
+            SECOND MOVEMENT BUILDER
+        </span>
         <span id="sysStatus">--:-- | READY</span>
+    </div>
+
+    <!-- CRT Effects Floating Menu -->
+    <div id="crtEffectsMenu" class="crt-effects-menu" style="display: none;">
+        <div class="crt-menu-overlay" id="crtMenuOverlay"></div>
+        <div class="crt-menu-content">
+            <div class="crt-menu-header">
+                <span style="color: var(--color-amber-hot);">[ CRT EFFECTS ]</span>
+                <span id="crtMenuClose" class="crt-menu-close">✕</span>
+            </div>
+            
+            <!-- CRT effect quality options -->
+            <div class="setting-options" id="crtQualityOptions">
+                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
+                <button class="setting-option" data-crt-quality="off">OFF</button>
+                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
+                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
+            </div>
+            <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+                CRT shader quality (AUTO detects device performance)
+            </div>
+        </div>
     </div>
 
     <div class="app-title">
@@ -1578,25 +1674,6 @@
             <div class="templates-save-row" style="margin-top:12px">
                 <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
                 <button id="saveTemplateBtn">[save]</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- CRT EFFECTS -->
-    <section class="panel" id="crtEffectsPanel">
-        <button class="panel-header" id="crtEffectsPanelBtn" aria-expanded="false" aria-controls="crtEffectsPanelBody">
-            <span>[ CRT EFFECTS ]</span>
-            <span class="panel-chevron" id="crtEffectsChevron">+</span>
-        </button>
-        <div class="panel-body" id="crtEffectsPanelBody" style="display:none">
-            <div class="setting-options" id="crtQualityOptions">
-                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
-                <button class="setting-option" data-crt-quality="off">OFF</button>
-                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
-                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
-            </div>
-            <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
-                CRT shader quality (AUTO detects device performance)
             </div>
         </div>
     </section>
@@ -4174,15 +4251,39 @@ async function init() {
         chevron.textContent = expanded ? '+' : '-';
     });
 
-    // CRT Effects panel toggle
-    document.getElementById('crtEffectsPanelBtn').addEventListener('click', function() {
-        const body = document.getElementById('crtEffectsPanelBody');
-        const chevron = document.getElementById('crtEffectsChevron');
-        const expanded = this.getAttribute('aria-expanded') === 'true';
-        this.setAttribute('aria-expanded', String(!expanded));
-        body.style.display = expanded ? 'none' : 'block';
-        chevron.textContent = expanded ? '+' : '-';
-    });
+    // CRT Effects Menu
+    const crtMenuButton = document.getElementById('crtMenuButton');
+    const crtEffectsMenu = document.getElementById('crtEffectsMenu');
+    const crtMenuClose = document.getElementById('crtMenuClose');
+    const crtMenuOverlay = document.getElementById('crtMenuOverlay');
+
+    if (crtMenuButton && crtEffectsMenu) {
+        // Open menu
+        crtMenuButton.addEventListener('click', function() {
+            crtEffectsMenu.style.display = 'block';
+        });
+        
+        // Close menu - close button
+        if (crtMenuClose) {
+            crtMenuClose.addEventListener('click', function() {
+                crtEffectsMenu.style.display = 'none';
+            });
+        }
+        
+        // Close menu - overlay click
+        if (crtMenuOverlay) {
+            crtMenuOverlay.addEventListener('click', function() {
+                crtEffectsMenu.style.display = 'none';
+            });
+        }
+        
+        // Close menu - ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && crtEffectsMenu.style.display === 'block') {
+                crtEffectsMenu.style.display = 'none';
+            }
+        });
+    }
 
     // Save template button
     document.getElementById('saveTemplateBtn').addEventListener('click', function() {
