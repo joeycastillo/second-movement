@@ -234,11 +234,13 @@ jobs:
           make BOARD=$BOARD DISPLAY=$DISPLAY $MAKE_FLAGS
 
       - name: Rename UF2 artifact
+        id: rename
         run: |
           # Extract short board name for filename
           BOARD_SHORT=$(echo "$BOARD" | sed 's/sensorwatch_//')
-          cp build/firmware.uf2 \
-            "${BOARD_SHORT}-${DISPLAY}-${BUILD_ID}.uf2"
+          FILENAME="${BOARD_SHORT}-${DISPLAY}-${BUILD_ID}.uf2"
+          cp build/firmware.uf2 "$FILENAME"
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
 
       - name: Upload to GitHub Release
         id: upload_release
@@ -249,11 +251,11 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            ${{ env.BOARD }}-${{ env.DISPLAY }}-${{ env.BUILD_ID }}.uf2
+            ${{ steps.rename.outputs.filename }}
 
       - name: Output build summary
         run: |
-          ASSET_NAME="${BOARD}-${DISPLAY}-${BUILD_ID}.uf2"
+          ASSET_NAME="${{ steps.rename.outputs.filename }}"
           REPO="${{ github.repository }}"
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/custom-builds/${ASSET_NAME}"
           echo "Build complete." >> "$GITHUB_STEP_SUMMARY"
