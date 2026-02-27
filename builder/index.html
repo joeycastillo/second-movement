@@ -5385,8 +5385,8 @@ async function pollBuild() {
         if (status === 'completed') {
             if (conclusion === 'success') {
                 // Extract short board name for filename (remove sensorwatch_ prefix)
-                const boardShort = board.replace('sensorwatch_', '');
-                const buildName = boardShort + '-' + display + '-' + buildId;
+                const boardShort = state.board.replace('sensorwatch_', '');
+                const buildName = boardShort + '-' + state.display + '-' + buildId;
                 const uf2Url = 'https://github.com/' + REPO + '/releases/download/custom-builds/' + buildName + '.uf2';
                 localStorage.setItem('sm_build_result_' + buildId, 'success:' + uf2Url);
                 showStatus('[OK] BUILD COMPLETE' + elapsed + ' - READY TO DOWNLOAD', 'success');
