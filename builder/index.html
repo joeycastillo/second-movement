@@ -3135,6 +3135,10 @@ function loadTemplate(tmplState) {
         const v = parseInt(tmplState.zoneActiveMax, 10);
         state.zoneActiveMax = (Number.isFinite(v) && v >= 65 && v <= 85) ? v : 75;
     }
+    // Phase 4: Load zone swap toggle
+    if (tmplState.zoneSwapEnabled !== undefined) {
+        state.zoneSwapEnabled = !!tmplState.zoneSwapEnabled;
+    }
     // sync sliders/toggles to loaded state
     document.getElementById('ledRed').value = state.ledRed;
     document.getElementById('ledRedVal').textContent = state.ledRed;
