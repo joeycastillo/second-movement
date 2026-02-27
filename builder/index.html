@@ -5339,6 +5339,12 @@ async function triggerBuild() {
         ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
         : faces.length;
 
+    // Calculate tertiary_index (number of faces before __tertiary__ divider)
+    const terIdx = state.activeFaces.indexOf('__tertiary__');
+    const tertiaryIndex = terIdx >= 0
+        ? state.activeFaces.slice(0, terIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
+        : -1;
+
     // Re-validate zone inputs before sending (PR #63 security fix)
     const clampZone = (val, def, min, max) => {
         const n = parseInt(val, 10);
@@ -5389,6 +5395,11 @@ async function triggerBuild() {
     }
     if (state.homebaseTz !== null) {
         inputs.homebase_tz = String(state.homebaseTz);
+    }
+    
+    // Add tertiary_index if __tertiary__ divider exists
+    if (tertiaryIndex >= 0) {
+        inputs.tertiary_index = String(tertiaryIndex);
     }
     
     // Add zone thresholds (Phase 3 - phase engine configuration)

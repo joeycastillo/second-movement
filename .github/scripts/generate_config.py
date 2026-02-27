@@ -379,6 +379,11 @@ def main():
         help="Output path for movement_defaults.h (default: same dir as --output).",
     )
     parser.add_argument(
+        "--tertiary-index",
+        default=None,
+        help="Index where tertiary faces start (for phase engine zone faces).",
+    )
+    parser.add_argument(
         "--registry",
         default=REGISTRY_PATH,
         help="Path to face_registry.json.",
@@ -433,15 +438,73 @@ def main():
         sys.exit(1)
 
     # Build face list for the C array
+    # Phase 4E: Handle tertiary faces for phase engine
+    
+    # Parse tertiary_index if provided
+    tertiary_index_value = None
+    if args.tertiary_index is not None:
+        try:
+            tertiary_index_value = int(args.tertiary_index)
+        except ValueError:
+            print("ERROR: --tertiary-index must be an integer, got '{}'.".format(
+                args.tertiary_index
+            ), file=sys.stderr)
+            sys.exit(1)
+    
+    # Extract all non-divider faces
+    all_faces = [fid for fid in face_ids if not fid.startswith('__')]
+    
+    # Extract tertiary faces if tertiary_index provided
+    tertiary_faces = []
+    remaining_faces = all_faces
+    if tertiary_index_value is not None:
+        if tertiary_index_value < 0 or tertiary_index_value > len(all_faces):
+            print("ERROR: --tertiary-index {} out of range (0-{})".format(
+                tertiary_index_value, len(all_faces)
+            ), file=sys.stderr)
+            sys.exit(1)
+        
+        # Extract 4 zone faces starting at tertiary_index
+        # These should be: emergence_face, active_face, momentum_face, descent_face
+        tertiary_faces = all_faces[tertiary_index_value:tertiary_index_value+4]
+        if len(tertiary_faces) != 4:
+            print("ERROR: Expected 4 tertiary faces at index {}, found {}".format(
+                tertiary_index_value, len(tertiary_faces)
+            ), file=sys.stderr)
+            sys.exit(1)
+        
+        # Remove tertiary faces from main list
+        remaining_faces = all_faces[:tertiary_index_value] + all_faces[tertiary_index_value+4:]
+    
+    # Build face list with tertiary faces at indices 2-5
     face_list_lines = []
-    for face_id in face_ids:
-        # Skip divider markers (__secondary__, __tertiary__, etc.)
-        if face_id.startswith('__'):
-            continue
-        face_list_lines.append("    {},".format(face_id))
-    # Strip trailing comma from last entry
+    if tertiary_faces:
+        # Indices 0-1: first two remaining faces
+        for i in range(min(2, len(remaining_faces))):
+            face_list_lines.append("    {},".format(remaining_faces[i]))
+        
+        # Indices 2-5: tertiary faces wrapped in #ifdef
+        face_list_lines.append("#ifdef PHASE_ENGINE_ENABLED")
+        for face_id in tertiary_faces:
+            face_list_lines.append("    {},".format(face_id))
+        face_list_lines.append("#endif")
+        
+        # Remaining faces (index 2+ of remaining_faces)
+        for i in range(2, len(remaining_faces)):
+            face_list_lines.append("    {},".format(remaining_faces[i]))
+    else:
+        # No tertiary faces - simple flat list
+        for face_id in remaining_faces:
+            face_list_lines.append("    {},".format(face_id))
+    
+    # Strip trailing comma from last entry before any #endif
     if face_list_lines:
-        face_list_lines[-1] = face_list_lines[-1].rstrip(",")
+        # Find last line that's not a preprocessor directive
+        for i in range(len(face_list_lines) - 1, -1, -1):
+            if not face_list_lines[i].startswith('#'):
+                face_list_lines[i] = face_list_lines[i].rstrip(',')
+                break
+    
     face_list = "\n".join(face_list_lines)
 
     # Parse and validate numeric/boolean inputs
@@ -455,6 +518,19 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+    
+    # Adjust secondary_index if tertiary faces were moved to indices 2-5
+    if tertiary_index_value is not None and secondary_index >= 2:
+        if secondary_index < tertiary_index_value:
+            # Secondary index is before tertiary block, shift right by 4
+            secondary_index += 4
+        elif secondary_index < tertiary_index_value + 4:
+            # ERROR: Secondary index points into tertiary block
+            print("ERROR: secondary_index {} is in the tertiary block ({}-{})".format(
+                secondary_index, tertiary_index_value, tertiary_index_value+3
+            ), file=sys.stderr)
+            sys.exit(1)
+        # else: secondary_index >= tertiary_index_value+4, no change needed
 
     try:
         led_red = int(args.led_red)
