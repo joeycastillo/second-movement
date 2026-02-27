@@ -11,12 +11,7 @@ on:
       board:
         description: "Board type"
         required: true
-        type: choice
-        options:
-          - sensorwatch_red
-          - sensorwatch_green
-          - sensorwatch_blue
-          - sensorwatch_pro
+        type: string
       display:
         description: "Display type"
         required: true
