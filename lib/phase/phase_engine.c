@@ -21,34 +21,34 @@
 /*
  * Integer cosine lookup table (24 entries, one per hour)
  * Values scaled to ±1000 to preserve precision
- * cos(2π * hour / 24) * 1000
+ * cos(2π * (hour - 14) / 24) * 1000
  * Peak at hour 14 (2 PM), trough at hour 2 (2 AM)
  */
 static const int16_t cosine_lut_24[24] = {
-    866,   // 00:00
-    707,   // 01:00
-    500,   // 02:00
-    259,   // 03:00
-    0,     // 04:00
-    -259,  // 05:00
-    -500,  // 06:00
-    -707,  // 07:00
-    -866,  // 08:00
+    500,   // 00:00
+    259,   // 01:00
+    0,     // 02:00 (TROUGH)
+    -259,  // 03:00
+    -500,  // 04:00
+    -707,  // 05:00
+    -866,  // 06:00
+    -966,  // 07:00
+    -1000, // 08:00
     -966,  // 09:00
-    -1000, // 10:00
-    -966,  // 11:00
-    -866,  // 12:00
-    -707,  // 13:00
-    -500,  // 14:00
-    -259,  // 15:00
-    0,     // 16:00
-    259,   // 17:00
-    500,   // 18:00
-    707,   // 19:00
-    866,   // 20:00
+    -866,  // 10:00
+    -707,  // 11:00
+    -500,  // 12:00
+    -259,  // 13:00
+    0,     // 14:00 (PEAK)
+    259,   // 15:00
+    500,   // 16:00
+    707,   // 17:00
+    866,   // 18:00
+    966,   // 19:00
+    1000,  // 20:00
     966,   // 21:00
-    1000,  // 22:00
-    966    // 23:00
+    866,   // 22:00
+    707    // 23:00
 };
 
 void phase_engine_init(phase_state_t *state) {
@@ -118,9 +118,9 @@ uint16_t phase_compute(phase_state_t *state,
     uint8_t sunset_hour = 12 + (daylight_min / 120);
     
     uint16_t expected_light = (hour >= sunrise_hour && hour < sunset_hour) ? 500 : 50;
-    int16_t light_dev = (light_lux > expected_light)
-                       ? (light_lux - expected_light)
-                       : (expected_light - light_lux);
+    int32_t light_dev = (light_lux > expected_light)
+                       ? ((int32_t)light_lux - (int32_t)expected_light)
+                       : ((int32_t)expected_light - (int32_t)light_lux);
     // Scale to penalty (max ~20)
     light_dev = (light_dev > 1000) ? 20 : (light_dev / 50);
     

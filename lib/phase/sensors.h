@@ -61,7 +61,7 @@ struct sensor_state_t {
     uint16_t lux_avg;
     
     // Temperature state (PR #66)
-    uint16_t temperature_c10;
+    int16_t temperature_c10;
     
     // Phase 4E: Sleep tracking state
     uint8_t  epoch_movement_count;   // Movement interrupts in current 30s epoch
@@ -84,7 +84,7 @@ bool sensors_is_motion_active(const struct sensor_state_t *state);
 void sensors_sample_lux(struct sensor_state_t *state);
 void sensors_sample_temperature(struct sensor_state_t *state);
 uint16_t sensors_get_lux_avg(const struct sensor_state_t *state);
-uint16_t sensors_get_temperature_c10(const struct sensor_state_t *state);
+int16_t sensors_get_temperature_c10(const struct sensor_state_t *state);
 
 // Phase 4E: Sleep tracking helpers
 void sensors_tick_epoch(struct sensor_state_t *state);

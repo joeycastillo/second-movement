@@ -204,9 +204,10 @@ def calculate_avg_temp_c10(latitude, day_of_year, base_temp_c=15):
         Temperature * 10 (integer, e.g., 125 = 12.5°C)
     """
     # Seasonal variation (peak in summer, trough in winter)
-    # Northern hemisphere: warmest ~day 200 (mid-July)
+    # Northern hemisphere: coldest ~day 15 (mid-January), warmest ~day 197 (mid-July)
     # Southern hemisphere: flip the phase
-    phase_offset = 200 if latitude >= 0 else 20
+    # phase_offset is where sine crosses zero upward, so minimum is 91 days earlier
+    phase_offset = 106 if latitude >= 0 else 289
     seasonal_swing_c = 10 + abs(latitude) / 3.0  # Higher swing at higher latitudes
     
     temp_variation = seasonal_swing_c * math.sin(

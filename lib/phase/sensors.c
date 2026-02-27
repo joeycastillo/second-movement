@@ -221,7 +221,8 @@ void sensors_sample_temperature(struct sensor_state_t *state) {
         state->temperature_c10 = 200;  // 20.0°C (room temperature)
     } else {
         // Convert float to 0.1°C units with rounding
-        state->temperature_c10 = (uint16_t)((temp_c * 10.0f) + 0.5f);
+        // Use int16_t to support negative temperatures (e.g., -30°C → -300)
+        state->temperature_c10 = (int16_t)((temp_c * 10.0f) + (temp_c >= 0 ? 0.5f : -0.5f));
     }
 }
 
@@ -229,7 +230,7 @@ uint16_t sensors_get_lux_avg(const struct sensor_state_t *state) {
     return state ? state->lux_avg : 0;
 }
 
-uint16_t sensors_get_temperature_c10(const struct sensor_state_t *state) {
+int16_t sensors_get_temperature_c10(const struct sensor_state_t *state) {
     return state ? state->temperature_c10 : 0;
 }
 
