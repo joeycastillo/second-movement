@@ -145,6 +145,9 @@ jobs:
       - name: Mark workspace as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Install Python dependencies
+        run: pip3 install requests
+
       - name: Generate homebase phase tables
         if: ${{ github.event.inputs.homebase_lat != '' && github.event.inputs.homebase_lon != '' && github.event.inputs.homebase_tz != '' }}
         env:
