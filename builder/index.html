@@ -5339,6 +5339,9 @@ async function triggerBuild() {
         ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
         : faces.length;
 
+    // Note: secondaryIndex adjustment for phase engine zone faces is handled by
+    // generate_config.py during build, not here. The builder sends the raw count.
+
     // Re-validate zone inputs before sending (PR #63 security fix)
     const clampZone = (val, def, min, max) => {
         const n = parseInt(val, 10);
@@ -5400,6 +5403,11 @@ async function triggerBuild() {
     }
     if (zam !== 75) {
         inputs.zone_active_max = String(zam);
+    }
+    
+    // Add phase engine flag
+    if (state.phaseEngineEnabled) {
+        inputs.phase_engine = 'true';
     }
     
     // Add zone swap flag (Phase 4)
