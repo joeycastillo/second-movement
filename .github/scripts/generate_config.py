@@ -141,6 +141,15 @@ const watch_face_t watch_faces[] = {{
  */
 #define MOVEMENT_DEBOUNCE_TICKS 0
 
+/* Phase engine zone boundaries (0-100 scale).
+ * Defines the upper boundary of each phase zone:
+ * - Emergence: 0 to zone_emergence_max
+ * - Momentum: zone_emergence_max+1 to zone_momentum_max
+ * - Active: zone_momentum_max+1 to zone_active_max
+ * - Recovery: zone_active_max+1 to 100
+ */
+{zone_defines}
+
 #endif /* MOVEMENT_CONFIG_H_ */
 """
 
@@ -244,6 +253,17 @@ def validate_quarter_hours(value, name):
     return v
 
 
+def validate_zone_boundary(value, name):
+    """Validate zone boundary value (0-100)."""
+    try:
+        v = int(value)
+    except ValueError:
+        raise ValueError("{} must be an integer, got {!r}".format(name, value))
+    if v < 0 or v > 100:
+        raise ValueError("{} must be 0-100, got {}".format(name, v))
+    return v
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate movement_config.h for a custom firmware build."
@@ -327,6 +347,26 @@ def main():
         "--phase-engine",
         default="false",
         help="Enable phase engine (true/false).",
+    )
+    parser.add_argument(
+        "--zone-emergence-max",
+        default="25",
+        help="Zone boundary: Emergence max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-momentum-max",
+        default="50",
+        help="Zone boundary: Momentum max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-active-max",
+        default="75",
+        help="Zone boundary: Active max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-swap-enabled",
+        default="0",
+        help="Swap Active/Momentum zones (0=off, 1=on).",
     )
     parser.add_argument(
         "--output",
@@ -452,10 +492,41 @@ def main():
     active_hours_enabled = parse_bool(args.active_hours_enabled)
     phase_engine_enabled = parse_bool(args.phase_engine)
 
+    # Validate zone boundary inputs
+    try:
+        zone_emergence_max = validate_zone_boundary(args.zone_emergence_max, "--zone-emergence-max")
+        zone_momentum_max = validate_zone_boundary(args.zone_momentum_max, "--zone-momentum-max")
+        zone_active_max = validate_zone_boundary(args.zone_active_max, "--zone-active-max")
+    except ValueError as exc:
+        print("ERROR: {}".format(exc), file=sys.stderr)
+        sys.exit(1)
+
+    # Validate zone swap enabled (0 or 1)
+    try:
+        zone_swap_enabled = int(args.zone_swap_enabled)
+    except ValueError:
+        print("ERROR: --zone-swap-enabled must be an integer, got '{}'.".format(
+            args.zone_swap_enabled
+        ), file=sys.stderr)
+        sys.exit(1)
+    if zone_swap_enabled not in (0, 1):
+        print("ERROR: --zone-swap-enabled must be 0 or 1, got {}.".format(
+            zone_swap_enabled
+        ), file=sys.stderr)
+        sys.exit(1)
+
     # Generate phase engine define if enabled
     phase_engine_define = ""
     if phase_engine_enabled:
         phase_engine_define = "#define PHASE_ENGINE_ENABLED\n"
+
+    # Generate zone configuration defines
+    zone_defines = ""
+    if phase_engine_enabled:
+        zone_defines = "#define PHASE_ZONE_EMERGENCE_MAX {}\n".format(zone_emergence_max)
+        zone_defines += "#define PHASE_ZONE_MOMENTUM_MAX {}\n".format(zone_momentum_max)
+        zone_defines += "#define PHASE_ZONE_ACTIVE_MAX {}\n".format(zone_active_max)
+        zone_defines += "#define PHASE_ZONE_SWAP_ENABLED {}".format(zone_swap_enabled)
 
     # Generate smooth LED fade define if enabled (PR #71)
     smooth_led_fade_define = ""
@@ -477,6 +548,7 @@ def main():
         smooth_led_fade_define=smooth_led_fade_define,
         clock_24h_bool="true" if clock_24h else "false",
         button_sound_bool="true" if button_sound else "false",
+        zone_defines=zone_defines,
     )
 
     with open(args.output, "w") as f:
