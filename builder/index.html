@@ -1672,8 +1672,6 @@
                 <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 4px; text-align: center;">
                     Enable for early peak schedules (Active → Momentum)
                 </div>
-                
-            <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: 36px; font-size: 9px;">[RESET TO BALANCED]</button>
         </div>
     </section>
 
@@ -3968,14 +3966,6 @@ async function init() {
             applyZonePreset(card.dataset.preset);
         });
     });
-    
-    // Reset button
-    const zoneResetBtn = document.getElementById('zone-reset');
-    if (zoneResetBtn) {
-        zoneResetBtn.addEventListener('click', () => {
-            applyZonePreset('balanced');
-        });
-    }
     
     // Initialize dragging
     initZoneHandleDragging();
