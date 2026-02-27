@@ -99,6 +99,12 @@ Settings stored in BKUP[2] register (battery backed RAM). Survives normal power 
 **3. World Clock, Sunrise/Sunset, etc.**
 
 ### Phase Engine: Chronomantic Instrument
+
+#### Phase Engine Documentation
+- [Data Architecture](docs/PHASE_ENGINE_DATA_ARCHITECTURE.md) - Temperature data system
+- [Implementation](docs/PHASE4_IMPLEMENTATION_PLAN.md) - Phase 4 plan
+- [Tuning](docs/PHASE4_TUNING_PLAN.md) - Calibration guide
+
 > ⚠️ **Current Status:** Phase 4E/4F complete - ready for dogfooding. All core features implemented and tested:
 > - ✅ Sleep tracking with movement frequency analysis
 > - ✅ Telemetry export (512 bytes via comms_face)

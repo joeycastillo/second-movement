@@ -25,6 +25,60 @@ from pathlib import Path
 import requests
 
 
+def fetch_elevation(latitude, longitude):
+    """
+    Fetch elevation data from Open-Meteo Elevation API.
+    
+    Args:
+        latitude: Latitude in degrees (-90 to 90)
+        longitude: Longitude in degrees (-180 to 180)
+    
+    Returns:
+        Elevation in meters (float)
+        Returns None on error
+    """
+    try:
+        url = "https://api.open-meteo.com/v1/elevation"
+        params = {
+            'latitude': latitude,
+            'longitude': longitude
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'elevation' not in data:
+            print("⚠️  API response missing elevation data", file=sys.stderr)
+            return None
+        
+        elevation = data['elevation']
+        
+        # API returns elevation as a list with a single value
+        if isinstance(elevation, list):
+            if len(elevation) == 0:
+                print("⚠️  API returned empty elevation list", file=sys.stderr)
+                return None
+            elevation = elevation[0]
+        
+        if elevation is None or not isinstance(elevation, (int, float)):
+            print("⚠️  Invalid elevation value from API", file=sys.stderr)
+            return None
+        
+        return float(elevation)
+        
+    except requests.exceptions.Timeout:
+        print("⚠️  Elevation API request timed out (>10s)", file=sys.stderr)
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️  Elevation API request failed: {e}", file=sys.stderr)
+        return None
+    except (KeyError, ValueError, TypeError) as e:
+        print(f"⚠️  Failed to parse elevation API response: {e}", file=sys.stderr)
+        return None
+
+
 def fetch_temperature_data(latitude, longitude, year):
     """
     Fetch historical temperature data from Open-Meteo API.
@@ -211,6 +265,21 @@ def generate_homebase_table(latitude, longitude, timezone_offset, year, output_p
     # Tropical: ~25°C, Temperate: ~15°C, Polar: ~0°C
     base_temp = 25 - abs(latitude) * 0.4
     
+    # Fetch elevation data first
+    elevation_m = None
+    elevation_text = "unknown (API unavailable)"
+    
+    if not skip_api:
+        print("📡 Fetching elevation from Open-Meteo API...")
+        elevation_m = fetch_elevation(latitude, longitude)
+        if elevation_m is not None:
+            elevation_text = f"{elevation_m:.0f} meters (from Open-Meteo Elevation API)"
+            print(f"✓ Elevation: {elevation_m:.0f} meters")
+        else:
+            print("⚠️  Elevation API fetch failed")
+    else:
+        print("⏭️  Skipping elevation API (--skip-api flag set)")
+    
     # Try to fetch real temperature data from Open-Meteo API
     data_source = "sinusoidal model (fallback)"
     temps_from_api = None
@@ -253,6 +322,7 @@ def generate_homebase_table(latitude, longitude, timezone_offset, year, output_p
  * Homebase configuration:
  * Latitude: {latitude:.4f}°{'N' if latitude >= 0 else 'S'}
  * Longitude: {longitude:.4f}°{'E' if longitude >= 0 else 'W'}
+ * Location elevation: {elevation_text}
  * Timezone offset: {timezone_offset} minutes (UTC{timezone_offset//60:+d})
  * Year: {year}
  * Temperature data source: {data_source}
