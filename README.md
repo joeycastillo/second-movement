@@ -102,7 +102,7 @@ Settings stored in BKUP[2] register (battery backed RAM). Survives normal power 
 
 #### Phase Engine Documentation
 - [Data Architecture](docs/PHASE_ENGINE_DATA_ARCHITECTURE.md) - Temperature data system
-- [Implementation](docs/PHASE4_IMPLEMENTATION_PLAN.md) - Phase 4 plan
+- [Implementation](docs/PHASE4E_IMPLEMENTATION.md) - Phase 4E implementation
 - [Tuning](docs/PHASE4_TUNING_PLAN.md) - Calibration guide
 
 > ⚠️ **Current Status:** Phase 4E/4F complete - ready for dogfooding. All core features implemented and tested:
