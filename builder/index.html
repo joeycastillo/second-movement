@@ -5262,9 +5262,21 @@ async function triggerBuild() {
     const zmm = clampZone(state.zoneMomentumMax || 50, 50, 40, 60);
     const zam = clampZone(state.zoneActiveMax || 75, 75, 65, 85);
 
+    // SAFETY NET: ensure board has sensorwatch_ prefix (guards against cached old pages / localStorage)
+    const boardLegacyMap = { 'red': 'sensorwatch_red', 'green': 'sensorwatch_green', 'blue': 'sensorwatch_blue', 'pro': 'sensorwatch_pro' };
+    const safeBoard = boardLegacyMap[state.board] || state.board;
+    if (safeBoard !== state.board) {
+        console.warn('[BUILD] Fixed legacy board name:', state.board, '->', safeBoard);
+        state.board = safeBoard;
+    }
+    if (!VALID_BOARDS.includes(safeBoard)) {
+        logTerminal('ERROR: Invalid board "' + safeBoard + '". Aborting.', 'error');
+        return;
+    }
+
     const inputs = {
         faces: faces.join(','),
-        board: state.board,
+        board: safeBoard,
         display: state.display,
         secondary_index: String(secondaryIndex),
         clock_24h: String(state.clock24h),
