@@ -1487,6 +1487,41 @@
         <div class="radio-group" id="displayRadio" role="radiogroup" aria-label="Display selection"></div>
     </div>
 
+    <!-- BRANCH SELECTION -->
+    <div class="section">
+        <div class="section-title">BUILD BRANCH</div>
+        <div class="radio-group" id="branchRadio" role="radiogroup" aria-label="Branch selection"></div>
+        <div style="font-size: 10px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+            Choose firmware branch to build from
+        </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <section class="panel" id="templatesPanel">
+        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
+            <span>[ TEMPLATES ]</span>
+            <span class="panel-chevron" id="templatesChevron">+</span>
+        </button>
+        <div class="panel-body" id="templatesPanelBody" style="display:none">
+            <!-- Presets -->
+            <div class="templates-group-label">-- PRESETS --</div>
+            <div id="preset-templates"></div>
+
+            <!-- User saved -->
+            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
+            <div id="user-templates-section">
+                <div id="user-templates"></div>
+                <div id="no-saved-templates" class="template-empty">no saved templates</div>
+            </div>
+
+            <!-- Save current -->
+            <div class="templates-save-row" style="margin-top:12px">
+                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
+                <button id="saveTemplateBtn">[save]</button>
+            </div>
+        </div>
+    </section>
+
 
     <!-- PHASE ENGINE -->
     <section class="section" id="phaseEngineSection" style="border-left: 3px solid var(--color-amber-bright); background: rgba(245, 166, 35, 0.05); padding-left: 14px;">
@@ -1645,41 +1680,6 @@
                 </div>
         </div>
     </section>
-    <!-- BRANCH SELECTION -->
-    <div class="section">
-        <div class="section-title">BUILD BRANCH</div>
-        <div class="radio-group" id="branchRadio" role="radiogroup" aria-label="Branch selection"></div>
-        <div style="font-size: 10px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
-            Choose firmware branch to build from
-        </div>
-    </div>
-
-    <!-- TEMPLATES -->
-    <section class="panel" id="templatesPanel">
-        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
-            <span>[ TEMPLATES ]</span>
-            <span class="panel-chevron" id="templatesChevron">+</span>
-        </button>
-        <div class="panel-body" id="templatesPanelBody" style="display:none">
-            <!-- Presets -->
-            <div class="templates-group-label">-- PRESETS --</div>
-            <div id="preset-templates"></div>
-
-            <!-- User saved -->
-            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
-            <div id="user-templates-section">
-                <div id="user-templates"></div>
-                <div id="no-saved-templates" class="template-empty">no saved templates</div>
-            </div>
-
-            <!-- Save current -->
-            <div class="templates-save-row" style="margin-top:12px">
-                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
-                <button id="saveTemplateBtn">[save]</button>
-            </div>
-        </div>
-    </section>
-
     <!-- WATCH FACES -->
     <div class="section">
         <div class="section-title">WATCH FACES</div>
