@@ -34,6 +34,17 @@
       }
     }
     </script>
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('crt-quality') === 'off') {
+                    document.documentElement.classList.add('crt-effects-off');
+                }
+            } catch (e) {
+                // Ignore storage access issues and keep default CRT background mode.
+            }
+        })();
+    </script>
     
     <style>
         /* Heritage Display font - pixel blackletter */
@@ -103,13 +114,34 @@
         html, body {
             width: 100%;
             min-height: 100%;
-            background: transparent;
+            background: var(--color-bg);
             color: var(--color-amber-mid);
             font-family: var(--font-mono);
             font-size: 11px;
             line-height: var(--line-height-dense);
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Clean fallback background when CRT effects are disabled. */
+        html.crt-effects-off,
+        html.crt-effects-off body {
+            background-color: #1a1510;
+        }
+
+        html.crt-effects-off body {
+            background-image: radial-gradient(circle at 20% -10%, rgba(245, 158, 11, 0.07) 0%, rgba(245, 158, 11, 0) 50%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        html.crt-effects-off #retro-canvas {
+            display: none;
+        }
+
+        html.crt-effects-off .glow,
+        html.crt-effects-off .app-title-main {
+            text-shadow: none;
         }
 
         /* RetroPass background canvas layer */
@@ -2364,6 +2396,11 @@ let wireframeMesh;
 let animationFrameId;
 let crtQuality = 'medium'; // medium, minimal, off
 
+function applyCRTAppearanceMode(quality) {
+    const crtOff = quality === 'off';
+    document.documentElement.classList.toggle('crt-effects-off', crtOff);
+}
+
 function initRetroScene() {
     const canvas = document.getElementById('retro-canvas');
     const deviceTier = getDeviceTier();
@@ -2372,6 +2409,7 @@ function initRetroScene() {
     const VALID_QUALITIES = ['auto', 'off', 'minimal', 'medium'];
     const savedQualityRaw = localStorage.getItem('crt-quality');
     const savedQuality = VALID_QUALITIES.includes(savedQualityRaw) ? savedQualityRaw : 'auto';
+    applyCRTAppearanceMode(savedQuality);
     
     // Determine CRT quality based on user preference or device tier
     if (savedQuality === 'auto') {
@@ -2488,6 +2526,7 @@ function initRetroScene() {
         console.log('[CRT] Phase 2 initialized - quality: ' + crtQuality + ' - scan texture replaced with GPU shader');
     } catch (error) {
         console.warn('[CRT] Shader compilation failed, falling back to no effects:', error);
+        applyCRTAppearanceMode('off');
         canvas.style.display = 'none'; // Hide 3D canvas
         // Cancel animation if already started
         if (animationFrameId) {
@@ -3998,6 +4037,7 @@ async function init() {
             
             // Save preference
             localStorage.setItem('crt-quality', quality);
+            applyCRTAppearanceMode(quality);
             
             // Update UI
             crtQualityOptions.forEach(btn => btn.classList.remove('active'));
