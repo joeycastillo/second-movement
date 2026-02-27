@@ -121,6 +121,47 @@ second-movement/
   - Return to homebase mode
   - Manual clear command
 
+## Future: Temperature Forecast Face
+
+### Purpose
+User-facing watch face to display weather forecast data fetched via UnifiedComms or at build time.
+
+### Features
+- Display 4-day or 7-day temperature forecast
+- Show daily high/low temperatures
+- Visual forecast indicators (trend arrows, icons)
+- Toggle between homebase forecast and travel forecast
+- Elevation-aware temperature corrections
+
+### Data Sources
+- **Homebase mode**: Use historical averages from homebase table (365-day data)
+- **Travel mode**: Use real-time 7-day forecast from Open-Meteo API (fetched via UnifiedComms)
+- **Hybrid mode**: Compare forecast vs historical baseline
+
+### Display Format
+```
+┌─────────────┐
+│ FORECAST    │
+├─────────────┤
+│ TODAY  18°C │
+│ +1 DAY 20°C │
+│ +2 DAY 22°C │
+│ +3 DAY 19°C │
+└─────────────┘
+```
+
+### Implementation Notes
+- Use LCD character set constraints (7-segment compatible)
+- Compact display (4-7 days max)
+- Optional: trend indicators (↑↓→)
+- Access travel table when available, otherwise extrapolate from homebase
+- Low memory footprint (reuse existing table data)
+
+### Integration Points
+- `lib/phase/homebase_table.h` - Read historical baseline
+- `lib/phase/travel_table.h` - Read real-time forecast (future)
+- `movement/watch_faces/complication/temperature_forecast_face.c` (future implementation)
+
 ## Developer Notes
 
 ### Generating Homebase Table
