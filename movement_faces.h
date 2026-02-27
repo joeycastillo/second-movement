@@ -80,4 +80,5 @@
 #include "simon_face.h"
 #include "ping_face.h"
 #include "rtccount_face.h"
+#include "kitchen_timer_face.h"
 // New includes go above this line.
