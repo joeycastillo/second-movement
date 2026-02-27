@@ -217,15 +217,6 @@ jobs:
 
       - name: Compile firmware
         run: |
-          # Map simplified board names to full gossamer board names
-          case "$BOARD" in
-            red)   BOARD_FULL="sensorwatch_red" ;;
-            green) BOARD_FULL="sensorwatch_green" ;;
-            blue)  BOARD_FULL="sensorwatch_blue" ;;
-            pro)   BOARD_FULL="sensorwatch_pro" ;;
-            *)     BOARD_FULL="$BOARD" ;;
-          esac
-          
           MAKE_FLAGS=""
           
           # Add Phase Engine flag if homebase configured
@@ -240,12 +231,14 @@ jobs:
             MAKE_FLAGS="$MAKE_FLAGS SMOOTH_LED_FADE=1"
           fi
           
-          make BOARD=$BOARD_FULL DISPLAY=$DISPLAY $MAKE_FLAGS
+          make BOARD=$BOARD DISPLAY=$DISPLAY $MAKE_FLAGS
 
       - name: Rename UF2 artifact
         run: |
+          # Extract short board name for filename
+          BOARD_SHORT=$(echo "$BOARD" | sed 's/sensorwatch_//')
           cp build/firmware.uf2 \
-            "${BOARD}-${DISPLAY}-${BUILD_ID}.uf2"
+            "${BOARD_SHORT}-${DISPLAY}-${BUILD_ID}.uf2"
 
       - name: Upload to GitHub Release
         id: upload_release

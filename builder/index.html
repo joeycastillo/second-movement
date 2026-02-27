@@ -2610,10 +2610,10 @@ const COOLDOWN_MS = 90 * 1000;
 const POLL_INTERVAL_MS = 5000;
 
 const BOARDS = [
-    { id: 'red', name: 'RED' },
-    { id: 'green', name: 'GRN' },
-    { id: 'blue', name: 'BLU' },
-    { id: 'pro', name: 'PRO' }
+    { id: 'sensorwatch_red', name: 'RED' },
+    { id: 'sensorwatch_green', name: 'GRN' },
+    { id: 'sensorwatch_blue', name: 'BLU' },
+    { id: 'sensorwatch_pro', name: 'PRO' }
 ];
 
 const DISPLAYS = [
@@ -2805,7 +2805,7 @@ const PRESET_TEMPLATES = [
         description: 'Classic setup: clock, alarm, stopwatch, tools',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -2836,7 +2836,7 @@ const PRESET_TEMPLATES = [
         description: 'Sleep + activity tracking with sensors',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -2865,7 +2865,7 @@ const PRESET_TEMPLATES = [
         description: 'Just the essentials: clock + settings',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -3015,7 +3015,7 @@ const PRESET_TEMPLATES = [
         description: 'Late sleeper with minimal faces',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             branch: 'main',
             activeFaces: [
@@ -3055,7 +3055,7 @@ const PRESET_TEMPLATES = [
         description: 'Productivity tools for late-night study sessions',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             branch: 'main',
             activeFaces: [
@@ -3096,7 +3096,7 @@ const PRESET_TEMPLATES = [
         description: 'Multiple time zones for globe-trotters',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             branch: 'main',
             activeFaces: [
@@ -3158,7 +3158,7 @@ const REGISTRY_MOCK = {
 let registry = null;
 
 let state = {
-    board: 'red',
+    board: 'sensorwatch_red',
     display: 'classic',
     branch: 'main',  // Build branch (main or phase4bc-playlist-dispatch)
     activeFaces: [], // array of face ids (includes '__secondary__' divider sentinel)
@@ -5100,8 +5100,12 @@ function parseHash() {
 
     if (!params.faces) return null;
 
-    // Validate board against allowlist
-    const board = VALID_BOARDS.includes(params.board) ? params.board : 'red';
+    // Validate board against allowlist (with backward compatibility for old URLs)
+    let board = params.board;
+    // Map legacy simplified names to full names
+    const boardMap = { 'red': 'sensorwatch_red', 'green': 'sensorwatch_green', 'blue': 'sensorwatch_blue', 'pro': 'sensorwatch_pro' };
+    if (boardMap[board]) board = boardMap[board];
+    board = VALID_BOARDS.includes(board) ? board : 'sensorwatch_red';
 
     // Validate display against allowlist
     const display = VALID_DISPLAYS.includes(params.display) ? params.display : 'classic';
@@ -5380,7 +5384,9 @@ async function pollBuild() {
 
         if (status === 'completed') {
             if (conclusion === 'success') {
-                const buildName = board + '-' + display + '-' + buildId;
+                // Extract short board name for filename (remove sensorwatch_ prefix)
+                const boardShort = board.replace('sensorwatch_', '');
+                const buildName = boardShort + '-' + display + '-' + buildId;
                 const uf2Url = 'https://github.com/' + REPO + '/releases/download/custom-builds/' + buildName + '.uf2';
                 localStorage.setItem('sm_build_result_' + buildId, 'success:' + uf2Url);
                 showStatus('[OK] BUILD COMPLETE' + elapsed + ' - READY TO DOWNLOAD', 'success');
