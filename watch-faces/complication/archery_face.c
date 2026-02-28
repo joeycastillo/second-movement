@@ -39,7 +39,7 @@ static const int8_t _sound_seq_end[] = {BUZZER_NOTE_C7, 40, BUZZER_NOTE_REST, 40
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
     if (movement_button_should_sound()) {
-        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C8, 20, movement_button_volume());
+        watch_buzzer_play_note_with_volume(BUZZER_NOTE_C7, 30, movement_button_volume());
     }
 }
 
