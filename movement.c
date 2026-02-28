@@ -926,8 +926,8 @@ void movement_move_to_next_face(void) {
     
 #ifdef PHASE_ENGINE_ENABLED
     // Skip tertiary zone faces (2-5) during normal MODE cycling
-    // These are only accessible via long-press ALARM from clock (playlist mode)
-    if (next_idx >= 2 && next_idx <= 5) {
+    // UNLESS we're in playlist mode (then allow cycling through zones)
+    if (!movement_state.playlist_mode_active && next_idx >= 2 && next_idx <= 5) {
         next_idx = 6;  // Jump past zone faces to timer
     }
 #endif

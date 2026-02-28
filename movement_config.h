@@ -55,8 +55,8 @@ const watch_face_t watch_faces[] = {
 #ifdef PHASE_ENGINE_ENABLED
     // TERTIARY (Zone faces - skipped in MODE rotation, after clocks)
     emergence_face,             // 2: Emergence (0-25)
-    active_face,                // 3: Active (26-50)
-    momentum_face,              // 4: Momentum (51-75)
+    momentum_face,              // 3: Momentum (26-50)
+    active_face,                // 4: Active (51-75)
     descent_face,               // 5: Descent (76-100)
 #endif
     
