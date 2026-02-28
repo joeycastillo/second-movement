@@ -55,8 +55,8 @@ const watch_face_t watch_faces[] = {
 #ifdef PHASE_ENGINE_ENABLED
     // TERTIARY (Zone faces - skipped in MODE rotation, after clocks)
     emergence_face,             // 2: Emergence (0-25)
-    momentum_face,              // 3: Momentum (26-50)
-    active_face,                // 4: Active (51-75)
+    active_face,                // 3: Active (26-50)
+    momentum_face,              // 4: Momentum (51-75)
     descent_face,               // 5: Descent (76-100)
 #endif
     
@@ -93,6 +93,12 @@ const watch_face_t watch_faces[] = {
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)  // Last 5 faces: comms, lis2dw, light_sensor, voltage, settings
 #else
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)  // Last 4 faces: comms, lis2dw, voltage, settings
+
+#ifdef PHASE_ENGINE_ENABLED
+#define MOVEMENT_TERTIARY_FACE_INDEX 2  // Zone faces start at index 2
+#else
+#define MOVEMENT_TERTIARY_FACE_INDEX 0  // No tertiary faces when phase engine disabled
+#endif
 #endif
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */

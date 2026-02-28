@@ -64,6 +64,10 @@
 #include "phase_engine.h"
 #endif
 
+#ifndef MOVEMENT_TERTIARY_FACE_INDEX
+#define MOVEMENT_TERTIARY_FACE_INDEX 0
+#endif
+
 #if __EMSCRIPTEN__
 #include <emscripten.h>
 void _wake_up_simulator(void);
@@ -225,6 +229,7 @@ static bool is_confirmed_asleep(void);
 #ifdef PHASE_ENGINE_ENABLED
 static uint8_t _movement_get_zone_face_index(phase_zone_t zone);
 #endif
+
 
 // Expose sleep tracker state for smart alarm integration
 sleep_tracker_state_t* movement_get_sleep_tracker_state(void) {
@@ -698,6 +703,7 @@ static void _movement_handle_top_of_minute(void) {
         }
     }
 #endif
+
 }
 
 static void _movement_handle_scheduled_tasks(void) {
@@ -849,6 +855,11 @@ bool movement_default_loop_handler(movement_event_t event) {
             break;
 #ifdef PHASE_ENGINE_ENABLED
         case EVENT_ALARM_LONG_PRESS:
+            // Long-press ALARM from face 0 → tertiary navigation (zone faces)
+            if (MOVEMENT_TERTIARY_FACE_INDEX && movement_state.current_face_idx == 0) {
+                movement_move_to_face(MOVEMENT_TERTIARY_FACE_INDEX);
+                break;
+            }
             // Phase 4B: Long-press ALARM from clock → enter phase playlist mode
             if (movement_state.current_face_idx == 1) {  // Clock face (index 1)
                 movement_state.playlist_mode_active = true;
@@ -867,6 +878,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
 #endif
+
         default:
             break;
     }
@@ -881,18 +893,21 @@ bool movement_default_loop_handler(movement_event_t event) {
  * 
  * Zone faces are positioned at indices 2-5 (after wyoscan and clock):
  * - Index 2: emergence_face (ZONE_EMERGENCE)
- * - Index 3: momentum_face (ZONE_MOMENTUM)
- * - Index 4: active_face (ZONE_ACTIVE)
+ * - Index 3: active_face (ZONE_ACTIVE)
+ * - Index 4: momentum_face (ZONE_MOMENTUM)
  * - Index 5: descent_face (ZONE_DESCENT)
  * 
  * @param zone Current zone (0-3)
  * @return Face index (2-5)
  */
 static uint8_t _movement_get_zone_face_index(phase_zone_t zone) {
-    // Zone faces start at index 2 (right after wyoscan[0] and clock[1])
-    return 2 + zone;
+    // Map zones to face indices: emergence→2, active→3, momentum→4, descent→5
+    // Zone enum: EMERGENCE=0, MOMENTUM=1, ACTIVE=2, DESCENT=3
+    const uint8_t zone_to_face[4] = {2, 4, 3, 5};  // [EMERGENCE, MOMENTUM, ACTIVE, DESCENT]
+    return zone_to_face[zone];
 }
 #endif
+
 
 void movement_move_to_face(uint8_t watch_face_index) {
     movement_state.watch_face_changed = true;
@@ -916,6 +931,7 @@ void movement_move_to_next_face(void) {
         next_idx = 6;  // Jump past zone faces to timer
     }
 #endif
+
     
     movement_move_to_face(next_idx);
 }
@@ -1631,6 +1647,7 @@ void app_setup(void) {
         }
 #endif
 
+
         movement_request_tick_frequency(1);
 
         for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
@@ -1796,6 +1813,7 @@ bool app_loop(void) {
         }
     }
 #endif
+
 
     // handle any button up/down events that occurred, e.g. schedule longpress timeouts, reset inactivity, etc.
     _movement_handle_button_presses(pending_events);
@@ -2132,6 +2150,7 @@ void cb_accelerometer_event(void) {
         movement_state.sensors.hourly_movement_count++;
     }
 #endif
+
 }
 
 // Active Hours Sleep Mode Support (Stream 1: Core Logic)
