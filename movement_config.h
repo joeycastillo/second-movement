@@ -93,12 +93,13 @@ const watch_face_t watch_faces[] = {
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)  // Last 5 faces: comms, lis2dw, light_sensor, voltage, settings
 #else
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)  // Last 4 faces: comms, lis2dw, voltage, settings
+#endif
 
+/* Tertiary navigation for phase engine zone faces */
 #ifdef PHASE_ENGINE_ENABLED
 #define MOVEMENT_TERTIARY_FACE_INDEX 2  // Zone faces start at index 2
 #else
 #define MOVEMENT_TERTIARY_FACE_INDEX 0  // No tertiary faces when phase engine disabled
-#endif
 #endif
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
@@ -108,8 +109,8 @@ const watch_face_t watch_faces[] = {
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */
 #define MOVEMENT_DEFAULT_RED_COLOR 0x0
-#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
-#define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
+#define MOVEMENT_DEFAULT_GREEN_COLOR 0x0
+#define MOVEMENT_DEFAULT_BLUE_COLOR 0xF
 
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE false
