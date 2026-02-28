@@ -107,10 +107,13 @@ const watch_face_t watch_faces[] = {
 
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
+ * 
+ * Standard boards (red/green/blue PCBs) have bicolor red/green LED only.
+ * Default to green for simplicity and compatibility.
  */
 #define MOVEMENT_DEFAULT_RED_COLOR 0x0
-#define MOVEMENT_DEFAULT_GREEN_COLOR 0x0
-#define MOVEMENT_DEFAULT_BLUE_COLOR 0xF
+#define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
+#define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
 
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE false
