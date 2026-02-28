@@ -848,8 +848,16 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
 #endif
             if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
+                // From face 0 → enter secondary
                 movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
+            } else if (movement_state.current_face_idx >= MOVEMENT_TERTIARY_FACE_INDEX) {
+                // From tertiary → return to face 0
+                movement_move_to_face(0);
+            } else if (movement_state.current_face_idx >= MOVEMENT_SECONDARY_FACE_INDEX) {
+                // From secondary → return to face 0
+                movement_move_to_face(0);
             } else {
+                // From primary → return to face 0
                 movement_move_to_face(0);
             }
             break;
