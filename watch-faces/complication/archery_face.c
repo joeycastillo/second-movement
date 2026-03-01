@@ -33,7 +33,6 @@ static const int8_t OUTDOOR_RUN_MINUTES = 4;
 
 static const int8_t _sound_seq_prepare[] = {BUZZER_NOTE_C6, 40, BUZZER_NOTE_REST, 40, -2, 1, 0};
 static const int8_t _sound_seq_start[] = {BUZZER_NOTE_C7, 50, 0};
-static const int8_t _sound_seq_30s[] = {BUZZER_NOTE_C6, 1, BUZZER_NOTE_REST, 2, -2, 3, 0};
 static const int8_t _sound_seq_end[] = {BUZZER_NOTE_C7, 40, BUZZER_NOTE_REST, 40, -2, 2, 0};
 
 static inline void button_beep() {
