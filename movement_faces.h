@@ -61,6 +61,7 @@
 #include "totp_face.h"
 #include "totp_lfs_face.h"
 #include "tally_face.h"
+#include "temperature_forecast_face.h"
 #include "probability_face.h"
 #include "ke_decimal_time_face.h"
 #include "baby_kicks_face.h"
