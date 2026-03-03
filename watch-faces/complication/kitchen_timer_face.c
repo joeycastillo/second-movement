@@ -240,7 +240,7 @@ static void draw(kitchen_timer_state_t *state, uint8_t subsecond) {
 }
 
 static void draw_title(kitchen_timer_state_t *state) {
-    char buf[3];
+    char buf[4];
     watch_display_text(WATCH_POSITION_TOP_LEFT, "KT");
     // Show 1-based timer number so users see "1"–"4" instead of "0"–"3"
     sprintf(buf, "%2d", state->timer_idx + 1);
