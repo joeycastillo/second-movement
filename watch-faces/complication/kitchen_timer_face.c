@@ -116,9 +116,9 @@ static void schedule_countdown(kitchen_timer_state_t *state, uint8_t idx) {
     reschedule_nearest(state);
 }
 
-static void enter_overtime(kitchen_timer_state_t *state, uint8_t idx) {
+static void enter_overtime(kitchen_timer_state_t *state, uint8_t idx, bool play_alarm) {
     kitchen_timer_slot_t *slot = &state->timers[idx];
-    movement_play_alarm();
+    if (play_alarm) movement_play_alarm();
     slot->mode = kt_overtime;
     slot->overtime_start_ts = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), movement_get_current_timezone_offset());
     slot->overtime_seconds = 0;
@@ -136,7 +136,7 @@ static void start(kitchen_timer_state_t *state, uint8_t idx) {
     // If the timer already expired (e.g. zero-length), enter overtime now
     // because a background task scheduled for a past time may never fire
     if (state->timers[idx].target_ts <= state->now_ts) {
-        enter_overtime(state, idx);
+        enter_overtime(state, idx, false);
     }
 }
 
@@ -548,7 +548,7 @@ bool kitchen_timer_face_loop(movement_event_t event, void *context) {
             // were close together or the watch was asleep
             for (uint8_t i = 0; i < KT_MAX_TIMERS; i++) {
                 if (state->timers[i].mode == kt_running && state->timers[i].target_ts <= state->now_ts) {
-                    enter_overtime(state, i);
+                    enter_overtime(state, i, true);
                 }
             }
             break;
