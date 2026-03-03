@@ -31,7 +31,7 @@
 #include "watch_utility.h"
 
 #define KT_SELECTIONS 3
-#define DEFAULT_MINUTES 3
+static const uint8_t default_minutes[KT_MAX_TIMERS] = {3, 10, 15, 25};
 #define TAP_DETECTION_SECONDS 5
 
 // We need a scheduled background task to keep the watch from entering deep
@@ -324,7 +324,7 @@ void kitchen_timer_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         memset(*context_ptr, 0, sizeof(kitchen_timer_state_t));
         state->watch_face_index = watch_face_index;
         for (uint8_t i = 0; i < KT_MAX_TIMERS; i++) {
-            state->timers[i].minutes = DEFAULT_MINUTES;
+            state->timers[i].minutes = default_minutes[i];
             state->timers[i].mode = kt_reset;
             store_countdown(&state->timers[i]);
         }
