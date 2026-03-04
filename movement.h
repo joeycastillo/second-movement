@@ -159,7 +159,8 @@ typedef union {
 // movement_reserved_t is a placeholder for future use of the BKUP[3] register.
 typedef union {
     struct {
-        uint32_t reserved : 32;
+        bool phase_engine_enabled : 1;     // if true, Phase Engine is active (circadian tracking)
+        uint32_t reserved : 31;            // reserved for future use
     } bit;
     uint32_t reg;
 } movement_reserved_t;
@@ -482,6 +483,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
 // gets and sets the active hours configuration (stored in BKUP[2])
 movement_active_hours_t movement_get_active_hours(void);
 void movement_set_active_hours(movement_active_hours_t settings);
+
+/** @brief Get the reserved register settings (BKUP[3]). */
+movement_reserved_t movement_get_reserved(void);
+/** @brief Set the reserved register settings (BKUP[3]). */
+void movement_set_reserved(movement_reserved_t settings);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

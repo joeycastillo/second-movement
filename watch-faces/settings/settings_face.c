@@ -361,6 +361,30 @@ static void active_hours_end_setting_advance(void) {
     s_active_hours_dirty = true;
 }
 
+static void phase_engine_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Phase", "PE");
+    watch_display_text(WATCH_POSITION_BOTTOM, "engine");
+    if (subsecond % 2) {
+        #ifdef PHASE_ENGINE_ENABLED
+        movement_reserved_t reserved = movement_get_reserved();
+        if (reserved.bit.phase_engine_enabled) {
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " Y");
+        } else {
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
+        }
+        #else
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "n-a");
+        #endif
+    }
+}
+
+static void phase_engine_setting_advance(void) {
+    #ifdef PHASE_ENGINE_ENABLED
+    movement_reserved_t reserved = movement_get_reserved();
+    reserved.bit.phase_engine_enabled = !reserved.bit.phase_engine_enabled;
+    movement_set_reserved(reserved);
+    #endif
+}
 static void  git_hash_setting_display(uint8_t subsecond) {
     (void) subsecond;
     char buf[8];
@@ -385,6 +409,9 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         int8_t current_setting = 0;
 
         state->num_settings = 10; // baseline: 7 original + 3 active hours settings
+        state->settings_screens[current_setting].display = phase_engine_setting_display;
+        state->settings_screens[current_setting].advance = phase_engine_setting_advance;
+        current_setting++;
 #ifdef BUILD_GIT_HASH
         state->num_settings++;
 #endif
@@ -456,6 +483,9 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         current_setting++;
         state->settings_screens[current_setting].display = active_hours_end_setting_display;
         state->settings_screens[current_setting].advance = active_hours_end_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = phase_engine_setting_display;
+        state->settings_screens[current_setting].advance = phase_engine_setting_advance;
         current_setting++;
 #ifdef BUILD_GIT_HASH
         state->settings_screens[current_setting].display = git_hash_setting_display;
