@@ -40,6 +40,7 @@ SRCS += \
   ./watch-faces/io/fesk_demo_face.c \
   ./watch-faces/io/fesk_lite_demo_face.c \
   ./watch-faces/io/irda_upload_face.c \
+  ./watch-faces/io/lux_rx_demo_face.c \
   ./watch-faces/complication/probability_face.c \
   ./watch-faces/clock/close_enough_face.c \
   ./watch-faces/complication/tarot_face.c \

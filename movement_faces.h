@@ -88,4 +88,5 @@
 #include "step_counter_face.h"
 #include "ping_face.h"
 #include "rtccount_face.h"
+#include "lux_rx_demo_face.h"
 // New includes go above this line.
