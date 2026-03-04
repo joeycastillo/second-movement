@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "local_solar_time_face.h"
+#include "solar_time_face.h"
 #include "watch.h"
 #include "watch_utility.h"
 #include "filesystem.h"
@@ -62,7 +62,7 @@ static movement_location_t _load_location(void) {
 }
 
 /* Compute and cache EoT and TC. Call when d != state->last_calc_d. */
-static void _compute_daily(local_solar_time_state_t *state, uint16_t d) {
+static void _compute_daily(solar_time_state_t *state, uint16_t d) {
     /* LSTM — movement_get_current_timezone_offset() returns seconds from UTC */
     float delta_T_UTC = (float)movement_get_current_timezone_offset() / 3600.0f;
     float LSTM = 15.0f * delta_T_UTC;
@@ -79,7 +79,7 @@ static void _compute_daily(local_solar_time_state_t *state, uint16_t d) {
 }
 
 /* Recompute if the day-of-year has rolled over. Returns current d. */
-static uint16_t _maybe_recompute(local_solar_time_state_t *state, watch_date_time_t dt) {
+static uint16_t _maybe_recompute(solar_time_state_t *state, watch_date_time_t dt) {
     uint16_t d = watch_utility_days_since_new_year(
         (uint16_t)(dt.unit.year + WATCH_RTC_REFERENCE_YEAR),
         dt.unit.month,
@@ -101,7 +101,7 @@ static int32_t _lst_seconds(watch_date_time_t dt, float TC) {
     return ((lt + tc) % 86400 + 86400) % 86400;
 }
 
-static void _update_display(local_solar_time_state_t *state, watch_date_time_t dt) {
+static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
     char buf[14];
 
     if (_load_location().reg == 0) {
@@ -111,7 +111,7 @@ static void _update_display(local_solar_time_state_t *state, watch_date_time_t d
 
     switch (state->mode) {
 
-        case LOCAL_SOLAR_TIME_MODE_LST: {
+        case SOLAR_TIME_MODE_LST: {
             int32_t s = _lst_seconds(dt, state->TC);
             sprintf(buf, "SO  %02d%02d%02d",
                     (int)(s / 3600), (int)((s % 3600) / 60), (int)(s % 60));
@@ -119,7 +119,7 @@ static void _update_display(local_solar_time_state_t *state, watch_date_time_t d
             break;
         }
 
-        case LOCAL_SOLAR_TIME_MODE_NOON: {
+        case SOLAR_TIME_MODE_NOON: {
             /* Solar noon: moment when LST = 12:00 → LT_noon = 12h - TC/60 */
             int32_t s = (int32_t)(( 12.0f - state->TC / 60.0f) * 3600.0f);
             s = ((s % 86400) + 86400) % 86400;
@@ -128,7 +128,7 @@ static void _update_display(local_solar_time_state_t *state, watch_date_time_t d
             break;
         }
 
-        case LOCAL_SOLAR_TIME_MODE_HRA: {
+        case SOLAR_TIME_MODE_HRA: {
             /* HRA = 15 * (LST - 12); negative = morning, positive = afternoon */
             int32_t s   = _lst_seconds(dt, state->TC);
             int16_t hra = (int16_t)roundf(15.0f * ((float)s / 3600.0f - 12.0f));
@@ -146,17 +146,17 @@ static void _update_display(local_solar_time_state_t *state, watch_date_time_t d
 
 /* ---- Movement callbacks -------------------------------------------------- */
 
-void local_solar_time_face_setup(uint8_t watch_face_index, void **context_ptr) {
+void solar_time_face_setup(uint8_t watch_face_index, void **context_ptr) {
     (void)watch_face_index;
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(local_solar_time_state_t));
-        memset(*context_ptr, 0, sizeof(local_solar_time_state_t));
+        *context_ptr = malloc(sizeof(solar_time_state_t));
+        memset(*context_ptr, 0, sizeof(solar_time_state_t));
         /* last_calc_d == 0 guarantees recomputation on first tick */
     }
 }
 
-void local_solar_time_face_activate(void *context) {
-    local_solar_time_state_t *state = (local_solar_time_state_t *)context;
+void solar_time_face_activate(void *context) {
+    solar_time_state_t *state = (solar_time_state_t *)context;
 
 #if __EMSCRIPTEN__
     /* In the simulator the browser exposes lat/lon as JS globals.
@@ -180,8 +180,8 @@ void local_solar_time_face_activate(void *context) {
     _maybe_recompute(state, dt);
 }
 
-bool local_solar_time_face_loop(movement_event_t event, void *context) {
-    local_solar_time_state_t *state = (local_solar_time_state_t *)context;
+bool solar_time_face_loop(movement_event_t event, void *context) {
+    solar_time_state_t *state = (solar_time_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -193,7 +193,7 @@ bool local_solar_time_face_loop(movement_event_t event, void *context) {
         }
 
         case EVENT_ALARM_BUTTON_UP:
-            state->mode = (local_solar_time_mode_t)((state->mode + 1) % LOCAL_SOLAR_TIME_NUM_MODES);
+            state->mode = (solar_time_mode_t)((state->mode + 1) % SOLAR_TIME_NUM_MODES);
             {
                 watch_date_time_t dt = movement_get_local_date_time();
                 _update_display(state, dt);
@@ -209,7 +209,7 @@ bool local_solar_time_face_loop(movement_event_t event, void *context) {
         }
 
         case EVENT_TIMEOUT:
-            state->mode = LOCAL_SOLAR_TIME_MODE_LST;
+            state->mode = SOLAR_TIME_MODE_LST;
             if (_load_location().reg == 0) movement_move_to_face(0);
             break;
 
@@ -220,8 +220,8 @@ bool local_solar_time_face_loop(movement_event_t event, void *context) {
     return true;
 }
 
-void local_solar_time_face_resign(void *context) {
-    local_solar_time_state_t *state = (local_solar_time_state_t *)context;
-    state->mode = LOCAL_SOLAR_TIME_MODE_LST;
+void solar_time_face_resign(void *context) {
+    solar_time_state_t *state = (solar_time_state_t *)context;
+    state->mode = SOLAR_TIME_MODE_LST;
     watch_clear_colon();
 }

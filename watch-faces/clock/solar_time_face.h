@@ -25,7 +25,7 @@
 #pragma once
 
 /*
- * LOCAL SOLAR TIME FACE
+ * SOLAR TIME FACE
  *
  * Displays solar time information based on the user's location.
  * Formulas follow the notation from:
@@ -36,7 +36,7 @@
  *   B     - Seasonal angle [degrees]                = (360/365) * (d - 81)
  *   EoT   - Equation of Time [minutes]              = 9.87*sin(2B) - 7.53*cos(B) - 1.5*sin(B)
  *   TC    - Time Correction Factor [minutes]        = 4*(Longitude - LSTM) + EoT
- *   LST   - Local Solar Time [hours]                = LT + TC/60
+ *   LST   - Solar Time [hours]                = LT + TC/60
  *   HRA   - Hour Angle [degrees]                    = 15*(LST - 12)
  *
  * B, EoT and TC only depend on the day-of-year d, so they are cached
@@ -48,7 +48,7 @@
  * "SO  no Loc".
  *
  * Display modes (cycle with the Alarm / start-stop button):
- *   SO  HH:MM:SS  — Local Solar Time (LST), live seconds display
+ *   SO  HH:MM:SS  — Solar Time (LST), live seconds display
  *   nO  HH:MM     — Solar Noon in local clock time
  *   Hr  ±DDD      — Hour Angle (HRA) in degrees; negative=morning, positive=afternoon
  */
@@ -56,29 +56,29 @@
 #include "movement.h"
 
 typedef enum {
-    LOCAL_SOLAR_TIME_MODE_LST  = 0,  /* Local Solar Time    SO HH:MM:SS */
-    LOCAL_SOLAR_TIME_MODE_NOON = 1,  /* Solar Noon (local)  nO HH:MM    */
-    LOCAL_SOLAR_TIME_MODE_HRA  = 2,  /* Hour Angle          Hr ±DDD     */
-    LOCAL_SOLAR_TIME_NUM_MODES
-} local_solar_time_mode_t;
+    SOLAR_TIME_MODE_LST  = 0,  /* Solar Time    SO HH:MM:SS */
+    SOLAR_TIME_MODE_NOON = 1,  /* Solar Noon (local)  nO HH:MM    */
+    SOLAR_TIME_MODE_HRA  = 2,  /* Hour Angle          Hr ±DDD     */
+    SOLAR_TIME_NUM_MODES
+} solar_time_mode_t;
 
 typedef struct {
-    local_solar_time_mode_t mode;
+    solar_time_mode_t mode;
     uint16_t last_calc_d;  /* day-of-year (1-366) when EoT/TC were last computed;
                               0 (zero-init) guarantees recomputation on first tick */
     float    EoT;          /* Equation of Time [minutes]       */
     float    TC;           /* Time Correction Factor [minutes] */
-} local_solar_time_state_t;
+} solar_time_state_t;
 
-void local_solar_time_face_setup(uint8_t watch_face_index, void **context_ptr);
-void local_solar_time_face_activate(void *context);
-bool local_solar_time_face_loop(movement_event_t event, void *context);
-void local_solar_time_face_resign(void *context);
+void solar_time_face_setup(uint8_t watch_face_index, void **context_ptr);
+void solar_time_face_activate(void *context);
+bool solar_time_face_loop(movement_event_t event, void *context);
+void solar_time_face_resign(void *context);
 
-#define local_solar_time_face ((const watch_face_t){ \
-    local_solar_time_face_setup,    \
-    local_solar_time_face_activate, \
-    local_solar_time_face_loop,     \
-    local_solar_time_face_resign,   \
+#define solar_time_face ((const watch_face_t){ \
+    solar_time_face_setup,    \
+    solar_time_face_activate, \
+    solar_time_face_loop,     \
+    solar_time_face_resign,   \
     NULL,                           \
 })
