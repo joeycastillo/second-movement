@@ -102,10 +102,13 @@ static int32_t _lst_seconds(watch_date_time_t dt, float TC) {
 }
 
 static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
-    char buf[14];
+    char bottom[7];
 
     if (_load_location().reg == 0) {
-        watch_display_text(WATCH_POSITION_FULL, "SO  no Loc");
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SOL", "SO");
+        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+        watch_display_text(WATCH_POSITION_BOTTOM, "no Loc");
+        watch_clear_colon();
         return;
     }
 
@@ -113,7 +116,8 @@ static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
 
         case SOLAR_TIME_MODE_LST: {
             int32_t s = _lst_seconds(dt, state->TC);
-            sprintf(buf, "SO  %02d%02d%02d",
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SOL", "SO");
+            sprintf(bottom, "%02d%02d%02d",
                     (int)(s / 3600), (int)((s % 3600) / 60), (int)(s % 60));
             watch_set_colon();
             break;
@@ -123,7 +127,8 @@ static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
             /* Solar noon: moment when LST = 12:00 → LT_noon = 12h - TC/60 */
             int32_t s = (int32_t)(( 12.0f - state->TC / 60.0f) * 3600.0f);
             s = ((s % 86400) + 86400) % 86400;
-            sprintf(buf, "nO  %02d%02d  ", (int)(s / 3600), (int)((s % 3600) / 60));
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "NOO", "nO");
+            sprintf(bottom, "%02d%02d  ", (int)(s / 3600), (int)((s % 3600) / 60));
             watch_set_colon();
             break;
         }
@@ -132,7 +137,8 @@ static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
             /* HRA = 15 * (LST - 12); negative = morning, positive = afternoon */
             int32_t s   = _lst_seconds(dt, state->TC);
             int16_t hra = (int16_t)roundf(15.0f * ((float)s / 3600.0f - 12.0f));
-            sprintf(buf, "Hr  %+4d  ", (int)hra);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "HrA", "Hr");
+            sprintf(bottom, "%+4d  ", (int)hra);
             watch_clear_colon();
             break;
         }
@@ -141,7 +147,8 @@ static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
             return;
     }
 
-    watch_display_text(WATCH_POSITION_FULL, buf);
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text(WATCH_POSITION_BOTTOM, bottom);
 }
 
 /* ---- Movement callbacks -------------------------------------------------- */
