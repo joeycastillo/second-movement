@@ -554,9 +554,17 @@ bool kitchen_timer_face_loop(movement_event_t event, void *context) {
             state->now_ts = watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), movement_get_current_timezone_offset());
             // Check all timers — multiple may have expired if their targets
             // were close together or the watch was asleep
-            for (uint8_t i = 0; i < KT_MAX_TIMERS; i++) {
-                if (state->timers[i].mode == kt_running && state->timers[i].target_ts <= state->now_ts) {
-                    enter_overtime(state, i, true);
+            {
+                bool any_expired = false;
+                for (uint8_t i = 0; i < KT_MAX_TIMERS; i++) {
+                    if (state->timers[i].mode == kt_running && state->timers[i].target_ts <= state->now_ts) {
+                        enter_overtime(state, i, true);
+                        state->timer_idx = i;
+                        any_expired = true;
+                    }
+                }
+                if (any_expired) {
+                    movement_move_to_face(state->watch_face_index);
                 }
             }
             break;
