@@ -1352,6 +1352,25 @@ void movement_set_active_hours(movement_active_hours_t settings) {
     watch_store_backup_data(settings.reg, 2);
 }
 
+movement_reserved_t movement_get_reserved(void) {
+    movement_reserved_t settings;
+    settings.reg = watch_get_backup_data(3);
+    
+    // Check if backup register is uninitialized (all zeros or all ones)
+    // Initialize with defaults
+    if (settings.reg == 0 || settings.reg == 0xFFFFFFFF) {
+        settings.bit.phase_engine_enabled = true;  // Default: Phase Engine ON
+        settings.bit.reserved = 0;
+        movement_set_reserved(settings);
+    }
+    
+    return settings;
+}
+
+void movement_set_reserved(movement_reserved_t settings) {
+    watch_store_backup_data(settings.reg, 3);
+}
+
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
 #if __EMSCRIPTEN__
