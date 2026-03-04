@@ -5304,11 +5304,66 @@ function genBuildId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// ============================================================
+// VALIDATION
+// ============================================================
+function validateConfiguration() {
+    const warnings = [];
+    const errors = [];
+    
+    // Check Phase Engine vs Homebase
+    const phaseEnabled = state.phaseEngineEnabled;
+    const latitude = state.homebaseLat;
+    const longitude = state.homebaseLon;
+    
+    if (phaseEnabled) {
+        // Check for missing homebase
+        if (latitude === null && longitude === null) {
+            errors.push('Phase Engine enabled but homebase coordinates not set');
+        }
+        
+        // Check coordinate bounds
+        if (latitude !== null && (latitude < -90 || latitude > 90)) {
+            errors.push('Invalid latitude (must be -90 to 90)');
+        }
+        if (longitude !== null && (longitude < -180 || longitude > 180)) {
+            errors.push('Invalid longitude (must be -180 to 180)');
+        }
+        
+        // Warn if homebase looks like placeholder
+        if (latitude !== null && longitude !== null) {
+            if (Math.abs(latitude) < 0.001 && Math.abs(longitude) < 0.001) {
+                warnings.push('Homebase coordinates look like placeholder values');
+            }
+        }
+    }
+    
+    return { warnings, errors };
+}
+
+
 async function triggerBuild() {
     const token = getToken();
     if (!token) {
         showStatus('[ERR] ENTER GITHUB PAT IN TOKEN FIELD ABOVE', 'error');
         return;
+    }
+
+    // Validate configuration before building
+    const validation = validateConfiguration();
+    if (validation.errors.length > 0) {
+        const errorMsg = validation.errors.join('\n');
+        showStatus('[ERR] ' + errorMsg, 'error');
+        alert('Configuration Errors:\n\n' + errorMsg + '\n\nPlease fix these issues before building.');
+        return;
+    }
+    
+    if (validation.warnings.length > 0) {
+        const warningMsg = validation.warnings.join('\n');
+        if (!confirm('Configuration Warnings:\n\n' + warningMsg + '\n\nContinue anyway?')) {
+            showStatus('[WARN] Build cancelled by user', 'error');
+            return;
+        }
     }
 
     const faces = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__');
