@@ -69,70 +69,15 @@
       "default_position": 5
     },
     {
-      "id": "sleep_tracker_face",
-      "name": "Sleep Tracker",
+      "id": "timer_face",
+      "name": "Timer",
       "category": "complication",
-      "source": "./watch-faces/complication/sleep_tracker_face.c",
-      "header": "./watch-faces/complication/sleep_tracker_face.h",
-      "description": "Implements Cole-Kripke (1992) sleep/wake detection algorithm enhanced with light sensor disambiguation. Designed for Sensor Watch Pro hardware. Algorithm:",
+      "source": "./watch-faces/complication/timer_face.c",
+      "header": "./watch-faces/complication/timer_face.h",
+      "description": "Advanced timer/countdown face with pre-set timer lengths This watch face provides the functionality of starting a countdown by choosing one out of nine programmable timer presets. A timer/countdown can be 23 hours,",
       "requires_sensor": null,
       "default": true,
       "default_position": 6
-    },
-    {
-      "id": "circadian_score_face",
-      "name": "Circadian Score",
-      "category": "complication",
-      "source": "./watch-faces/complication/circadian_score_face.c",
-      "header": "./watch-faces/complication/circadian_score_face.h",
-      "description": "Circadian Score (CS) Face Displays overall Circadian Score (0-100) with drill-down to 5 component subscores: - TI (Timing/SRI): Sleep Regularity Index (35% weight)",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 7
-    },
-    {
-      "id": "comms_face",
-      "name": "Comms",
-      "category": "io",
-      "source": "./watch-faces/io/comms_face.c",
-      "header": "./watch-faces/io/comms_face.h",
-      "description": "Bidirectional Communication (TX + RX): - TX mode: Acoustic data transmission via FESK (buzzer phone mic) - RX mode: Optical data reception (phone screen light sensor)",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 8
-    },
-    {
-      "id": "world_clock_face",
-      "name": "World Clock",
-      "category": "clock",
-      "source": "./watch-faces/clock/world_clock_face.c",
-      "header": "./watch-faces/clock/world_clock_face.h",
-      "description": "The World Clock watch face looks similar to the Simple Clock watch face, but youll notice that at first launch the day of week indicators are blank. Thats because this watch face does not display the day of the week.",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 9
-    },
-    {
-      "id": "sunrise_sunset_face",
-      "name": "Sunrise Sunset",
-      "category": "complication",
-      "source": "./watch-faces/complication/sunrise_sunset_face.c",
-      "header": "./watch-faces/complication/sunrise_sunset_face.h",
-      "description": "SUNRISE & SUNSET FACE The Sunrise/Sunset face is designed to display the next sunrise or sunset for a given location. It also functions as an interface for setting the",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 10
-    },
-    {
-      "id": "moon_phase_face",
-      "name": "Moon Phase",
-      "category": "complication",
-      "source": "./watch-faces/complication/moon_phase_face.c",
-      "header": "./watch-faces/complication/moon_phase_face.h",
-      "description": "The Moon Phase face is similar to the Sunrise/Sunset face: it displays the current phase of the moon, along with the day of the month and a graphical representation of the moon on the top row.",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 11
     },
     {
       "id": "fast_stopwatch_face",
@@ -143,40 +88,117 @@
       "description": "The Stock Stopwatch face implements the original F-91W stopwatch functionality, including counting hundredths of seconds and lap timing. Use the ALARM button to start and stop the stopwatch.",
       "requires_sensor": null,
       "default": true,
+      "default_position": 7
+    },
+    {
+      "id": "advanced_alarm_face",
+      "name": "Advanced Alarm",
+      "category": "complication",
+      "source": "./watch-faces/complication/advanced_alarm_face.c",
+      "header": "./watch-faces/complication/advanced_alarm_face.h",
+      "description": "Implements up to 16 alarm slots on the sensor watch Usage: - In normal mode, the alarm button cycles through all 16 alarms.",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 8
+    },
+    {
+      "id": "sleep_tracker_face",
+      "name": "Sleep Tracker",
+      "category": "complication",
+      "source": "./watch-faces/complication/sleep_tracker_face.c",
+      "header": "./watch-faces/complication/sleep_tracker_face.h",
+      "description": "Implements Cole-Kripke (1992) sleep/wake detection algorithm enhanced with light sensor disambiguation. Designed for Sensor Watch Pro hardware. Algorithm:",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 9
+    },
+    {
+      "id": "circadian_score_face",
+      "name": "Circadian Score",
+      "category": "complication",
+      "source": "./watch-faces/complication/circadian_score_face.c",
+      "header": "./watch-faces/complication/circadian_score_face.h",
+      "description": "Circadian Score (CS) Face Displays overall Circadian Score (0-100) with drill-down to 5 component subscores: - TI (Timing/SRI): Sleep Regularity Index (35% weight)",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 10
+    },
+    {
+      "id": "oracle_face",
+      "name": "Oracle",
+      "category": "complication",
+      "source": "./watch-faces/complication/oracle_face.c",
+      "header": "./watch-faces/complication/oracle_face.h",
+      "description": "",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 11
+    },
+    {
+      "id": "world_clock_face",
+      "name": "World Clock",
+      "category": "clock",
+      "source": "./watch-faces/clock/world_clock_face.c",
+      "header": "./watch-faces/clock/world_clock_face.h",
+      "description": "The World Clock watch face looks similar to the Simple Clock watch face, but youll notice that at first launch the day of week indicators are blank. Thats because this watch face does not display the day of the week.",
+      "requires_sensor": null,
+      "default": true,
       "default_position": 12
     },
     {
-      "id": "countdown_face",
-      "name": "Countdown",
+      "id": "moon_phase_face",
+      "name": "Moon Phase",
       "category": "complication",
-      "source": "./watch-faces/complication/countdown_face.c",
-      "header": "./watch-faces/complication/countdown_face.h",
-      "description": "Slight extension of the original countdown face by Wesley Ellis. - Press the light button to enter setting mode and adjust the countdown timer.",
+      "source": "./watch-faces/complication/moon_phase_face.c",
+      "header": "./watch-faces/complication/moon_phase_face.h",
+      "description": "The Moon Phase face is similar to the Sunrise/Sunset face: it displays the current phase of the moon, along with the day of the month and a graphical representation of the moon on the top row.",
       "requires_sensor": null,
       "default": true,
       "default_position": 13
     },
     {
-      "id": "alarm_face",
-      "name": "Alarm",
+      "id": "sunrise_sunset_face",
+      "name": "Sunrise Sunset",
       "category": "complication",
-      "source": "./watch-faces/complication/alarm_face.c",
-      "header": "./watch-faces/complication/alarm_face.h",
-      "description": "Daily ALARM face (formerly WAKE Face) Basic daily alarm clock face. Seems useful if nothing else in the interest of feature parity with the F-91Ws OEM module, 593.",
+      "source": "./watch-faces/complication/sunrise_sunset_face.c",
+      "header": "./watch-faces/complication/sunrise_sunset_face.h",
+      "description": "SUNRISE & SUNSET FACE The Sunrise/Sunset face is designed to display the next sunrise or sunset for a given location. It also functions as an interface for setting the",
       "requires_sensor": null,
       "default": true,
       "default_position": 14
     },
     {
-      "id": "temperature_display_face",
-      "name": "Temperature Display",
-      "category": "sensor",
-      "source": "./watch-faces/sensor/temperature_display_face.c",
-      "header": "./watch-faces/sensor/temperature_display_face.h",
-      "description": "THERMISTOR READOUT (aka Temperature Display) This watch face is designed to work with either the Temperature + GPIO sensor board or the Temperature + Light sensor board. It reads the current",
-      "requires_sensor": "sensor",
+      "id": "comms_face",
+      "name": "Comms",
+      "category": "io",
+      "source": "./watch-faces/io/comms_face.c",
+      "header": "./watch-faces/io/comms_face.h",
+      "description": "Bidirectional Communication (TX + RX): - TX mode: Acoustic data transmission via FESK (buzzer phone mic) - RX mode: Optical data reception (phone screen light sensor)",
+      "requires_sensor": null,
       "default": true,
       "default_position": 15
+    },
+    {
+      "id": "lis2dw_monitor_face",
+      "name": "Lis2dw Monitor",
+      "category": "sensor",
+      "source": "./watch-faces/sensor/lis2dw_monitor_face.c",
+      "header": "./watch-faces/sensor/lis2dw_monitor_face.h",
+      "description": "This watch face displays the current reading of the LIS2DW12 accelerometer. The axis (x,y,z) can be selected using the alarm button. A long press on the light button allows to configure the sensor, including",
+      "requires_sensor": "sensor",
+      "default": true,
+      "default_position": 16
+    },
+    {
+      "id": "light_sensor_face",
+      "name": "Light Sensor",
+      "category": "demo",
+      "source": "./watch-faces/demo/light_sensor_face.c",
+      "header": "./watch-faces/demo/light_sensor_face.h",
+      "description": "Temporary watch face for playing with the light sensor. WARNING: This watch face may not play nicely with watch faces that use the ADC in the background, such as the temperature logger. More improvement and testing needs to be done before this is can",
+      "requires_sensor": null,
+      "default": true,
+      "default_position": 17
     },
     {
       "id": "voltage_face",
@@ -187,7 +209,7 @@
       "description": "This watch face is very simple and has no controls to speak of. It displays the battery voltage as measured by the SAM L22s ADC. Note that the Simple Clock watch face includes a low battery warning, so you",
       "requires_sensor": "sensor",
       "default": true,
-      "default_position": 16
+      "default_position": 18
     },
     {
       "id": "settings_face",
@@ -198,18 +220,7 @@
       "description": "SETTINGS face (replaces old Preferences watch face) The Settings watch face allows you to configure various options on your Sensor Watch. Like all other screens, you advance the field youre setting",
       "requires_sensor": null,
       "default": true,
-      "default_position": 17
-    },
-    {
-      "id": "set_time_face",
-      "name": "Set Time",
-      "category": "settings",
-      "source": "./watch-faces/settings/set_time_face.c",
-      "header": "./watch-faces/settings/set_time_face.h",
-      "description": "The default method for adjusting Sensor Watch time. The Time Set watch face allows you to set the time on Sensor Watch. Use the LIGHT button to advance through the field you are setting, and the",
-      "requires_sensor": null,
-      "default": true,
-      "default_position": 18
+      "default_position": 19
     },
     {
       "id": "accelerometer_status_face",
@@ -234,12 +245,12 @@
       "default_position": null
     },
     {
-      "id": "advanced_alarm_face",
-      "name": "Advanced Alarm",
+      "id": "alarm_face",
+      "name": "Alarm",
       "category": "complication",
-      "source": "./watch-faces/complication/advanced_alarm_face.c",
-      "header": "./watch-faces/complication/advanced_alarm_face.h",
-      "description": "Implements up to 16 alarm slots on the sensor watch Usage: - In normal mode, the alarm button cycles through all 16 alarms.",
+      "source": "./watch-faces/complication/alarm_face.c",
+      "header": "./watch-faces/complication/alarm_face.h",
+      "description": "Daily ALARM face (formerly WAKE Face) Basic daily alarm clock face. Seems useful if nothing else in the interest of feature parity with the F-91Ws OEM module, 593.",
       "requires_sensor": null,
       "default": false,
       "default_position": null
@@ -328,6 +339,17 @@
       "source": "./watch-faces/clock/close_enough_face.c",
       "header": "./watch-faces/clock/close_enough_face.h",
       "description": "Displays the current time; but only in periods of 5. Some examples: - 5:10 is \"10 past 5\" displayed as \"10 P 5\"",
+      "requires_sensor": null,
+      "default": false,
+      "default_position": null
+    },
+    {
+      "id": "countdown_face",
+      "name": "Countdown",
+      "category": "complication",
+      "source": "./watch-faces/complication/countdown_face.c",
+      "header": "./watch-faces/complication/countdown_face.h",
+      "description": "Slight extension of the original countdown face by Wesley Ellis. - Press the light button to enter setting mode and adjust the countdown timer.",
       "requires_sensor": null,
       "default": false,
       "default_position": null
@@ -476,28 +498,6 @@
       "default_position": null
     },
     {
-      "id": "light_sensor_face",
-      "name": "Light Sensor",
-      "category": "demo",
-      "source": "./watch-faces/demo/light_sensor_face.c",
-      "header": "./watch-faces/demo/light_sensor_face.h",
-      "description": "Temporary watch face for playing with the light sensor. WARNING: This watch face may not play nicely with watch faces that use the ADC in the background, such as the temperature logger. More improvement and testing needs to be done before this is can",
-      "requires_sensor": null,
-      "default": false,
-      "default_position": null
-    },
-    {
-      "id": "lis2dw_monitor_face",
-      "name": "Lis2dw Monitor",
-      "category": "sensor",
-      "source": "./watch-faces/sensor/lis2dw_monitor_face.c",
-      "header": "./watch-faces/sensor/lis2dw_monitor_face.h",
-      "description": "This watch face displays the current reading of the LIS2DW12 accelerometer. The axis (x,y,z) can be selected using the alarm button. A long press on the light button allows to configure the sensor, including",
-      "requires_sensor": "sensor",
-      "default": false,
-      "default_position": null
-    },
-    {
       "id": "mars_time_face",
       "name": "Mars Time",
       "category": "clock",
@@ -581,6 +581,17 @@
       "source": "./watch-faces/demo/rtccount_face.c",
       "header": "./watch-faces/demo/rtccount_face.h",
       "description": "A test face to inspect some metrics of the rtc-counter32 mode.",
+      "requires_sensor": null,
+      "default": false,
+      "default_position": null
+    },
+    {
+      "id": "set_time_face",
+      "name": "Set Time",
+      "category": "settings",
+      "source": "./watch-faces/settings/set_time_face.c",
+      "header": "./watch-faces/settings/set_time_face.h",
+      "description": "The default method for adjusting Sensor Watch time. The Time Set watch face allows you to set the time on Sensor Watch. Use the LIGHT button to advance through the field you are setting, and the",
       "requires_sensor": null,
       "default": false,
       "default_position": null
@@ -674,6 +685,28 @@
       "default_position": null
     },
     {
+      "id": "temperature_display_face",
+      "name": "Temperature Display",
+      "category": "sensor",
+      "source": "./watch-faces/sensor/temperature_display_face.c",
+      "header": "./watch-faces/sensor/temperature_display_face.h",
+      "description": "THERMISTOR READOUT (aka Temperature Display) This watch face is designed to work with either the Temperature + GPIO sensor board or the Temperature + Light sensor board. It reads the current",
+      "requires_sensor": "sensor",
+      "default": false,
+      "default_position": null
+    },
+    {
+      "id": "temperature_forecast_face",
+      "name": "Temperature Forecast",
+      "category": "complication",
+      "source": "./watch-faces/complication/temperature_forecast_face.c",
+      "header": "./watch-faces/complication/temperature_forecast_face.h",
+      "description": "Displays 7-day weather forecast using the forecast_table API. Usage: - MODE short: Cycle through 7 days (today 6 days out)",
+      "requires_sensor": null,
+      "default": false,
+      "default_position": null
+    },
+    {
       "id": "temperature_logging_face",
       "name": "Temperature Logging",
       "category": "sensor",
@@ -681,17 +714,6 @@
       "header": "./watch-faces/sensor/temperature_logging_face.h",
       "description": "THERMISTOR LOGGING (aka Temperature Log) This watch face automatically logs the temperature once an hour, and maintains a 36-hour log of readings. This watch face is admittedly rather",
       "requires_sensor": "sensor",
-      "default": false,
-      "default_position": null
-    },
-    {
-      "id": "timer_face",
-      "name": "Timer",
-      "category": "complication",
-      "source": "./watch-faces/complication/timer_face.c",
-      "header": "./watch-faces/complication/timer_face.h",
-      "description": "Advanced timer/countdown face with pre-set timer lengths This watch face provides the functionality of starting a countdown by choosing one out of nine programmable timer presets. A timer/countdown can be 23 hours,",
-      "requires_sensor": null,
       "default": false,
       "default_position": null
     },

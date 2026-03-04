@@ -6,7 +6,7 @@
       "name": "Secondary Face Index",
       "type": "choice",
       "default": "(MOVEMENT_NUM_FACES - 5)",
-      "description": "Determines what face to go to from the first face on long press of the Mode button. Also excludes these faces from the normal rotation. In the default firmware, this lets you access temperature and battery voltage with a long press of Mode. Some folks also like to use this to hide the preferences and time set faces from the normal rotation. If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect."
+      "description": "Last 5 faces: comms, lis2dw, light_sensor, voltage, settings"
     },
     {
       "id": "SIGNAL_TUNE_DEFAULT",
@@ -20,7 +20,7 @@
       "name": "Red Color",
       "type": "int",
       "default": 0,
-      "description": "Determines the intensity of the led colors Set a hex value 0-15 with 0x0 being off and 0xF being max intensity",
+      "description": "Determines the intensity of the led colors Set a hex value 0-15 with 0x0 being off and 0xF being max intensity Standard boards (red/green/blue PCBs) have bicolor red/green LED only. Default to green for simplicity and compatibility.",
       "min": 0,
       "max": 15
     },
