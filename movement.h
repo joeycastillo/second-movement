@@ -31,12 +31,47 @@
 #include "utz.h"
 #include "lis2dw.h"
 
+// Sleep orientation tracking constants (used by movement.c, always available)
+#define SLEEP_BINS_PER_NIGHT 32         // 32 × 15-minute bins for 8-hour night
+#define SLEEP_BIN_MINUTES 15            // Minutes per bin (60 min/hour ÷ 4 bins/hour)
+#define SLEEP_BYTES_PER_NIGHT 8         // 32 bins × 2 bits / 8 bits per byte
+#define SLEEP_NIGHTS_STORED 7           // 7-day rolling window
+#define SLEEP_STORAGE_ROW 30            // Flash storage row for sleep orientation data
+
+// Orientation constants (2-bit values)
+#define SLEEP_ORIENTATION_UNKNOWN 0
+#define SLEEP_ORIENTATION_FACE_UP 1
+#define SLEEP_ORIENTATION_FACE_DOWN 2
+#define SLEEP_ORIENTATION_TILTED 3
+
+// Sleep orientation tracking types (used by movement.c, always available)
+typedef struct {
+    uint8_t night_data[SLEEP_BYTES_PER_NIGHT];  // 32 bins × 2 bits = 8 bytes
+    uint16_t date_code;                          // Date code for this night
+} sleep_night_t;
+
+typedef struct {
+    sleep_night_t nights[SLEEP_NIGHTS_STORED];  // 7 nights × (8 bytes + 2 bytes) = 70 bytes
+    uint8_t current_index;                       // Current night index (0-6)
+} sleep_data_t;
+
+// Sleep tracking function declarations
+void sleep_tracking_init(void);
+void sleep_tracking_load_from_flash(void);
+void sleep_tracking_save_to_flash(void);
+uint8_t sleep_tracking_get_current_bin(void);
+void sleep_tracking_log_orientation(uint8_t orientation);
+bool sleep_tracking_get_night_data(uint8_t days_ago, sleep_night_t *out_night);
+uint8_t sleep_tracking_count_orientation_changes(const sleep_night_t *night);
+
 #ifdef PHASE_ENGINE_ENABLED
 #include "metrics.h"
 #include "playlist.h"
 #include "sensors.h"
 #include "phase_engine.h"
-#endif
+#include "sleep_data.h"
+#include "circadian_score.h"
+#endif // PHASE_ENGINE_ENABLED
 
 /// @brief A struct that allows a watch face to report its state back to Movement.
 typedef struct {
@@ -124,7 +159,8 @@ typedef union {
 // movement_reserved_t is a placeholder for future use of the BKUP[3] register.
 typedef union {
     struct {
-        uint32_t reserved : 32;
+        bool phase_engine_enabled : 1;     // if true, Phase Engine is active (circadian tracking)
+        uint32_t reserved : 31;            // reserved for future use
     } bit;
     uint32_t reg;
 } movement_reserved_t;
@@ -332,6 +368,9 @@ typedef struct {
     // Phase 4D: Phase engine state (for anomaly detection)
     phase_state_t phase;
     
+    // Phase 4E: Sleep tracking and telemetry state
+    sleep_telemetry_state_t sleep_telemetry;
+    
     // Playlist integration state
     uint16_t metric_tick_count;     // Counter for 15-minute metric updates
     uint16_t cumulative_activity;    // Activity accumulator since wake
@@ -444,6 +483,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
 // gets and sets the active hours configuration (stored in BKUP[2])
 movement_active_hours_t movement_get_active_hours(void);
 void movement_set_active_hours(movement_active_hours_t settings);
+
+/** @brief Get the reserved register settings (BKUP[3]). */
+movement_reserved_t movement_get_reserved(void);
+/** @brief Set the reserved register settings (BKUP[3]). */
+void movement_set_reserved(movement_reserved_t settings);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

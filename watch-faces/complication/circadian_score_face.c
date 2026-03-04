@@ -8,6 +8,11 @@
 #include <string.h>
 #include "circadian_score_face.h"
 #include "circadian_score.h"
+#include "movement.h"
+
+#ifdef PHASE_ENGINE_ENABLED
+extern volatile movement_state_t movement_state;
+#endif
 
 static circadian_data_t global_circadian_data = {0};
 static bool data_loaded = false;
@@ -45,6 +50,12 @@ static void _circadian_score_face_update_display(circadian_score_face_state_t *s
             case CSFACE_MODE_LI:
                 snprintf(buf, sizeof(buf), "LI  %2d", components.light_score);
                 break;
+#ifdef PHASE_ENGINE_ENABLED
+            case CSFACE_MODE_RI:
+                // Phase 4E: Display restlessness index (0-100, 0=perfect, 100=terrible)
+                snprintf(buf, sizeof(buf), "RI  %2d", movement_state.sleep_telemetry.restlessness.today);
+                break;
+#endif
             default:
                 break;
         }
@@ -79,6 +90,19 @@ static void _circadian_score_face_update_display(circadian_score_face_state_t *s
                 case CSFACE_MODE_LI:
                     snprintf(buf, sizeof(buf), "-%d  %2d", state->historical_night, night->light_quality);
                     break;
+#ifdef PHASE_ENGINE_ENABLED
+                case CSFACE_MODE_RI: {
+                    // Show historical restlessness index
+                    uint8_t hist_idx = state->historical_night - 1;  // 1-7 maps to 0-6
+                    if (hist_idx < 7) {
+                        uint8_t ri = movement_state.sleep_telemetry.restlessness.history[hist_idx];
+                        snprintf(buf, sizeof(buf), "-%d  %2d", state->historical_night, ri);
+                    } else {
+                        snprintf(buf, sizeof(buf), "-%d  --", state->historical_night);
+                    }
+                    break;
+                }
+#endif
                 default:
                     break;
             }

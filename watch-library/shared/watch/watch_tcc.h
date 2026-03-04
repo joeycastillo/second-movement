@@ -256,6 +256,13 @@ void watch_buzzer_abort_sequence(void);
 
 void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop);
 
+#ifdef SMOOTH_LED_FADE
+/** @brief Registers a callback for LED fade animation (called at 64 Hz by TC0).
+  * @param callback Function to call on each TC0 tick for LED fade stepping.
+  */
+void watch_register_led_fade_callback(watch_cb_t callback);
+#endif
+
 #ifndef __EMSCRIPTEN__
 void irq_handler_tc0(void);
 #endif

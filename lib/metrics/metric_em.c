@@ -79,10 +79,10 @@ uint8_t metric_em_compute(uint8_t hour, uint16_t day_of_year, uint16_t activity_
     uint8_t lunar_score = (uint8_t)(100 - (lunar_deviation / 5));  // Peak at 500 → 100, edges → 0
     
     // Variance component (40%)
-    // TODO Phase 4: Implement proper activity variance vs zone expectation
-    // For Phase 3: Use simplified placeholder (50 = neutral)
-    (void)activity_variance;  // Suppress unused parameter warning
-    uint8_t variance_score = 50;
+    // Map activity variance (0-1000) to score (0-100)
+    // Higher variance indicates more varied/active movement patterns
+    uint16_t clamped_variance = (activity_variance > 1000) ? 1000 : activity_variance;
+    uint8_t variance_score = (uint8_t)(clamped_variance / 10);
     
     // Blend: 40% circadian + 20% lunar + 40% variance
     uint16_t em = (uint16_t)(((uint32_t)circ_score * 40 + 

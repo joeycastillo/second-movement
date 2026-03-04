@@ -11,12 +11,7 @@ on:
       board:
         description: "Board type"
         required: true
-        type: choice
-        options:
-          - sensorwatch_red
-          - sensorwatch_green
-          - sensorwatch_blue
-          - sensorwatch_pro
+        type: string
       display:
         description: "Display type"
         required: true
@@ -49,6 +44,11 @@ on:
         required: false
         default: "0"
         type: string
+      smooth_led_fade:
+        description: "Enable smooth LED fade animation (PR #71)"
+        required: false
+        default: false
+        type: boolean
       button_sound:
         description: "Enable button click sound by default"
         required: false
@@ -56,6 +56,21 @@ on:
         type: boolean
       signal_tune:
         description: "Signal tune define (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
+      hourly_chime_tune:
+        description: "Hourly chime tune (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
+      alarm_tune:
+        description: "Alarm tune (e.g. SIGNAL_TUNE_DEFAULT)"
+        required: false
+        default: "SIGNAL_TUNE_DEFAULT"
+        type: string
+      smart_alarm_tune:
+        description: "Smart alarm tune (e.g. SIGNAL_TUNE_DEFAULT)"
         required: false
         default: "SIGNAL_TUNE_DEFAULT"
         type: string
@@ -90,6 +105,26 @@ on:
         required: false
         type: string
         default: ""
+      zone_emergence_max:
+        description: 'Zone boundary: Emergence max (0-100)'
+        required: false
+        default: '25'
+        type: string
+      zone_momentum_max:
+        description: 'Zone boundary: Momentum max (0-100)'
+        required: false
+        default: '50'
+        type: string
+      zone_active_max:
+        description: 'Zone boundary: Active max (0-100)'
+        required: false
+        default: '75'
+        type: string
+      zone_swap_enabled:
+        description: 'Swap Active/Momentum zones (0=off, 1=on)'
+        required: false
+        default: '0'
+        type: string
 
 jobs:
   build:
@@ -109,6 +144,9 @@ jobs:
 
       - name: Mark workspace as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install Python dependencies
+        run: pip3 install requests
 
       - name: Generate homebase phase tables
         if: ${{ github.event.inputs.homebase_lat != '' && github.event.inputs.homebase_lon != '' && github.event.inputs.homebase_tz != '' }}
@@ -133,12 +171,20 @@ jobs:
           INPUT_LED_RED: ${{ github.event.inputs.led_red }}
           INPUT_LED_GREEN: ${{ github.event.inputs.led_green }}
           INPUT_LED_BLUE: ${{ github.event.inputs.led_blue }}
+          INPUT_SMOOTH_LED_FADE: ${{ github.event.inputs.smooth_led_fade }}
           INPUT_BUTTON_SOUND: ${{ github.event.inputs.button_sound }}
           INPUT_SIGNAL_TUNE: ${{ github.event.inputs.signal_tune }}
+          INPUT_HOURLY_CHIME_TUNE: ${{ github.event.inputs.hourly_chime_tune }}
+          INPUT_ALARM_TUNE: ${{ github.event.inputs.alarm_tune }}
+          INPUT_SMART_ALARM_TUNE: ${{ github.event.inputs.smart_alarm_tune }}
           INPUT_ACTIVE_HOURS_ENABLED: ${{ inputs.active_hours_enabled }}
           INPUT_ACTIVE_HOURS_START: ${{ inputs.active_hours_start }}
           INPUT_ACTIVE_HOURS_END: ${{ inputs.active_hours_end }}
           INPUT_PHASE_ENGINE: ${{ github.event.inputs.homebase_lat != '' && github.event.inputs.homebase_lon != '' && github.event.inputs.homebase_tz != '' }}
+          INPUT_ZONE_EMERGENCE_MAX: ${{ github.event.inputs.zone_emergence_max }}
+          INPUT_ZONE_MOMENTUM_MAX: ${{ github.event.inputs.zone_momentum_max }}
+          INPUT_ZONE_ACTIVE_MAX: ${{ github.event.inputs.zone_active_max }}
+          INPUT_ZONE_SWAP_ENABLED: ${{ github.event.inputs.zone_swap_enabled }}
         run: |
           python3 .github/scripts/generate_config.py \
             --faces "$INPUT_FACES" \
@@ -147,12 +193,20 @@ jobs:
             --led-red "$INPUT_LED_RED" \
             --led-green "$INPUT_LED_GREEN" \
             --led-blue "$INPUT_LED_BLUE" \
+            --smooth-led-fade "$INPUT_SMOOTH_LED_FADE" \
             --button-sound "$INPUT_BUTTON_SOUND" \
             --signal-tune "$INPUT_SIGNAL_TUNE" \
+            --hourly-chime-tune "$INPUT_HOURLY_CHIME_TUNE" \
+            --alarm-tune "$INPUT_ALARM_TUNE" \
+            --smart-alarm-tune "$INPUT_SMART_ALARM_TUNE" \
             --active-hours-enabled "$INPUT_ACTIVE_HOURS_ENABLED" \
             --active-hours-start "$INPUT_ACTIVE_HOURS_START" \
             --active-hours-end "$INPUT_ACTIVE_HOURS_END" \
             --phase-engine "$INPUT_PHASE_ENGINE" \
+            --zone-emergence-max "$INPUT_ZONE_EMERGENCE_MAX" \
+            --zone-momentum-max "$INPUT_ZONE_MOMENTUM_MAX" \
+            --zone-active-max "$INPUT_ZONE_ACTIVE_MAX" \
+            --zone-swap-enabled "$INPUT_ZONE_SWAP_ENABLED" \
             --output movement_config.h
 
       - name: Generate watch-faces.mk
@@ -165,12 +219,31 @@ jobs:
             --output watch-faces.mk
 
       - name: Compile firmware
-        run: make
+        run: |
+          MAKE_FLAGS=""
+          
+          # Add Phase Engine flag if homebase configured
+          if [ "${{ github.event.inputs.homebase_lat }}" != "" ] && \
+             [ "${{ github.event.inputs.homebase_lon }}" != "" ] && \
+             [ "${{ github.event.inputs.homebase_tz }}" != "" ]; then
+            MAKE_FLAGS="$MAKE_FLAGS PHASE_ENGINE_ENABLED=1"
+          fi
+          
+          # Add smooth LED fade flag if enabled
+          if [ "${{ github.event.inputs.smooth_led_fade }}" = "true" ]; then
+            MAKE_FLAGS="$MAKE_FLAGS SMOOTH_LED_FADE=1"
+          fi
+          
+          make BOARD=$BOARD DISPLAY=$DISPLAY $MAKE_FLAGS
 
       - name: Rename UF2 artifact
+        id: rename
         run: |
-          cp build/firmware.uf2 \
-            "${BOARD}-${DISPLAY}-${BUILD_ID}.uf2"
+          # Extract short board name for filename
+          BOARD_SHORT=$(echo "$BOARD" | sed 's/sensorwatch_//')
+          FILENAME="${BOARD_SHORT}-${DISPLAY}-${BUILD_ID}.uf2"
+          cp build/firmware.uf2 "$FILENAME"
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
 
       - name: Upload to GitHub Release
         id: upload_release
@@ -181,11 +254,11 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            ${{ env.BOARD }}-${{ env.DISPLAY }}-${{ env.BUILD_ID }}.uf2
+            ${{ steps.rename.outputs.filename }}
 
       - name: Output build summary
         run: |
-          ASSET_NAME="${BOARD}-${DISPLAY}-${BUILD_ID}.uf2"
+          ASSET_NAME="${{ steps.rename.outputs.filename }}"
           REPO="${{ github.repository }}"
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/custom-builds/${ASSET_NAME}"
           echo "Build complete." >> "$GITHUB_STEP_SUMMARY"

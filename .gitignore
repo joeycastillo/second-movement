@@ -27,6 +27,11 @@ fp-info-cache
 /.direnv
 /.emscripten_cache
 
+# Build artifacts and test outputs
+build.log
+measure_all_output.txt
+all_flash_sizes.json
+
 # Priority 3 source assets (large files, not for git)
 /assets/
 

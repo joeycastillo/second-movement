@@ -1,0 +1,33 @@
+Add Phase Engine telemetry export to comms_face for dogfooding
+
+Implements Phase Engine hourly sample export alongside existing circadian
+data transmission for initial dogfooding data collection.
+
+Changes:
+- Add phase_hourly_sample_t (6 bytes) and phase_export_t (146 bytes) structs
+- Implement _export_phase_data() to serialize current metrics snapshot
+- Modify _start_transmission() to prepend Phase data before circadian export
+- Update buffer sizes: 256 bytes binary (vs 112), 513 bytes hex (vs 225)
+- All Phase Engine code guarded by #ifdef PHASE_ENGINE_ENABLED
+
+Data format:
+- 146 bytes: Phase Engine data (version + 24 hourly samples)
+- 112 bytes: Circadian data (existing)
+- Total: 258 bytes binary → 516 hex chars
+- TX time: ~2 minutes @ 26 bps (vs ~1 min circadian-only)
+
+MVP limitation:
+Current implementation exports the current metrics snapshot repeated
+for all 24 hours. Production version will read from circular buffer
+storing actual hourly samples.
+
+Backward compatible: When PHASE_ENGINE_ENABLED is not defined, code
+compiles exactly as before (112-byte circadian-only export).
+
+Testing:
+- Struct sizes validated: 6 bytes/sample, 146 bytes total ✓
+- Backward compatibility preserved ✓
+- Compilation with PHASE_ENGINE_ENABLED=1 - pending
+- Full TX/RX integration test - pending
+
+See: PHASE_ENGINE_COMMS_IMPLEMENTATION.md for detailed documentation

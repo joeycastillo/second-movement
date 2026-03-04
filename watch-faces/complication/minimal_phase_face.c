@@ -52,8 +52,15 @@ static void _minimal_phase_face_update_display(minimal_phase_state_t *state) {
         
         case PHASE_MODE_RECOMMENDATION:
         {
+            // Get active hours configuration
+            movement_active_hours_t active_hours = movement_get_active_hours();
+            uint8_t active_start = active_hours.bit.start_quarter_hours / 4;
+            uint8_t active_end = active_hours.bit.end_quarter_hours / 4;
+            
             // Display recommendation
-            uint8_t rec = phase_get_recommendation(phase_score, hour);
+            uint8_t rec = phase_get_recommendation(phase_score, hour,
+                                                   active_hours.bit.enabled,
+                                                   active_start, active_end);
             const char *rec_str[] = {"RST", "MOD", "ACT", "PEK"};
             sprintf(buf, "RC %s   ", rec_str[rec]);
             break;

@@ -61,6 +61,7 @@
 #include "totp_face.h"
 #include "totp_lfs_face.h"
 #include "tally_face.h"
+#include "temperature_forecast_face.h"
 #include "probability_face.h"
 #include "ke_decimal_time_face.h"
 #include "baby_kicks_face.h"
@@ -83,6 +84,7 @@
 #include "wyoscan_face.h"
 #include "sleep_tracker_face.h"
 #include "circadian_score_face.h"
+#include "oracle_face.h"
 #include "comms_face.h"
 
 #ifdef PHASE_ENGINE_ENABLED
@@ -91,6 +93,8 @@
 #include "active_face.h"
 #include "descent_face.h"
 #include "zone_display_face.h"
+#include "sleep_score_face.h"
+#include "smart_alarm_face.h"
 #endif
 
 // New includes go above this line.

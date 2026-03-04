@@ -21,15 +21,7 @@
 #ifdef PHASE_ENGINE_ENABLED
 
 /**
- * Get homebase entry for a given day of year.
- * 
- * @param day_of_year Day of year (1-365, Jan 1 = 1)
- * @return Pointer to homebase entry (const, in flash)
- */
-const homebase_entry_t* homebase_get_entry(uint16_t day_of_year);
-
-/**
- * Get metadata about the homebase table.
+ * Homebase metadata structure.
  * Used for debugging and configuration validation.
  */
 typedef struct {
@@ -40,7 +32,8 @@ typedef struct {
     uint16_t entry_count;   // Number of entries (should be 365)
 } homebase_metadata_t;
 
-const homebase_metadata_t* homebase_get_metadata(void);
+// Include the generated table with static inline accessor functions
+#include "homebase_table.h"
 
 #endif // PHASE_ENGINE_ENABLED
 

@@ -22,6 +22,157 @@ import math
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+import requests
+
+# City presets for quick generation
+CITY_PRESETS = {
+    'anchorage': {
+        'name': 'Anchorage, AK',
+        'lat': 61.2181,
+        'lon': -149.9003,
+        'tz': 'AKST'
+    },
+    'portland': {
+        'name': 'Portland, OR',
+        'lat': 45.5152,
+        'lon': -122.6784,
+        'tz': 'PST'
+    },
+    'dallas': {
+        'name': 'Dallas, TX',
+        'lat': 32.7767,
+        'lon': -96.7970,
+        'tz': 'CST'
+    },
+    'ny': {
+        'name': 'New York, NY',
+        'lat': 40.7128,
+        'lon': -74.0060,
+        'tz': 'EST'
+    }
+}
+
+
+def fetch_elevation(latitude, longitude):
+    """
+    Fetch elevation data from Open-Meteo Elevation API.
+    
+    Args:
+        latitude: Latitude in degrees (-90 to 90)
+        longitude: Longitude in degrees (-180 to 180)
+    
+    Returns:
+        Elevation in meters (float)
+        Returns None on error
+    """
+    try:
+        url = "https://api.open-meteo.com/v1/elevation"
+        params = {
+            'latitude': latitude,
+            'longitude': longitude
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'elevation' not in data:
+            print("⚠️  API response missing elevation data", file=sys.stderr)
+            return None
+        
+        elevation = data['elevation']
+        
+        # API returns elevation as a list with a single value
+        if isinstance(elevation, list):
+            if len(elevation) == 0:
+                print("⚠️  API returned empty elevation list", file=sys.stderr)
+                return None
+            elevation = elevation[0]
+        
+        if elevation is None or not isinstance(elevation, (int, float)):
+            print("⚠️  Invalid elevation value from API", file=sys.stderr)
+            return None
+        
+        return float(elevation)
+        
+    except requests.exceptions.Timeout:
+        print("⚠️  Elevation API request timed out (>10s)", file=sys.stderr)
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️  Elevation API request failed: {e}", file=sys.stderr)
+        return None
+    except (KeyError, ValueError, TypeError) as e:
+        print(f"⚠️  Failed to parse elevation API response: {e}", file=sys.stderr)
+        return None
+
+
+def fetch_temperature_data(latitude, longitude, year):
+    """
+    Fetch historical temperature data from Open-Meteo API.
+    
+    Args:
+        latitude: Latitude in degrees (-90 to 90)
+        longitude: Longitude in degrees (-180 to 180)
+        year: Year to fetch data for
+    
+    Returns:
+        List of 365/366 daily average temperatures (float, in Celsius)
+        Returns None on error
+    """
+    try:
+        # Determine if leap year
+        is_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+        days_in_year = 366 if is_leap else 365
+        
+        # Build API request
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            'latitude': latitude,
+            'longitude': longitude,
+            'start_date': f'{year}-01-01',
+            'end_date': f'{year}-12-31',
+            'daily': 'temperature_2m_mean',
+            'timezone': 'auto'
+        }
+        
+        # Make request with timeout
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        # Parse response
+        data = response.json()
+        
+        if 'daily' not in data or 'temperature_2m_mean' not in data['daily']:
+            print("⚠️  API response missing temperature data", file=sys.stderr)
+            return None
+        
+        temps = data['daily']['temperature_2m_mean']
+        
+        # Validate we got the right number of days
+        if len(temps) != days_in_year:
+            print(f"⚠️  Expected {days_in_year} days, got {len(temps)}", file=sys.stderr)
+            return None
+        
+        # Convert to float list (API may return None for missing data)
+        result = []
+        for temp in temps:
+            if temp is None:
+                print("⚠️  API returned None for some temperature values", file=sys.stderr)
+                return None
+            result.append(float(temp))
+        
+        return result
+        
+    except requests.exceptions.Timeout:
+        print("⚠️  API request timed out (>10s)", file=sys.stderr)
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️  API request failed: {e}", file=sys.stderr)
+        return None
+    except (KeyError, ValueError, TypeError) as e:
+        print(f"⚠️  Failed to parse API response: {e}", file=sys.stderr)
+        return None
 
 
 def calculate_daylight_minutes(latitude, day_of_year):
@@ -81,9 +232,10 @@ def calculate_avg_temp_c10(latitude, day_of_year, base_temp_c=15):
         Temperature * 10 (integer, e.g., 125 = 12.5°C)
     """
     # Seasonal variation (peak in summer, trough in winter)
-    # Northern hemisphere: warmest ~day 200 (mid-July)
+    # Northern hemisphere: coldest ~day 15 (mid-January), warmest ~day 197 (mid-July)
     # Southern hemisphere: flip the phase
-    phase_offset = 200 if latitude >= 0 else 20
+    # phase_offset is where sine crosses zero upward, so minimum is 91 days earlier
+    phase_offset = 106 if latitude >= 0 else 289
     seasonal_swing_c = 10 + abs(latitude) / 3.0  # Higher swing at higher latitudes
     
     temp_variation = seasonal_swing_c * math.sin(
@@ -121,7 +273,7 @@ def calculate_seasonal_baseline(day_of_year, latitude):
     return int(max(0, min(100, baseline)))
 
 
-def generate_homebase_table(latitude, longitude, timezone_offset, year, output_path, tz_string="N/A"):
+def generate_homebase_table(latitude, longitude, timezone_offset, year, output_path, tz_string="N/A", skip_api=False):
     """
     Generate homebase_table.h with 365 days of seasonal data.
     
@@ -132,6 +284,7 @@ def generate_homebase_table(latitude, longitude, timezone_offset, year, output_p
         year: Year for generation (informational only)
         output_path: Path to output .h file
         tz_string: Original timezone string for display purposes
+        skip_api: If True, skip API and use sinusoidal fallback
     """
     # Convert coordinates to scaled integers for metadata
     lat_e6 = int(latitude * 1_000_000)
@@ -141,11 +294,48 @@ def generate_homebase_table(latitude, longitude, timezone_offset, year, output_p
     # Tropical: ~25°C, Temperate: ~15°C, Polar: ~0°C
     base_temp = 25 - abs(latitude) * 0.4
     
+    # Fetch elevation data first
+    elevation_m = None
+    elevation_text = "unknown (API unavailable)"
+    
+    if not skip_api:
+        print("📡 Fetching elevation from Open-Meteo API...")
+        elevation_m = fetch_elevation(latitude, longitude)
+        if elevation_m is not None:
+            elevation_text = f"{elevation_m:.0f} meters (from Open-Meteo Elevation API)"
+            print(f"✓ Elevation: {elevation_m:.0f} meters")
+        else:
+            print("⚠️  Elevation API fetch failed")
+    else:
+        print("⏭️  Skipping elevation API (--skip-api flag set)")
+    
+    # Try to fetch real temperature data from Open-Meteo API
+    data_source = "sinusoidal model (fallback)"
+    temps_from_api = None
+    
+    if not skip_api:
+        print("📡 Fetching temperature data from Open-Meteo API...")
+        temps_from_api = fetch_temperature_data(latitude, longitude, year)
+        if temps_from_api:
+            data_source = "Open-Meteo Historical Weather API"
+            print(f"✓ Successfully fetched {len(temps_from_api)} days of temperature data")
+        else:
+            print("⚠️  API fetch failed, falling back to sinusoidal model")
+    else:
+        print("⏭️  Skipping API (--skip-api flag set), using sinusoidal model")
+    
     # Generate 365 entries
     entries = []
     for day in range(1, 366):
         daylight_min = calculate_daylight_minutes(latitude, day)
-        temp_c10 = calculate_avg_temp_c10(latitude, day, base_temp)
+        
+        # Use API data if available, otherwise fallback to sinusoidal model
+        if temps_from_api:
+            temp_c = temps_from_api[day - 1]
+            temp_c10 = int(temp_c * 10)
+        else:
+            temp_c10 = calculate_avg_temp_c10(latitude, day, base_temp)
+        
         baseline = calculate_seasonal_baseline(day, latitude)
         entries.append((daylight_min, temp_c10, baseline))
     
@@ -161,8 +351,10 @@ def generate_homebase_table(latitude, longitude, timezone_offset, year, output_p
  * Homebase configuration:
  * Latitude: {latitude:.4f}°{'N' if latitude >= 0 else 'S'}
  * Longitude: {longitude:.4f}°{'E' if longitude >= 0 else 'W'}
+ * Location elevation: {elevation_text}
  * Timezone offset: {timezone_offset} minutes (UTC{timezone_offset//60:+d})
  * Year: {year}
+ * Temperature data source: {data_source}
  */
 
 #ifndef HOMEBASE_TABLE_H_
@@ -199,15 +391,15 @@ static const homebase_entry_t homebase_table[365] = {{
     header += """  // Day 365
 };
 
-// Accessor functions
-const homebase_entry_t* homebase_get_entry(uint16_t day_of_year) {
+// Accessor functions (static inline to avoid linker errors)
+static inline const homebase_entry_t* homebase_get_entry(uint16_t day_of_year) {
     if (day_of_year < 1 || day_of_year > 365) {
         return &homebase_table[0];  // Safe fallback
     }
     return &homebase_table[day_of_year - 1];
 }
 
-const homebase_metadata_t* homebase_get_metadata(void) {
+static inline const homebase_metadata_t* homebase_get_metadata(void) {
     return &homebase_metadata;
 }
 
@@ -352,19 +544,39 @@ Examples:
         """
     )
     
-    parser.add_argument('--lat', type=float, required=True,
+    parser.add_argument('--lat', type=float,
                         help='Latitude in degrees (-90 to 90)')
-    parser.add_argument('--lon', type=float, required=True,
+    parser.add_argument('--lon', type=float,
                         help='Longitude in degrees (-180 to 180)')
-    parser.add_argument('--tz', type=str, required=True,
+    parser.add_argument('--tz', type=str,
                         help='Timezone (AKST, PST, EST, HST, UTC+X, or minutes offset)')
+    parser.add_argument('--city', choices=list(CITY_PRESETS.keys()),
+                        help='Use preset coordinates for common cities (anchorage, portland, dallas, ny)')
     parser.add_argument('--year', type=int, default=2026,
                         help='Year for generation (default: 2026, range: 2000-2099)')
     parser.add_argument('--output', type=Path,
                         default=Path(__file__).parent.parent / 'lib' / 'phase' / 'homebase_table.h',
                         help='Output path (default: lib/phase/homebase_table.h)')
+    parser.add_argument('--skip-api', action='store_true',
+                        help='Skip Open-Meteo API and use sinusoidal temperature model (offline mode)')
     
     args = parser.parse_args()
+    
+    # Apply city preset if specified
+    if args.city:
+        preset = CITY_PRESETS[args.city]
+        if args.lat is None:
+            args.lat = preset['lat']
+        if args.lon is None:
+            args.lon = preset['lon']
+        if args.tz is None:
+            args.tz = preset['tz']
+        print(f"Using preset: {preset['name']}")
+    
+    # Validate that we have lat/lon/tz (either from args or preset)
+    if args.lat is None or args.lon is None or args.tz is None:
+        print("Error: Must provide either --city or all of --lat, --lon, and --tz", file=sys.stderr)
+        return 1
     
     # Validate inputs
     # Note: Year range limitation is due to watch-library date handling
@@ -390,7 +602,7 @@ Examples:
         return 1
     
     # Generate table
-    generate_homebase_table(args.lat, args.lon, tz_offset, args.year, args.output, args.tz)
+    generate_homebase_table(args.lat, args.lon, tz_offset, args.year, args.output, args.tz, args.skip_api)
     
     return 0
 

@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+ 138316	   2804	   5188	 146308	  23b84	build/firmware.elf

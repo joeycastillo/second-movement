@@ -1,0 +1,424 @@
+/bin/sh: sysctl: command not found
+make: the `-j' option requires a positive integral argument
+:
+CC build/startup_saml22.o
+CC build/system_saml22.o
+CC build/delay.o
+CC build/adc.o
+CC build/dac.o
+CC build/dma.o
+CC build/eic.o
+CC build/evsys.o
+CC build/i2c.o
+CC build/i2s.o
+CC build/opamp.o
+CC build/ptc.o
+CC build/sercom.o
+CC build/slcd.o
+CC build/spi.o
+CC build/tc.o
+CC build/tcc.o
+CC build/uart.o
+CC build/main.o
+CC build/tusb.o
+CC build/tusb_fifo.o
+CC build/usbd.o
+CC build/usbd_control.o
+CC build/audio_device.o
+CC build/cdc_device.o
+CC build/dfu_device.o
+CC build/dfu_rt_device.o
+CC build/hid_device.o
+CC build/midi_device.o
+CC build/msc_device.o
+CC build/ecm_rndis_device.o
+CC build/ncm_device.o
+CC build/usbtmc_device.o
+CC build/video_device.o
+CC build/vendor_device.o
+CC build/dcd_samd.o
+CC build/usb.o
+CC build/dummy.o
+CC build/lfs.o
+CC build/lfs_util.o
+CC build/filesystem.o
+CC build/utz.o
+CC build/zones.o
+CC build/shell.o
+CC build/shell_cmd_list.o
+CC build/sunriset.o
+CC build/base32.o
+CC build/sha1.o
+CC build/sha256.o
+CC build/sha512.o
+CC build/TOTP.o
+CC build/chirpy_tx.o
+CC build/base64.o
+CC build/circadian_score.o
+CC build/fesk_tx.o
+CC build/fesk_session.o
+CC build/phase_engine.o
+CC build/forecast_table.o
+CC build/playlist.o
+CC build/sensors.o
+CC build/sleep_data.o
+CC build/zone_words.o
+lib/phase/zone_words.c:72:29: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:29: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:37: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:37: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:46: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:46: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:55: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:55: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:63: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:63: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:71: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:71: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:81: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:81: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:90: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:90: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:100: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:100: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:72:108: warning: excess elements in array initializer
+lib/phase/zone_words.c:72:108: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:5: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:5: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:13: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:13: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:22: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:22: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:30: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:30: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:39: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:39: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:50: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:50: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:58: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:58: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:73:66: warning: excess elements in array initializer
+lib/phase/zone_words.c:73:66: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:5: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:5: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:13: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:13: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:21: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:21: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:28: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:28: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:37: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:37: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:47: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:47: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:58: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:58: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:74:69: warning: excess elements in array initializer
+lib/phase/zone_words.c:74:69: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:5: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:5: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:15: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:15: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:23: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:23: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:33: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:33: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:42: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:42: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:53: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:53: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:62: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:62: note: (near initialization for 'wildcard_words')
+lib/phase/zone_words.c:75:70: warning: excess elements in array initializer
+lib/phase/zone_words.c:75:70: note: (near initialization for 'wildcard_words')
+CC build/metrics.o
+lib/metrics/metrics.c: In function 'metrics_get':
+lib/metrics/metrics.c:146:42: warning: unused parameter 'engine' [-Wunused-parameter]
+lib/metrics/metrics.c: In function 'metrics_get_dominant':
+lib/metrics/metrics.c:216:74: warning: unused parameter 'zone' [-Wunused-parameter]
+CC build/metric_sd.o
+CC build/metric_em.o
+CC build/metric_wk.o
+CC build/metric_energy.o
+CC build/metric_comfort.o
+CC build/thermistor_driver.o
+CC build/watch_common_buzzer.o
+CC build/watch_common_display.o
+CC build/watch_utility.o
+CC build/lis2dw.o
+CC build/rtc32.o
+CC build/watch.o
+CC build/watch_adc.o
+CC build/watch_deepsleep.o
+CC build/watch_extint.o
+CC build/watch_gpio.o
+CC build/watch_i2c.o
+CC build/watch_private.o
+CC build/watch_rtc.o
+CC build/watch_slcd.o
+CC build/watch_spi.o
+CC build/watch_storage.o
+CC build/watch_tcc.o
+CC build/watch_uart.o
+CC build/watch_usb_descriptors.o
+CC build/watch_usb_cdc.o
+CC build/clock_face.o
+CC build/beats_face.o
+CC build/world_clock_face.o
+CC build/mars_time_face.o
+CC build/ish_face.o
+CC build/alarm_face.o
+CC build/advanced_alarm_face.o
+CC build/countdown_face.o
+CC build/stopwatch_face.o
+CC build/fast_stopwatch_face.o
+CC build/sunrise_sunset_face.o
+CC build/moon_phase_face.o
+CC build/days_since_face.o
+CC build/breathing_face.o
+CC build/squash_face.o
+CC build/totp_face.o
+CC build/totp_lfs_face.o
+CC build/tally_face.o
+CC build/wordle_face.o
+CC build/all_segments_face.o
+CC build/character_set_face.o
+CC build/light_sensor_face.o
+CC build/peek_memory_face.o
+CC build/rtccount_face.o
+CC build/accelerometer_status_face.o
+CC build/temperature_display_face.o
+CC build/temperature_logging_face.o
+CC build/activity_logging_face.o
+CC build/voltage_face.o
+CC build/set_time_face.o
+CC build/settings_face.o
+CC build/finetune_face.o
+CC build/nanosec_face.o
+CC build/chirpy_demo_face.o
+CC build/irda_upload_face.o
+CC build/probability_face.o
+CC build/close_enough_face.o
+CC build/tarot_face.o
+CC build/kitchen_conversions_face.o
+CC build/periodic_table_face.o
+CC build/ke_decimal_time_face.o
+CC build/wyoscan_face.o
+CC build/baby_kicks_face.o
+CC build/counter_face.o
+CC build/pulsometer_face.o
+CC build/interval_face.o
+CC build/timer_face.o
+CC build/simple_coin_flip_face.o
+CC build/lis2dw_monitor_face.o
+CC build/wareki_face.o
+CC build/deadline_face.o
+CC build/blackjack_face.o
+CC build/endless_runner_face.o
+CC build/higher_lower_game_face.o
+CC build/lander_face.o
+CC build/simon_face.o
+CC build/ping_face.o
+CC build/smart_alarm_face.o
+CC build/sleep_tracker_face.o
+CC build/circadian_score_face.o
+CC build/oracle_face.o
+CC build/comms_face.o
+CC build/sleep_score_face.o
+CC build/comms_rx.o
+CC build/fesk_demo_lite_face.o
+CC build/emergence_face.o
+watch-faces/complication/emergence_face.c: In function '_emergence_face_update_display':
+watch-faces/complication/emergence_face.c:42:50: warning: '%d' directive output may be truncated writing between 1 and 3 bytes into a region of size 2 [-Wformat-truncation=]
+watch-faces/complication/emergence_face.c:42:40: note: directive argument in the range [0, 255]
+watch-faces/complication/emergence_face.c:42:13: note: 'snprintf' output between 11 and 13 bytes into a destination of size 11
+watch-faces/complication/emergence_face.c:46:47: warning: '      ' directive output may be truncated writing 6 bytes into a region of size between 4 and 6 [-Wformat-truncation=]
+watch-faces/complication/emergence_face.c:46:13: note: 'snprintf' output between 12 and 14 bytes into a destination of size 11
+CC build/momentum_face.o
+watch-faces/complication/momentum_face.c: In function '_momentum_face_update_display':
+watch-faces/complication/momentum_face.c:42:50: warning: '%d' directive output may be truncated writing between 1 and 3 bytes into a region of size 2 [-Wformat-truncation=]
+watch-faces/complication/momentum_face.c:42:40: note: directive argument in the range [0, 255]
+watch-faces/complication/momentum_face.c:42:13: note: 'snprintf' output between 11 and 13 bytes into a destination of size 11
+watch-faces/complication/momentum_face.c:46:47: warning: '      ' directive output may be truncated writing 6 bytes into a region of size between 4 and 6 [-Wformat-truncation=]
+watch-faces/complication/momentum_face.c:46:13: note: 'snprintf' output between 12 and 14 bytes into a destination of size 11
+CC build/active_face.o
+watch-faces/complication/active_face.c: In function '_active_face_update_display':
+watch-faces/complication/active_face.c:42:50: warning: '%d' directive output may be truncated writing between 1 and 3 bytes into a region of size 2 [-Wformat-truncation=]
+watch-faces/complication/active_face.c:42:40: note: directive argument in the range [0, 255]
+watch-faces/complication/active_face.c:42:13: note: 'snprintf' output between 11 and 13 bytes into a destination of size 11
+watch-faces/complication/active_face.c:46:47: warning: '      ' directive output may be truncated writing 6 bytes into a region of size between 4 and 6 [-Wformat-truncation=]
+watch-faces/complication/active_face.c:46:13: note: 'snprintf' output between 12 and 14 bytes into a destination of size 11
+CC build/descent_face.o
+watch-faces/complication/descent_face.c: In function '_descent_face_update_display':
+watch-faces/complication/descent_face.c:42:50: warning: '%d' directive output may be truncated writing between 1 and 3 bytes into a region of size 2 [-Wformat-truncation=]
+watch-faces/complication/descent_face.c:42:40: note: directive argument in the range [0, 255]
+watch-faces/complication/descent_face.c:42:13: note: 'snprintf' output between 11 and 13 bytes into a destination of size 11
+watch-faces/complication/descent_face.c:46:47: warning: '      ' directive output may be truncated writing 6 bytes into a region of size between 4 and 6 [-Wformat-truncation=]
+watch-faces/complication/descent_face.c:46:13: note: 'snprintf' output between 12 and 14 bytes into a destination of size 11
+CC build/zone_display_face.o
+watch-faces/complication/zone_display_face.c: In function '_zone_display_face_update_display':
+watch-faces/complication/zone_display_face.c:35:52: warning: passing argument 1 of 'playlist_get_current_face' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./movement.h:69,
+                 from watch-faces/complication/zone_display_face.h:24,
+                 from watch-faces/complication/zone_display_face.c:12:
+./lib/phase/playlist.h:88:59: note: expected 'const playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+watch-faces/complication/zone_display_face.c:39:17: warning: passing argument 1 of 'metrics_get' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./movement.h:68,
+                 from watch-faces/complication/zone_display_face.h:24,
+                 from watch-faces/complication/zone_display_face.c:12:
+./lib/metrics/metrics.h:117:42: note: expected 'const metrics_engine_t *' but argument is of type 'volatile metrics_engine_t *'
+watch-faces/complication/zone_display_face.c: In function 'zone_display_face_loop':
+watch-faces/complication/zone_display_face.c:99:30: warning: passing argument 1 of 'playlist_advance' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./movement.h:69,
+                 from watch-faces/complication/zone_display_face.h:24,
+                 from watch-faces/complication/zone_display_face.c:12:
+./lib/phase/playlist.h:96:41: note: expected 'playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+CC build/movement.o
+movement.c: In function '_movement_handle_top_of_minute':
+movement.c:556:24: warning: passing argument 1 of 'sensors_sample_lux' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:84:48: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:572:24: warning: passing argument 1 of 'sensors_update' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:78:44: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:581:65: warning: passing argument 1 of 'sensors_get_temperature_c10' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:87:66: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:582:50: warning: passing argument 1 of 'sensors_get_lux_avg' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:86:59: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:585:46: warning: passing argument 1 of 'phase_compute' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./lib/metrics/metrics.h:34,
+                 from movement.h:68,
+                 from movement.c:39:
+./lib/phase/phase_engine.h:76:39: note: expected 'phase_state_t *' but argument is of type 'volatile phase_state_t *'
+movement.c:593:24: warning: passing argument 1 of 'metrics_update' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:68,
+                 from movement.c:39:
+./lib/metrics/metrics.h:100:39: note: expected 'metrics_engine_t *' but argument is of type 'volatile metrics_engine_t *'
+movement.c:594:23: warning: passing argument 2 of 'metrics_update' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:68,
+                 from movement.c:39:
+./lib/metrics/metrics.h:101:50: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:604:21: warning: passing argument 1 of 'metrics_get' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:68,
+                 from movement.c:39:
+./lib/metrics/metrics.h:117:42: note: expected 'const metrics_engine_t *' but argument is of type 'volatile metrics_engine_t *'
+movement.c:607:52: warning: passing argument 1 of 'playlist_get_zone' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:104:56: note: expected 'const playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:623:75: warning: passing argument 1 of 'sensors_get_hourly_movement_count' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:94:72: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:626:25: warning: passing argument 1 of 'playlist_update' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:79:40: note: expected 'playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:630:55: warning: passing argument 1 of 'playlist_get_zone' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:104:56: note: expected 'const playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:640:32: warning: passing argument 1 of 'phase_detect_anomalies' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./lib/metrics/metrics.h:34,
+                 from movement.h:68,
+                 from movement.c:39:
+./lib/phase/phase_engine.h:133:44: note: expected 'phase_state_t *' but argument is of type 'volatile phase_state_t *'
+movement.c:653:59: warning: passing argument 1 of 'playlist_get_zone' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:104:56: note: expected 'const playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:656:70: warning: passing argument 1 of 'sensors_get_hourly_light_minutes' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:93:71: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:657:75: warning: passing argument 1 of 'sensors_get_hourly_movement_count' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:94:72: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:676:49: warning: passing argument 1 of 'sleep_data_accumulate_telemetry' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:72,
+                 from movement.c:39:
+./lib/phase/sleep_data.h:185:63: note: expected 'sleep_telemetry_state_t *' but argument is of type 'volatile sleep_telemetry_state_t *'
+movement.c:697:43: warning: passing argument 1 of 'sensors_reset_hourly_counters' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:92:59: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:701:50: warning: passing argument 1 of 'sleep_data_reset_daily_telemetry' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:72,
+                 from movement.c:39:
+./lib/phase/sleep_data.h:208:64: note: expected 'sleep_telemetry_state_t *' but argument is of type 'volatile sleep_telemetry_state_t *'
+movement.c:623:18: warning: unused variable 'movement_this_minute' [-Wunused-variable]
+movement.c: In function 'movement_default_loop_handler':
+movement.c:856:56: warning: comparison of integer expressions of different signedness: 'int16_t' {aka 'volatile short int'} and 'unsigned int' [-Wsign-compare]
+movement.c:876:55: warning: passing argument 1 of 'playlist_get_zone' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:104:56: note: expected 'const playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:884:34: warning: passing argument 1 of 'playlist_advance' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:96:41: note: expected 'playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c: In function 'app_setup':
+movement.c:1636:16: warning: passing argument 1 of 'memset' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.c:31:
+/usr/local/Cellar/arm-none-eabi-gcc/10.3-2021.10/gcc/arm-none-eabi/include/string.h:33:17: note: expected 'void *' but argument is of type 'volatile metrics_engine_t *'
+movement.c:1637:16: warning: passing argument 1 of 'memset' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.c:31:
+/usr/local/Cellar/arm-none-eabi-gcc/10.3-2021.10/gcc/arm-none-eabi/include/string.h:33:17: note: expected 'void *' but argument is of type 'volatile playlist_state_t *'
+movement.c:1638:22: warning: passing argument 1 of 'metrics_init' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:68,
+                 from movement.c:39:
+./lib/metrics/metrics.h:84:37: note: expected 'metrics_engine_t *' but argument is of type 'volatile metrics_engine_t *'
+movement.c:1639:23: warning: passing argument 1 of 'playlist_init' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:69,
+                 from movement.c:39:
+./lib/phase/playlist.h:69:38: note: expected 'playlist_state_t *' but argument is of type 'volatile playlist_state_t *'
+movement.c:1645:16: warning: passing argument 1 of 'memset' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.c:31:
+/usr/local/Cellar/arm-none-eabi-gcc/10.3-2021.10/gcc/arm-none-eabi/include/string.h:33:17: note: expected 'void *' but argument is of type 'volatile phase_state_t *'
+movement.c:1646:27: warning: passing argument 1 of 'phase_engine_init' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from ./lib/metrics/metrics.h:34,
+                 from movement.h:68,
+                 from movement.c:39:
+./lib/phase/phase_engine.h:63:39: note: expected 'phase_state_t *' but argument is of type 'volatile phase_state_t *'
+movement.c:1649:25: warning: passing argument 1 of 'sleep_data_init' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:72,
+                 from movement.c:39:
+./lib/phase/sleep_data.h:131:47: note: expected 'sleep_telemetry_state_t *' but argument is of type 'volatile sleep_telemetry_state_t *'
+movement.c:1652:22: warning: passing argument 1 of 'sensors_init' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:76:42: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:1654:37: warning: passing argument 1 of 'sensors_configure_accel' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:77:53: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c: In function 'app_loop':
+movement.c:1806:28: warning: passing argument 1 of 'sensors_tick_epoch' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:90:48: note: expected 'struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:1815:75: warning: passing argument 1 of 'sensors_get_epoch_movement_count' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:70,
+                 from movement.c:39:
+./lib/phase/sensors.h:91:71: note: expected 'const struct sensor_state_t *' but argument is of type 'volatile struct sensor_state_t *'
+movement.c:1816:41: warning: passing argument 1 of 'sleep_data_record_epoch' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+In file included from movement.h:72,
+                 from movement.c:39:
+./lib/phase/sleep_data.h:139:55: note: expected 'sleep_telemetry_state_t *' but argument is of type 'volatile sleep_telemetry_state_t *'
+LD build/firmware.elf
+OBJCOPY build/firmware.hex
+OBJCOPY build/firmware.bin
+UF2CONV build/firmware.uf2
+Converting to uf2, output size: 312832, start address: 0x2000
+Wrote 312832 bytes to build/firmware.uf2
+size:
+   text	   data	    bss	    dec	    hex	filename
+ 153532	   2812	   7028	 163372	  27e2c	build/firmware.elf
+ 153532	   2812	   7028	 163372	  27e2c	(TOTALS)

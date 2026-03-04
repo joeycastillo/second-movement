@@ -34,6 +34,17 @@
       }
     }
     </script>
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('crt-quality') === 'off') {
+                    document.documentElement.classList.add('crt-effects-off');
+                }
+            } catch (e) {
+                // Ignore storage access issues and keep default CRT background mode.
+            }
+        })();
+    </script>
     
     <style>
         /* Heritage Display font - pixel blackletter */
@@ -103,13 +114,34 @@
         html, body {
             width: 100%;
             min-height: 100%;
-            background: transparent;
+            background: var(--color-bg);
             color: var(--color-amber-mid);
             font-family: var(--font-mono);
             font-size: 11px;
             line-height: var(--line-height-dense);
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Clean fallback background when CRT effects are disabled. */
+        html.crt-effects-off,
+        html.crt-effects-off body {
+            background-color: #000;
+        }
+
+        html.crt-effects-off body {
+            background-image: radial-gradient(circle at 20% -10%, rgba(26, 21, 16, 0.6) 0%, rgba(26, 21, 16, 0) 50%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        html.crt-effects-off #retro-canvas {
+            display: none;
+        }
+
+        html.crt-effects-off .glow,
+        html.crt-effects-off .app-title-main {
+            text-shadow: none;
         }
 
         /* RetroPass background canvas layer */
@@ -196,10 +228,83 @@
             z-index: 10;
         }
 
+        /* CRT Menu Button in Header */
+        .crt-menu-button {
+            cursor: pointer;
+            padding: 2px 6px;
+            margin-right: 8px;
+            color: var(--color-amber-dim);
+            font-size: 8px;
+            border: 1px solid var(--color-border);
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .crt-menu-button:hover {
+            color: var(--color-amber-bright);
+            border-color: var(--color-amber-mid);
+            opacity: 1;
+            background: rgba(245, 166, 35, 0.05);
+        }
+
+        /* Floating Menu */
+        .crt-effects-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+        }
+
+        .crt-menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .crt-menu-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-bg);
+            border: 2px solid var(--color-amber-bright);
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(245, 166, 35, 0.3);
+        }
+
+        .crt-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .crt-menu-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--color-amber-mid);
+            transition: color 0.2s;
+        }
+
+        .crt-menu-close:hover {
+            color: var(--color-amber-hot);
+        }
+
         /* ---- SECTIONS ---- */
         .section {
             border-bottom: 1px solid var(--color-amber-trace);
-            padding: 12px 12px 14px;
+            padding: 12px 16px 14px;
         }
 
         .section-title {
@@ -455,7 +560,7 @@
             align-items: center;
             justify-content: space-between;
             min-height: var(--touch-min);
-            padding: 4px 0;
+            padding: 4px 16px;
             border-bottom: 1px solid var(--color-amber-trace);
             gap: 12px;
         }
@@ -563,6 +668,90 @@
             border-radius: 0;
         }
 
+        /* ---- LED CRT GLOW PREVIEW ---- */
+        .led-preview-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: inline-block;
+        }
+
+        #led-color-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgb(0, 150, 0); /* default green */
+            transition: background-color 0.1s ease;
+            z-index: 1;
+        }
+
+        #led-color-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgb(0, 150, 0);
+            transition: background-color 0.1s ease;
+            z-index: 2;
+            opacity: 1;  /* Always full opacity */
+        }
+
+        #led-color-ring.animating {
+            animation: led-pulse 2.5s infinite;
+        }
+
+        @keyframes led-pulse {
+            /* Match watch hardware timing: 64 Hz, 20 steps fade-in (312ms), 32 steps fade-out (500ms) */
+            /* Fade in: 0-300ms (0-12%) - quadratic ease */
+            0% { opacity: 0; animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+            12% { opacity: 1; }
+            
+            /* Hold bright: 300-500ms (12-20%) */
+            20% { opacity: 1; animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+            
+            /* Fade out: 500-1000ms (20-40%) - quadratic ease */
+            40% { opacity: 0; }
+            
+            /* Shorter pause: 1000-2500ms (40-100%) */
+            100% { opacity: 0; }
+        }
+
+        /* ---- LED FADE ANIMATION PREVIEW ---- */
+        #ledFadePreview {
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid var(--color-amber-trace);
+            background: var(--color-bg-recessed);
+            display: none;
+        }
+
+        #ledFadePreview.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #ledCanvas {
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .preview-label {
+            font-size: 9px;
+            color: var(--color-amber-dim);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         /* ---- CRT QUALITY TOGGLE ---- */
         .setting-group {
             display: flex;
@@ -595,7 +784,7 @@
             display: none;
         }
 
-        .setting-summary #crtQualityLabel {
+        .setting-summary-unused #crtQualityLabel {
             color: var(--color-amber-bright);
         }
 
@@ -660,7 +849,7 @@
 
         /* ---- ACTIVE HOURS VISUAL BAR ---- */
         .ah-visual-container {
-            padding: 8px 0;
+            padding: 8px 16px;
             margin-top: 4px;
             display: none;
         }
@@ -717,9 +906,258 @@
             line-height: 1.4;
         }
 
+        /* ---- LED COLOR SECTION LAYOUT ---- */
+        .led-color-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid var(--color-amber-trace);
+            background: var(--color-bg-recessed);
+        }
+
+        .led-sliders {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-row.compact {
+            padding: 4px 0;
+        }
+
+        .setting-row.compact .setting-label {
+            font-size: 9px;
+            min-width: 50px;
+        }
+
+        .led-preview-container {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+        }
+
+        /* Zone Preset Cards */
+        .zone-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .zone-preset-card {
+            padding: 10px;
+            border: 2px solid var(--color-border);
+            background: var(--color-bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .zone-preset-card:hover {
+            border-color: var(--color-amber-mid);
+        }
+
+        .zone-preset-card.active {
+            border-color: var(--color-amber-bright);
+            background: var(--color-bg-elevated);
+        }
+
+        .preset-name {
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--color-amber-mid);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .zone-preset-card.active .preset-name {
+            color: var(--color-amber-hot);
+        }
+
+        .preset-mini-bar {
+            display: flex;
+            height: 16px;
+            width: 100%;
+            border: 1px solid var(--color-border);
+        }
+
+        .preset-segment {
+            transition: width 0.3s ease;
+        }
+
+        .preset-values {
+            font-size: 9px;
+            color: var(--color-amber-dim);
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+
+        .zone-preset-card.active .preset-values {
+            color: var(--color-amber-bright);
+        }
+
+        /* Multi-Handle Zone Bar */
+        .zone-bar-container {
+            position: relative;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .zone-bar {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .zone-segment {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            transition: left 0.3s ease, width 0.3s ease;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        .zone-emergence {
+            background: rgba(74, 144, 226, 0.3);
+        }
+
+        .zone-momentum {
+            background: rgba(126, 211, 33, 0.3);
+        }
+
+        .zone-active {
+            background: rgba(245, 166, 35, 0.3);
+        }
+
+        .zone-descent {
+            background: rgba(208, 2, 27, 0.3);
+        }
+
+        .zone-label {
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            color: var(--color-amber-hot);
+            text-shadow: 0 0 4px rgba(0,0,0,0.8);
+        }
+
+        .zone-range {
+            font-size: 8px;
+            color: var(--color-amber-mid);
+            font-family: var(--font-mono);
+            margin-top: 4px;
+        }
+
+        /* Draggable Handles */
+        .zone-handle {
+            position: absolute;
+            top: -4px;
+            width: 20px;
+            height: 88px;
+            background: var(--color-amber-bright);
+            border: 2px solid var(--color-amber-hot);
+            cursor: ew-resize;
+            transform: translateX(-50%);
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .zone-handle:hover {
+            background: var(--color-amber-hot);
+            box-shadow: 0 0 8px var(--color-amber-bright);
+        }
+
+        .zone-handle.dragging {
+            background: var(--color-amber-hot);
+            box-shadow: 0 0 12px var(--color-amber-bright);
+            cursor: grabbing;
+        }
+
+        .handle-tooltip {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-bg);
+            border: 1px solid var(--color-amber-mid);
+            padding: 2px 6px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            color: var(--color-amber-bright);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Preview Indicator */
+        .zone-preview-indicator {
+            position: absolute;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--color-amber-hot);
+            transform: translateX(-50%);
+            transition: left 0.2s ease;
+            z-index: 5;
+            opacity: 0.8;
+            box-shadow: 0 0 8px var(--color-amber-bright);
+        }
+
+        .preview-tooltip {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-bg);
+            border: 1px solid var(--color-amber-hot);
+            padding: 2px 6px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            color: var(--color-amber-hot);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            .zone-presets {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .zone-bar {
+                height: 60px;
+            }
+            
+            .zone-handle {
+                width: 28px;
+                height: 68px;
+                top: -4px;
+            }
+            
+            .zone-label {
+                font-size: 8px;
+            }
+            
+            .zone-range {
+                font-size: 7px;
+            }
+        }
+
         /* ---- BUILD SECTION ---- */
         .build-section {
-            padding: 16px 12px;
+            padding: 16px;
         }
 
         .build-btn {
@@ -797,7 +1235,7 @@
 
         /* ---- SHARE SECTION ---- */
         .share-section {
-            padding: 12px;
+            padding: 12px 16px;
             border-top: 1px solid var(--color-amber-trace);
             border-bottom: 1px solid var(--color-amber-trace);
         }
@@ -863,7 +1301,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 12px;
+            padding: 0 16px;
             background: transparent;
             border: none;
             color: var(--color-amber-dim);
@@ -883,7 +1321,7 @@
         }
 
         .panel-body {
-            padding: 10px 12px 14px;
+            padding: 10px 16px 14px;
         }
 
         /* ---- SIGNAL TUNE ---- */
@@ -999,7 +1437,7 @@
         }
 
         .app-title {
-            padding: 14px 12px 10px;
+            padding: 14px 16px 10px;
             border-bottom: 1px solid var(--color-amber-trace);
         }
 
@@ -1022,6 +1460,7 @@
 
         @media (min-width: 600px) {
             .terminal-app {
+                max-width: 720px;
                 margin-top: 12px;
                 margin-bottom: 12px;
             }
@@ -1035,8 +1474,33 @@
 <div class="terminal-app">
 
     <div class="system-bar">
-        <span>SECOND MOVEMENT BUILDER</span>
+        <span>
+            <span id="crtMenuButton" class="crt-menu-button" title="CRT Effects">[ CRT EFFECTS ]</span>
+            SECOND MOVEMENT BUILDER
+        </span>
         <span id="sysStatus">--:-- | READY</span>
+    </div>
+
+    <!-- CRT Effects Floating Menu -->
+    <div id="crtEffectsMenu" class="crt-effects-menu" style="display: none;">
+        <div class="crt-menu-overlay" id="crtMenuOverlay"></div>
+        <div class="crt-menu-content">
+            <div class="crt-menu-header">
+                <span style="color: var(--color-amber-hot);">[ CRT EFFECTS ]</span>
+                <span id="crtMenuClose" class="crt-menu-close">✕</span>
+            </div>
+            
+            <!-- CRT effect quality options -->
+            <div class="setting-options" id="crtQualityOptions">
+                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
+                <button class="setting-option" data-crt-quality="off">OFF</button>
+                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
+                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
+            </div>
+            <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+                CRT shader quality (AUTO detects device performance)
+            </div>
+        </div>
     </div>
 
     <div class="app-title">
@@ -1056,12 +1520,218 @@
         <div class="radio-group" id="displayRadio" role="radiogroup" aria-label="Display selection"></div>
     </div>
 
+    <!-- BRANCH SELECTION -->
+    <div class="section">
+        <div class="section-title">BUILD BRANCH</div>
+        <div class="radio-group" id="branchRadio" role="radiogroup" aria-label="Branch selection"></div>
+        <div style="font-size: 10px; color: var(--color-amber-dim); margin-top: 8px; letter-spacing: 0.05em;">
+            Choose firmware branch to build from
+        </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <section class="panel" id="templatesPanel">
+        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
+            <span>[ TEMPLATES ]</span>
+            <span class="panel-chevron" id="templatesChevron">+</span>
+        </button>
+        <div class="panel-body" id="templatesPanelBody" style="display:none">
+            <!-- Presets -->
+            <div class="templates-group-label">-- PRESETS --</div>
+            <div id="preset-templates"></div>
+
+            <!-- User saved -->
+            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
+            <div id="user-templates-section">
+                <div id="user-templates"></div>
+                <div id="no-saved-templates" class="template-empty">no saved templates</div>
+            </div>
+
+            <!-- Save current -->
+            <div class="templates-save-row" style="margin-top:12px">
+                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
+                <button id="saveTemplateBtn">[save]</button>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- PHASE ENGINE -->
+    <section class="section" id="phaseEngineSection" style="border-left: 3px solid var(--color-amber-bright); background: rgba(245, 166, 35, 0.05); padding-left: 14px;">
+        <div class="section-title" style="color: var(--color-amber-hot); letter-spacing: 0.1em;">PHASE ENGINE</div>
+        
+        <div class="setting-row">
+            <span class="setting-label">ENABLED</span>
+            <div class="setting-control">
+                <label class="toggle-wrap" aria-label="Phase engine enabled toggle">
+                    <div class="toggle-track" id="togglePhaseEngine" role="switch" aria-checked="false">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label" id="labelPhaseEngine">OFF</span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="font-size: 9px; color: var(--color-amber-mid); margin-top: 8px; line-height: 1.4;">
+            Advanced circadian rhythm tracking with zone-based face playlist. Surfaces the right complications at the right time based on your biological cycle, not just clock time. Uses accelerometer, light sensor, and location data for phase computation.
+            <br><br>
+            <strong style="color: var(--color-amber-bright);">Requires sensor board (Pro) for full functionality.</strong>
+        </div>
+    </section>
+
+    <!-- ZONE CONFIGURATION (PHASE 3) - Option B: Presets + Multi-Handle Bar -->
+    <section id="zone-config" class="section" style="display: none;">
+        <div class="section-title">ZONE CONFIGURATION</div>
+        <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Choose a preset or customize zone boundaries</p>
+        
+        <!-- Zone Presets -->
+        <div class="zone-presets">
+            <div class="zone-preset-card active" data-preset="balanced">
+                <div class="preset-name">BALANCED</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 25%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">25 / 50 / 75</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="early-bloom">
+                <div class="preset-name">EARLY BLOOM</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 15%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 25%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">15 / 40 / 70</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="late-surge">
+                <div class="preset-name">LATE SURGE</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 30%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 30%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 20%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 20%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">30 / 60 / 80</div>
+            </div>
+            
+            <div class="zone-preset-card" data-preset="narrow-active">
+                <div class="preset-name">NARROW ACTIVE</div>
+                <div class="preset-mini-bar">
+                    <div class="preset-segment" style="width: 30%; background: #4A90E2;"></div>
+                    <div class="preset-segment" style="width: 15%; background: #7ED321;"></div>
+                    <div class="preset-segment" style="width: 10%; background: #F5A623;"></div>
+                    <div class="preset-segment" style="width: 45%; background: #D0021B;"></div>
+                </div>
+                <div class="preset-values">30 / 45 / 55</div>
+            </div>
+        </div>
+        
+        <!-- Zone Bar -->
+        <div style="margin-top: 12px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
+            <!-- Multi-Handle Segmented Bar -->
+                <div class="zone-bar-container">
+                    <div class="zone-bar" id="zoneBar">
+                        <div class="zone-segment zone-emergence" id="segmentEmergence">
+                            <span class="zone-label">EMERGENCE</span>
+                            <span class="zone-range" id="rangeEmergence">0-25</span>
+                        </div>
+                        <div class="zone-segment zone-momentum" id="segmentMomentum">
+                            <span class="zone-label">MOMENTUM</span>
+                            <span class="zone-range" id="rangeMomentum">26-50</span>
+                        </div>
+                        <div class="zone-segment zone-active" id="segmentActive">
+                            <span class="zone-label">ACTIVE</span>
+                            <span class="zone-range" id="rangeActive">51-75</span>
+                        </div>
+                        <div class="zone-segment zone-descent" id="segmentDescent">
+                            <span class="zone-label">DESCENT</span>
+                            <span class="zone-range" id="rangeDescent">76-100</span>
+                        </div>
+                        
+                        <!-- Draggable Handles -->
+                        <div class="zone-handle" id="handle1" data-boundary="1" style="left: 25%;">
+                            <div class="handle-tooltip">25</div>
+                        </div>
+                        <div class="zone-handle" id="handle2" data-boundary="2" style="left: 50%;">
+                            <div class="handle-tooltip">50</div>
+                        </div>
+                        <div class="zone-handle" id="handle3" data-boundary="3" style="left: 75%;">
+                            <div class="handle-tooltip">75</div>
+                        </div>
+                        
+                        <!-- Preview Indicator -->
+                        <div class="zone-preview-indicator" id="zonePreviewIndicator" style="left: 50%;">
+                            <div class="preview-tooltip">50</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Info -->
+                <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 8px; background: var(--color-bg); border: 1px solid var(--color-amber-trace);">
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">At score</span>
+                    <strong style="color: var(--color-amber-bright); font-size: 11px;"><span id="zone-preview-score-display">50</span></strong>
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
+                    <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
+                    <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
+                </div>
+                
+                <!-- Zone Time Ranges & Descriptions -->
+                <div id="zone-time-details" style="margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--color-amber-trace); font-family: var(--font-mono);">
+                    <!-- Content populated by updateZonePreview() -->
+                </div>
+                
+                <div style="margin-top: 8px; font-size: 9px; color: var(--color-amber-dim); text-align: center; font-family: var(--font-mono);">
+                    Active Hours: <span id="led-ah-range">08:00-22:00</span>
+                </div>
+                
+                <!-- Zone Swap Toggle -->
+                <div class="setting-row" style="margin-top: 12px;">
+                    <span class="setting-label">SWAP ORDER</span>
+                    <div class="setting-control">
+                        <label class="toggle-wrap" aria-label="Swap Active/Momentum zones">
+                            <div class="toggle-track" id="toggleZoneSwap" role="switch" aria-checked="false">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                            <span class="toggle-label" id="labelZoneSwap">OFF</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="font-size: 9px; color: var(--color-amber-dim); margin-top: 4px; text-align: center;">
+                    Enable for early peak schedules (Active → Momentum)
+                </div>
+        </div>
+    </section>
     <!-- WATCH FACES -->
     <div class="section">
         <div class="section-title">WATCH FACES</div>
 
-        <div class="faces-active-header">ACTIVE (drag to reorder)</div>
-        <ul class="face-list" id="activeList" aria-label="Active watch faces"></ul>
+        <!-- What is this? Collapsible section -->
+        <div style="margin-bottom: 16px;">
+            <details style="background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px; border-radius: 3px;">
+                <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber); user-select: none;">
+                    THREE-TIER NAVIGATION
+                </summary>
+                <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">PRIMARY:</strong> MODE button cycles through these faces</p>
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">SECONDARY:</strong> Long-press MODE from clock face to access</p>
+                    <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">TERTIARY:</strong> Long-press ALARM from clock face (hidden from MODE rotation)</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="faces-active-header">PRIMARY (drag to reorder)</div>
+        <ul class="face-list" id="primaryList" aria-label="Primary watch faces"></ul>
+
+        <div class="faces-active-header" style="margin-top: 16px;">SECONDARY (drag to reorder)</div>
+        <ul class="face-list" id="secondaryList" aria-label="Secondary watch faces"></ul>
+
+        <div class="faces-active-header" style="margin-top: 16px;">TERTIARY (drag to reorder)</div>
+        <ul class="face-list" id="tertiaryList" aria-label="Tertiary watch faces"></ul>
 
         <div class="avail-header">AVAILABLE (tap to add)</div>
         <div id="availList"></div>
@@ -1075,7 +1745,7 @@
         <div style="margin-bottom: 16px;">
             <details style="background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px; border-radius: 3px;">
                 <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber); user-select: none;">
-                    ℹ️ WHAT IS HOMEBASE?
+                    WHAT IS HOMEBASE?
                 </summary>
                 <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-text-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
                     <p style="margin: 0 0 8px 0;"><strong style="color: var(--color-amber);">Homebase</strong> is your primary location for circadian-aware features.</p>
@@ -1133,87 +1803,6 @@
         </div>
     </div>
 
-    <!-- ZONE CONFIGURATION (PHASE 3) -->
-    <section id="zone-config" class="section" style="display:none">
-        <div class="section-title">◆ ZONE CONFIGURATION</div>
-        <p style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 12px; letter-spacing: 0.06em;">Customize phase zone boundaries (optional - defaults work for most users)</p>
-        
-        <details style="margin-bottom: 16px; background: var(--color-bg-recessed); border: 1px solid var(--color-border); padding: 12px;">
-            <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-amber-mid); user-select: none;">
-                ℹ️ WHAT ARE ZONES?
-            </summary>
-            <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
-                <p style="margin: 0 0 8px 0;">The phase engine divides your day into 4 zones based on your phase score (0-100):</p>
-                <ul style="margin: 4px 0 8px 20px; padding: 0;">
-                    <li><strong style="color: var(--color-amber-bright);">Emergence</strong> (0-25): Waking, orienting - focus on rest quality</li>
-                    <li><strong style="color: var(--color-amber-bright);">Momentum</strong> (26-50): Building energy - wake momentum key</li>
-                    <li><strong style="color: var(--color-amber-bright);">Active</strong> (51-75): Peak output - energy dominates</li>
-                    <li><strong style="color: var(--color-amber-bright);">Descent</strong> (76-100): Winding down - comfort priority</li>
-                </ul>
-            </div>
-        </details>
-        
-        <div class="setting-row">
-            <span class="setting-label">EMERGENCE/MOMENTUM</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-emergence-max" min="15" max="35" value="25" step="1" aria-label="Emergence/Momentum threshold">
-                <span class="slider-val" id="zone-emergence-val">25</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Emergence and Momentum zones (default: 25)
-        </div>
-        
-        <div class="setting-row">
-            <span class="setting-label">MOMENTUM/ACTIVE</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-momentum-max" min="40" max="60" value="50" step="1" aria-label="Momentum/Active threshold">
-                <span class="slider-val" id="zone-momentum-val">50</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Momentum and Active zones (default: 50)
-        </div>
-        
-        <div class="setting-row">
-            <span class="setting-label">ACTIVE/DESCENT</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="zone-active-max" min="65" max="85" value="75" step="1" aria-label="Active/Descent threshold">
-                <span class="slider-val" id="zone-active-val">75</span>
-            </div>
-        </div>
-        <div style="margin: 4px 0 12px 8px; padding-left: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--color-amber-trace); line-height: 1.4;">
-            Boundary between Active and Descent zones (default: 75)
-        </div>
-        
-        <div style="margin-top: 16px; padding: 12px; background: var(--color-bg-recessed); border: 1px solid var(--color-border);">
-            <div style="font-size: 10px; color: var(--color-amber-dim); letter-spacing: 0.08em; margin-bottom: 8px;">PREVIEW</div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 10px; color: var(--color-amber-mid);">At phase score</span>
-                <input type="number" id="zone-preview-score" value="50" min="0" max="100" style="width: 60px; min-height: 36px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-amber-bright); padding: 4px 6px; font-family: var(--font-mono); font-size: 11px; text-align: center;">
-                <span style="font-size: 10px; color: var(--color-amber-mid);">you'd be in</span>
-                <strong id="zone-preview-name" style="color: var(--color-amber-hot); font-size: 12px; letter-spacing: 0.08em;">MOMENTUM</strong>
-                <span style="font-size: 10px; color: var(--color-amber-mid);">zone</span>
-            </div>
-        </div>
-        
-        <button id="zone-reset" style="width: 100%; margin-top: 12px; min-height: var(--touch-min);">[RESET TO DEFAULTS]</button>
-        
-        <details style="margin-top: 20px; background: var(--color-bg-recessed); border: 1px solid var(--color-amber-dim); padding: 12px;">
-            <summary style="cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--color-alert); user-select: none;">
-                ⚙️ ADVANCED: METRIC WEIGHTS (EXPERTS ONLY)
-            </summary>
-            <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 9px; line-height: 1.6; color: var(--color-amber-dim); border-top: 1px solid var(--color-border); padding-top: 12px;">
-                <p style="margin: 0; color: var(--color-critical); font-style: italic;"><strong>⚠ Warning:</strong> Only modify if you understand the metric system. Incorrect weights can break face rotation.</p>
-                <p style="margin: 8px 0 0 0; color: var(--color-amber-trace);">Weight editor deferred to Phase 4. Use zone thresholds above for customization.</p>
-            </div>
-        </details>
-    </section>
-
-    <!-- SETTINGS -->
-    <div class="section">
-        <div class="section-title">SETTINGS</div>
-
         <!-- 24H MODE -->
         <div class="setting-row">
             <span class="setting-label">24H MODE</span>
@@ -1225,65 +1814,6 @@
                     <span class="toggle-label" id="label24h">OFF</span>
                 </label>
             </div>
-        </div>
-
-        <!-- CRT EFFECTS QUALITY -->
-        <details class="setting-collapsible">
-            <summary class="setting-summary">
-                CRT EFFECTS <span id="crtQualityLabel">▸ AUTO</span>
-            </summary>
-            <div class="setting-options" id="crtQualityOptions">
-                <button class="setting-option active" data-crt-quality="auto">AUTO</button>
-                <button class="setting-option" data-crt-quality="off">OFF</button>
-                <button class="setting-option" data-crt-quality="minimal">MINIMAL</button>
-                <button class="setting-option" data-crt-quality="medium">MEDIUM</button>
-            </div>
-        </details>
-
-        <!-- LED RED -->
-        <div class="setting-row">
-            <span class="setting-label">LED RED</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledRed" min="0" max="15" value="0" aria-label="LED red brightness">
-                <span class="slider-val" id="ledRedVal">0</span>
-            </div>
-        </div>
-
-        <!-- LED GREEN -->
-        <div class="setting-row">
-            <span class="setting-label">LED GREEN</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledGreen" min="0" max="15" value="15" aria-label="LED green brightness">
-                <span class="slider-val" id="ledGreenVal">15</span>
-            </div>
-        </div>
-
-        <!-- LED BLUE -->
-        <div class="setting-row">
-            <span class="setting-label">LED BLUE</span>
-            <div class="setting-control slider-wrap">
-                <input type="range" id="ledBlue" min="0" max="15" value="0" aria-label="LED blue brightness">
-                <span class="slider-val" id="ledBlueVal">0</span>
-            </div>
-        </div>
-
-        <!-- BTN SOUND -->
-        <div class="setting-row">
-            <span class="setting-label">BTN SOUND</span>
-            <div class="setting-control">
-                <label class="toggle-wrap" aria-label="Button sound toggle">
-                    <div class="toggle-track" id="toggleBtn" role="switch" aria-checked="false">
-                        <div class="toggle-thumb"></div>
-                    </div>
-                    <span class="toggle-label" id="labelBtn">OFF</span>
-                </label>
-            </div>
-        </div>
-
-        <!-- FIRST BOOT DEFAULTS HEADER -->
-        <div class="setting-section-header">
-            <span class="setting-section-label">-- FIRST BOOT DEFAULTS --</span>
-            <span class="setting-section-note">Applied once on first flash. User can override via watch face UI.</span>
         </div>
 
         <!-- ACTIVE HOURS ENABLED -->
@@ -1329,30 +1859,176 @@
             </div>
         </div>
 
-    </div>
+        <!-- LED COLOR SECTION HEADER -->
+        <div class="setting-section-header">
+            <span class="setting-section-label">-- LED COLOR --</span>
+        </div>
 
-    <!-- SIGNAL TUNE -->
-    <section class="panel" id="signalTunePanel">
-        <button class="panel-header" id="signalTunePanelBtn" aria-expanded="true" aria-controls="signalTunePanelBody">
-            <span>[ SIGNAL TUNE ]</span>
-            <span class="panel-chevron" id="signalTuneChevron">-</span>
+        <!-- LED SLIDERS WITH PREVIEW -->
+        <div class="led-color-section">
+            <div class="led-sliders">
+                <!-- LED RED -->
+                <div class="setting-row compact">
+                    <span class="setting-label">RED</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledRed" min="0" max="15" value="0" aria-label="LED red brightness">
+                        <span class="slider-val" id="ledRedVal">0</span>
+                    </div>
+                </div>
+
+                <!-- LED GREEN -->
+                <div class="setting-row compact">
+                    <span class="setting-label">GREEN</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledGreen" min="0" max="15" value="15" aria-label="LED green brightness">
+                        <span class="slider-val" id="ledGreenVal">15</span>
+                    </div>
+                </div>
+
+                <!-- LED BLUE -->
+                <div class="setting-row compact">
+                    <span class="setting-label">BLUE</span>
+                    <div class="setting-control slider-wrap">
+                        <input type="range" id="ledBlue" min="0" max="15" value="0" aria-label="LED blue brightness">
+                        <span class="slider-val" id="ledBlueVal">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Color Preview -->
+            <div class="led-preview-container">
+                <div id="led-color-ring"></div>
+                <div id="led-color-center"></div>
+            </div>
+        </div>
+
+        <!-- SMOOTH LED FADE -->
+        <div class="setting-row">
+            <span class="setting-label">FADE ANIM</span>
+            <div class="setting-control">
+                <label class="toggle-wrap" aria-label="Smooth LED fade animation">
+                    <div class="toggle-track" id="toggleSmoothLED" role="switch" aria-checked="false">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label" id="labelSmoothLED">OFF</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- BTN SOUND -->
+        <div class="setting-row">
+            <span class="setting-label">BTN SOUND</span>
+            <div class="setting-control">
+                <label class="toggle-wrap" aria-label="Button sound toggle">
+                    <div class="toggle-track" id="toggleBtn" role="switch" aria-checked="false">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                    <span class="toggle-label" id="labelBtn">OFF</span>
+                </label>
+            </div>
+        </div>
+
+    <!-- ALARM TUNES -->
+    <section class="panel" id="alarmTunesPanel">
+        <button class="panel-header" id="alarmTunesPanelBtn" aria-expanded="true" aria-controls="alarmTunesPanelBody">
+            <span>[ ALARM TUNES ]</span>
+            <span class="panel-chevron" id="alarmTunesChevron">-</span>
         </button>
-        <div class="panel-body" id="signalTunePanelBody">
-            <div class="signal-tune-row">
-                <select id="signalTune" aria-label="Signal tune selection">
-                    <option value="SIGNAL_TUNE_DEFAULT">Default</option>
-                    <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
-                    <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
-                    <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
-                    <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
-                    <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
-                    <option value="SIGNAL_TUNE_LAYLA">Layla (Derek &amp; Dominos)</option>
-                    <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
-                    <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
-                    <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
-                    <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angel&#39;s Thesis (NGE)</option>
-                </select>
-                <button id="signalTunePreviewBtn" class="preview-btn" aria-label="Preview signal tune">&#9654; PREVIEW</button>
+        <div class="panel-body" id="alarmTunesPanelBody">
+            <div style="margin-bottom: 12px;">
+                <label for="hourlyChimeTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">HOURLY CHIME TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="hourlyChimeTune" aria-label="Hourly chime tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokemon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Victory Fanfare (FF)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_TRITONE">Tritone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Sosumi (Mac)</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
+                    </select>
+                    <button id="hourlyChimePreviewBtn" class="preview-btn" aria-label="Preview hourly chime tune">PREVIEW</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label for="alarmTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">ALARM TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="alarmTune" aria-label="Alarm tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokemon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Victory Fanfare (FF)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_TRITONE">Tritone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Sosumi (Mac)</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
+                    </select>
+                    <button id="alarmTunePreviewBtn" class="preview-btn" aria-label="Preview alarm tune">PREVIEW</button>
+                </div>
+            </div>
+
+            <div>
+                <label for="smartAlarmTune" style="display: block; margin-bottom: 4px; color: var(--color-amber-mid); font-size: 10px; letter-spacing: 0.08em;">SMART ALARM TUNE</label>
+                <div class="signal-tune-row">
+                    <select id="smartAlarmTune" aria-label="Smart alarm tune selection">
+                        <option value="SIGNAL_TUNE_DEFAULT">Default</option>
+                        <option value="SIGNAL_TUNE_ZELDA_SECRET">Zelda Secret</option>
+                        <option value="SIGNAL_TUNE_MARIO_THEME">Mario Theme</option>
+                        <option value="SIGNAL_TUNE_MGS_CODEC">MGS Codec</option>
+                        <option value="SIGNAL_TUNE_MGS_ALERT">MGS Alert (!)</option>
+                        <option value="SIGNAL_TUNE_KIM_POSSIBLE">Kim Possible</option>
+                        <option value="SIGNAL_TUNE_POWER_RANGERS">Power Rangers</option>
+                        <option value="SIGNAL_TUNE_LAYLA">Layla (Derek and Dominos)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_SHORT">Harry Potter (Short)</option>
+                        <option value="SIGNAL_TUNE_HARRY_POTTER_LONG">Harry Potter (Long)</option>
+                        <option value="SIGNAL_TUNE_JURASSIC_PARK">Jurassic Park</option>
+                        <option value="SIGNAL_TUNE_EVANGELION">A Cruel Angels Thesis (NGE)</option>
+                        <option value="SIGNAL_TUNE_NOKIA">Nokia</option>
+                        <option value="SIGNAL_TUNE_TETRIS">Tetris</option>
+                        <option value="SIGNAL_TUNE_IMPERIAL">Imperial March (Star Wars)</option>
+                        <option value="SIGNAL_TUNE_POKEMON">Pokemon Center</option>
+                        <option value="SIGNAL_TUNE_VICTORY">Victory Fanfare (FF)</option>
+                        <option value="SIGNAL_TUNE_SONIC">Sonic Ring</option>
+                        <option value="SIGNAL_TUNE_PACMAN">Pac-Man Death</option>
+                        <option value="SIGNAL_TUNE_TRITONE">Tritone</option>
+                        <option value="SIGNAL_TUNE_SOSUMI">Sosumi (Mac)</option>
+                        <option value="SIGNAL_TUNE_OLDPHONE">Old Phone Ring</option>
+                        <option value="SIGNAL_TUNE_WINERROR">Windows Error</option>
+                    </select>
+                    <button id="smartAlarmTunePreviewBtn" class="preview-btn" aria-label="Preview smart alarm tune">PREVIEW</button>
+                </div>
             </div>
         </div>
     </section>
@@ -1369,32 +2045,6 @@
             </div>
         </div>
     </div>
-
-    <!-- TEMPLATES -->
-    <section class="panel" id="templatesPanel">
-        <button class="panel-header" id="templatesPanelBtn" aria-expanded="false" aria-controls="templatesPanelBody">
-            <span>[ TEMPLATES ]</span>
-            <span class="panel-chevron" id="templatesChevron">+</span>
-        </button>
-        <div class="panel-body" id="templatesPanelBody" style="display:none">
-            <!-- Presets -->
-            <div class="templates-group-label">-- PRESETS --</div>
-            <div id="preset-templates"></div>
-
-            <!-- User saved -->
-            <div class="templates-group-label" style="margin-top:12px">-- SAVED --</div>
-            <div id="user-templates-section">
-                <div id="user-templates"></div>
-                <div id="no-saved-templates" class="template-empty">no saved templates</div>
-            </div>
-
-            <!-- Save current -->
-            <div class="templates-save-row" style="margin-top:12px">
-                <input type="text" id="templateNameInput" placeholder="template name..." maxlength="40" style="flex:1; min-height:44px; background:var(--color-bg-recessed); border:1px solid var(--color-border); color:var(--color-amber-bright); padding:6px 8px; letter-spacing:0.06em;">
-                <button id="saveTemplateBtn">[save]</button>
-            </div>
-        </div>
-    </section>
 
     <!-- BUILD -->
     <div class="build-section">
@@ -1414,7 +2064,7 @@
 
     <!-- OPTICAL COMMS -->
     <div class="share-section" style="border-top: 1px solid var(--color-amber-trace);">
-        <div class="share-title">◆ OPTICAL COMMS</div>
+        <div class="share-title">OPTICAL COMMS</div>
         <div style="color: var(--color-amber-dim); font-size: 10px; margin-bottom: 8px; letter-spacing: 0.06em;">TIME SYNC VIA SCREEN FLASH (TIMEX DATALINK-STYLE)</div>
         <a href="../companion-app/index.html" class="copy-btn" style="display: block; text-align: center; text-decoration: none; line-height: 44px;">OPEN COMPANION APP →</a>
     </div>
@@ -1738,6 +2388,11 @@ let wireframeMesh;
 let animationFrameId;
 let crtQuality = 'medium'; // medium, minimal, off
 
+function applyCRTAppearanceMode(quality) {
+    const crtOff = quality === 'off';
+    document.documentElement.classList.toggle('crt-effects-off', crtOff);
+}
+
 function initRetroScene() {
     const canvas = document.getElementById('retro-canvas');
     const deviceTier = getDeviceTier();
@@ -1746,6 +2401,7 @@ function initRetroScene() {
     const VALID_QUALITIES = ['auto', 'off', 'minimal', 'medium'];
     const savedQualityRaw = localStorage.getItem('crt-quality');
     const savedQuality = VALID_QUALITIES.includes(savedQualityRaw) ? savedQualityRaw : 'auto';
+    applyCRTAppearanceMode(savedQuality);
     
     // Determine CRT quality based on user preference or device tier
     if (savedQuality === 'auto') {
@@ -1862,6 +2518,7 @@ function initRetroScene() {
         console.log('[CRT] Phase 2 initialized - quality: ' + crtQuality + ' - scan texture replaced with GPU shader');
     } catch (error) {
         console.warn('[CRT] Shader compilation failed, falling back to no effects:', error);
+        applyCRTAppearanceMode('off');
         canvas.style.display = 'none'; // Hide 3D canvas
         // Cancel animation if already started
         if (animationFrameId) {
@@ -1930,6 +2587,9 @@ window.addEventListener('beforeunload', () => {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
+    if (ledAnimationFrame) {
+        cancelAnimationFrame(ledAnimationFrame);
+    }
 });
 </script>
 
@@ -1943,10 +2603,10 @@ const COOLDOWN_MS = 90 * 1000;
 const POLL_INTERVAL_MS = 5000;
 
 const BOARDS = [
-    { id: 'red', name: 'RED' },
-    { id: 'green', name: 'GRN' },
-    { id: 'blue', name: 'BLU' },
-    { id: 'pro', name: 'PRO' }
+    { id: 'sensorwatch_red', name: 'RED' },
+    { id: 'sensorwatch_green', name: 'GRN' },
+    { id: 'sensorwatch_blue', name: 'BLU' },
+    { id: 'sensorwatch_pro', name: 'PRO' }
 ];
 
 const DISPLAYS = [
@@ -1954,8 +2614,14 @@ const DISPLAYS = [
     { id: 'custom', name: 'CUSTOM' }
 ];
 
+const BRANCHES = [
+    { id: 'main', name: 'MAIN', description: 'Stable release branch' },
+    { id: 'phase4bc-playlist-dispatch', name: 'PHASE4BC', description: 'Dogfooding: Phase 4E/4F + LED fade' }
+];
+
 const VALID_BOARDS = BOARDS.map(b => b.id);
 const VALID_DISPLAYS = DISPLAYS.map(d => d.id);
+const VALID_BRANCHES = BRANCHES.map(b => b.id);
 const VALID_SIGNAL_TUNES = [
     'SIGNAL_TUNE_DEFAULT',
     'SIGNAL_TUNE_ZELDA_SECRET',
@@ -2084,12 +2750,55 @@ function updateTokenStatus(result) {
 
 const PRESET_TEMPLATES = [
     {
+        id: 'preset_phase_engine',
+        name: 'Phase Engine (Default)',
+        description: 'Phase 4D dogfooding: circadian tracking with zone playlist',
+        preset: true,
+        state: {
+            board: 'sensorwatch_pro',
+            display: 'classic',
+            activeFaces: [
+                'wyoscan_face',
+                'clock_face',
+                'timer_face',
+                'fast_stopwatch_face',
+                'advanced_alarm_face',
+                'sleep_tracker_face',
+                'circadian_score_face',
+                'world_clock_face',
+                'moon_phase_face',
+                'sunrise_sunset_face',
+                '__secondary__',
+                'comms_face',
+                'lis2dw_monitor_face',
+                'light_sensor_face',
+                'voltage_face',
+                'settings_face',
+                '__tertiary__',
+                'emergence_face',
+                'active_face',
+                'momentum_face',
+                'descent_face'
+            ],
+            clock24h: false,
+            ledRed: 0, ledGreen: 15, ledBlue: 0,
+            btnSound: true,
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 16,
+            activeHoursEnd: 92,
+            phaseEngineEnabled: true
+        }
+    },
+    {
         id: 'preset_standard',
         name: 'Standard Edition',
         description: 'Classic setup: clock, alarm, stopwatch, tools',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -2106,7 +2815,12 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 16,
+            activeHoursEnd: 92
         }
     },
     {
@@ -2115,7 +2829,7 @@ const PRESET_TEMPLATES = [
         description: 'Sleep + activity tracking with sensors',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -2130,7 +2844,12 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 16,
+            activeHoursEnd: 92
         }
     },
     {
@@ -2139,7 +2858,7 @@ const PRESET_TEMPLATES = [
         description: 'Just the essentials: clock + settings',
         preset: true,
         state: {
-            board: 'red',
+            board: 'sensorwatch_red',
             display: 'classic',
             activeFaces: [
                 'clock_face',
@@ -2150,7 +2869,260 @@ const PRESET_TEMPLATES = [
             clock24h: false,
             ledRed: 0, ledGreen: 15, ledBlue: 0,
             btnSound: false,
-            signalTune: 'SIGNAL_TUNE_DEFAULT'
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 20,
+            activeHoursEnd: 88
+        }
+    },
+    {
+        id: 'astronaut',
+        name: 'Astronaut',
+        description: 'Sky watcher with shift-work schedule',
+        preset: true,
+        state: {
+            board: 'sensorwatch_pro',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'sunrise_sunset_face',
+                'moon_phase_face',
+                'mars_time_face',
+                'world_clock_face',
+                'temperature_display_face',
+                'alarm_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 5,
+            ledGreen: 0,
+            ledBlue: 10,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_JURASSIC_PARK',
+            alarmTune: 'SIGNAL_TUNE_JURASSIC_PARK',
+            smartAlarmTune: 'SIGNAL_TUNE_JURASSIC_PARK',
+            activeHoursEnabled: true,
+            activeHoursStart: 0,
+            activeHoursEnd: 95,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 20,
+            zoneMomentumMax: 45,
+            zoneActiveMax: 70,
+            zoneSwapEnabled: false
+        }
+    },
+    {
+        id: 'athlete',
+        name: 'Athlete',
+        description: 'Fitness tracking with early morning routine',
+        preset: true,
+        state: {
+            board: 'sensorwatch_pro',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'activity_logging_face',
+                'accelerometer_status_face',
+                'fast_stopwatch_face',
+                'interval_face',
+                'pulsometer_face',
+                'breathing_face',
+                'countdown_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 15,
+            ledGreen: 0,
+            ledBlue: 0,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_POWER_RANGERS',
+            alarmTune: 'SIGNAL_TUNE_POWER_RANGERS',
+            smartAlarmTune: 'SIGNAL_TUNE_POWER_RANGERS',
+            activeHoursEnabled: true,
+            activeHoursStart: 20,
+            activeHoursEnd: 88,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 15,
+            zoneMomentumMax: 40,
+            zoneActiveMax: 80,
+            zoneSwapEnabled: true  // Early peak for morning workouts
+        }
+    },
+    {
+        id: 'developer',
+        name: 'Developer',
+        description: 'Debug tools for firmware development',
+        preset: true,
+        state: {
+            board: 'sensorwatch_pro',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'voltage_face',
+                'lis2dw_monitor_face',
+                'light_sensor_face',
+                'peek_memory_face',
+                'stopwatch_face',
+                'timer_face',
+                'countdown_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 15,
+            ledGreen: 0,
+            ledBlue: 0,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_MGS_CODEC',
+            alarmTune: 'SIGNAL_TUNE_MGS_CODEC',
+            smartAlarmTune: 'SIGNAL_TUNE_MGS_CODEC',
+            activeHoursEnabled: true,
+            activeHoursStart: 36,
+            activeHoursEnd: 68,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 25,
+            zoneMomentumMax: 50,
+            zoneActiveMax: 75,
+            zoneSwapEnabled: false
+        }
+    },
+    {
+        id: 'night_owl',
+        name: 'Night Owl',
+        description: 'Late sleeper with minimal faces',
+        preset: true,
+        state: {
+            board: 'sensorwatch_red',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'clock_face',
+                'alarm_face',
+                'moon_phase_face',
+                'world_clock_face',
+                'countdown_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 0,
+            ledGreen: 10,
+            ledBlue: 0,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 48,
+            activeHoursEnd: 12,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 35,
+            zoneMomentumMax: 60,
+            zoneActiveMax: 85,
+            zoneSwapEnabled: false
+        }
+    },
+    {
+        id: 'student',
+        name: 'Student',
+        description: 'Productivity tools for late-night study sessions',
+        preset: true,
+        state: {
+            board: 'sensorwatch_red',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'interval_face',
+                'timer_face',
+                'countdown_face',
+                'breathing_face',
+                'stopwatch_face',
+                'deadline_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 5,
+            ledGreen: 5,
+            ledBlue: 15,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_NOKIA',
+            alarmTune: 'SIGNAL_TUNE_NOKIA',
+            smartAlarmTune: 'SIGNAL_TUNE_NOKIA',
+            activeHoursEnabled: true,
+            activeHoursStart: 32,
+            activeHoursEnd: 8,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 20,
+            zoneMomentumMax: 45,
+            zoneActiveMax: 80,
+            zoneSwapEnabled: false
+        }
+    },
+    {
+        id: 'traveler',
+        name: 'Traveler',
+        description: 'Multiple time zones for globe-trotters',
+        preset: true,
+        state: {
+            board: 'sensorwatch_red',
+            display: 'classic',
+            branch: 'main',
+            activeFaces: [
+                'world_clock_face',
+                'world_clock_face',
+                'world_clock_face',
+                'sunrise_sunset_face',
+                'alarm_face',
+                'countdown_face',
+                'moon_phase_face',
+                '__secondary__',
+                'settings_face',
+                'set_time_face'
+            ],
+            clock24h: true,
+            ledRed: 0,
+            ledGreen: 0,
+            ledBlue: 15,
+            smoothLEDFade: true,
+            btnSound: false,
+            hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+            alarmTune: 'SIGNAL_TUNE_DEFAULT',
+            smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
+            activeHoursEnabled: true,
+            activeHoursStart: 24,
+            activeHoursEnd: 92,
+            homebaseLat: null,
+            homebaseLon: null,
+            homebaseTz: null,
+            zoneEmergenceMax: 25,
+            zoneMomentumMax: 50,
+            zoneActiveMax: 75,
+            zoneSwapEnabled: false
         }
     }
 ];
@@ -2179,15 +3151,19 @@ const REGISTRY_MOCK = {
 let registry = null;
 
 let state = {
-    board: 'red',
+    board: 'sensorwatch_red',
     display: 'classic',
+    branch: 'main',  // Build branch (main or phase4bc-playlist-dispatch)
     activeFaces: [], // array of face ids (includes '__secondary__' divider sentinel)
     clock24h: false,
     ledRed: 0,
     ledGreen: 15,
     ledBlue: 0,
+    smoothLEDFade: false,  // PR #71: Smooth LED fade animation (optional)
     btnSound: false,
-    signalTune: 'SIGNAL_TUNE_DEFAULT',
+    hourlyChimeTune: 'SIGNAL_TUNE_DEFAULT',
+    alarmTune: 'SIGNAL_TUNE_DEFAULT',
+    smartAlarmTune: 'SIGNAL_TUNE_DEFAULT',
     // First-boot defaults (BKUP[2]: active hours)
     activeHoursEnabled: true,
     activeHoursStart: 16,  // 04:00
@@ -2195,7 +3171,11 @@ let state = {
     // Phase 3: Zone thresholds
     zoneEmergenceMax: 25,
     zoneMomentumMax: 50,
-    zoneActiveMax: 75
+    zoneActiveMax: 75,
+    // Phase 4: Zone swap toggle
+    zoneSwapEnabled: false,
+    // Phase Engine toggle
+    phaseEngineEnabled: false
 };
 
 let buildId = null;
@@ -2244,13 +3224,17 @@ function deleteUserTemplate(id) {
 function loadTemplate(tmplState) {
     if (tmplState.board) state.board = tmplState.board;
     if (tmplState.display) state.display = tmplState.display;
+    if (tmplState.branch) state.branch = tmplState.branch;
     if (tmplState.activeFaces) state.activeFaces = [...tmplState.activeFaces];
     if (tmplState.clock24h !== undefined) state.clock24h = tmplState.clock24h;
     if (tmplState.ledRed !== undefined) state.ledRed = tmplState.ledRed;
     if (tmplState.ledGreen !== undefined) state.ledGreen = tmplState.ledGreen;
     if (tmplState.ledBlue !== undefined) state.ledBlue = tmplState.ledBlue;
+    if (tmplState.smoothLEDFade !== undefined) state.smoothLEDFade = tmplState.smoothLEDFade;
     if (tmplState.btnSound !== undefined) state.btnSound = tmplState.btnSound;
-    if (tmplState.signalTune) state.signalTune = tmplState.signalTune;
+    if (tmplState.hourlyChimeTune) state.hourlyChimeTune = tmplState.hourlyChimeTune;
+    if (tmplState.alarmTune) state.alarmTune = tmplState.alarmTune;
+    if (tmplState.smartAlarmTune) state.smartAlarmTune = tmplState.smartAlarmTune;
     if (tmplState.activeHoursEnabled !== undefined) state.activeHoursEnabled = !!tmplState.activeHoursEnabled;
     if (tmplState.activeHoursStart !== undefined) {
         const v = parseInt(tmplState.activeHoursStart, 10);
@@ -2284,6 +3268,14 @@ function loadTemplate(tmplState) {
         const v = parseInt(tmplState.zoneActiveMax, 10);
         state.zoneActiveMax = (Number.isFinite(v) && v >= 65 && v <= 85) ? v : 75;
     }
+    // Phase 4: Load zone swap toggle
+    if (tmplState.zoneSwapEnabled !== undefined) {
+        state.zoneSwapEnabled = !!tmplState.zoneSwapEnabled;
+    }
+    // Load phase engine toggle state
+    if (tmplState.phaseEngineEnabled !== undefined) {
+        state.phaseEngineEnabled = !!tmplState.phaseEngineEnabled;
+    }
     // sync sliders/toggles to loaded state
     document.getElementById('ledRed').value = state.ledRed;
     document.getElementById('ledRedVal').textContent = state.ledRed;
@@ -2291,9 +3283,14 @@ function loadTemplate(tmplState) {
     document.getElementById('ledGreenVal').textContent = state.ledGreen;
     document.getElementById('ledBlue').value = state.ledBlue;
     document.getElementById('ledBlueVal').textContent = state.ledBlue;
-    document.getElementById('signalTune').value = state.signalTune;
+    document.getElementById('hourlyChimeTune').value = state.hourlyChimeTune;
+    document.getElementById('alarmTune').value = state.alarmTune;
+    document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
+    updateLEDPreview();
+    updateLEDFadePreview();
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
     document.getElementById('ahStart').innerHTML = buildTimeOptions(state.activeHoursStart);
     document.getElementById('ahEnd').innerHTML = buildTimeOptions(state.activeHoursEnd);
@@ -2301,16 +3298,22 @@ function loadTemplate(tmplState) {
     document.getElementById('homebase-lat').value = state.homebaseLat !== null ? state.homebaseLat : '';
     document.getElementById('homebase-lon').value = state.homebaseLon !== null ? state.homebaseLon : '';
     document.getElementById('homebase-tz').value = state.homebaseTz !== null ? state.homebaseTz : '';
-    // Sync zone threshold UI
-    document.getElementById('zone-emergence-max').value = state.zoneEmergenceMax;
-    document.getElementById('zone-emergence-val').textContent = state.zoneEmergenceMax;
-    document.getElementById('zone-momentum-max').value = state.zoneMomentumMax;
-    document.getElementById('zone-momentum-val').textContent = state.zoneMomentumMax;
-    document.getElementById('zone-active-max').value = state.zoneActiveMax;
-    document.getElementById('zone-active-val').textContent = state.zoneActiveMax;
+    // Restore zone swap toggle state
+    setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled || false);
+    // Restore phase engine toggle state
+    setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled || false);
+    // Show/hide zone configuration based on phase engine state
+    const zoneSection = document.getElementById('zone-config');
+    if (zoneSection) {
+        zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
+    // Sync zone threshold UI (new multi-handle bar)
+    updateZoneBar();
     updateZonePreview();
+    updateZoneDescriptions();
     renderBoards();
     renderDisplays();
+    renderBranches();
     renderActiveFaces();
     renderAvailFaces();
     updateHash();
@@ -2398,7 +3401,7 @@ async function loadRegistry() {
 // ============================================================
 // AUDIO PREVIEW
 // ============================================================
-function playSignalTune(tuneId) {
+function playSignalTune(tuneId, buttonId) {
     const tune = SIGNAL_TUNES.find(t => t.id === tuneId);
     if (!tune) return;
 
@@ -2428,18 +3431,18 @@ function playSignalTune(tuneId) {
     });
 
     // show "playing" state on button
-    const btn = document.getElementById('signalTunePreviewBtn');
+    const btn = buttonId ? document.getElementById(buttonId) : null;
+    const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
+    
     if (btn) {
         btn.classList.add('playing');
         btn.disabled = true;
-        const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
         setTimeout(() => {
             btn.classList.remove('playing');
             btn.disabled = false;
             try { audioCtx.close(); } catch(e) {}
         }, totalMs + 200);
     } else {
-        const totalMs = tune.notes.reduce((sum, [, ticks]) => sum + ticks * 16, 0);
         setTimeout(() => { try { audioCtx.close(); } catch(e) {} }, totalMs + 200);
     }
 }
@@ -2526,33 +3529,421 @@ function updateAhVisualBar() {
             bar.appendChild(activeDiv2);
         }
     }
+    
+    // Update LED active hours display
+    const startHour = Math.floor(start / 4);
+    const startMin = (start % 4) * 15;
+    const endHour = Math.floor(end / 4);
+    const endMin = (end % 4) * 15;
+    const startStr = String(startHour).padStart(2, '0') + ':' + String(startMin).padStart(2, '0');
+    const endStr = String(endHour).padStart(2, '0') + ':' + String(endMin).padStart(2, '0');
+    const ledAhRange = document.getElementById('led-ah-range');
+    if (ledAhRange) {
+        ledAhRange.textContent = startStr + '-' + endStr;
+    }
 }
 
 // ============================================================
 // ZONE CONFIGURATION (PHASE 3)
 // ============================================================
 function updateZoneConfigVisibility() {
-    const phaseEnabled = state.activeFaces.some(id => 
-        id.includes('emergence') || id.includes('momentum') || 
-        id.includes('active') || id.includes('descent') ||
-        id.includes('phase')
-    );
-    document.getElementById('zone-config').style.display = phaseEnabled ? 'block' : 'none';
+    const zoneSection = document.getElementById('zone-config');
+    if (zoneSection) {
+        // Only show when phase engine is enabled
+        zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
 }
 
 function updateZonePreview() {
-    const score = parseInt(document.getElementById('zone-preview-score').value) || 50;
+    const scoreEl = document.getElementById('zone-preview-score');
+    const score = scoreEl ? parseInt(scoreEl.value) || 50 : 50;
     const emergenceMax = state.zoneEmergenceMax || 25;
     const momentumMax = state.zoneMomentumMax || 50;
     const activeMax = state.zoneActiveMax || 75;
+    const isSwapped = state.zoneSwapEnabled || false;
     
     let zoneName;
-    if (score <= emergenceMax) zoneName = 'EMERGENCE';
-    else if (score <= momentumMax) zoneName = 'MOMENTUM';
-    else if (score <= activeMax) zoneName = 'ACTIVE';
-    else zoneName = 'DESCENT';
+    if (score <= emergenceMax) {
+        zoneName = 'EMERGENCE';
+    } else if (score <= momentumMax) {
+        // When swapped: second zone is ACTIVE
+        zoneName = isSwapped ? 'ACTIVE' : 'MOMENTUM';
+    } else if (score <= activeMax) {
+        // When swapped: third zone is MOMENTUM
+        zoneName = isSwapped ? 'MOMENTUM' : 'ACTIVE';
+    } else {
+        zoneName = 'DESCENT';
+    }
     
     document.getElementById('zone-preview-name').textContent = zoneName;
+    document.getElementById('zone-preview-score-display').textContent = score;
+    
+    // Update visual indicator on zone bar
+    const indicator = document.getElementById('zonePreviewIndicator');
+    if (indicator) {
+        indicator.style.left = `${score}%`;
+        const tooltip = indicator.querySelector('.preview-tooltip');
+        if (tooltip) tooltip.textContent = score;
+    }
+    
+    // Update time ranges and descriptions
+    updateZoneTimeDetails();
+}
+
+// Helper: convert quarter-hours to 12-hour format with AM/PM
+function qhTo12Hour(qh) {
+    const normalizedQh = qh % 96;
+    const totalMinutes = normalizedQh * 15;
+    let h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+// Update zone time details section
+function updateZoneTimeDetails() {
+    const e = state.zoneEmergenceMax || 25;
+    const m = state.zoneMomentumMax || 50;
+    const a = state.zoneActiveMax || 75;
+    const ahStart = state.activeHoursStart || 16; // default 04:00 (16 quarter-hours)
+    const ahEnd = state.activeHoursEnd || 92;     // default 23:00 (92 quarter-hours)
+    const isSwapped = state.zoneSwapEnabled || false;
+    
+    // Calculate active hours duration in minutes
+    let ahDurationMin = (ahEnd - ahStart) * 15;
+    if (ahEnd < ahStart) ahDurationMin = (96 - ahStart + ahEnd) * 15;
+    
+    // Calculate zone transition times (in quarter-hours from start)
+    const eMin = Math.round(ahDurationMin * (e / 100));
+    const mMin = Math.round(ahDurationMin * (m / 100));
+    const aMin = Math.round(ahDurationMin * (a / 100));
+    
+    const eEndQh = ahStart + Math.round(eMin / 15);
+    const mEndQh = ahStart + Math.round(mMin / 15);
+    const aEndQh = ahStart + Math.round(aMin / 15);
+    
+    // Zone descriptions
+    const descriptions = {
+        EMERGENCE: 'Gentle wake-up, building energy',
+        ACTIVE: 'Peak performance, high focus',
+        MOMENTUM: isSwapped ? 'Sustaining momentum, maintaining energy' : 'Sustaining energy, maintaining flow',
+        DESCENT: 'Wind-down, prepare for sleep'
+    };
+    
+    // Build zone list (respect swap order)
+    const zones = [
+        {
+            name: 'EMERGENCE',
+            start: qhTo12Hour(ahStart),
+            end: qhTo12Hour(eEndQh),
+            desc: descriptions.EMERGENCE,
+            color: 'var(--color-amber-dim)'
+        },
+        {
+            name: isSwapped ? 'ACTIVE' : 'MOMENTUM',
+            start: qhTo12Hour(eEndQh),
+            end: qhTo12Hour(mEndQh),
+            desc: isSwapped ? descriptions.ACTIVE : descriptions.MOMENTUM,
+            color: isSwapped ? 'var(--color-amber-bright)' : 'var(--color-amber-hot)'
+        },
+        {
+            name: isSwapped ? 'MOMENTUM' : 'ACTIVE',
+            start: qhTo12Hour(mEndQh),
+            end: qhTo12Hour(aEndQh),
+            desc: isSwapped ? descriptions.MOMENTUM : descriptions.ACTIVE,
+            color: isSwapped ? 'var(--color-amber-hot)' : 'var(--color-amber-bright)'
+        },
+        {
+            name: 'DESCENT',
+            start: qhTo12Hour(aEndQh),
+            end: qhTo12Hour(ahEnd),
+            desc: descriptions.DESCENT,
+            color: 'var(--color-amber-trace)'
+        }
+    ];
+    
+    // Render zone details
+    const detailsEl = document.getElementById('zone-time-details');
+    if (detailsEl) {
+        detailsEl.innerHTML = zones.map(zone => `
+            <div style="font-size: 9px; line-height: 1.6; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span style="color: ${zone.color}; font-weight: bold; letter-spacing: 0.05em; min-width: 85px;">${zone.name}</span>
+                <span style="color: var(--color-amber-mid); white-space: nowrap;">(${zone.start} - ${zone.end}):</span>
+                <span style="color: var(--color-amber-dim); flex: 1; text-align: right; font-style: italic;">${zone.desc}</span>
+            </div>
+        `).join('');
+    }
+}
+
+// ============================================================
+// Zone Configuration - Presets + Multi-Handle Bar
+// ============================================================
+
+const ZONE_PRESETS = {
+    'balanced': { emergence: 25, momentum: 50, active: 75, name: 'BALANCED' },
+    'early-bloom': { emergence: 15, momentum: 40, active: 70, name: 'EARLY BLOOM' },
+    'late-surge': { emergence: 30, momentum: 60, active: 80, name: 'LATE SURGE' },
+    'narrow-active': { emergence: 30, momentum: 45, active: 55, name: 'NARROW ACTIVE' }
+};
+
+let zoneDragging = null;
+let zoneStartX = 0;
+let zoneStartValue = 0;
+
+// Apply preset
+function applyZonePreset(presetName) {
+    const preset = ZONE_PRESETS[presetName];
+    if (!preset) return;
+    
+    state.zoneEmergenceMax = preset.emergence;
+    state.zoneMomentumMax = preset.momentum;
+    state.zoneActiveMax = preset.active;
+    
+    updateZoneBar();
+    updateZonePreview();
+    updateHash();
+    
+    // Update active preset card
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.preset === presetName);
+    });
+}
+
+// Update the visual zone bar
+function updateZoneBar() {
+    const e = state.zoneEmergenceMax || 25;
+    const m = state.zoneMomentumMax || 50;
+    const a = state.zoneActiveMax || 75;
+    
+    // Get active hours (quarter-hours: 0-95)
+    const ahStart = state.activeHoursStart || 16; // default 04:00
+    const ahEnd = state.activeHoursEnd || 92;     // default 23:00
+    
+    // Calculate active hours duration in minutes
+    let ahDurationMin;
+    if (ahStart < ahEnd) {
+        ahDurationMin = (ahEnd - ahStart) * 15;
+    } else {
+        // Wrapped midnight
+        ahDurationMin = ((96 - ahStart) + ahEnd) * 15;
+    }
+    
+    // Helper: quarter-hours to HH:MM
+    function qhToTime(qh) {
+        const normalizedQh = qh % 96;
+        const h = Math.floor(normalizedQh / 4);
+        const m = (normalizedQh % 4) * 15;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+    
+    // Calculate zone transition times
+    const eMin = Math.round(ahDurationMin * (e / 100));
+    const mMin = Math.round(ahDurationMin * (m / 100));
+    const aMin = Math.round(ahDurationMin * (a / 100));
+    
+    const eTime = qhToTime(ahStart + Math.round(eMin / 15));
+    const mTime = qhToTime(ahStart + Math.round(mMin / 15));
+    const aTime = qhToTime(ahStart + Math.round(aMin / 15));
+    const endTime = qhToTime(ahEnd);
+    
+    // Check if zones are swapped
+    const isSwapped = state.zoneSwapEnabled || false;
+    
+    // Update segment positions (absolute positioning)
+    const segEmergence = document.getElementById('segmentEmergence');
+    const segMomentum = document.getElementById('segmentMomentum');
+    const segActive = document.getElementById('segmentActive');
+    const segDescent = document.getElementById('segmentDescent');
+    
+    if (segEmergence) {
+        segEmergence.style.left = '0%';
+        segEmergence.style.width = `${e}%`;
+    }
+    
+    // When swapped: E → A → M → D (segment 2 becomes Active, segment 3 becomes Momentum)
+    if (segMomentum) {
+        segMomentum.style.left = `${e}%`;
+        segMomentum.style.width = `${m - e}%`;
+        // Swap visual classes
+        if (isSwapped) {
+            segMomentum.className = 'zone-segment zone-active';
+            const label = segMomentum.querySelector('.zone-label');
+            if (label) label.textContent = 'ACTIVE';
+        } else {
+            segMomentum.className = 'zone-segment zone-momentum';
+            const label = segMomentum.querySelector('.zone-label');
+            if (label) label.textContent = 'MOMENTUM';
+        }
+    }
+    
+    if (segActive) {
+        segActive.style.left = `${m}%`;
+        segActive.style.width = `${a - m}%`;
+        // Swap visual classes
+        if (isSwapped) {
+            segActive.className = 'zone-segment zone-momentum';
+            const label = segActive.querySelector('.zone-label');
+            if (label) label.textContent = 'MOMENTUM';
+        } else {
+            segActive.className = 'zone-segment zone-active';
+            const label = segActive.querySelector('.zone-label');
+            if (label) label.textContent = 'ACTIVE';
+        }
+    }
+    
+    if (segDescent) {
+        segDescent.style.left = `${a}%`;
+        segDescent.style.width = `${100 - a}%`;
+    }
+    
+    // Update range labels with times
+    const rangeEmergence = document.getElementById('rangeEmergence');
+    const rangeMomentum = document.getElementById('rangeMomentum');
+    const rangeActive = document.getElementById('rangeActive');
+    const rangeDescent = document.getElementById('rangeDescent');
+    
+    const startTime = qhToTime(ahStart);
+    if (rangeEmergence) rangeEmergence.textContent = `${startTime}-${eTime}`;
+    if (rangeMomentum) rangeMomentum.textContent = `${eTime}-${mTime}`;
+    if (rangeActive) rangeActive.textContent = `${mTime}-${aTime}`;
+    if (rangeDescent) rangeDescent.textContent = `${aTime}-${endTime}`;
+    
+    // Update handle positions and tooltips
+    const handle1 = document.getElementById('handle1');
+    const handle2 = document.getElementById('handle2');
+    const handle3 = document.getElementById('handle3');
+    
+    if (handle1) {
+        handle1.style.left = `${e}%`;
+        const tooltip1 = handle1.querySelector('.handle-tooltip');
+        if (tooltip1) tooltip1.textContent = eTime;
+    }
+    if (handle2) {
+        handle2.style.left = `${m}%`;
+        const tooltip2 = handle2.querySelector('.handle-tooltip');
+        if (tooltip2) tooltip2.textContent = mTime;
+    }
+    if (handle3) {
+        handle3.style.left = `${a}%`;
+        const tooltip3 = handle3.querySelector('.handle-tooltip');
+        if (tooltip3) tooltip3.textContent = aTime;
+    }
+    
+    // Check if matches any preset
+    const matchingPreset = Object.keys(ZONE_PRESETS).find(key => {
+        const preset = ZONE_PRESETS[key];
+        return preset.emergence === e && preset.momentum === m && preset.active === a;
+    });
+    
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.classList.toggle('active', matchingPreset && card.dataset.preset === matchingPreset);
+    });
+    
+    // Update zone preview with time details
+    updateZonePreview();
+}
+
+// Update zone descriptions dropdown based on swap state
+function updateZoneDescriptions() {
+    const isSwapped = state.zoneSwapEnabled || false;
+    
+    // Find the dropdown content container
+    const dropdown = document.getElementById('zone-descriptions-content');
+    if (!dropdown) return;
+    
+    if (isSwapped) {
+        // SWAPPED ORDER: E → A → M → D
+        dropdown.innerHTML = `
+            <p style="margin: 0 0 8px 0;"><strong style="color: #4A90E2;">EMERGENCE</strong> — Waking up, gentle start, low energy activities, building momentum slowly</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #F5A623;">ACTIVE</strong> — Peak output early. High energy from the start. Deep work, complex tasks, maximum focus.</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #7ED321;">MOMENTUM</strong> — Sustaining momentum, maintaining the day's energy. Light work, preparation for evening.</p>
+            <p style="margin: 0 0 0 0;"><strong style="color: #D0021B;">DESCENT</strong> — Winding down, reflection, administrative tasks, preparation for rest</p>
+        `;
+    } else {
+        // STANDARD ORDER: E → M → A → D
+        dropdown.innerHTML = `
+            <p style="margin: 0 0 8px 0;"><strong style="color: #4A90E2;">EMERGENCE</strong> — Waking up, gentle start, low energy activities, building momentum slowly</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #7ED321;">MOMENTUM</strong> — Energy building, light work, warm-up tasks, preparation for peak hours</p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #F5A623;">ACTIVE</strong> — Peak performance, deep work, complex tasks, maximum output and focus</p>
+            <p style="margin: 0 0 0 0;"><strong style="color: #D0021B;">DESCENT</strong> — Winding down, reflection, administrative tasks, preparation for rest</p>
+        `;
+    }
+}
+
+// Handle dragging
+function initZoneHandleDragging() {
+    const handles = document.querySelectorAll('.zone-handle');
+    
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', startZoneDrag);
+        handle.addEventListener('touchstart', startZoneDrag);
+    });
+    
+    document.addEventListener('mousemove', zoneHandleMove);
+    document.addEventListener('touchmove', zoneHandleMove);
+    document.addEventListener('mouseup', endZoneDrag);
+    document.addEventListener('touchend', endZoneDrag);
+}
+
+function startZoneDrag(e) {
+    e.preventDefault();
+    zoneDragging = e.target.closest('.zone-handle');
+    if (!zoneDragging) return;
+    
+    zoneDragging.classList.add('dragging');
+    const boundary = parseInt(zoneDragging.dataset.boundary);
+    
+    if (boundary === 1) zoneStartValue = state.zoneEmergenceMax;
+    else if (boundary === 2) zoneStartValue = state.zoneMomentumMax;
+    else if (boundary === 3) zoneStartValue = state.zoneActiveMax;
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    zoneStartX = clientX;
+}
+
+function zoneHandleMove(e) {
+    if (!zoneDragging) return;
+    e.preventDefault();
+    
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const bar = document.getElementById('zoneBar');
+    const barRect = bar.getBoundingClientRect();
+    const barWidth = barRect.width;
+    
+    // Calculate new value (0-100)
+    const relativeX = clientX - barRect.left;
+    let newValue = Math.round((relativeX / barWidth) * 100);
+    newValue = Math.max(0, Math.min(100, newValue));
+    
+    const boundary = parseInt(zoneDragging.dataset.boundary);
+    
+    // Apply constraints (handles can't cross, min 5pt gap)
+    if (boundary === 1) {
+        // Emergence max: can't exceed momentum - 5
+        newValue = Math.max(10, Math.min(newValue, state.zoneMomentumMax - 5));
+        state.zoneEmergenceMax = newValue;
+    } else if (boundary === 2) {
+        // Momentum max: between emergence + 5 and active - 5
+        newValue = Math.max(state.zoneEmergenceMax + 5, Math.min(newValue, state.zoneActiveMax - 5));
+        state.zoneMomentumMax = newValue;
+    } else if (boundary === 3) {
+        // Active max: above momentum + 5, below 95
+        newValue = Math.max(state.zoneMomentumMax + 5, Math.min(newValue, 95));
+        state.zoneActiveMax = newValue;
+    }
+    
+    updateZoneBar();
+    updateZonePreview();
+}
+
+function endZoneDrag(e) {
+    if (zoneDragging) {
+        zoneDragging.classList.remove('dragging');
+        zoneDragging = null;
+        updateHash();
+    }
 }
 
 // ============================================================
@@ -2601,9 +3992,18 @@ async function init() {
     document.getElementById('ledGreenVal').textContent = state.ledGreen;
     document.getElementById('ledBlue').value = state.ledBlue;
     document.getElementById('ledBlueVal').textContent = state.ledBlue;
-    document.getElementById('signalTune').value = state.signalTune;
+    document.getElementById('hourlyChimeTune').value = state.hourlyChimeTune;
+    document.getElementById('alarmTune').value = state.alarmTune;
+    document.getElementById('smartAlarmTune').value = state.smartAlarmTune;
     setToggle('toggle24h', 'label24h', state.clock24h);
     setToggle('toggleBtn', 'labelBtn', state.btnSound);
+    setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
+    
+    // Initialize LED preview
+    updateLEDPreview();
+    
+    // Initialize LED fade preview
+    updateLEDFadePreview();
 
     // restore active hours first-boot defaults
     setToggle('toggleAhEn', 'labelAhEn', state.activeHoursEnabled);
@@ -2623,22 +4023,21 @@ async function init() {
     }
     
     // restore zone thresholds (Phase 3)
-    if (state.zoneEmergenceMax !== undefined) {
-        document.getElementById('zone-emergence-max').value = state.zoneEmergenceMax;
-        document.getElementById('zone-emergence-val').textContent = state.zoneEmergenceMax;
-    }
-    if (state.zoneMomentumMax !== undefined) {
-        document.getElementById('zone-momentum-max').value = state.zoneMomentumMax;
-        document.getElementById('zone-momentum-val').textContent = state.zoneMomentumMax;
-    }
-    if (state.zoneActiveMax !== undefined) {
-        document.getElementById('zone-active-max').value = state.zoneActiveMax;
-        document.getElementById('zone-active-val').textContent = state.zoneActiveMax;
-    }
+    // Values are stored in state and will be applied by updateZoneBar()
     updateZonePreview();
+    updateZoneDescriptions();
+    
+    // Restore phase engine toggle state and zone config visibility
+    setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled || false);
+    setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled || false);
+    const zoneConfigSection = document.getElementById('zone-config');
+    if (zoneConfigSection) {
+        zoneConfigSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+    }
 
     renderBoards();
     renderDisplays();
+    renderBranches();
     renderActiveFaces();
     renderAvailFaces();
 
@@ -2656,11 +4055,42 @@ async function init() {
         pollBuild();
     }
 
-    wireSlider('ledRed', 'ledRedVal', v => { state.ledRed = +v; updateHash(); });
-    wireSlider('ledGreen', 'ledGreenVal', v => { state.ledGreen = +v; updateHash(); });
-    wireSlider('ledBlue', 'ledBlueVal', v => { state.ledBlue = +v; updateHash(); });
-    document.getElementById('signalTune').addEventListener('change', e => {
-        state.signalTune = e.target.value;
+    wireSlider('ledRed', 'ledRedVal', v => { 
+        state.ledRed = +v; 
+        const red = parseInt(v, 10);
+        const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+        const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
+    wireSlider('ledGreen', 'ledGreenVal', v => { 
+        state.ledGreen = +v; 
+        const red = parseInt(document.getElementById('ledRed').value || '0', 10);
+        const green = parseInt(v, 10);
+        const blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
+    wireSlider('ledBlue', 'ledBlueVal', v => { 
+        state.ledBlue = +v; 
+        const red = parseInt(document.getElementById('ledRed').value || '0', 10);
+        const green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+        const blue = parseInt(v, 10);
+        updateLEDPreview(red, green, blue); 
+        updateHash(); 
+    });
+    
+    // Alarm tune dropdowns
+    document.getElementById('hourlyChimeTune').addEventListener('change', e => {
+        state.hourlyChimeTune = e.target.value;
+        updateHash();
+    });
+    document.getElementById('alarmTune').addEventListener('change', e => {
+        state.alarmTune = e.target.value;
+        updateHash();
+    });
+    document.getElementById('smartAlarmTune').addEventListener('change', e => {
+        state.smartAlarmTune = e.target.value;
         updateHash();
     });
     // Debounced token validation (500ms delay to prevent API rate limiting)
@@ -2692,14 +4122,13 @@ async function init() {
             
             // Save preference
             localStorage.setItem('crt-quality', quality);
+            applyCRTAppearanceMode(quality);
             
             // Update UI
             crtQualityOptions.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
             // Update label
-            document.getElementById('crtQualityLabel').textContent = '▸ ' + quality.toUpperCase();
-            
             // Notify user to reload (console only, no alert)
             console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- reload page to apply');
         });
@@ -2715,12 +4144,20 @@ async function init() {
         }
     });
     
-    // Initialize label with saved quality
-    document.getElementById('crtQualityLabel').textContent = '▸ ' + savedCrtQuality.toUpperCase();
-    
     document.getElementById('toggleBtn').addEventListener('click', () => {
         state.btnSound = !state.btnSound;
         setToggle('toggleBtn', 'labelBtn', state.btnSound);
+        updateHash();
+    });
+    document.getElementById('toggleSmoothLED').addEventListener('click', () => {
+        state.smoothLEDFade = !state.smoothLEDFade;
+        setToggle('toggleSmoothLED', 'labelSmoothLED', state.smoothLEDFade);
+        updateLEDFadePreview(); // Show/hide animation preview
+        // Toggle animation on LED preview
+        const ring = document.getElementById('led-color-ring');
+        if (ring) {
+            ring.classList.toggle('animating', state.smoothLEDFade);
+        }
         updateHash();
     });
     document.getElementById('toggleAhEn').addEventListener('click', () => {
@@ -2733,12 +4170,14 @@ async function init() {
         const v = parseInt(e.target.value, 10);
         state.activeHoursStart = (Number.isFinite(v) && v >= 0 && v <= 95) ? v : 16;
         updateAhVisualBar();
+        updateZoneBar(); // Update zone times when active hours change
         updateHash();
     });
     document.getElementById('ahEnd').addEventListener('change', e => {
         const v = parseInt(e.target.value, 10);
         state.activeHoursEnd = (Number.isFinite(v) && v >= 0 && v <= 95) ? v : 92;
         updateAhVisualBar();
+        updateZoneBar(); // Update zone times when active hours change
         updateHash();
     });
 
@@ -2746,12 +4185,14 @@ async function init() {
     document.getElementById('homebase-lat').addEventListener('input', e => {
         const lat = parseFloat(e.target.value);
         state.homebaseLat = (Number.isFinite(lat) && lat >= -90 && lat <= 90) ? lat : null;
+        checkPhaseEngineAutoPopulate();
         updateHash();
     });
     
     document.getElementById('homebase-lon').addEventListener('input', e => {
         const lon = parseFloat(e.target.value);
         state.homebaseLon = (Number.isFinite(lon) && lon >= -180 && lon <= 180) ? lon : null;
+        checkPhaseEngineAutoPopulate();
         updateHash();
     });
     
@@ -2769,55 +4210,111 @@ async function init() {
         }
     });
     
-    // Zone configuration sliders (Phase 3)
-    document.getElementById('zone-emergence-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 15 || val > 35) val = 25;  // Clamp to safe range
-        state.zoneEmergenceMax = val;
-        document.getElementById('zone-emergence-val').textContent = val;
-        updateZonePreview();
-        updateHash();
+    // Phase Engine toggle
+    const togglePhaseEngine = document.getElementById('togglePhaseEngine');
+    if (togglePhaseEngine) {
+        togglePhaseEngine.addEventListener('click', function() {
+            state.phaseEngineEnabled = !state.phaseEngineEnabled;
+            setToggle('togglePhaseEngine', 'labelPhaseEngine', state.phaseEngineEnabled);
+            
+            // Show/hide zone configuration
+            const zoneSection = document.getElementById('zone-config');
+            if (zoneSection) {
+                zoneSection.style.display = state.phaseEngineEnabled ? 'block' : 'none';
+            }
+            
+            // Add/remove phase faces when toggled
+            if (state.phaseEngineEnabled) {
+                addPhaseFacesToTertiary();
+            } else {
+                removePhaseFacesFromTertiary();
+            }
+            
+            updateHash();
+        });
+    }
+    
+    // Zone swap toggle (Phase 4)
+    const toggleZoneSwap = document.getElementById('toggleZoneSwap');
+    if (toggleZoneSwap) {
+        toggleZoneSwap.addEventListener('click', function() {
+            state.zoneSwapEnabled = !state.zoneSwapEnabled;
+            setToggle('toggleZoneSwap', 'labelZoneSwap', state.zoneSwapEnabled);
+            // Update zone bar segments and preview
+            updateZoneBar();
+            updateZonePreview();
+            updateZoneDescriptions();
+            updateHash();
+        });
+    }
+    
+    // Zone configuration - Presets + Multi-Handle Bar (Phase 3)
+    // Preset card clicks
+    document.querySelectorAll('.zone-preset-card').forEach(card => {
+        card.addEventListener('click', () => {
+            applyZonePreset(card.dataset.preset);
+        });
     });
     
-    document.getElementById('zone-momentum-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 40 || val > 60) val = 50;  // Clamp to safe range
-        state.zoneMomentumMax = val;
-        document.getElementById('zone-momentum-val').textContent = val;
+    // Initialize dragging
+    initZoneHandleDragging();
+    
+    // Initial render of zone bar
+    updateZoneBar();
+    
+    // Zone bar click/drag for preview
+    const zoneBar = document.getElementById('zoneBar');
+    let previewDragging = false;
+    
+    function updatePreviewFromBar(e) {
+        const rect = zoneBar.getBoundingClientRect();
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const relativeX = clientX - rect.left;
+        let score = Math.round((relativeX / rect.width) * 100);
+        score = Math.max(0, Math.min(100, score));
+        
+        // Update hidden state
+        if (!document.getElementById('zone-preview-score')) {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'zone-preview-score';
+            hiddenInput.value = score;
+            zoneBar.appendChild(hiddenInput);
+        } else {
+            document.getElementById('zone-preview-score').value = score;
+        }
+        
+        document.getElementById('zone-preview-score-display').textContent = score;
         updateZonePreview();
-        updateHash();
+    }
+    
+    zoneBar.addEventListener('mousedown', e => {
+        // Don't interfere with handle dragging
+        if (e.target.closest('.zone-handle')) return;
+        previewDragging = true;
+        updatePreviewFromBar(e);
     });
     
-    document.getElementById('zone-active-max').addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10);
-        if (isNaN(val) || val < 65 || val > 85) val = 75;  // Clamp to safe range
-        state.zoneActiveMax = val;
-        document.getElementById('zone-active-val').textContent = val;
-        updateZonePreview();
-        updateHash();
+    zoneBar.addEventListener('touchstart', e => {
+        if (e.target.closest('.zone-handle')) return;
+        previewDragging = true;
+        updatePreviewFromBar(e);
     });
     
-    // Zone preview score input
-    document.getElementById('zone-preview-score').addEventListener('input', e => {
-        let score = parseInt(e.target.value, 10);
-        if (isNaN(score) || score < 0 || score > 100) score = 50;
-        e.target.value = score;  // Clamp input
-        updateZonePreview();
+    document.addEventListener('mousemove', e => {
+        if (previewDragging) updatePreviewFromBar(e);
     });
     
-    // Zone reset button
-    document.getElementById('zone-reset').addEventListener('click', () => {
-        state.zoneEmergenceMax = 25;
-        state.zoneMomentumMax = 50;
-        state.zoneActiveMax = 75;
-        document.getElementById('zone-emergence-max').value = 25;
-        document.getElementById('zone-momentum-max').value = 50;
-        document.getElementById('zone-active-max').value = 75;
-        document.getElementById('zone-emergence-val').textContent = '25';
-        document.getElementById('zone-momentum-val').textContent = '50';
-        document.getElementById('zone-active-val').textContent = '75';
-        updateZonePreview();
-        updateHash();
+    document.addEventListener('touchmove', e => {
+        if (previewDragging) updatePreviewFromBar(e);
+    });
+    
+    document.addEventListener('mouseup', () => {
+        previewDragging = false;
+    });
+    
+    document.addEventListener('touchend', () => {
+        previewDragging = false;
     });
     
     // Use browser location button
@@ -2844,25 +4341,34 @@ async function init() {
             document.getElementById('homebase-tz').value = tzString;
             state.homebaseTz = tzString;
             
+            // Trigger Phase Engine auto-populate
+            checkPhaseEngineAutoPopulate();
+            
             updateHash();
         }, function(error) {
             alert('Geolocation failed: ' + error.message);
         });
     });
 
-    // Signal tune panel toggle
-    document.getElementById('signalTunePanelBtn').addEventListener('click', function() {
-        const body = document.getElementById('signalTunePanelBody');
-        const chevron = document.getElementById('signalTuneChevron');
+    // Alarm tunes panel toggle
+    document.getElementById('alarmTunesPanelBtn').addEventListener('click', function() {
+        const body = document.getElementById('alarmTunesPanelBody');
+        const chevron = document.getElementById('alarmTunesChevron');
         const expanded = this.getAttribute('aria-expanded') === 'true';
         this.setAttribute('aria-expanded', String(!expanded));
         body.style.display = expanded ? 'none' : 'block';
         chevron.textContent = expanded ? '+' : '-';
     });
 
-    // Signal tune preview button
-    document.getElementById('signalTunePreviewBtn').addEventListener('click', () => {
-        playSignalTune(state.signalTune);
+    // Alarm tune preview buttons
+    document.getElementById('hourlyChimePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.hourlyChimeTune, 'hourlyChimePreviewBtn');
+    });
+    document.getElementById('alarmTunePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.alarmTune, 'alarmTunePreviewBtn');
+    });
+    document.getElementById('smartAlarmTunePreviewBtn').addEventListener('click', () => {
+        playSignalTune(state.smartAlarmTune, 'smartAlarmTunePreviewBtn');
     });
 
     // Templates panel toggle
@@ -2874,6 +4380,40 @@ async function init() {
         body.style.display = expanded ? 'none' : 'block';
         chevron.textContent = expanded ? '+' : '-';
     });
+
+    // CRT Effects Menu
+    const crtMenuButton = document.getElementById('crtMenuButton');
+    const crtEffectsMenu = document.getElementById('crtEffectsMenu');
+    const crtMenuClose = document.getElementById('crtMenuClose');
+    const crtMenuOverlay = document.getElementById('crtMenuOverlay');
+
+    if (crtMenuButton && crtEffectsMenu) {
+        // Open menu
+        crtMenuButton.addEventListener('click', function() {
+            crtEffectsMenu.style.display = 'block';
+        });
+        
+        // Close menu - close button
+        if (crtMenuClose) {
+            crtMenuClose.addEventListener('click', function() {
+                crtEffectsMenu.style.display = 'none';
+            });
+        }
+        
+        // Close menu - overlay click
+        if (crtMenuOverlay) {
+            crtMenuOverlay.addEventListener('click', function() {
+                crtEffectsMenu.style.display = 'none';
+            });
+        }
+        
+        // Close menu - ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && crtEffectsMenu.style.display === 'block') {
+                crtEffectsMenu.style.display = 'none';
+            }
+        });
+    }
 
     // Save template button
     document.getElementById('saveTemplateBtn').addEventListener('click', function() {
@@ -2895,6 +4435,239 @@ function updateClock() {
     const h = now.getHours().toString().padStart(2, '0');
     const m = now.getMinutes().toString().padStart(2, '0');
     document.getElementById('sysStatus').textContent = h + ':' + m + ' | READY';
+}
+
+// ============================================================
+// LED PREVIEW (CRT GLOW VISUALIZATION)
+// ============================================================
+function updateLEDPreview(red, green, blue) {
+    // Use passed values if provided, otherwise read from DOM
+    if (red === undefined) red = parseInt(document.getElementById('ledRed').value || '0', 10);
+    if (green === undefined) green = parseInt(document.getElementById('ledGreen').value || '0', 10);
+    if (blue === undefined) blue = parseInt(document.getElementById('ledBlue').value || '0', 10);
+    
+    // Convert 0-15 to 0-150 (dimmer to match actual watch LED brightness)
+    // Watch LEDs are much less saturated than full RGB (17*15=255)
+    const r = red * 10;
+    const g = green * 10;
+    const b = blue * 10;
+    
+    const color = `rgb(${r}, ${g}, ${b})`;
+    const ring = document.getElementById('led-color-ring');
+    const center = document.getElementById('led-color-center');
+    
+    if (ring) {
+        ring.style.backgroundColor = color;
+        
+        // Restart animation to show new color immediately
+        const wasAnimating = ring.classList.contains('animating');
+        if (wasAnimating) {
+            ring.classList.remove('animating');
+            // Force reflow to restart animation
+            void ring.offsetWidth;
+            ring.classList.add('animating');
+        }
+    }
+    
+    if (center) center.style.backgroundColor = color;
+    
+    // Update fade preview if running
+    updateLEDFadePreview();
+}
+
+// ============================================================
+// LED FADE ANIMATION PREVIEW
+// ============================================================
+const FADE_IN_STEPS = 20;
+const FADE_OUT_STEPS = 32;
+const STEP_MS = 1000 / 64; // 15.625ms per step @ 64 Hz
+
+let ledAnimationFrame = null;
+
+// Quadratic gamma curve (matches firmware)
+function calcBrightness(step, maxSteps, target) {
+    const stepSq = step * step;
+    const maxSq = maxSteps * maxSteps;
+    return (stepSq * target) / maxSq;
+}
+
+// Draw LED on canvas with glow effect
+function drawLED(ctx, r, g, b, brightness) {
+    const centerX = 50;
+    const centerY = 50;
+    const radius = 30;
+    
+    // Apply brightness
+    const br = Math.floor(r * brightness);
+    const bg = Math.floor(g * brightness);
+    const bb = Math.floor(b * brightness);
+    
+    // Draw glow (radial gradient)
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, `rgba(${br}, ${bg}, ${bb}, 1)`);
+    gradient.addColorStop(0.7, `rgba(${br}, ${bg}, ${bb}, 0.5)`);
+    gradient.addColorStop(1, `rgba(${br}, ${bg}, ${bb}, 0)`);
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 100, 100);
+    
+    // Draw LED circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.7, 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
+    ctx.fill();
+}
+
+// Start LED fade animation loop
+function startLEDPreview() {
+    const canvas = document.getElementById('ledCanvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Get LED color from state (0-15 range)
+    const r = (state.ledRed << 4) | state.ledRed; // Convert to 0-255
+    const g = (state.ledGreen << 4) | state.ledGreen;
+    const b = (state.ledBlue << 4) | state.ledBlue;
+    
+    let phase = 'fade-in';
+    let step = 0;
+    let startTime = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        
+        // Clear canvas (dark background)
+        ctx.fillStyle = '#0B0900';
+        ctx.fillRect(0, 0, 100, 100);
+        
+        let brightness = 0;
+        
+        if (phase === 'fade-in') {
+            step = Math.min(FADE_IN_STEPS, Math.floor(elapsed / STEP_MS));
+            brightness = calcBrightness(step, FADE_IN_STEPS, 1.0);
+            
+            if (step >= FADE_IN_STEPS) {
+                phase = 'hold-on';
+                startTime = Date.now();
+            }
+        } else if (phase === 'hold-on') {
+            brightness = 1.0;
+            
+            if (elapsed > 1000) { // Hold 1 second
+                phase = 'fade-out';
+                step = 0;
+                startTime = Date.now();
+            }
+        } else if (phase === 'fade-out') {
+            step = Math.min(FADE_OUT_STEPS, Math.floor(elapsed / STEP_MS));
+            const remaining = FADE_OUT_STEPS - step;
+            brightness = calcBrightness(remaining, FADE_OUT_STEPS, 1.0);
+            
+            if (step >= FADE_OUT_STEPS) {
+                phase = 'hold-off';
+                startTime = Date.now();
+            }
+        } else if (phase === 'hold-off') {
+            brightness = 0;
+            
+            if (elapsed > 1000) { // Hold 1 second
+                phase = 'fade-in';
+                step = 0;
+                startTime = Date.now();
+            }
+        }
+        
+        drawLED(ctx, r, g, b, brightness);
+        
+        ledAnimationFrame = requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+// Stop LED fade animation
+function stopLEDPreview() {
+    if (ledAnimationFrame) {
+        cancelAnimationFrame(ledAnimationFrame);
+        ledAnimationFrame = null;
+    }
+}
+
+// Update LED fade preview visibility and restart animation with new colors
+function updateLEDFadePreview() {
+    const previewEl = document.getElementById('ledFadePreview');
+    if (!previewEl) return;
+    
+    if (state.smoothLEDFade) {
+        previewEl.style.display = 'flex';
+        previewEl.classList.add('active');
+        
+        // Restart animation with updated colors
+        stopLEDPreview();
+        startLEDPreview();
+    } else {
+        previewEl.style.display = 'none';
+        previewEl.classList.remove('active');
+        stopLEDPreview();
+    }
+}
+
+// ============================================================
+// PHASE ENGINE AUTO-POPULATE
+// ============================================================
+let phaseEngineAutoPopulated = false; // Track if we've already auto-populated
+
+function checkPhaseEngineAutoPopulate() {
+    // Only auto-populate once when both lat and lon are valid
+    if (phaseEngineAutoPopulated) return;
+    
+    if (state.homebaseLat !== null && state.homebaseLon !== null) {
+        // Phase Engine enabled - auto-populate dogfooding config
+        const defaultFaces = [
+            'wyoscan_face',
+            'clock_face',
+            'timer_face',
+            'emergence_face',
+            'momentum_face',
+            'active_face',
+            'descent_face',
+            'fast_stopwatch_face',
+            'advanced_alarm_face',
+            'sleep_tracker_face',
+            'circadian_score_face',
+            'world_clock_face',
+            'moon_phase_face',
+            'sunrise_sunset_face',
+            'comms_face',
+            'lis2dw_monitor_face',
+            'voltage_face',
+            '__secondary__',
+            'settings_face'
+        ];
+        
+        // Only auto-populate if user hasn't customized faces yet (still has default config)
+        const currentFaceCount = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__').length;
+        if (currentFaceCount <= 5) { // Assume <5 faces means they haven't customized yet
+            state.activeFaces = defaultFaces;
+            renderActiveFaces();
+            renderAvailFaces();
+            updateHash();
+            phaseEngineAutoPopulated = true;
+            
+            // Show a subtle notification
+            const statusEl = document.getElementById('buildStatus');
+            const prevText = statusEl.textContent;
+            statusEl.textContent = 'PHASE ENGINE ENABLED - LOADED 18-FACE DOGFOODING CONFIG';
+            statusEl.className = 'build-status success active';
+            setTimeout(() => {
+                statusEl.className = 'build-status';
+                if (statusEl.textContent === 'PHASE ENGINE ENABLED - LOADED 18-FACE DOGFOODING CONFIG') {
+                    statusEl.textContent = prevText;
+                }
+            }, 3000);
+        }
+    }
 }
 
 // ============================================================
@@ -2942,86 +4715,167 @@ function renderDisplays() {
 }
 
 // ============================================================
+// RENDER BRANCHES
+// ============================================================
+function renderBranches() {
+    const el = document.getElementById('branchRadio');
+    el.innerHTML = '';
+    BRANCHES.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'radio-btn' + (state.branch === b.id ? ' active' : '');
+        btn.setAttribute('role', 'radio');
+        btn.setAttribute('aria-checked', state.branch === b.id ? 'true' : 'false');
+        btn.setAttribute('aria-label', 'Branch: ' + b.name);
+        btn.innerHTML = '<span class="dot">' + (state.branch === b.id ? '*' : ' ') + '</span> ' + b.name;
+        btn.onclick = () => {
+            state.branch = b.id;
+            renderBranches();
+            updateHash();
+        };
+        el.appendChild(btn);
+    });
+}
+
+// ============================================================
+// PHASE FACE MANAGEMENT
+// ============================================================
+function addPhaseFacesToTertiary() {
+    const phaseFaces = [
+        'emergence_face',
+        'active_face',
+        'momentum_face',
+        'descent_face'
+    ];
+    
+    // Get current active faces
+    const activeFaces = state.activeFaces.slice();
+    
+    // Remove phase faces from any position and dividers
+    const filtered = activeFaces.filter(f => 
+        !phaseFaces.includes(f) && 
+        f !== '__secondary__' && 
+        f !== '__tertiary__'
+    );
+    
+    // Find or add divider positions
+    let secondaryIdx = activeFaces.indexOf('__secondary__');
+    let tertiaryIdx = activeFaces.indexOf('__tertiary__');
+    
+    // Ensure secondary divider exists
+    if (secondaryIdx === -1) {
+        // Place secondary after first few faces (reasonable default)
+        const insertPoint = Math.min(filtered.length, 3);
+        filtered.splice(insertPoint, 0, '__secondary__');
+        secondaryIdx = insertPoint;
+    } else {
+        // Re-insert secondary at its relative position
+        const beforeSecondary = activeFaces.slice(0, secondaryIdx).filter(f => 
+            !phaseFaces.includes(f) && f !== '__secondary__' && f !== '__tertiary__'
+        ).length;
+        filtered.splice(beforeSecondary, 0, '__secondary__');
+        secondaryIdx = beforeSecondary;
+    }
+    
+    // Add tertiary divider right after secondary if not present
+    if (tertiaryIdx === -1) {
+        filtered.splice(secondaryIdx + 1, 0, '__tertiary__');
+        tertiaryIdx = secondaryIdx + 1;
+    } else {
+        // Re-insert tertiary at its relative position
+        const beforeTertiary = activeFaces.slice(0, tertiaryIdx).filter(f => 
+            !phaseFaces.includes(f) && f !== '__secondary__' && f !== '__tertiary__'
+        ).length;
+        // Adjust for secondary divider
+        const adjustedTertiaryIdx = beforeTertiary + (beforeTertiary > secondaryIdx ? 1 : 0);
+        filtered.splice(adjustedTertiaryIdx, 0, '__tertiary__');
+        tertiaryIdx = adjustedTertiaryIdx;
+    }
+    
+    // Add phase faces after __tertiary__
+    phaseFaces.forEach((face, idx) => {
+        filtered.splice(tertiaryIdx + 1 + idx, 0, face);
+    });
+    
+    // Update state and UI
+    state.activeFaces = filtered;
+    renderActiveFaces();
+    renderAvailFaces();
+}
+
+function removePhaseFacesFromTertiary() {
+    const phaseFaces = [
+        'emergence_face',
+        'active_face',
+        'momentum_face',
+        'descent_face'
+    ];
+    
+    const filtered = state.activeFaces.filter(f => !phaseFaces.includes(f));
+    
+    state.activeFaces = filtered;
+    renderActiveFaces();
+    renderAvailFaces();
+}
+
+// ============================================================
 // RENDER ACTIVE FACES
 // ============================================================
 function renderActiveFaces() {
-    const ul = document.getElementById('activeList');
-    ul.innerHTML = '';
-    let faceNum = 1;
+    // Split faces into three tiers based on dividers
+    const secondaryIdx = state.activeFaces.indexOf('__secondary__');
+    const tertiaryIdx = state.activeFaces.indexOf('__tertiary__');
+    
+    const primaryFaces = secondaryIdx >= 0 
+        ? state.activeFaces.slice(0, secondaryIdx)
+        : (tertiaryIdx >= 0 ? state.activeFaces.slice(0, tertiaryIdx) : state.activeFaces);
+    
+    const secondaryFaces = secondaryIdx >= 0
+        ? (tertiaryIdx >= 0 ? state.activeFaces.slice(secondaryIdx + 1, tertiaryIdx) : state.activeFaces.slice(secondaryIdx + 1))
+        : [];
+    
+    const tertiaryFaces = tertiaryIdx >= 0
+        ? state.activeFaces.slice(tertiaryIdx + 1)
+        : [];
 
-    state.activeFaces.forEach((id, idx) => {
-        const li = document.createElement('li');
-        li.setAttribute('data-id', id);
+    // Render each tier
+    renderFaceTier('primaryList', primaryFaces, 1);
+    renderFaceTier('secondaryList', secondaryFaces, primaryFaces.length + 1);
+    renderFaceTier('tertiaryList', tertiaryFaces, primaryFaces.length + secondaryFaces.length + 1);
 
-        if (id === '__secondary__') {
-            li.className = 'secondary-divider';
-            const handleSpan = document.createElement('span');
-            handleSpan.className = 'face-handle';
-            handleSpan.textContent = ':::::';
-            const secLabel = document.createElement('span');
-            secLabel.textContent = '-- SECONDARY --';
-            li.appendChild(handleSpan);
-            li.appendChild(secLabel);
-        } else {
-            const face = registry.faces.find(f => f.id === id);
-            const name = face ? face.name.toUpperCase() : id.toUpperCase();
-            li.className = 'face-item';
-            const numSpan = document.createElement('span');
-            numSpan.className = 'face-num';
-            numSpan.textContent = faceNum;
-            const handleSpan = document.createElement('span');
-            handleSpan.className = 'face-handle';
-            handleSpan.textContent = ':::::';
-            // Wireframe icon (hash face ID to wireframe 1-30)
-            const wireframeNum = (id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 30) + 1;
-            const iconImg = document.createElement('img');
-            iconImg.className = 'face-icon';
-            iconImg.src = `assets/wireframes/${wireframeNum}.png`;
-            iconImg.alt = '';
-            iconImg.loading = 'lazy';
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'face-name';
-            nameSpan.textContent = name;
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'face-remove';
-            removeBtn.setAttribute('aria-label', 'Remove ' + name);
-            removeBtn.setAttribute('data-idx', String(idx));
-            removeBtn.textContent = 'x';
-            li.appendChild(numSpan);
-            li.appendChild(handleSpan);
-            li.appendChild(iconImg);
-            li.appendChild(nameSpan);
-            li.appendChild(removeBtn);
-            faceNum++;
-        }
-
-        ul.appendChild(li);
-    });
-
-    // wire remove buttons
-    ul.querySelectorAll('.face-remove').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const idx = parseInt(btn.getAttribute('data-idx'), 10);
-            removeFace(idx);
-        });
-    });
-
-    // init SortableJS
-    if (window._sortable) { try { window._sortable.destroy(); } catch(e) {} }
-    window._sortable = Sortable.create(ul, {
+    // Setup drag-and-drop for all three lists with shared group
+    if (window._sortablePrimary) { try { window._sortablePrimary.destroy(); } catch(e) {} }
+    if (window._sortableSecondary) { try { window._sortableSecondary.destroy(); } catch(e) {} }
+    if (window._sortableTertiary) { try { window._sortableTertiary.destroy(); } catch(e) {} }
+    
+    const sortableOptions = {
         animation: 120,
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         handle: '.face-handle',
+        group: 'faces',
         onEnd: function() {
-            const newOrder = Array.from(ul.children).map(li => li.getAttribute('data-id'));
-            state.activeFaces = newOrder;
+            // Reconstruct activeFaces from three lists
+            const primary = Array.from(document.getElementById('primaryList').children).map(li => li.getAttribute('data-id'));
+            const secondary = Array.from(document.getElementById('secondaryList').children).map(li => li.getAttribute('data-id'));
+            const tertiary = Array.from(document.getElementById('tertiaryList').children).map(li => li.getAttribute('data-id'));
+            
+            state.activeFaces = [...primary];
+            if (secondary.length > 0) {
+                state.activeFaces.push('__secondary__', ...secondary);
+            }
+            if (tertiary.length > 0) {
+                state.activeFaces.push('__tertiary__', ...tertiary);
+            }
+            
             renderActiveFaces();
             renderAvailFaces();
             updateHash();
         }
-    });
+    };
+    
+    window._sortablePrimary = Sortable.create(document.getElementById('primaryList'), sortableOptions);
+    window._sortableSecondary = Sortable.create(document.getElementById('secondaryList'), sortableOptions);
+    window._sortableTertiary = Sortable.create(document.getElementById('tertiaryList'), sortableOptions);
 
     // Calculate flash usage
     updateFlashUsage();
@@ -3030,8 +4884,71 @@ function renderActiveFaces() {
     updateZoneConfigVisibility();
 }
 
+function renderFaceTier(listId, faces, startNum) {
+    const ul = document.getElementById(listId);
+    ul.innerHTML = '';
+    let faceNum = startNum;
+
+    faces.forEach((id, idx) => {
+        const face = registry.faces.find(f => f.id === id);
+        const name = face ? face.name.toUpperCase() : id.toUpperCase();
+        
+        const li = document.createElement('li');
+        li.setAttribute('data-id', id);
+        li.className = 'face-item';
+        
+        const numSpan = document.createElement('span');
+        numSpan.className = 'face-num';
+        numSpan.textContent = faceNum;
+        
+        const handleSpan = document.createElement('span');
+        handleSpan.className = 'face-handle';
+        handleSpan.textContent = ':::::';
+        
+        // Wireframe icon (hash face ID to wireframe 1-30)
+        const wireframeNum = (id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 30) + 1;
+        const iconImg = document.createElement('img');
+        iconImg.className = 'face-icon';
+        iconImg.src = `assets/wireframes/${wireframeNum}.png`;
+        iconImg.alt = '';
+        iconImg.loading = 'lazy';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'face-name';
+        nameSpan.textContent = name;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'face-remove';
+        removeBtn.setAttribute('aria-label', 'Remove ' + name);
+        removeBtn.setAttribute('data-tier', listId);
+        removeBtn.setAttribute('data-idx', String(idx));
+        removeBtn.textContent = 'x';
+        
+        li.appendChild(numSpan);
+        li.appendChild(handleSpan);
+        li.appendChild(iconImg);
+        li.appendChild(nameSpan);
+        li.appendChild(removeBtn);
+        
+        ul.appendChild(li);
+        faceNum++;
+    });
+
+    // Wire remove buttons for this tier
+    ul.querySelectorAll('.face-remove').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const faceId = btn.parentElement.getAttribute('data-id');
+            const globalIdx = state.activeFaces.indexOf(faceId);
+            if (globalIdx >= 0) {
+                removeFace(globalIdx);
+            }
+        });
+    });
+}
+
 function updateFlashUsage() {
-    const faceIds = state.activeFaces.filter(id => id !== '__secondary__');
+    const faceIds = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__');
     const totalBytes = faceIds.reduce((sum, id) => {
         const face = registry.faces.find(f => f.id === id);
         return sum + (face?.estimated_flash_bytes || 2048);
@@ -3047,12 +4964,12 @@ function updateFlashUsage() {
     if (totalKB > limitKB) {
         // Over limit - disable build
         buildBtn.disabled = true;
-        statusEl.textContent = `⚠️ TOO MANY FACES: ${totalKB} KB / ${limitKB} KB LIMIT - REMOVE ${Math.ceil((totalKB - limitKB) / 15)} FACES`;
+        statusEl.textContent = `WARNING: TOO MANY FACES: ${totalKB} KB / ${limitKB} KB LIMIT - REMOVE ${Math.ceil((totalKB - limitKB) / 15)} FACES`;
         statusEl.className = 'build-status error active';
     } else if (totalKB > warningKB) {
         // Near limit - warn but allow
         buildBtn.disabled = false;
-        statusEl.textContent = `⚠️ NEAR FLASH LIMIT: ${totalKB} KB / ${limitKB} KB - BUILD MAY FAIL`;
+        statusEl.textContent = `WARNING: NEAR FLASH LIMIT: ${totalKB} KB / ${limitKB} KB - BUILD MAY FAIL`;
         statusEl.className = 'build-status error active';
     } else {
         // Normal - clear warning if not building
@@ -3193,24 +5110,28 @@ function wireSlider(id, valId, cb) {
 // HASH ENCODE / DECODE
 // ============================================================
 function updateHash() {
-    const faces = state.activeFaces.filter(id => id !== '__secondary__').join(',');
+    const faces = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__').join(',');
     const secIdx = state.activeFaces.indexOf('__secondary__');
     // count non-sentinel items before the divider
     const secondaryAt = secIdx >= 0
-        ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__').length
-        : state.activeFaces.filter(id => id !== '__secondary__').length;
+        ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
+        : state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__').length;
 
     const params = [
         'board=' + state.board,
         'display=' + state.display,
+        'branch=' + encodeURIComponent(state.branch),
         'faces=' + encodeURIComponent(faces),
         'secondary=' + secondaryAt,
         '24h=' + state.clock24h,
         'led_r=' + state.ledRed,
         'led_g=' + state.ledGreen,
         'led_b=' + state.ledBlue,
+        'smooth_fade=' + state.smoothLEDFade,
         'btn=' + state.btnSound,
-        'tune=' + encodeURIComponent(state.signalTune),
+        'hc_tune=' + encodeURIComponent(state.hourlyChimeTune),
+        'al_tune=' + encodeURIComponent(state.alarmTune),
+        'sa_tune=' + encodeURIComponent(state.smartAlarmTune),
         'ah_en=' + state.activeHoursEnabled,
         'ah_start=' + state.activeHoursStart,
         'ah_end=' + state.activeHoursEnd
@@ -3238,6 +5159,16 @@ function updateHash() {
         params.push('zam=' + encodeURIComponent(state.zoneActiveMax));
     }
     
+    // Add zone swap flag if enabled (Phase 4)
+    if (state.zoneSwapEnabled) {
+        params.push('zswap=1');
+    }
+    
+    // Add phase engine flag if enabled
+    if (state.phaseEngineEnabled) {
+        params.push('phase_engine=1');
+    }
+    
     history.replaceState(null, '', '#' + params.join('&'));
 }
 
@@ -3255,14 +5186,23 @@ function parseHash() {
 
     if (!params.faces) return null;
 
-    // Validate board against allowlist
-    const board = VALID_BOARDS.includes(params.board) ? params.board : 'red';
+    // Validate board against allowlist (with backward compatibility for old URLs)
+    let board = params.board;
+    // Map legacy simplified names to full names
+    const boardMap = { 'red': 'sensorwatch_red', 'green': 'sensorwatch_green', 'blue': 'sensorwatch_blue', 'pro': 'sensorwatch_pro' };
+    if (boardMap[board]) board = boardMap[board];
+    board = VALID_BOARDS.includes(board) ? board : 'sensorwatch_red';
 
     // Validate display against allowlist
     const display = VALID_DISPLAYS.includes(params.display) ? params.display : 'classic';
 
-    // Validate signal_tune against allowlist
-    const signalTune = VALID_SIGNAL_TUNES.includes(params.tune) ? params.tune : 'SIGNAL_TUNE_DEFAULT';
+    // Validate branch against allowlist
+    const branch = VALID_BRANCHES.includes(params.branch) ? params.branch : 'main';
+
+    // Validate alarm tunes against allowlist
+    const hourlyChimeTune = VALID_SIGNAL_TUNES.includes(params.hc_tune) ? params.hc_tune : 'SIGNAL_TUNE_DEFAULT';
+    const alarmTune = VALID_SIGNAL_TUNES.includes(params.al_tune) ? params.al_tune : 'SIGNAL_TUNE_DEFAULT';
+    const smartAlarmTune = VALID_SIGNAL_TUNES.includes(params.sa_tune) ? params.sa_tune : 'SIGNAL_TUNE_DEFAULT';
 
     // Clamp LED values to valid integer range 0-15
     const clampLed = (val, def) => {
@@ -3332,13 +5272,17 @@ function parseHash() {
     return {
         board,
         display,
+        branch,
         activeFaces,
         clock24h: params['24h'] === 'true',
         ledRed: clampLed(params.led_r, 0),
         ledGreen: clampLed(params.led_g, 15),
         ledBlue: clampLed(params.led_b, 0),
+        smoothLEDFade: params.smooth_fade === 'true',
         btnSound: params.btn === 'true',
-        signalTune,
+        hourlyChimeTune,
+        alarmTune,
+        smartAlarmTune,
         activeHoursEnabled: params.ah_en !== undefined ? params.ah_en === 'true' : true,
         activeHoursStart: clampQh(params.ah_start, 16),
         activeHoursEnd: clampQh(params.ah_end, 92),
@@ -3347,7 +5291,9 @@ function parseHash() {
         homebaseTz,
         zoneEmergenceMax,
         zoneMomentumMax,
-        zoneActiveMax
+        zoneActiveMax,
+        zoneSwapEnabled: params.zswap === '1',
+        phaseEngineEnabled: params.phase_engine === '1'
     };
 }
 
@@ -3358,6 +5304,44 @@ function genBuildId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// ============================================================
+// VALIDATION
+// ============================================================
+function validateConfiguration() {
+    const warnings = [];
+    const errors = [];
+    
+    // Check Phase Engine vs Homebase
+    const phaseEnabled = state.phaseEngineEnabled;
+    const latitude = state.homebaseLat;
+    const longitude = state.homebaseLon;
+    
+    if (phaseEnabled) {
+        // Check for missing homebase
+        if (latitude === null && longitude === null) {
+            errors.push('Phase Engine enabled but homebase coordinates not set');
+        }
+        
+        // Check coordinate bounds
+        if (latitude !== null && (latitude < -90 || latitude > 90)) {
+            errors.push('Invalid latitude (must be -90 to 90)');
+        }
+        if (longitude !== null && (longitude < -180 || longitude > 180)) {
+            errors.push('Invalid longitude (must be -180 to 180)');
+        }
+        
+        // Warn if homebase looks like placeholder
+        if (latitude !== null && longitude !== null) {
+            if (Math.abs(latitude) < 0.001 && Math.abs(longitude) < 0.001) {
+                warnings.push('Homebase coordinates look like placeholder values');
+            }
+        }
+    }
+    
+    return { warnings, errors };
+}
+
+
 async function triggerBuild() {
     const token = getToken();
     if (!token) {
@@ -3365,7 +5349,24 @@ async function triggerBuild() {
         return;
     }
 
-    const faces = state.activeFaces.filter(id => id !== '__secondary__');
+    // Validate configuration before building
+    const validation = validateConfiguration();
+    if (validation.errors.length > 0) {
+        const errorMsg = validation.errors.join('\n');
+        showStatus('[ERR] ' + errorMsg, 'error');
+        alert('Configuration Errors:\n\n' + errorMsg + '\n\nPlease fix these issues before building.');
+        return;
+    }
+    
+    if (validation.warnings.length > 0) {
+        const warningMsg = validation.warnings.join('\n');
+        if (!confirm('Configuration Warnings:\n\n' + warningMsg + '\n\nContinue anyway?')) {
+            showStatus('[WARN] Build cancelled by user', 'error');
+            return;
+        }
+    }
+
+    const faces = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__');
     if (faces.length === 0) {
         showStatus('[ERR] ADD AT LEAST ONE WATCH FACE', 'error');
         return;
@@ -3390,8 +5391,14 @@ async function triggerBuild() {
 
     const secIdx = state.activeFaces.indexOf('__secondary__');
     const secondaryIndex = secIdx >= 0
-        ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__').length
+        ? state.activeFaces.slice(0, secIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
         : faces.length;
+
+    // Calculate tertiary_index (number of faces before __tertiary__ divider)
+    const terIdx = state.activeFaces.indexOf('__tertiary__');
+    const tertiaryIndex = terIdx >= 0
+        ? state.activeFaces.slice(0, terIdx).filter(id => id !== '__secondary__' && id !== '__tertiary__').length
+        : -1;
 
     // Re-validate zone inputs before sending (PR #63 security fix)
     const clampZone = (val, def, min, max) => {
@@ -3402,17 +5409,32 @@ async function triggerBuild() {
     const zmm = clampZone(state.zoneMomentumMax || 50, 50, 40, 60);
     const zam = clampZone(state.zoneActiveMax || 75, 75, 65, 85);
 
+    // SAFETY NET: ensure board has sensorwatch_ prefix (guards against cached old pages / localStorage)
+    const boardLegacyMap = { 'red': 'sensorwatch_red', 'green': 'sensorwatch_green', 'blue': 'sensorwatch_blue', 'pro': 'sensorwatch_pro' };
+    const safeBoard = boardLegacyMap[state.board] || state.board;
+    if (safeBoard !== state.board) {
+        console.warn('[BUILD] Fixed legacy board name:', state.board, '->', safeBoard);
+        state.board = safeBoard;
+    }
+    if (!VALID_BOARDS.includes(safeBoard)) {
+        logTerminal('ERROR: Invalid board "' + safeBoard + '". Aborting.', 'error');
+        return;
+    }
+
     const inputs = {
         faces: faces.join(','),
-        board: state.board,
+        board: safeBoard,
         display: state.display,
         secondary_index: String(secondaryIndex),
         clock_24h: String(state.clock24h),
         led_red: String(state.ledRed),
         led_green: String(state.ledGreen),
         led_blue: String(state.ledBlue),
+        smooth_led_fade: String(state.smoothLEDFade),
         button_sound: String(state.btnSound),
-        signal_tune: state.signalTune,
+        hourly_chime_tune: state.hourlyChimeTune,
+        alarm_tune: state.alarmTune,
+        smart_alarm_tune: state.smartAlarmTune,
         active_hours_enabled: String(state.activeHoursEnabled),
         active_hours_start: String(state.activeHoursStart),
         active_hours_end: String(state.activeHoursEnd),
@@ -3430,6 +5452,11 @@ async function triggerBuild() {
         inputs.homebase_tz = String(state.homebaseTz);
     }
     
+    // Add tertiary_index if __tertiary__ divider exists
+    if (tertiaryIndex >= 0) {
+        inputs.tertiary_index = String(tertiaryIndex);
+    }
+    
     // Add zone thresholds (Phase 3 - phase engine configuration)
     if (zem !== 25) {
         inputs.zone_emergence_max = String(zem);
@@ -3439,6 +5466,11 @@ async function triggerBuild() {
     }
     if (zam !== 75) {
         inputs.zone_active_max = String(zam);
+    }
+    
+    // Add zone swap flag (Phase 4)
+    if (state.zoneSwapEnabled) {
+        inputs.zone_swap_enabled = '1';
     }
 
     showStatus('DISPATCHING BUILD ' + buildId + '...', '');
@@ -3455,7 +5487,7 @@ async function triggerBuild() {
                     'Accept': 'application/vnd.github+json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ref: 'main', inputs })
+                body: JSON.stringify({ ref: state.branch, inputs })
             }
         );
 
@@ -3516,7 +5548,9 @@ async function pollBuild() {
 
         if (status === 'completed') {
             if (conclusion === 'success') {
-                const buildName = 'second-movement-' + buildId;
+                // Extract short board name for filename (remove sensorwatch_ prefix)
+                const boardShort = state.board.replace('sensorwatch_', '');
+                const buildName = boardShort + '-' + state.display + '-' + buildId;
                 const uf2Url = 'https://github.com/' + REPO + '/releases/download/custom-builds/' + buildName + '.uf2';
                 localStorage.setItem('sm_build_result_' + buildId, 'success:' + uf2Url);
                 showStatus('[OK] BUILD COMPLETE' + elapsed + ' - READY TO DOWNLOAD', 'success');

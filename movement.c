@@ -64,6 +64,10 @@
 #include "phase_engine.h"
 #endif
 
+#ifndef MOVEMENT_TERTIARY_FACE_INDEX
+#define MOVEMENT_TERTIARY_FACE_INDEX 0
+#endif
+
 #if __EMSCRIPTEN__
 #include <emscripten.h>
 void _wake_up_simulator(void);
@@ -119,6 +123,17 @@ typedef struct {
 
     // button events that will not be passed to the current face loop, but will instead passed directly to the default loop handler.
     volatile uint32_t passthrough_events;
+
+#ifdef SMOOTH_LED_FADE
+    // LED fade state (7 bytes) - MR-G inspired premium animation
+    struct {
+        uint8_t mode;       // 0=off, 1=fade-in (20 steps), 2=fade-out (32 steps)
+        uint8_t step;       // current step in fade sequence
+        uint8_t target_r;   // target red value (0-255)
+        uint8_t target_g;   // target green value (0-255)
+        uint8_t target_b;   // target blue value (0-255)
+    } led_fade;
+#endif
 } movement_volatile_state_t;
 
 movement_volatile_state_t movement_volatile_state;
@@ -202,6 +217,10 @@ void cb_sleep_timeout_interrupt(void);
 void cb_buzzer_start(void);
 void cb_buzzer_stop(void);
 
+#ifdef SMOOTH_LED_FADE
+void cb_led_fade_step(void);
+#endif
+
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
 static bool is_sleep_window(void);
@@ -210,6 +229,7 @@ static bool is_confirmed_asleep(void);
 #ifdef PHASE_ENGINE_ENABLED
 static uint8_t _movement_get_zone_face_index(phase_zone_t zone);
 #endif
+
 
 // Expose sleep tracker state for smart alarm integration
 sleep_tracker_state_t* movement_get_sleep_tracker_state(void) {
@@ -537,6 +557,14 @@ static void _movement_handle_top_of_minute(void) {
     
     // Phase 3: Update metrics engine every 15 minutes
     movement_state.metric_tick_count++;
+    
+    // Phase 4E: Track hourly boundaries for telemetry accumulation
+    static uint8_t last_telemetry_hour = 255;  // Initialize to invalid hour
+    bool is_hourly_tick = (last_telemetry_hour != date_time.unit.hour);
+    if (is_hourly_tick) {
+        last_telemetry_hour = date_time.unit.hour;
+    }
+    
     if (movement_state.metric_tick_count >= 15) {
         movement_state.metric_tick_count = 0;
         
@@ -548,8 +576,18 @@ static void _movement_handle_top_of_minute(void) {
         uint8_t minute = date_time.unit.minute;
         uint16_t day_of_year = date_time.unit.day;  // Simplified; actual day_of_year calculation needed
         
-        // Get phase score from phase engine (stubbed for now - requires Phase 1-2 integration)
-        uint16_t phase_score = 50;  // Default midpoint; replace with phase_compute() when available
+        // Get sensor readings for phase engine
+        uint16_t activity_level = movement_state.cumulative_activity;
+        int16_t temp_c10 = (int16_t)sensors_get_temperature_c10(&movement_state.sensors);
+        uint16_t light_lux = sensors_get_lux_avg(&movement_state.sensors);
+        
+        // Compute phase score from real sensor data (Phase 4E/4F integration)
+        uint16_t phase_score = phase_compute(&movement_state.phase,
+                                             hour,
+                                             day_of_year,
+                                             activity_level,
+                                             temp_c10,
+                                             light_lux);
         
         // Update metrics engine (sensors passed directly for cleaner API)
         metrics_update(&movement_state.metrics,
@@ -568,6 +606,23 @@ static void _movement_handle_top_of_minute(void) {
         // Get previous zone before update
         phase_zone_t prev_zone = playlist_get_zone(&movement_state.playlist);
         
+        // Phase 4F: Get active hours configuration for sleep mode enforcement
+        movement_active_hours_t active_hours = movement_get_active_hours();
+        
+        // Clamp to valid range before division (96 quarter-hours = 24 hours)
+        uint8_t start_qh = active_hours.bit.start_quarter_hours;
+        uint8_t end_qh = active_hours.bit.end_quarter_hours;
+        
+        if (start_qh > 95) start_qh = 95;
+        if (end_qh > 95) end_qh = 95;
+        
+        uint8_t active_start = start_qh / 4;  // Convert to hours
+        uint8_t active_end = end_qh / 4;      // Convert to hours
+        
+        // Get recent movement for all-nighter detection
+        uint16_t movement_this_minute = sensors_get_hourly_movement_count(&movement_state.sensors);
+        
+        // Update playlist (simplified - sleep mode logic removed from Phase 4F)
         playlist_update(&movement_state.playlist, phase_score, &snapshot);
         
         // Phase 4B: If playlist mode is active and zone changed, switch to zone face
@@ -582,19 +637,6 @@ static void _movement_handle_top_of_minute(void) {
         }
         
         // Phase 4D: Detect anomalies and trigger chimes if needed
-        // Get active hours configuration for gating
-        movement_active_hours_t active_hours = movement_get_active_hours();
-        
-        // Clamp to valid range before division (96 quarter-hours = 24 hours)
-        uint8_t start_qh = active_hours.bit.start_quarter_hours;
-        uint8_t end_qh = active_hours.bit.end_quarter_hours;
-        
-        if (start_qh > 95) start_qh = 95;
-        if (end_qh > 95) end_qh = 95;
-        
-        uint8_t active_start = start_qh / 4;  // Convert to hours
-        uint8_t active_end = end_qh / 4;      // Convert to hours
-        
         phase_detect_anomalies(&movement_state.phase,
                               snapshot.sd,
                               snapshot.em,
@@ -604,8 +646,64 @@ static void _movement_handle_top_of_minute(void) {
                               active_hours.bit.enabled,
                               active_start,
                               active_end);
+        
+        // Phase 4E: Accumulate telemetry every hour
+        if (is_hourly_tick) {
+            // Get current zone
+            phase_zone_t current_zone = playlist_get_zone(&movement_state.playlist);
+            
+            // Get hourly sensor data
+            uint8_t light_minutes = sensors_get_hourly_light_minutes(&movement_state.sensors);
+            uint8_t motion_interrupts = sensors_get_hourly_movement_count(&movement_state.sensors);
+            
+            // Get battery voltage (in millivolts)
+            uint16_t battery_mv = watch_get_vcc_voltage();
+            
+            // Get previous hour's metrics for confidence calculation
+            // For simplicity, use a static buffer to track last hour's values
+            static metrics_snapshot_t prev_snapshot = {0};
+            static bool prev_snapshot_valid = false;
+            static phase_zone_t prev_zone_hourly = 0;
+            
+            // Calculate dominant metric based on deviation from neutral
+            dominant_metric_t dominant = (dominant_metric_t)metrics_get_dominant(&snapshot, current_zone);
+            
+            // Check if any anomaly fired this hour
+            bool anomaly_fired = (movement_state.phase.anomaly_flags != ANOMALY_NONE);
+            
+            // Accumulate telemetry
+            if (prev_snapshot_valid) {
+                sleep_data_accumulate_telemetry(&movement_state.sleep_telemetry,
+                                               hour,
+                                               current_zone,
+                                               prev_zone_hourly,
+                                               dominant,
+                                               anomaly_fired,
+                                               light_minutes,
+                                               motion_interrupts,
+                                               battery_mv,
+                                               snapshot.sd, prev_snapshot.sd,
+                                               snapshot.em, prev_snapshot.em,
+                                               snapshot.energy, prev_snapshot.energy,
+                                               snapshot.comfort, prev_snapshot.comfort);
+            }
+            
+            // Save current snapshot for next hour
+            prev_snapshot = snapshot;
+            prev_snapshot_valid = true;
+            prev_zone_hourly = current_zone;
+            
+            // Reset hourly sensor counters
+            sensors_reset_hourly_counters(&movement_state.sensors);
+            
+            // Reset midnight telemetry at hour 0
+            if (hour == 0) {
+                sleep_data_reset_daily_telemetry(&movement_state.sleep_telemetry);
+            }
+        }
     }
 #endif
+
 }
 
 static void _movement_handle_scheduled_tasks(void) {
@@ -658,9 +756,24 @@ void movement_request_tick_frequency(uint8_t freq) {
 void movement_illuminate_led(void) {
     if (movement_state.settings.bit.led_duration != 0b111) {
         movement_state.light_on = true;
+        
+#ifdef SMOOTH_LED_FADE
+        // Start premium fade-in animation (300ms, 20 steps @ 64 Hz)
+        movement_volatile_state.led_fade.mode = 1;  // fade-in
+        movement_volatile_state.led_fade.step = 0;
+        movement_volatile_state.led_fade.target_r = movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4;
+        movement_volatile_state.led_fade.target_g = movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4;
+        movement_volatile_state.led_fade.target_b = movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4;
+        
+        // Kick off first step immediately
+        watch_set_led_color_rgb(0, 0, 0);
+#else
+        // Instant-on (original behavior)
         watch_set_led_color_rgb(movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4,
                                 movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4,
                                 movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4);
+#endif
+        
         if (movement_state.settings.bit.led_duration == 0) {
             // Do nothing it'll be turned off on button release
         } else {
@@ -687,11 +800,28 @@ void movement_force_led_on(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 void movement_force_led_off(void) {
-    movement_state.light_on = false;
     // The led timeout probably already triggered, but still disable just in case we are switching off the light by other means
     watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
     movement_volatile_state.schedule_next_comp = true;
+    
+#ifdef SMOOTH_LED_FADE
+    if (movement_state.light_on) {
+        // Start premium fade-out animation (500ms, 32 steps @ 64 Hz)
+        movement_volatile_state.led_fade.mode = 2;  // fade-out
+        movement_volatile_state.led_fade.step = 0;
+        // Capture current color as fade-out target
+        movement_volatile_state.led_fade.target_r = movement_state.settings.bit.led_red_color | movement_state.settings.bit.led_red_color << 4;
+        movement_volatile_state.led_fade.target_g = movement_state.settings.bit.led_green_color | movement_state.settings.bit.led_green_color << 4;
+        movement_volatile_state.led_fade.target_b = movement_state.settings.bit.led_blue_color | movement_state.settings.bit.led_blue_color << 4;
+        // Note: movement_state.light_on will be set to false by cb_led_fade_step when fade completes
+    } else {
+        watch_set_led_off();
+    }
+#else
+    // Instant-off (original behavior)
+    movement_state.light_on = false;
     watch_set_led_off();
+#endif
 }
 
 bool movement_default_loop_handler(movement_event_t event) {
@@ -713,18 +843,31 @@ bool movement_default_loop_handler(movement_event_t event) {
             // Phase 4D: Long-press MODE from any face → exit playlist mode if active
             if (movement_state.playlist_mode_active) {
                 movement_state.playlist_mode_active = false;
-                movement_move_to_face(1);  // Return to clock (index 1)
+                movement_move_to_face(0);  // Return to face 0 (wyoscan)
                 break;
             }
 #endif
             if (MOVEMENT_SECONDARY_FACE_INDEX && movement_state.current_face_idx == 0) {
+                // From face 0 → enter secondary
                 movement_move_to_face(MOVEMENT_SECONDARY_FACE_INDEX);
+            } else if (movement_state.current_face_idx >= MOVEMENT_TERTIARY_FACE_INDEX) {
+                // From tertiary → return to face 0
+                movement_move_to_face(0);
+            } else if (movement_state.current_face_idx >= MOVEMENT_SECONDARY_FACE_INDEX) {
+                // From secondary → return to face 0
+                movement_move_to_face(0);
             } else {
+                // From primary → return to face 0
                 movement_move_to_face(0);
             }
             break;
 #ifdef PHASE_ENGINE_ENABLED
         case EVENT_ALARM_LONG_PRESS:
+            // Long-press ALARM from face 0 → tertiary navigation (zone faces)
+            if (MOVEMENT_TERTIARY_FACE_INDEX && movement_state.current_face_idx == 0) {
+                movement_move_to_face(MOVEMENT_TERTIARY_FACE_INDEX);
+                break;
+            }
             // Phase 4B: Long-press ALARM from clock → enter phase playlist mode
             if (movement_state.current_face_idx == 1) {  // Clock face (index 1)
                 movement_state.playlist_mode_active = true;
@@ -743,6 +886,7 @@ bool movement_default_loop_handler(movement_event_t event) {
             }
             break;
 #endif
+
         default:
             break;
     }
@@ -757,18 +901,21 @@ bool movement_default_loop_handler(movement_event_t event) {
  * 
  * Zone faces are positioned at indices 2-5 (after wyoscan and clock):
  * - Index 2: emergence_face (ZONE_EMERGENCE)
- * - Index 3: momentum_face (ZONE_MOMENTUM)
- * - Index 4: active_face (ZONE_ACTIVE)
+ * - Index 3: active_face (ZONE_ACTIVE)
+ * - Index 4: momentum_face (ZONE_MOMENTUM)
  * - Index 5: descent_face (ZONE_DESCENT)
  * 
  * @param zone Current zone (0-3)
  * @return Face index (2-5)
  */
 static uint8_t _movement_get_zone_face_index(phase_zone_t zone) {
-    // Zone faces start at index 2 (after wyoscan[0] and clock[1])
-    return 2 + zone;
+    // Map zones to face indices: emergence→2, active→3, momentum→4, descent→5
+    // Zone enum: EMERGENCE=0, MOMENTUM=1, ACTIVE=2, DESCENT=3
+    const uint8_t zone_to_face[4] = {2, 4, 3, 5};  // [EMERGENCE, MOMENTUM, ACTIVE, DESCENT]
+    return zone_to_face[zone];
 }
 #endif
+
 
 void movement_move_to_face(uint8_t watch_face_index) {
     movement_state.watch_face_changed = true;
@@ -782,7 +929,19 @@ void movement_move_to_next_face(void) {
     } else {
         face_max = MOVEMENT_NUM_FACES;
     }
-    movement_move_to_face((movement_state.current_face_idx + 1) % face_max);
+    
+    uint8_t next_idx = (movement_state.current_face_idx + 1) % face_max;
+    
+#ifdef PHASE_ENGINE_ENABLED
+    // Skip tertiary zone faces (2-5) during normal MODE cycling
+    // UNLESS we're in playlist mode (then allow cycling through zones)
+    if (!movement_state.playlist_mode_active && next_idx >= 2 && next_idx <= 5) {
+        next_idx = 6;  // Jump past zone faces to timer
+    }
+#endif
+
+    
+    movement_move_to_face(next_idx);
 }
 
 void movement_schedule_background_task(watch_date_time_t date_time) {
@@ -1193,6 +1352,25 @@ void movement_set_active_hours(movement_active_hours_t settings) {
     watch_store_backup_data(settings.reg, 2);
 }
 
+movement_reserved_t movement_get_reserved(void) {
+    movement_reserved_t settings;
+    settings.reg = watch_get_backup_data(3);
+    
+    // Check if backup register is uninitialized (all zeros or all ones)
+    // Initialize with defaults
+    if (settings.reg == 0 || settings.reg == 0xFFFFFFFF) {
+        settings.bit.phase_engine_enabled = true;  // Default: Phase Engine ON
+        settings.bit.reserved = 0;
+        movement_set_reserved(settings);
+    }
+    
+    return settings;
+}
+
+void movement_set_reserved(movement_reserved_t settings) {
+    watch_store_backup_data(settings.reg, 3);
+}
+
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
 #if __EMSCRIPTEN__
@@ -1339,6 +1517,11 @@ void app_init(void) {
     // this is so movement can be notified even when triggered by a face bypassing movement
     watch_buzzer_register_global_callbacks(cb_buzzer_start, cb_buzzer_stop);
 
+#ifdef SMOOTH_LED_FADE
+    // Register LED fade callback for premium animation (64 Hz via TC0)
+    watch_register_led_fade_callback(cb_led_fade_step);
+#endif
+
     // populate the DST offset cache
     _movement_update_dst_offset_cache();
 
@@ -1481,12 +1664,16 @@ void app_setup(void) {
         memset(&movement_state.phase, 0, sizeof(phase_state_t));
         phase_engine_init(&movement_state.phase);
         
+        // Phase 4E: Initialize sleep tracking and telemetry
+        sleep_data_init(&movement_state.sleep_telemetry);
+        
         // Phase 4A: Initialize sensor state (PR #65 + #66)
         sensors_init(&movement_state.sensors, movement_state.has_lis2dw);
         if (movement_state.has_lis2dw) {
             sensors_configure_accel(&movement_state.sensors);
         }
 #endif
+
 
         movement_request_tick_frequency(1);
 
@@ -1630,6 +1817,30 @@ bool app_loop(void) {
         movement_volatile_state.accelerometer_woke = false;
         _movement_handle_accelerometer_wake();
     }
+
+#ifdef PHASE_ENGINE_ENABLED
+    // Phase 4E: Track per-second light exposure and epoch sleep state
+    if (pending_events & (1 << EVENT_TICK)) {
+        // Tick epoch counter for light exposure tracking
+        sensors_tick_epoch(&movement_state.sensors);
+        
+        // Every 30 seconds, record sleep epoch if in sleep window and confirmed asleep
+        movement_state.sensors.epoch_seconds++;
+        if (movement_state.sensors.epoch_seconds >= 30) {
+            movement_state.sensors.epoch_seconds = 0;
+            
+            // Record epoch if we're in sleep window and confirmed asleep
+            if (is_sleep_window() && is_confirmed_asleep()) {
+                uint8_t movement_count = sensors_get_epoch_movement_count(&movement_state.sensors);
+                sleep_data_record_epoch(&movement_state.sleep_telemetry, movement_count);
+                
+                // Reset epoch counter for next 30-second window
+                movement_state.sensors.epoch_movement_count = 0;
+            }
+        }
+    }
+#endif
+
 
     // handle any button up/down events that occurred, e.g. schedule longpress timeouts, reset inactivity, etc.
     _movement_handle_button_presses(pending_events);
@@ -1864,7 +2075,12 @@ void cb_alarm_btn_timeout_interrupt(void) {
 }
 
 void cb_led_timeout_interrupt(void) {
+#ifdef SMOOTH_LED_FADE
+    // Trigger smooth fade-out instead of instant off
     movement_volatile_state.turn_led_off = true;
+#else
+    movement_volatile_state.turn_led_off = true;
+#endif
 }
 
 void cb_resign_timeout_interrupt(void) {
@@ -1874,6 +2090,56 @@ void cb_resign_timeout_interrupt(void) {
 void cb_sleep_timeout_interrupt(void) {
     movement_request_sleep();
 }
+
+#ifdef SMOOTH_LED_FADE
+void cb_led_fade_step(void) {
+    // Advances LED fade animation one step (called at 64 Hz by TC0)
+    if (movement_volatile_state.led_fade.mode == 0) return;
+    
+    movement_volatile_state.led_fade.step++;
+    
+    uint8_t max_steps = (movement_volatile_state.led_fade.mode == 1) ? 20 : 32;
+    
+    if (movement_volatile_state.led_fade.step >= max_steps) {
+        // Fade complete
+        if (movement_volatile_state.led_fade.mode == 1) {
+            // Fade-in complete - hold at target color
+            watch_set_led_color_rgb(
+                movement_volatile_state.led_fade.target_r,
+                movement_volatile_state.led_fade.target_g,
+                movement_volatile_state.led_fade.target_b
+            );
+        } else {
+            // Fade-out complete - turn off
+            watch_set_led_off();
+            movement_state.light_on = false;
+        }
+        movement_volatile_state.led_fade.mode = 0;
+        return;
+    }
+    
+    // Quadratic gamma curve: brightness = (step² × target) / max_steps²
+    uint16_t step_sq = movement_volatile_state.led_fade.step * movement_volatile_state.led_fade.step;
+    uint16_t max_sq = max_steps * max_steps;
+    
+    uint8_t r, g, b;
+    if (movement_volatile_state.led_fade.mode == 1) {
+        // Fade-in
+        r = (step_sq * movement_volatile_state.led_fade.target_r) / max_sq;
+        g = (step_sq * movement_volatile_state.led_fade.target_g) / max_sq;
+        b = (step_sq * movement_volatile_state.led_fade.target_b) / max_sq;
+    } else {
+        // Fade-out (reverse)
+        uint16_t remaining_sq = (max_steps - movement_volatile_state.led_fade.step) * 
+                                (max_steps - movement_volatile_state.led_fade.step);
+        r = (remaining_sq * movement_volatile_state.led_fade.target_r) / max_sq;
+        g = (remaining_sq * movement_volatile_state.led_fade.target_g) / max_sq;
+        b = (remaining_sq * movement_volatile_state.led_fade.target_b) / max_sq;
+    }
+    
+    watch_set_led_color_rgb(r, g, b);
+}
+#endif
 
 void cb_alarm_btn_extwake(void) {
     // wake up!
@@ -1899,6 +2165,19 @@ void cb_tick(void) {
 
 void cb_accelerometer_event(void) {
     movement_volatile_state.has_pending_accelerometer = true;
+    
+#ifdef PHASE_ENGINE_ENABLED
+    // Phase 4E: Increment epoch movement counter for sleep tracking
+    if (movement_state.sensors.epoch_movement_count < 255) {
+        movement_state.sensors.epoch_movement_count++;
+    }
+    
+    // Also increment hourly counter for telemetry
+    if (movement_state.sensors.hourly_movement_count < 255) {
+        movement_state.sensors.hourly_movement_count++;
+    }
+#endif
+
 }
 
 // Active Hours Sleep Mode Support (Stream 1: Core Logic)
@@ -1960,19 +2239,21 @@ uint8_t sleep_tracking_get_current_bin(void) {
     uint8_t hour = now.unit.hour;
     uint8_t minute = now.unit.minute;
 
-    // Sleep end hour is user-configurable: active hours start = wake-up time (BKUP[2])
+    // Sleep window is user-configurable via active hours (BKUP[2])
+    // Sleep start = end of active hours, sleep end = start of active hours
     movement_active_hours_t active_hours = movement_get_active_hours();
+    uint8_t sleep_start_hour = active_hours.bit.end_quarter_hours / 4;
     uint8_t sleep_end_hour = active_hours.bit.start_quarter_hours / 4;
 
-    // Sleep window runs from SLEEP_START_HOUR until the configured wake-up hour
+    // Calculate which 15-minute bin we're in
     int bin = -1;
     
-    if (hour >= SLEEP_START_HOUR) {
-        // Evening portion (e.g. 23:00-23:59) -> bins 0-3
-        bin = (hour - SLEEP_START_HOUR) * 4 + (minute / SLEEP_BIN_MINUTES);
+    if (hour >= sleep_start_hour) {
+        // Evening portion (e.g. 22:00-23:59) -> bins 0-7
+        bin = (hour - sleep_start_hour) * 4 + (minute / SLEEP_BIN_MINUTES);
     } else if (hour < sleep_end_hour) {
-        // Post-midnight portion (e.g. 00:00 to wake hour) -> bins 4+
-        bin = ((24 - SLEEP_START_HOUR) + hour) * 4 + (minute / SLEEP_BIN_MINUTES);
+        // Post-midnight portion (e.g. 00:00 to wake hour) -> bins 8+
+        bin = ((24 - sleep_start_hour) + hour) * 4 + (minute / SLEEP_BIN_MINUTES);
     }
     
     if (bin < 0 || bin >= SLEEP_BINS_PER_NIGHT) {

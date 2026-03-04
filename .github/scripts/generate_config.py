@@ -28,6 +28,18 @@ VALID_SIGNAL_TUNES = {
     'SIGNAL_TUNE_MGS_CODEC',
     'SIGNAL_TUNE_POWER_RANGERS',
     'SIGNAL_TUNE_ZELDA_SECRET',
+    'SIGNAL_TUNE_NOKIA',
+    'SIGNAL_TUNE_TETRIS',
+    'SIGNAL_TUNE_IMPERIAL',
+    'SIGNAL_TUNE_POKEMON',
+    'SIGNAL_TUNE_VICTORY',
+    'SIGNAL_TUNE_TRITONE',
+    'SIGNAL_TUNE_SOSUMI',
+    'SIGNAL_TUNE_OLDPHONE',
+    'SIGNAL_TUNE_MGS_ALERT',
+    'SIGNAL_TUNE_SONIC',
+    'SIGNAL_TUNE_PACMAN',
+    'SIGNAL_TUNE_WINERROR',
 }
 
 DEFAULTS_TEMPLATE = """\
@@ -53,9 +65,10 @@ TEMPLATE = """\
 #ifndef MOVEMENT_CONFIG_H_
 #define MOVEMENT_CONFIG_H_
 
+{phase_engine_define}
+
 #include "movement_faces.h"
 
-{phase_engine_define}
 const watch_face_t watch_faces[] = {{
 {face_list}
 }};
@@ -77,6 +90,9 @@ const watch_face_t watch_faces[] = {{
 #define MOVEMENT_DEFAULT_RED_COLOR {led_red_hex}
 #define MOVEMENT_DEFAULT_GREEN_COLOR {led_green_hex}
 #define MOVEMENT_DEFAULT_BLUE_COLOR {led_blue_hex}
+
+/* Enable smooth LED fade animation (PR #71 - optional feature) */
+{smooth_led_fade_define}
 
 /* Set to true for 24h mode or false for 12h mode */
 #define MOVEMENT_DEFAULT_24H_MODE {clock_24h_bool}
@@ -124,6 +140,15 @@ const watch_face_t watch_faces[] = {{
  * with multiple button presses firing.
  */
 #define MOVEMENT_DEBOUNCE_TICKS 0
+
+/* Phase engine zone boundaries (0-100 scale).
+ * Defines the upper boundary of each phase zone:
+ * - Emergence: 0 to zone_emergence_max
+ * - Momentum: zone_emergence_max+1 to zone_momentum_max
+ * - Active: zone_momentum_max+1 to zone_active_max
+ * - Recovery: zone_active_max+1 to 100
+ */
+{zone_defines}
 
 #endif /* MOVEMENT_CONFIG_H_ */
 """
@@ -180,6 +205,9 @@ def load_registry(registry_path):
 
 def validate_face(face_id, registry):
     """Return True if face_id is valid according to the registry."""
+    # Allow divider markers (__secondary__, __tertiary__, etc.)
+    if face_id.startswith('__'):
+        return True
     if registry is None:
         return True
     faces = registry.get("faces", registry)
@@ -225,6 +253,17 @@ def validate_quarter_hours(value, name):
     return v
 
 
+def validate_zone_boundary(value, name):
+    """Validate zone boundary value (0-100)."""
+    try:
+        v = int(value)
+    except ValueError:
+        raise ValueError("{} must be an integer, got {!r}".format(name, value))
+    if v < 0 or v > 100:
+        raise ValueError("{} must be 0-100, got {}".format(name, v))
+    return v
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate movement_config.h for a custom firmware build."
@@ -260,6 +299,11 @@ def main():
         help="Default LED blue intensity (0-15).",
     )
     parser.add_argument(
+        "--smooth-led-fade",
+        default="false",
+        help="Enable smooth LED fade animation (PR #71) (true/false).",
+    )
+    parser.add_argument(
         "--button-sound",
         default="true",
         help="Enable button click sound by default (true/false).",
@@ -268,6 +312,21 @@ def main():
         "--signal-tune",
         default="SIGNAL_TUNE_DEFAULT",
         help="Signal tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
+        "--hourly-chime-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Hourly chime tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
+        "--alarm-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Alarm tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
+    )
+    parser.add_argument(
+        "--smart-alarm-tune",
+        default="SIGNAL_TUNE_DEFAULT",
+        help="Smart alarm tune define name (e.g. SIGNAL_TUNE_DEFAULT).",
     )
     parser.add_argument(
         "--active-hours-start",
@@ -290,6 +349,26 @@ def main():
         help="Enable phase engine (true/false).",
     )
     parser.add_argument(
+        "--zone-emergence-max",
+        default="25",
+        help="Zone boundary: Emergence max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-momentum-max",
+        default="50",
+        help="Zone boundary: Momentum max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-active-max",
+        default="75",
+        help="Zone boundary: Active max (0-100).",
+    )
+    parser.add_argument(
+        "--zone-swap-enabled",
+        default="0",
+        help="Swap Active/Momentum zones (0=off, 1=on).",
+    )
+    parser.add_argument(
         "--output",
         default="movement_config.h",
         help="Output file path.",
@@ -298,6 +377,11 @@ def main():
         "--defaults-output",
         default=None,
         help="Output path for movement_defaults.h (default: same dir as --output).",
+    )
+    parser.add_argument(
+        "--tertiary-index",
+        default=None,
+        help="Index where tertiary faces start (for phase engine zone faces).",
     )
     parser.add_argument(
         "--registry",
@@ -328,6 +412,18 @@ def main():
         print("ERROR: {}".format(exc), file=sys.stderr)
         sys.exit(1)
 
+    # Validate three-tune parameters (hourly chime, alarm, smart alarm)
+    # NOTE: Firmware currently uses only one global SIGNAL_TUNE define.
+    # For backward compatibility, we use hourly_chime_tune as the single tune.
+    # Separate alarm tunes (alarm_tune, smart_alarm_tune) are for future firmware support.
+    try:
+        hourly_chime_tune = validate_signal_tune(args.hourly_chime_tune)
+        alarm_tune = validate_signal_tune(args.alarm_tune)
+        smart_alarm_tune = validate_signal_tune(args.smart_alarm_tune)
+    except ValueError as exc:
+        print("ERROR: {}".format(exc), file=sys.stderr)
+        sys.exit(1)
+
     # Load and validate against registry
     registry = load_registry(args.registry)
     unknown = []
@@ -342,12 +438,73 @@ def main():
         sys.exit(1)
 
     # Build face list for the C array
+    # Phase 4E: Handle tertiary faces for phase engine
+    
+    # Parse tertiary_index if provided
+    tertiary_index_value = None
+    if args.tertiary_index is not None:
+        try:
+            tertiary_index_value = int(args.tertiary_index)
+        except ValueError:
+            print("ERROR: --tertiary-index must be an integer, got '{}'.".format(
+                args.tertiary_index
+            ), file=sys.stderr)
+            sys.exit(1)
+    
+    # Extract all non-divider faces
+    all_faces = [fid for fid in face_ids if not fid.startswith('__')]
+    
+    # Extract tertiary faces if tertiary_index provided
+    tertiary_faces = []
+    remaining_faces = all_faces
+    if tertiary_index_value is not None:
+        if tertiary_index_value < 0 or tertiary_index_value > len(all_faces):
+            print("ERROR: --tertiary-index {} out of range (0-{})".format(
+                tertiary_index_value, len(all_faces)
+            ), file=sys.stderr)
+            sys.exit(1)
+        
+        # Extract 4 zone faces starting at tertiary_index
+        # These should be: emergence_face, active_face, momentum_face, descent_face
+        tertiary_faces = all_faces[tertiary_index_value:tertiary_index_value+4]
+        if len(tertiary_faces) != 4:
+            print("ERROR: Expected 4 tertiary faces at index {}, found {}".format(
+                tertiary_index_value, len(tertiary_faces)
+            ), file=sys.stderr)
+            sys.exit(1)
+        
+        # Remove tertiary faces from main list
+        remaining_faces = all_faces[:tertiary_index_value] + all_faces[tertiary_index_value+4:]
+    
+    # Build face list with tertiary faces at indices 2-5
     face_list_lines = []
-    for face_id in face_ids:
-        face_list_lines.append("    {},".format(face_id))
-    # Strip trailing comma from last entry
+    if tertiary_faces:
+        # Indices 0-1: first two remaining faces
+        for i in range(min(2, len(remaining_faces))):
+            face_list_lines.append("    {},".format(remaining_faces[i]))
+        
+        # Indices 2-5: tertiary faces wrapped in #ifdef
+        face_list_lines.append("#ifdef PHASE_ENGINE_ENABLED")
+        for face_id in tertiary_faces:
+            face_list_lines.append("    {},".format(face_id))
+        face_list_lines.append("#endif")
+        
+        # Remaining faces (index 2+ of remaining_faces)
+        for i in range(2, len(remaining_faces)):
+            face_list_lines.append("    {},".format(remaining_faces[i]))
+    else:
+        # No tertiary faces - simple flat list
+        for face_id in remaining_faces:
+            face_list_lines.append("    {},".format(face_id))
+    
+    # Strip trailing comma from last entry before any #endif
     if face_list_lines:
-        face_list_lines[-1] = face_list_lines[-1].rstrip(",")
+        # Find last line that's not a preprocessor directive
+        for i in range(len(face_list_lines) - 1, -1, -1):
+            if not face_list_lines[i].startswith('#'):
+                face_list_lines[i] = face_list_lines[i].rstrip(',')
+                break
+    
     face_list = "\n".join(face_list_lines)
 
     # Parse and validate numeric/boolean inputs
@@ -361,6 +518,19 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+    
+    # Adjust secondary_index if tertiary faces were moved to indices 2-5
+    if tertiary_index_value is not None and secondary_index >= 2:
+        if secondary_index < tertiary_index_value:
+            # Secondary index is before tertiary block, shift right by 4
+            secondary_index += 4
+        elif secondary_index < tertiary_index_value + 4:
+            # ERROR: Secondary index points into tertiary block
+            print("ERROR: secondary_index {} is in the tertiary block ({}-{})".format(
+                secondary_index, tertiary_index_value, tertiary_index_value+3
+            ), file=sys.stderr)
+            sys.exit(1)
+        # else: secondary_index >= tertiary_index_value+4, no change needed
 
     try:
         led_red = int(args.led_red)
@@ -379,6 +549,7 @@ def main():
             sys.exit(1)
 
     clock_24h = parse_bool(args.clock_24h)
+    smooth_led_fade = parse_bool(args.smooth_led_fade)
     button_sound = parse_bool(args.button_sound)
 
     # Validate active hours inputs
@@ -397,22 +568,63 @@ def main():
     active_hours_enabled = parse_bool(args.active_hours_enabled)
     phase_engine_enabled = parse_bool(args.phase_engine)
 
+    # Validate zone boundary inputs
+    try:
+        zone_emergence_max = validate_zone_boundary(args.zone_emergence_max, "--zone-emergence-max")
+        zone_momentum_max = validate_zone_boundary(args.zone_momentum_max, "--zone-momentum-max")
+        zone_active_max = validate_zone_boundary(args.zone_active_max, "--zone-active-max")
+    except ValueError as exc:
+        print("ERROR: {}".format(exc), file=sys.stderr)
+        sys.exit(1)
+
+    # Validate zone swap enabled (0 or 1)
+    try:
+        zone_swap_enabled = int(args.zone_swap_enabled)
+    except ValueError:
+        print("ERROR: --zone-swap-enabled must be an integer, got '{}'.".format(
+            args.zone_swap_enabled
+        ), file=sys.stderr)
+        sys.exit(1)
+    if zone_swap_enabled not in (0, 1):
+        print("ERROR: --zone-swap-enabled must be 0 or 1, got {}.".format(
+            zone_swap_enabled
+        ), file=sys.stderr)
+        sys.exit(1)
+
     # Generate phase engine define if enabled
     phase_engine_define = ""
     if phase_engine_enabled:
         phase_engine_define = "#define PHASE_ENGINE_ENABLED\n"
 
+    # Generate zone configuration defines
+    zone_defines = ""
+    if phase_engine_enabled:
+        zone_defines = "#define PHASE_ZONE_EMERGENCE_MAX {}\n".format(zone_emergence_max)
+        zone_defines += "#define PHASE_ZONE_MOMENTUM_MAX {}\n".format(zone_momentum_max)
+        zone_defines += "#define PHASE_ZONE_ACTIVE_MAX {}\n".format(zone_active_max)
+        zone_defines += "#define PHASE_ZONE_SWAP_ENABLED {}".format(zone_swap_enabled)
+
+    # Generate smooth LED fade define if enabled (PR #71)
+    smooth_led_fade_define = ""
+    if smooth_led_fade:
+        smooth_led_fade_define = "#define SMOOTH_LED_FADE"
+
     # Render template
+    # NOTE: Currently using hourly_chime_tune as the single SIGNAL_TUNE define
+    # for backward compatibility. Future firmware will support separate tunes
+    # for hourly chime, alarm, and smart alarm.
     output = TEMPLATE.format(
         phase_engine_define=phase_engine_define,
         face_list=face_list,
         secondary_index=secondary_index,
-        signal_tune=signal_tune,
+        signal_tune=hourly_chime_tune,
         led_red_hex=int_to_hex(led_red),
         led_green_hex=int_to_hex(led_green),
         led_blue_hex=int_to_hex(led_blue),
+        smooth_led_fade_define=smooth_led_fade_define,
         clock_24h_bool="true" if clock_24h else "false",
         button_sound_bool="true" if button_sound else "false",
+        zone_defines=zone_defines,
     )
 
     with open(args.output, "w") as f:

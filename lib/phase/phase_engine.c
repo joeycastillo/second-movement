@@ -21,34 +21,34 @@
 /*
  * Integer cosine lookup table (24 entries, one per hour)
  * Values scaled to ±1000 to preserve precision
- * cos(2π * hour / 24) * 1000
+ * cos(2π * (hour - 14) / 24) * 1000
  * Peak at hour 14 (2 PM), trough at hour 2 (2 AM)
  */
 static const int16_t cosine_lut_24[24] = {
-    866,   // 00:00
-    707,   // 01:00
-    500,   // 02:00
-    259,   // 03:00
-    0,     // 04:00
-    -259,  // 05:00
-    -500,  // 06:00
-    -707,  // 07:00
-    -866,  // 08:00
+    500,   // 00:00
+    259,   // 01:00
+    0,     // 02:00 (TROUGH)
+    -259,  // 03:00
+    -500,  // 04:00
+    -707,  // 05:00
+    -866,  // 06:00
+    -966,  // 07:00
+    -1000, // 08:00
     -966,  // 09:00
-    -1000, // 10:00
-    -966,  // 11:00
-    -866,  // 12:00
-    -707,  // 13:00
-    -500,  // 14:00
-    -259,  // 15:00
-    0,     // 16:00
-    259,   // 17:00
-    500,   // 18:00
-    707,   // 19:00
-    866,   // 20:00
+    -866,  // 10:00
+    -707,  // 11:00
+    -500,  // 12:00
+    -259,  // 13:00
+    0,     // 14:00 (PEAK)
+    259,   // 15:00
+    500,   // 16:00
+    707,   // 17:00
+    866,   // 18:00
+    966,   // 19:00
+    1000,  // 20:00
     966,   // 21:00
-    1000,  // 22:00
-    966    // 23:00
+    866,   // 22:00
+    707    // 23:00
 };
 
 void phase_engine_init(phase_state_t *state) {
@@ -110,11 +110,17 @@ uint16_t phase_compute(phase_state_t *state,
     temp_dev = (temp_dev > 300) ? 30 : (temp_dev / 10);
     
     // Light deviation (simplified scoring)
-    // Expected light during day (6-18), darkness at night
-    uint16_t expected_light = (hour >= 6 && hour < 18) ? 500 : 50;
-    int16_t light_dev = (light_lux > expected_light)
-                       ? (light_lux - expected_light)
-                       : (expected_light - light_lux);
+    // Use homebase daylight data to determine day/night
+    // Approximate sunrise: 12:00 - (daylight_min / 120) hours
+    // Approximate sunset: 12:00 + (daylight_min / 120) hours
+    uint16_t daylight_min = baseline->expected_daylight_min;
+    uint8_t sunrise_hour = 12 - (daylight_min / 120);
+    uint8_t sunset_hour = 12 + (daylight_min / 120);
+    
+    uint16_t expected_light = (hour >= sunrise_hour && hour < sunset_hour) ? 500 : 50;
+    int32_t light_dev = (light_lux > expected_light)
+                       ? ((int32_t)light_lux - (int32_t)expected_light)
+                       : ((int32_t)expected_light - (int32_t)light_lux);
     // Scale to penalty (max ~20)
     light_dev = (light_dev > 1000) ? 20 : (light_dev / 50);
     
@@ -211,33 +217,169 @@ int16_t phase_get_trend(const phase_state_t *state, uint8_t hours) {
     return trend;
 }
 
-uint8_t phase_get_recommendation(uint16_t phase_score, uint8_t hour) {
+uint8_t phase_get_recommendation(uint16_t phase_score, 
+                                 uint8_t hour,
+                                 bool active_hours_enabled,
+                                 uint8_t active_start,
+                                 uint8_t active_end) {
     // Recommendation codes:
     // 0 = rest
     // 1 = moderate activity
     // 2 = active
     // 3 = peak performance
     
-    // Night hours (22-5): prefer rest/moderate
-    if (hour >= 22 || hour <= 5) {
-        if (phase_score < 30) return 0;  // Rest
-        if (phase_score < 70) return 1;  // Moderate
-        return 1;  // Even high scores -> moderate at night
+    // Check if we're within active hours
+    bool in_active_hours;
+    if (!active_hours_enabled) {
+        in_active_hours = true;  // If disabled, always active
+    } else if (active_start < active_end) {
+        in_active_hours = (hour >= active_start && hour < active_end);
+    } else if (active_start > active_end) {
+        // Wraparound case (e.g., 22:00-06:00)
+        in_active_hours = (hour >= active_start || hour < active_end);
+    } else {
+        // start == end: 24-hour active
+        in_active_hours = true;
     }
     
-    // Early morning (6-11): gradual ramp
-    if (hour >= 6 && hour <= 11) {
+    // Outside active hours: prefer rest/moderate only
+    if (!in_active_hours) {
+        if (phase_score < 30) return 0;  // Rest
+        if (phase_score < 70) return 1;  // Moderate
+        return 1;  // Even high scores -> moderate when resting
+    }
+    
+    // Within active hours: calculate activity periods
+    // Calculate active duration (handling wraparound)
+    uint8_t active_duration;
+    if (active_start < active_end) {
+        active_duration = active_end - active_start;
+    } else {
+        active_duration = (24 - active_start) + active_end;
+    }
+    
+    // Calculate position within active hours (0 to active_duration-1)
+    uint8_t hours_into_active;
+    if (active_start < active_end) {
+        hours_into_active = hour - active_start;
+    } else {
+        // Wraparound case
+        if (hour >= active_start) {
+            hours_into_active = hour - active_start;
+        } else {
+            hours_into_active = (24 - active_start) + hour;
+        }
+    }
+    
+    // Define activity periods:
+    // First 25% = early morning (gradual ramp)
+    // Middle 50% = peak activity window
+    // Last 25% = wind-down period
+    uint8_t early_morning_end = active_duration / 4;  // First 25%
+    uint8_t wind_down_start = (active_duration * 3) / 4;  // Last 25%
+    
+    if (hours_into_active < early_morning_end) {
+        // Early active hours: gradual ramp
+        if (phase_score < 30) return 0;
+        if (phase_score < 50) return 1;
+        if (phase_score < 70) return 2;
+        return 3;
+    } else if (hours_into_active >= wind_down_start) {
+        // Wind-down period: moderate activity preferred
+        if (phase_score < 30) return 0;
+        if (phase_score < 50) return 1;
+        if (phase_score < 70) return 2;
+        return 2;  // Cap at active, not peak
+    } else {
+        // Peak activity window: full range available
         if (phase_score < 30) return 0;
         if (phase_score < 50) return 1;
         if (phase_score < 70) return 2;
         return 3;
     }
+}
+
+// Helper: Check if current hour is within active hours
+static bool is_active_hours(uint8_t hour, 
+                           bool enabled, 
+                           uint8_t start, 
+                           uint8_t end) {
+    if (!enabled) {
+        return true;  // If disabled, always active
+    }
     
-    // Afternoon/evening (12-21): peak activity window
-    if (phase_score < 30) return 0;
-    if (phase_score < 50) return 1;
-    if (phase_score < 70) return 2;
-    return 3;
+    // Handle wraparound case (e.g., 22:00 - 06:00)
+    if (start < end) {
+        return (hour >= start && hour < end);
+    } else if (start > end) {
+        return (hour >= start || hour < end);
+    } else {
+        // start == end: 24-hour active
+        return true;
+    }
+}
+
+void phase_detect_anomalies(phase_state_t *state,
+                            int16_t sd,
+                            uint8_t em,
+                            uint8_t energy,
+                            uint8_t comfort,
+                            uint8_t hour,
+                            bool active_hours_enabled,
+                            uint8_t active_start,
+                            uint8_t active_end) {
+    if (!state || !state->initialized) {
+        return;
+    }
+    
+    // Check if we're in active hours
+    bool in_active_hours = is_active_hours(hour, active_hours_enabled, 
+                                          active_start, active_end);
+    
+    // Store previous anomaly flags to detect new anomalies
+    uint8_t prev_flags = state->anomaly_flags;
+    uint8_t new_flags = ANOMALY_NONE;
+    
+    // Detect Sleep Debt anomalies (midpoint 30, threshold ±20)
+    // SD range: -60 to +120, midpoint = 30
+    if (sd >= 50) {  // 30 + 20
+        new_flags |= ANOMALY_SD_HIGH;
+    } else if (sd <= 10) {  // 30 - 20
+        new_flags |= ANOMALY_SD_LOW;
+    }
+    
+    // Detect Emotional anomalies (midpoint 50, threshold ±20)
+    if (em >= 70) {  // 50 + 20
+        new_flags |= ANOMALY_EM_HIGH;
+    } else if (em <= 30) {  // 50 - 20
+        new_flags |= ANOMALY_EM_LOW;
+    }
+    
+    // Detect Energy anomalies (midpoint 50, threshold ±20)
+    if (energy >= 70) {
+        new_flags |= ANOMALY_ENERGY_HIGH;
+    } else if (energy <= 30) {
+        new_flags |= ANOMALY_ENERGY_LOW;
+    }
+    
+    // Detect Comfort anomalies (midpoint 50, threshold ±20)
+    if (comfort >= 70) {
+        new_flags |= ANOMALY_COMFORT_HIGH;
+    } else if (comfort <= 30) {
+        new_flags |= ANOMALY_COMFORT_LOW;
+    }
+    
+    // Update state
+    state->anomaly_flags = new_flags;
+    
+    // Trigger soft chime if new anomalies detected during active hours
+    // Only chime if there are new flags that weren't present before
+    uint8_t newly_detected = new_flags & ~prev_flags;
+    
+    if (in_active_hours && newly_detected != ANOMALY_NONE) {
+        // Soft chime: C7 @ 80ms
+        watch_buzzer_play_note(BUZZER_NOTE_C7, 80);
+    }
 }
 
 // Helper: Check if current hour is within active hours

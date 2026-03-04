@@ -142,6 +142,17 @@ void metrics_load_bkup(metrics_engine_t *engine);
  */
 void metrics_set_wake_onset(metrics_engine_t *engine, uint8_t hour, uint8_t minute);
 
+/**
+ * Get dominant metric ID for current zone.
+ * Determines which metric (SD/EM/WK/Comfort) has highest deviation from neutral (50).
+ * Used for Phase 4E telemetry to track which metric is driving zone state.
+ * 
+ * @param snapshot Current metric values
+ * @param zone Current phase zone (0-3: Emergence/Momentum/Active/Descent)
+ * @return Dominant metric ID (0=SD, 1=EM, 2=WK, 3=Comfort)
+ */
+uint8_t metrics_get_dominant(const metrics_snapshot_t *snapshot, uint8_t zone);
+
 #endif // PHASE_ENGINE_ENABLED
 
 #endif // METRICS_H_

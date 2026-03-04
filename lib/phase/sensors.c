@@ -79,6 +79,14 @@ void sensors_update(struct sensor_state_t *state) {
         if (is_awake) {
             state->motion_active = true;
             state->inactivity_minutes = 0;
+            
+            // Phase 4E: Count movement interrupt for sleep tracking
+            if (state->epoch_movement_count < 255) {
+                state->epoch_movement_count++;
+            }
+            if (state->hourly_movement_count < 255) {
+                state->hourly_movement_count++;
+            }
         } else if (is_sleeping) {
             state->inactivity_minutes += 15;
             if (state->inactivity_minutes >= SENSOR_INACTIVITY_MIN) {
@@ -213,7 +221,8 @@ void sensors_sample_temperature(struct sensor_state_t *state) {
         state->temperature_c10 = 200;  // 20.0°C (room temperature)
     } else {
         // Convert float to 0.1°C units with rounding
-        state->temperature_c10 = (uint16_t)((temp_c * 10.0f) + 0.5f);
+        // Use int16_t to support negative temperatures (e.g., -30°C → -300)
+        state->temperature_c10 = (int16_t)((temp_c * 10.0f) + (temp_c >= 0 ? 0.5f : -0.5f));
     }
 }
 
@@ -221,8 +230,47 @@ uint16_t sensors_get_lux_avg(const struct sensor_state_t *state) {
     return state ? state->lux_avg : 0;
 }
 
-uint16_t sensors_get_temperature_c10(const struct sensor_state_t *state) {
+int16_t sensors_get_temperature_c10(const struct sensor_state_t *state) {
     return state ? state->temperature_c10 : 0;
+}
+
+// ============================================================================
+// Phase 4E: Sleep Tracking Helpers
+// ============================================================================
+
+void sensors_tick_epoch(struct sensor_state_t *state) {
+    if (!state || !state->initialized) {
+        return;
+    }
+    
+    state->epoch_seconds++;
+    
+    // Check if light is currently detected (lux > threshold)
+    // Threshold: 10 lux (dim light detection)
+    if (state->lux_avg > 10 && state->hourly_light_minutes < 60) {
+        state->hourly_light_minutes++;
+    }
+}
+
+uint8_t sensors_get_epoch_movement_count(const struct sensor_state_t *state) {
+    return state ? state->epoch_movement_count : 0;
+}
+
+void sensors_reset_hourly_counters(struct sensor_state_t *state) {
+    if (!state || !state->initialized) {
+        return;
+    }
+    
+    state->hourly_light_minutes = 0;
+    state->hourly_movement_count = 0;
+}
+
+uint8_t sensors_get_hourly_light_minutes(const struct sensor_state_t *state) {
+    return state ? state->hourly_light_minutes : 0;
+}
+
+uint8_t sensors_get_hourly_movement_count(const struct sensor_state_t *state) {
+    return state ? state->hourly_movement_count : 0;
 }
 
 #endif // PHASE_ENGINE_ENABLED

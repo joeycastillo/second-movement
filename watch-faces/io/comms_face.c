@@ -13,19 +13,59 @@
 #include <stdio.h>
 #include "comms_face.h"
 #include "circadian_score.h"
+#include "movement.h"
+
+// Access to global movement state
+extern volatile movement_state_t movement_state;
 
 #ifdef HAS_IR_SENSOR
 #include "adc.h"
+#endif
+
+#ifdef PHASE_ENGINE_ENABLED
+#include "../../lib/phase/phase_engine.h"
+#include "../../lib/metrics/metrics.h"
+#include "../../lib/phase/sleep_data.h"
+#endif
+
+#ifdef PHASE_ENGINE_ENABLED
+// Phase Engine hourly sample (6 bytes)
+typedef struct {
+    uint8_t hour : 5;          // 0-23
+    uint8_t zone : 2;          // 0-3 (Emergence/Momentum/Active/Descent)
+    uint8_t reserved : 1;      // Future use
+    
+    uint8_t phase_score;       // 0-100
+    uint8_t sd;                // Sleep Debt (offset by 60: 0-180 → -60 to +120)
+    uint8_t em;                // Emotional 0-100
+    uint8_t wk;                // Wake Momentum 0-100
+    uint8_t comfort;           // Comfort 0-100
+} phase_hourly_sample_t;
+
+// Phase Engine export data (prepended to circadian export)
+typedef struct {
+    uint8_t version;           // Protocol version (0x01)
+    uint8_t sample_count;      // Number of samples (0-24)
+    phase_hourly_sample_t samples[24];  // Hourly samples
+} phase_export_t;  // Total: 2 + (6 × 24) = 146 bytes
 #endif
 
 // Hex encoding lookup
 static const char hex_chars[] = "0123456789ABCDEF";
 
 /* Static TX buffers: allocated once in BSS, not per-session on heap.
- * 112 bytes binary + 225 bytes hex (224 chars + NUL) = 337 bytes total.
+ * Phase 4E: 512 bytes binary (146 phase + 112 circadian + 254 sleep/telemetry)
+ * Phase Engine (pre-4E): 256 bytes binary (146 phase + 112 circadian)
+ * Circadian only: 112 bytes binary
+ * Hex buffer: 2x binary + 1 for NUL
  * Safe on embedded: zeroed at startup, reused each transmission. */
+#ifdef PHASE_ENGINE_ENABLED
+static uint8_t _export_buffer[512];  // Phase 4E: increased for sleep tracking + telemetry
+static char    _hex_buffer[1025];    // 512 * 2 + 1 = 1025
+#else
 static uint8_t _export_buffer[112];
 static char    _hex_buffer[225];
+#endif
 
 static void _hex_encode(const uint8_t *data, size_t len, char *out) {
     for (size_t i = 0; i < len; i++) {
@@ -34,6 +74,108 @@ static void _hex_encode(const uint8_t *data, size_t len, char *out) {
     }
     out[len * 2] = '\0';
 }
+
+#ifdef PHASE_ENGINE_ENABLED
+
+// Phase 4E: Export sleep tracking + telemetry data
+static uint16_t _export_sleep_telemetry(uint8_t *buffer, uint16_t max_size, sleep_telemetry_state_t *sleep_state) {
+    if (!sleep_state || max_size < 254) {
+        return 0;  // Need at least 254 bytes
+    }
+    
+    uint16_t offset = 0;
+    
+    // Header (2 bytes)
+    buffer[offset++] = 0x4E;  // Magic: 'N' for Phase 4E
+    buffer[offset++] = 0x01;  // Version 1
+    
+    // Sleep state percentages (4 bytes)
+    buffer[offset++] = sleep_state->sleep_states.deep_pct;
+    buffer[offset++] = sleep_state->sleep_states.light_pct;
+    buffer[offset++] = sleep_state->sleep_states.restless_pct;
+    buffer[offset++] = sleep_state->sleep_states.wake_pct;
+    
+    // Wake events (20 bytes)
+    buffer[offset++] = sleep_state->wake_events.wake_count;
+    buffer[offset++] = (sleep_state->wake_events.total_wake_min >> 8) & 0xFF;
+    buffer[offset++] = sleep_state->wake_events.total_wake_min & 0xFF;
+    buffer[offset++] = sleep_state->wake_events.longest_wake_min;
+    memcpy(buffer + offset, sleep_state->wake_events.wake_times, MAX_WAKE_EVENTS);
+    offset += MAX_WAKE_EVENTS;
+    
+    // Restlessness index (8 bytes)
+    buffer[offset++] = sleep_state->restlessness.today;
+    memcpy(buffer + offset, sleep_state->restlessness.history, 7);
+    offset += 7;
+    
+    // Hourly telemetry (24 × 8 = 192 bytes)
+    for (uint8_t i = 0; i < 24; i++) {
+        hourly_telemetry_t *sample = &sleep_state->telemetry.hours[i];
+        buffer[offset++] = sample->flags;
+        buffer[offset++] = sample->light_exposure_min;
+        buffer[offset++] = sample->movement_count;
+        buffer[offset++] = sample->battery_voltage;
+        buffer[offset++] = sample->confidence_sd;
+        buffer[offset++] = sample->confidence_em;
+        buffer[offset++] = sample->confidence_wk;
+        buffer[offset++] = sample->confidence_comfort;
+    }
+    
+    // Sleep state thresholds (3 bytes)
+    buffer[offset++] = sleep_state->thresholds.light_threshold;
+    buffer[offset++] = sleep_state->thresholds.restless_threshold;
+    buffer[offset++] = sleep_state->thresholds.wake_threshold;
+    
+    // Padding to 254 bytes (offset should be 230, need 24 more)
+    while (offset < 254) {
+        buffer[offset++] = 0x00;
+    }
+    
+    return offset;
+}
+
+static uint16_t _export_phase_data(uint8_t *buffer, uint16_t max_size) {
+    if (max_size < sizeof(phase_export_t)) {
+        return 0;  // Buffer too small
+    }
+    
+    phase_export_t *export = (phase_export_t *)buffer;
+    export->version = 0x01;
+    export->sample_count = 0;
+    
+    // Get phase state (from movement.c global or BKUP registers)
+    // TODO: Access phase_state_t and metrics history
+    // For now, export current snapshot repeated (dogfooding MVP)
+    
+    // Get current hour (unused in MVP but reserved for future hourly buffering)
+    // rtc_date_time_t now = watch_rtc_get_date_time();
+    // uint8_t current_hour = now.unit.hour;
+    
+    // Get current metrics
+    metrics_snapshot_t metrics;
+    metrics_get(NULL, &metrics);
+    
+    // Get current phase/zone (TODO: access playlist state)
+    uint8_t current_zone = 0;  // Default to Emergence
+    uint8_t phase_score = 50;  // Default mid-range
+    
+    // Fill hourly samples (for MVP, just current state)
+    // TODO: In production, read from 24-hour circular buffer
+    for (uint8_t i = 0; i < 24; i++) {
+        export->samples[i].hour = i;
+        export->samples[i].zone = current_zone;
+        export->samples[i].reserved = 0;
+        export->samples[i].phase_score = phase_score;
+        export->samples[i].sd = (uint8_t)(metrics.sd + 60);  // Offset -60..+120 → 0..180
+        export->samples[i].em = metrics.em;
+        export->samples[i].wk = metrics.wk;
+        export->samples[i].comfort = metrics.comfort;
+        export->sample_count++;
+    }
+    
+    return sizeof(phase_export_t);
+}
+#endif
 
 static void _on_transmission_end(void *user_data) {
     comms_face_state_t *state = (comms_face_state_t *)user_data;
@@ -58,13 +200,32 @@ static void _on_error(fesk_result_t error, void *user_data) {
 }
 
 static void _start_transmission(comms_face_state_t *state) {
+    uint16_t offset = 0;
+    
+#ifdef PHASE_ENGINE_ENABLED
+    // Export Phase Engine data first
+    offset = _export_phase_data(_export_buffer, sizeof(_export_buffer));
+    if (offset == 0) {
+        // Export failed, fall back to circadian only
+        offset = 0;
+    }
+    
+    // Phase 4E: Export sleep tracking + telemetry data
+    uint16_t sleep_size = _export_sleep_telemetry(_export_buffer + offset, 
+                                                   sizeof(_export_buffer) - offset,
+                                                   (sleep_telemetry_state_t*)&movement_state.sleep_telemetry);
+    offset += sleep_size;
+#endif
+    
     // Load circadian data for export
     circadian_data_t circadian_data;
     circadian_data_load_from_flash(&circadian_data);
     
-    state->export_size = circadian_data_export_binary(&circadian_data, 
-                                                       _export_buffer, 
-                                                       sizeof(_export_buffer));
+    uint16_t circadian_size = circadian_data_export_binary(&circadian_data, 
+                                                            _export_buffer + offset, 
+                                                            sizeof(_export_buffer) - offset);
+    
+    state->export_size = offset + circadian_size;
     
     if (state->export_size == 0) {
         // No data or buffer too small

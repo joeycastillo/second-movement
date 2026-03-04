@@ -213,4 +213,35 @@ void metrics_set_wake_onset(metrics_engine_t *engine, uint8_t hour, uint8_t minu
     }
 }
 
+uint8_t metrics_get_dominant(const metrics_snapshot_t *snapshot, uint8_t zone) {
+    if (!snapshot) return 0;  // Default to SD
+    
+    // Calculate absolute deviation from neutral (50) for each metric
+    // Higher deviation = more "active" / driving the current state
+    uint8_t sd_dev = (snapshot->sd >= 50) ? (snapshot->sd - 50) : (50 - snapshot->sd);
+    uint8_t em_dev = (snapshot->em >= 50) ? (snapshot->em - 50) : (50 - snapshot->em);
+    uint8_t wk_dev = (snapshot->wk >= 50) ? (snapshot->wk - 50) : (50 - snapshot->wk);
+    uint8_t comfort_dev = (snapshot->comfort >= 50) ? (snapshot->comfort - 50) : (50 - snapshot->comfort);
+    
+    // Find metric with highest deviation
+    uint8_t max_dev = sd_dev;
+    uint8_t dominant = 0;  // DOMINANT_SD
+    
+    if (em_dev > max_dev) {
+        max_dev = em_dev;
+        dominant = 1;  // DOMINANT_EM
+    }
+    
+    if (wk_dev > max_dev) {
+        max_dev = wk_dev;
+        dominant = 2;  // DOMINANT_WK
+    }
+    
+    if (comfort_dev > max_dev) {
+        dominant = 3;  // DOMINANT_COMFORT
+    }
+    
+    return dominant;
+}
+
 #endif // PHASE_ENGINE_ENABLED

@@ -50,9 +50,15 @@ typedef enum {
 } descent_view_index_t;
 
 typedef struct {
-    uint8_t view_index;     // 0-2, cycles through metrics
+    uint8_t view_index;     // 0-2, cycles through metrics (LEGACY - kept for compatibility)
     int8_t prev_sd;         // Previous Sleep Debt value (signed, range -60 to +120)
     uint8_t prev_other[2];  // Previous values for other metrics (CF, EM)
+    
+    // Word display system
+    uint8_t display_mode;   // 0=word1, 1=word2, 2=stats
+    char selected_words[2][9];  // Two selected words (8 chars + null terminator)
+    uint8_t streak_days;    // Consecutive days viewed
+    uint8_t last_check_day; // Day of year for streak tracking (1-366)
 } descent_face_state_t;
 
 void descent_face_setup(uint8_t watch_face_index, void **context_ptr);

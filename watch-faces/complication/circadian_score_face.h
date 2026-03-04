@@ -48,6 +48,7 @@ typedef enum {
     CSFACE_MODE_EF,    // Efficiency
     CSFACE_MODE_AH,    // Active Hours
     CSFACE_MODE_LI,    // Light
+    CSFACE_MODE_RI,    // Restlessness Index (Phase 4E)
     CSFACE_MODE_COUNT
 } circadian_score_face_mode_t;
 

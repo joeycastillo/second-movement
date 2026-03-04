@@ -48,27 +48,37 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
-    wyoscan_face,
-    clock_face,
+    // PRIMARY FACES (MODE cycles through 0 → 13, skipping 2-5)
+    wyoscan_face,               // 0: Always visible
+    clock_face,                 // 1: Main clock (long-press ALARM → playlist)
+    
 #ifdef PHASE_ENGINE_ENABLED
-    emergence_face,
-    momentum_face,
-    active_face,
-    descent_face,
+    // TERTIARY (Zone faces - skipped in MODE rotation, after clocks)
+    emergence_face,             // 2: Emergence (0-25)
+    momentum_face,              // 3: Momentum (26-50)
+    active_face,                // 4: Active (51-75)
+    descent_face,               // 5: Descent (76-100)
 #endif
-    sleep_tracker_face,
-    circadian_score_face,
-    comms_face,
-    world_clock_face,
-    sunrise_sunset_face,
-    moon_phase_face,
-    fast_stopwatch_face,
-    countdown_face,
-    alarm_face,
-    temperature_display_face,
-    voltage_face,
-    settings_face,
-    set_time_face,
+    
+    timer_face,                 // 6: Countdown
+    fast_stopwatch_face,        // 7: Quick timing
+    advanced_alarm_face,        // 8: 16 alarms with day modes
+    sleep_tracker_face,         // 9: Sleep review
+    circadian_score_face,       // 10: Circadian alignment
+    oracle_face,                // 11: Daily 2-word reading
+    world_clock_face,           // 12: Timezone
+    moon_phase_face,            // 13: Lunar phase
+    sunrise_sunset_face,        // 14: Solar timing
+    // End of PRIMARY faces (MODE cycles 0→1→6→7→...→14)
+    
+    // SECONDARY FACES (Long-press MODE from face 0 → 15)
+    comms_face,                 // 15: Phase telemetry export
+    lis2dw_monitor_face,        // 16: Accelerometer data
+#ifdef HAS_IR_SENSOR
+    light_sensor_face,          // 17: Light sensor data
+#endif
+    voltage_face,               // 18: Battery voltage
+    settings_face,              // 19: Configuration
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
@@ -79,13 +89,27 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
-#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)
+#ifdef HAS_IR_SENSOR
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)  // Last 5 faces: comms, lis2dw, light_sensor, voltage, settings
+#else
+#define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 4)  // Last 4 faces: comms, lis2dw, voltage, settings
+#endif
+
+/* Tertiary navigation for phase engine zone faces */
+#ifdef PHASE_ENGINE_ENABLED
+#define MOVEMENT_TERTIARY_FACE_INDEX 2  // Zone faces start at index 2
+#else
+#define MOVEMENT_TERTIARY_FACE_INDEX 0  // No tertiary faces when phase engine disabled
+#endif
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
 #define SIGNAL_TUNE_DEFAULT
 
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
+ * 
+ * Standard boards (red/green/blue PCBs) have bicolor red/green LED only.
+ * Default to green for simplicity and compatibility.
  */
 #define MOVEMENT_DEFAULT_RED_COLOR 0x0
 #define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
