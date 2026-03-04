@@ -24,6 +24,34 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import requests
 
+# City presets for quick generation
+CITY_PRESETS = {
+    'anchorage': {
+        'name': 'Anchorage, AK',
+        'lat': 61.2181,
+        'lon': -149.9003,
+        'tz': 'AKST'
+    },
+    'portland': {
+        'name': 'Portland, OR',
+        'lat': 45.5152,
+        'lon': -122.6784,
+        'tz': 'PST'
+    },
+    'dallas': {
+        'name': 'Dallas, TX',
+        'lat': 32.7767,
+        'lon': -96.7970,
+        'tz': 'CST'
+    },
+    'ny': {
+        'name': 'New York, NY',
+        'lat': 40.7128,
+        'lon': -74.0060,
+        'tz': 'EST'
+    }
+}
+
 
 def fetch_elevation(latitude, longitude):
     """
@@ -516,12 +544,14 @@ Examples:
         """
     )
     
-    parser.add_argument('--lat', type=float, required=True,
+    parser.add_argument('--lat', type=float,
                         help='Latitude in degrees (-90 to 90)')
-    parser.add_argument('--lon', type=float, required=True,
+    parser.add_argument('--lon', type=float,
                         help='Longitude in degrees (-180 to 180)')
-    parser.add_argument('--tz', type=str, required=True,
+    parser.add_argument('--tz', type=str,
                         help='Timezone (AKST, PST, EST, HST, UTC+X, or minutes offset)')
+    parser.add_argument('--city', choices=list(CITY_PRESETS.keys()),
+                        help='Use preset coordinates for common cities (anchorage, portland, dallas, ny)')
     parser.add_argument('--year', type=int, default=2026,
                         help='Year for generation (default: 2026, range: 2000-2099)')
     parser.add_argument('--output', type=Path,
@@ -531,6 +561,22 @@ Examples:
                         help='Skip Open-Meteo API and use sinusoidal temperature model (offline mode)')
     
     args = parser.parse_args()
+    
+    # Apply city preset if specified
+    if args.city:
+        preset = CITY_PRESETS[args.city]
+        if args.lat is None:
+            args.lat = preset['lat']
+        if args.lon is None:
+            args.lon = preset['lon']
+        if args.tz is None:
+            args.tz = preset['tz']
+        print(f"Using preset: {preset['name']}")
+    
+    # Validate that we have lat/lon/tz (either from args or preset)
+    if args.lat is None or args.lon is None or args.tz is None:
+        print("Error: Must provide either --city or all of --lat, --lon, and --tz", file=sys.stderr)
+        return 1
     
     # Validate inputs
     # Note: Year range limitation is due to watch-library date handling
