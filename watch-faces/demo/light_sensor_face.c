@@ -24,13 +24,22 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "light_sensor_face.h"
-#include "tc.h"
-#include "eic.h"
-#include "usb.h"
-#include "adc.h"
+#include "opt3001.h"
+#include "watch_i2c.h"
 
-#ifdef HAS_IR_SENSOR
+#define OPT3001_ADDR 0x44
+
+static const opt3001_Config_t light_sensor_continuous = {
+    .RangeNumber = 0b1100,
+    .ConversionTime = 0,
+    .ModeOfConversionOperation = 0b11,
+};
+
+static const opt3001_Config_t light_sensor_shutdown = {
+    .ModeOfConversionOperation = 0b00,
+};
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -39,11 +48,8 @@ void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void light_sensor_face_activate(void *context) {
     (void) context;
-    HAL_GPIO_IR_ENABLE_out();
-    HAL_GPIO_IR_ENABLE_clr();
-    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
-    adc_init();
-    adc_enable();
+    watch_enable_i2c();
+    opt3001_writeConfig(OPT3001_ADDR, light_sensor_continuous);
     movement_request_tick_frequency(8);
 }
 
@@ -56,14 +62,15 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK:
         {
             char buf[7];
-            uint16_t light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
-            snprintf(buf, 7, "%-6d", light_level);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LIGHT", "LL");
+            opt3001_t result = opt3001_readResult(OPT3001_ADDR);
+            uint32_t lux_int = (uint32_t)result.lux;
+            if (lux_int > 999999) lux_int = 999999;
+            snprintf(buf, 7, "%-6lu", (unsigned long)lux_int);
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LUX  ", "LX");
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            // suppress LED, as it would interfere with light sensing
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
@@ -77,11 +84,6 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
 
 void light_sensor_face_resign(void *context) {
     (void) context;
-
-    adc_disable();
-    HAL_GPIO_IRSENSE_pmuxdis();
-    HAL_GPIO_IRSENSE_off();
-    HAL_GPIO_IR_ENABLE_off();
+    opt3001_writeConfig(OPT3001_ADDR, light_sensor_shutdown);
+    watch_disable_i2c();
 }
-
-#endif // HAS_IR_SENSOR

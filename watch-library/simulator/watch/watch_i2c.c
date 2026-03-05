@@ -56,6 +56,9 @@ static uint16_t opt3001_read_register(uint8_t reg) {
     switch (reg) {
         case OPT3001_REG_RESULT: {
             double lux = EM_ASM_DOUBLE({
+                if (window.light_tx_queue && window.light_tx_queue.length > 0) {
+                    return window.light_tx_queue.shift();
+                }
                 return window.light_level || 0.0;
             });
             return opt3001_lux_to_raw(lux);

@@ -26,12 +26,10 @@
 
 #include "movement.h"
 
-#ifdef HAS_IR_SENSOR
-
 /*
  * LUX RX DEMO FACE
  *
- * Receives text via the IR photodiode using the lux_rx 6-bit protocol.
+ * Receives text via the OPT3001 visible light sensor using the lux_rx 6-bit protocol.
  *
  * Display:
  *   WAIT   — idle, waiting for START symbol
@@ -63,5 +61,3 @@ void lux_rx_demo_face_resign(void *context);
     lux_rx_demo_face_resign, \
     NULL, \
 })
-
-#endif // HAS_IR_SENSOR

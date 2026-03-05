@@ -26,16 +26,15 @@
 
 #include "movement.h"
 
-#ifdef HAS_IR_SENSOR
-
 /*
- * LIGHT SENSOR PLAYGROUND
+ * LIGHT SENSOR
  *
- * Temporary watch face for playing with the light sensor.
- * WARNING: This watch face may not play nicely with watch faces that use the ADC in the background,
- * such as the temperature logger. More improvement and testing needs to be done before this is can
- * be considered a production-ready watch face.
+ * Displays the current ambient light level in lux using the OPT3001 sensor.
+ * Updates at 8 Hz (OPT3001 in 100ms continuous conversion mode).
  *
+ * Buttons:
+ *   LIGHT: suppressed (interferes with sensor)
+ *   MODE:  next face
  */
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -50,5 +49,3 @@ void light_sensor_face_resign(void *context);
     light_sensor_face_resign, \
     NULL, \
 })
-
-#endif // HAS_IR_SENSOR

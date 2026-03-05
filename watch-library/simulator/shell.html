@@ -1808,7 +1808,7 @@
     // Preamble: dark samples to establish ambient baseline
     for (var i = 0; i < 12; i++) queue.push(0);
     // Protocol bits
-    for (var i = 0; i < bits.length; i++) queue.push(bits[i] ? 40000 : 0);
+    for (var i = 0; i < bits.length; i++) queue.push(bits[i] ? 400 : 0);
     // Dark tail: give receiver time to process END before queue drains
     for (var i = 0; i < 12; i++) queue.push(0);
 
