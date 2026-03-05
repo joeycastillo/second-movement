@@ -79,13 +79,22 @@ void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) context_ptr;
 }
 
-void light_sensor_face_activate(void *context) {
-    (void) context;
+static uint16_t take_light_reading(void) {
     HAL_GPIO_IR_ENABLE_out();
     HAL_GPIO_IR_ENABLE_clr();
     HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
     adc_init();
     adc_enable();
+    uint16_t val = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
+    adc_disable();
+    HAL_GPIO_IRSENSE_pmuxdis();
+    HAL_GPIO_IRSENSE_off();
+    HAL_GPIO_IR_ENABLE_off();
+    return val;
+}
+
+void light_sensor_face_activate(void *context) {
+    (void) context;
     has_reading = false;
 }
 
@@ -103,7 +112,7 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
             display_reading();
             break;
         case EVENT_ALARM_LONG_PRESS:
-            light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
+            light_level = take_light_reading();
             has_reading = true;
             display_reading();
             break;
@@ -121,7 +130,6 @@ bool light_sensor_face_loop(movement_event_t event, void *context) {
 
 void light_sensor_face_resign(void *context) {
     (void) context;
-
     adc_disable();
     HAL_GPIO_IRSENSE_pmuxdis();
     HAL_GPIO_IRSENSE_off();
