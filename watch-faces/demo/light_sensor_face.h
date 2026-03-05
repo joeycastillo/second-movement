@@ -29,10 +29,15 @@
 /*
  * LIGHT SENSOR
  *
- * Displays the current ambient light level in lux using the OPT3001 sensor.
- * Updates at 8 Hz (OPT3001 in 100ms continuous conversion mode).
+ * Reads the IR/light sensor via ADC. Two modes cycled with ALARM:
+ *   LEVEL:  shows raw ADC value (lower = brighter)
+ *   BINARY: shows BRIGHT or DARK based on threshold
+ *
+ * Long press ALARM to take a reading.
  *
  * Buttons:
+ *   ALARM short: cycle mode
+ *   ALARM long:  take reading
  *   LIGHT: suppressed (interferes with sensor)
  *   MODE:  next face
  */

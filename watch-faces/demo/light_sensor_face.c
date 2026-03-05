@@ -24,14 +24,55 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "light_sensor_face.h"
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
 #include "adc.h"
 
-uint8_t light_sensor_frequency = 8;
-uint16_t light_level;
+#define LIGHT_SENSOR_BORDER 65440
+
+typedef enum {
+    LIGHT_SENSOR_MODE_LEVEL,
+    LIGHT_SENSOR_MODE_BINARY,
+} light_sensor_mode_t;
+
+static light_sensor_mode_t light_sensor_mode = LIGHT_SENSOR_MODE_LEVEL;
+static uint16_t light_level;
+static bool has_reading = false;
+
+static void display_reading(void) {
+    char buf[7];
+    if (!has_reading) {
+        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        return;
+    }
+    switch (light_sensor_mode) {
+        case LIGHT_SENSOR_MODE_LEVEL:
+            snprintf(buf, 7, "%-6d", light_level);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+            break;
+        case LIGHT_SENSOR_MODE_BINARY:
+            if (light_level < LIGHT_SENSOR_BORDER) {
+                watch_display_text(WATCH_POSITION_BOTTOM, "BRIGHT");
+            } else {
+                watch_display_text(WATCH_POSITION_BOTTOM, " DARK ");
+            }
+            break;
+    }
+}
+
+static void display_mode_label(void) {
+    switch (light_sensor_mode) {
+        case LIGHT_SENSOR_MODE_LEVEL:
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LEVEL", "LE");
+            break;
+        case LIGHT_SENSOR_MODE_BINARY:
+            watch_display_text_with_fallback(WATCH_POSITION_TOP, "BI nA", "BI");
+            break;
+    }
+}
 
 void light_sensor_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -45,24 +86,28 @@ void light_sensor_face_activate(void *context) {
     HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
     adc_init();
     adc_enable();
-    movement_request_tick_frequency(light_sensor_frequency);
+    has_reading = false;
 }
 
 bool light_sensor_face_loop(movement_event_t event, void *context) {
     (void) context;
 
     switch (event.event_type) {
-        case EVENT_TICK:
-            light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
-            char buf[7];
-            snprintf(buf, 7, "%-6d", light_level);
-            watch_display_text_with_fallback(WATCH_POSITION_TOP, "LIGHT", "LL");
-            watch_display_text(WATCH_POSITION_BOTTOM, buf);
-            break;
-        case EVENT_LIGHT_BUTTON_UP:
-            // suppress LED, as it would interfere with light sensing
+        case EVENT_ACTIVATE:
+            display_mode_label();
+            display_reading();
             break;
         case EVENT_ALARM_BUTTON_UP:
+            light_sensor_mode = (light_sensor_mode + 1) % 2;
+            display_mode_label();
+            display_reading();
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            light_level = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
+            has_reading = true;
+            display_reading();
+            break;
+        case EVENT_LIGHT_BUTTON_UP:
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
