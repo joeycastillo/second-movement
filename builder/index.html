@@ -2388,9 +2388,65 @@ let wireframeMesh;
 let animationFrameId;
 let crtQuality = 'medium'; // medium, minimal, off
 
+function cleanupRetroScene() {
+    // Cancel animation loop
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    
+    // Dispose Three.js resources
+    if (wireframeMesh) {
+        if (wireframeMesh.geometry) wireframeMesh.geometry.dispose();
+        if (wireframeMesh.material) wireframeMesh.material.dispose();
+        wireframeMesh = null;
+    }
+    
+    if (scene) {
+        scene.clear();
+        scene = null;
+    }
+    
+    if (composer) {
+        composer = null;
+    }
+    
+    if (renderer) {
+        renderer.dispose();
+        renderer = null;
+    }
+    
+    // Clear shader passes
+    scanlinesPass = null;
+    barrelPass = null;
+    chromaticPass = null;
+    vignettePass = null;
+    bloomPass = null;
+}
+
 function applyCRTAppearanceMode(quality) {
     const crtOff = quality === 'off';
     document.documentElement.classList.toggle('crt-effects-off', crtOff);
+    
+    // Update global quality setting
+    crtQuality = quality === 'auto' ? (getDeviceTier() === 'low' ? 'minimal' : 'medium') : quality;
+    
+    // Clean up existing scene
+    cleanupRetroScene();
+    
+    // Reinitialize if not off
+    if (!crtOff) {
+        const canvas = document.getElementById('retro-canvas');
+        if (canvas) {
+            canvas.style.display = '';
+            initRetroScene();
+        }
+    } else {
+        const canvas = document.getElementById('retro-canvas');
+        if (canvas) {
+            canvas.style.display = 'none';
+        }
+    }
 }
 
 function initRetroScene() {
@@ -2401,7 +2457,7 @@ function initRetroScene() {
     const VALID_QUALITIES = ['auto', 'off', 'minimal', 'medium'];
     const savedQualityRaw = localStorage.getItem('crt-quality');
     const savedQuality = VALID_QUALITIES.includes(savedQualityRaw) ? savedQualityRaw : 'auto';
-    applyCRTAppearanceMode(savedQuality);
+    document.documentElement.classList.toggle('crt-effects-off', savedQuality === 'off');
     
     // Determine CRT quality based on user preference or device tier
     if (savedQuality === 'auto') {
@@ -4130,7 +4186,7 @@ async function init() {
             
             // Update label
             // Notify user to reload (console only, no alert)
-            console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- reload page to apply');
+            console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- applying immediately');
         });
     });
     
