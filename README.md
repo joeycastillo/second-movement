@@ -86,7 +86,9 @@ python3 utils/generate_homebase.py --lat 61.2181 --lon -149.9003
 
 ### 2. Build Firmware
 
-**Web Builder:** https://dlorp.github.io/second-movement/
+**Web Builder:** https://dlorp.github.io/second-movement/builder/index.html
+
+**Companion App** (for Comms Face): https://dlorp.github.io/second-movement/companion-app/#home
 
 Or build locally:
 \`\`\`bash
