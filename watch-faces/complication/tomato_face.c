@@ -169,7 +169,9 @@ bool tomato_face_loop(movement_event_t event, void *context) {
             tomato_draw(state);
             break;
         case EVENT_TIMEOUT:
-            movement_move_to_face(0);
+            if (state->mode != tomato_run) {
+                movement_move_to_face(0);
+            }
             break;
         default:
             movement_default_loop_handler(event);
