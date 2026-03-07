@@ -45,7 +45,7 @@ static void tomato_start(tomato_state_t *state) {
     state->mode = tomato_run;
     state->now_ts = movement_get_utc_timestamp();
     state->target_ts = watch_utility_offset_timestamp(state->now_ts, 0, length, 0);
-    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
+    watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, 0);
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
     watch_set_indicator(WATCH_INDICATOR_BELL);
 }
