@@ -175,6 +175,7 @@ bool archery_face_loop(movement_event_t event, void *context) {
             draw(state, event.subsecond);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
+            movement_illuminate_led();
             if (state->mode == archery_paused) {
                 reset(state);
                 button_beep();
