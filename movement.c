@@ -418,6 +418,10 @@ static void _movement_handle_scheduled_tasks(void) {
     }
 }
 
+static bool _movement_buzzer_gate(void) {
+    return !movement_state.muted;
+}
+
 void movement_request_tick_frequency(uint8_t freq) {
     // Movement requires at least a 1 Hz tick.
     // If we are asked for an invalid frequency, default back to 1 Hz.
@@ -736,6 +740,14 @@ void movement_set_button_volume(watch_buzzer_volume_t value) {
     movement_state.settings.bit.button_volume = value;
 }
 
+bool movement_signal_should_sound(void) {
+    return movement_state.signal_should_sound;
+}
+
+void movement_set_signal_should_sound(bool value) {
+    movement_state.signal_should_sound = value;
+}
+
 watch_buzzer_volume_t movement_signal_volume(void) {
     return movement_state.signal_volume;
 }
@@ -781,6 +793,14 @@ uint8_t movement_get_low_energy_timeout(void) {
 
 void movement_set_low_energy_timeout(uint8_t value) {
     movement_state.settings.bit.le_interval = value;
+}
+
+bool movement_is_muted(void) {
+    return movement_state.muted;
+}
+
+void movement_mute(bool value) {
+    movement_state.muted = value;
 }
 
 movement_color_t movement_backlight_color(void) {
@@ -1033,6 +1053,7 @@ void app_init(void) {
 
     if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
+    movement_state.signal_should_sound = MOVEMENT_DEFAULT_SIGNAL_SOUND;
     movement_state.signal_volume = MOVEMENT_DEFAULT_SIGNAL_VOLUME;
     movement_state.alarm_volume = MOVEMENT_DEFAULT_ALARM_VOLUME;
     movement_state.light_on = false;
@@ -1041,6 +1062,8 @@ void app_init(void) {
 
     // set up the 1 minute alarm (for background tasks and low power updates)
     _movement_set_top_of_minute_alarm();
+
+    watch_buzzer_set_gate(_movement_buzzer_gate);
 }
 
 void app_wake_from_backup(void) {

@@ -24,6 +24,8 @@
 
 #include <stdlib.h>
 #include "settings_face.h"
+#include "movement.h"
+#include "watch_slcd.h"
 #include "watch.h"
 
 static void clock_setting_display(uint8_t subsecond) {
@@ -81,28 +83,40 @@ static void signal_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SIG", "SI");
     watch_display_text(WATCH_POSITION_BOTTOM, "SIGNAL");
     if (subsecond % 2) {
-        if (movement_signal_volume() == WATCH_BUZZER_VOLUME_LOUD) {
-            // H for HIGH
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
-        }
-        else {
-            // L for LOW
-            watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+        if (movement_signal_should_sound()) {
+            if (movement_signal_volume() == WATCH_BUZZER_VOLUME_LOUD) {
+                // H for HIGH
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+            }
+            else {
+                // L for LOW
+                watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+            }
+        } else {
+            // N for NONE
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " N");
         }
     }
 }
 
-static void signal_setting_advance(void) {
-    if (movement_signal_volume() == WATCH_BUZZER_VOLUME_SOFT) {
+static void signal_setting_advance(settings_state_t *state) {
+    if (state->time_signal_enabled == false) {
+        // was off. make it soft.
+        state->time_signal_enabled = true;
+        movement_set_signal_should_sound(true);
+        movement_set_signal_volume(WATCH_BUZZER_VOLUME_SOFT);
+        movement_play_signal();
+    } else if (movement_signal_volume() == WATCH_BUZZER_VOLUME_SOFT) {
         // was soft. make it loud.
         movement_set_signal_volume(WATCH_BUZZER_VOLUME_LOUD);
+        movement_play_signal();
     } else {
-        // was loud. make it soft.
-        movement_set_signal_volume(WATCH_BUZZER_VOLUME_SOFT);
+        // was loud. turn it off.
+        state->time_signal_enabled = false;
+        movement_set_signal_should_sound(false);
     }
 
     signal_setting_display(1);
-    movement_play_signal();
 }
 
 
@@ -388,10 +402,19 @@ bool settings_face_loop(movement_event_t event, void *context) {
             movement_move_to_next_face();
             return true;
         case EVENT_ALARM_BUTTON_UP:
-            state->settings_screens[state->current_page].advance();
+            if (state->settings_screens[state->current_page].advance == signal_setting_advance) {
+                signal_setting_advance(state);
+            } else {
+                state->settings_screens[state->current_page].advance();
+            }
             break;
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
+            break;
+        case EVENT_BACKGROUND_TASK:
+            // uncomment this line to snap back to the clock face when the hour signal sounds:
+            // movement_move_to_face(state->watch_face_index);
+            movement_play_signal();
             break;
         default:
             return movement_default_loop_handler(event);
@@ -414,4 +437,16 @@ void settings_face_resign(void *context) {
     (void) context;
     movement_force_led_off();
     movement_store_settings();
+}
+
+movement_watch_face_advisory_t settings_face_advise(void *context) {
+    movement_watch_face_advisory_t retval = { 0 };
+    settings_state_t *state = (settings_state_t *) context;
+
+    if (state->time_signal_enabled) {
+        watch_date_time_t date_time = movement_get_local_date_time();
+        retval.wants_background_task = date_time.unit.minute == 0;
+    }
+
+    return retval;
 }
