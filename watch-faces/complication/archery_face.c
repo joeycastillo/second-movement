@@ -230,10 +230,9 @@ bool archery_face_loop(movement_event_t event, void *context) {
             manage_stages(state);
             break;
         case EVENT_TIMEOUT:
-            // Do not get back to face 0 on timeout but return on low energy below
+            movement_move_to_face(0);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            movement_move_to_face(0);
             break;
         default:
             return movement_default_loop_handler(event);
