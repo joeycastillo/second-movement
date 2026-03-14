@@ -51,8 +51,6 @@
  * - 1 signal will indicate that round start
  * - 3 final signals indicate a timeout
  *
- * The volume of the signal is the same of the hourly signal
- *
  * Pressing the alarm button while the timer is running will pause the
  * countdown (during the preparation too). You can reset the timer by pressing
  * the light button.
