@@ -126,11 +126,11 @@ static void manage_stages(archery_state_t *state) {
     if (state->mode == archery_prepare) {
         state->minutes = state->round == wa_indoor ? INDOOR_RUN_MINUTES : OUTDOOR_RUN_MINUTES;
         state->seconds = 0;
-        watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_start, NULL, movement_signal_volume());
+        watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_start, NULL, WATCH_BUZZER_VOLUME_SOFT);
         state->mode = archery_running;
         schedule_countdown(state);
     } else {
-        watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_end, NULL, movement_signal_volume());
+        watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_end, NULL, WATCH_BUZZER_VOLUME_SOFT);
         reset(state);
     }
 }
@@ -193,7 +193,7 @@ bool archery_face_loop(movement_event_t event, void *context) {
                 case archery_reset:
                     state->minutes = 0;
                     state->seconds = 10;
-                    watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_prepare, NULL, movement_signal_volume());
+                    watch_buzzer_play_sequence_with_volume((int8_t *)_sound_seq_prepare, NULL, WATCH_BUZZER_VOLUME_SOFT);
                     state->mode = archery_prepare;
                     schedule_countdown(state);
                     watch_set_indicator(WATCH_INDICATOR_SIGNAL);
