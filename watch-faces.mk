@@ -55,5 +55,6 @@ SRCS += \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
   ./watch-faces/complication/ping_face.c \
+  ./watch-faces/complication/tomato_face.c \
   ./watch-faces/clock/solar_time_face.c \
 # New watch faces go above this line.
