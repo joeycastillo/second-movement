@@ -25,8 +25,14 @@
 #ifndef MOVEMENT_CONFIG_H_
 #define MOVEMENT_CONFIG_H_
 
+/* Include local overrides */
+#if __has_include("movement_config_local.h")
+#include "movement_config_local.h"
+#endif
+
 #include "movement_faces.h"
 
+#ifndef WATCH_FACES
 const watch_face_t watch_faces[] = {
     clock_face,
     world_clock_face,
@@ -40,6 +46,7 @@ const watch_face_t watch_faces[] = {
     settings_face,
     set_time_face,
 };
+#endif
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
 
@@ -49,27 +56,47 @@ const watch_face_t watch_faces[] = {
  * Some folks also like to use this to hide the preferences and time set faces from the normal rotation.
  * If you don't want any faces to be excluded, set this to 0 and a long Mode press will have no effect.
  */
+#ifndef MOVEMENT_SECONDARY_FACE_INDEX
 #define MOVEMENT_SECONDARY_FACE_INDEX (MOVEMENT_NUM_FACES - 5)
+#endif
 
 /* Custom hourly chime tune. Check movement_custom_signal_tunes.h for options. */
+#ifndef SIGNAL_TUNE_DEFAULT
 #define SIGNAL_TUNE_DEFAULT
+#endif
 
 /* Determines the intensity of the led colors
  * Set a hex value 0-15 with 0x0 being off and 0xF being max intensity
  */
+#ifndef MOVEMENT_DEFAULT_RED_COLOR
 #define MOVEMENT_DEFAULT_RED_COLOR 0x0
+#endif
+#ifndef MOVEMENT_DEFAULT_GREEN_COLOR
 #define MOVEMENT_DEFAULT_GREEN_COLOR 0xF
+#endif
+#ifndef MOVEMENT_DEFAULT_BLUE_COLOR
 #define MOVEMENT_DEFAULT_BLUE_COLOR 0x0
+#endif
 
 /* Set to true for 24h mode or false for 12h mode */
+#ifndef MOVEMENT_DEFAULT_24H_MODE
 #define MOVEMENT_DEFAULT_24H_MODE false
+#endif
 
 /* Enable or disable the sound on mode button press */
+#ifndef MOVEMENT_DEFAULT_BUTTON_SOUND
 #define MOVEMENT_DEFAULT_BUTTON_SOUND true
+#endif
 
+#ifndef MOVEMENT_DEFAULT_BUTTON_VOLUME
 #define MOVEMENT_DEFAULT_BUTTON_VOLUME WATCH_BUZZER_VOLUME_SOFT
+#endif
+#ifndef MOVEMENT_DEFAULT_SIGNAL_VOLUME
 #define MOVEMENT_DEFAULT_SIGNAL_VOLUME WATCH_BUZZER_VOLUME_LOUD
+#endif
+#ifndef MOVEMENT_DEFAULT_ALARM_VOLUME
 #define MOVEMENT_DEFAULT_ALARM_VOLUME WATCH_BUZZER_VOLUME_LOUD
+#endif
 
 /* Set the timeout before switching back to the main watch face
  * Valid values are:
@@ -78,7 +105,9 @@ const watch_face_t watch_faces[] = {
  * 2: 5 minutes
  * 3: 30 minutes
  */
+#ifndef MOVEMENT_DEFAULT_TIMEOUT_INTERVAL
 #define MOVEMENT_DEFAULT_TIMEOUT_INTERVAL 0
+#endif
 
 /* Set the timeout before switching to low energy mode
  * Valid values are:
@@ -91,7 +120,9 @@ const watch_face_t watch_faces[] = {
  * 6: 1 day
  * 7: 7 days
  */
+#ifndef MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL
 #define MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL 2
+#endif
 
 /* Set the led duration
  * Valid values are:
@@ -100,12 +131,16 @@ const watch_face_t watch_faces[] = {
  * 2: 3 seconds
  * 3: 5 seconds
  */
+#ifndef MOVEMENT_DEFAULT_LED_DURATION
 #define MOVEMENT_DEFAULT_LED_DURATION 1
+#endif
 
 /* Optionally debounce button presses (disable by default).
  * A value of 4 is a good starting point if you have issues
  * with multiple button presses firing.
 */
+#ifndef MOVEMENT_DEBOUNCE_TICKS
 #define MOVEMENT_DEBOUNCE_TICKS 0
+#endif
 
 #endif // MOVEMENT_CONFIG_H_

@@ -51,9 +51,13 @@
  *  o Find your secret key(s).
  *      o Use https://github.com/susam/mintotp to generate test codes for
  *        verification
- *  o Edit global `credentials` variable in "totp_face.c" to configure your
- *    TOTP credentials. The file includes two examples that you can use as a
- *    reference. Credentials are added with the `CREDENTIAL` macro in the form
+ *  o Create a (gitignored) file named "movement_config_local.h" at the root of the
+ *    repo if it doesn't exist yet, and in it create a definition like this:
+#define TOTP_CREDS \
+    CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30), \
+    CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
+ *    You can use these two examples as a reference.
+ *    Credentials are added with the `CREDENTIAL` macro in the form
  *    `CREDENTIAL(label, key, algorithm, timestep)` where:
  *      o `label` is a 2 character label that is displayed in the weekday digits
  *        to identify the TOTP credential.

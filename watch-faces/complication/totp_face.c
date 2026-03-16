@@ -64,8 +64,12 @@ typedef struct {
 // Enter your TOTP key data below
 
 static totp_t credentials[] = {
+#ifdef TOTP_CREDS
+    TOTP_CREDS
+#else
     CREDENTIAL(2F, "JBSWY3DPEHPK3PXP", SHA1, 30),
     CREDENTIAL(AC, "JBSWY3DPEHPK3PXP", SHA1, 30),
+#endif
 };
 
 // END OF KEY DATA.

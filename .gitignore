@@ -27,3 +27,8 @@ fp-info-cache
 *.plan
 /.direnv
 /.emscripten_cache
+.cache/
+.clangd
+compile_commands.json
+movement_config_local.h
+totp_uris.txt
