@@ -277,7 +277,7 @@ static void display_win_ratio(blackjack_face_state_t *state) {
     game_state = BJ_WIN_RATIO;
     uint8_t win_ratio = 0;
     if (state->games_played > 0) {  // Avoid dividing by zero
-        win_ratio = (uint8_t)(100 * state->games_won) / state->games_played;
+        win_ratio = (uint8_t)((100 * state->games_won) / state->games_played);
     }
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "WINS  ", "WR");
@@ -444,6 +444,11 @@ bool blackjack_face_loop(movement_event_t event, void *context) {
         case EVENT_ALARM_LONG_PRESS:
             if (game_state == BJ_TITLE_SCREEN) {
                 toggle_tap_control(state);
+            } else if (game_state == BJ_WIN_RATIO) {
+                // Reset the win-lose ratio
+                state->games_won = 0;
+                state->games_played = 0;
+                watch_display_text(WATCH_POSITION_BOTTOM, "  0Pct");
             }
             break;
         case EVENT_TIMEOUT:

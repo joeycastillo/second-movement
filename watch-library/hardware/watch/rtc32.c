@@ -61,9 +61,7 @@ void rtc_init(void) {
     MCLK->APBAMASK.reg |= MCLK_APBAMASK_RTC;
 #endif
 
-    // if (rtc_is_enabled()) return; // don't reset the RTC if it's already set up.
-    // Reset everything, once things are stabilized we can think about preserving some state
-    CTRLREG.bit.ENABLE = 0;
+    if (rtc_is_enabled()) return; // don't reset the RTC if it's already set up.
 
     _rtc_sync();
     CTRLREG.bit.SWRST = 1;
