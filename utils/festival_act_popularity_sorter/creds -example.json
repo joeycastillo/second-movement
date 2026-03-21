@@ -1,4 +1,14 @@
 {
-    "client_id": "REDACTED",
-    "client_secret": "REDACTED"
+    "spotify" : {
+        "client_id": "REDACTED",
+        "client_secret": "REDACTED"
+    },
+    "last.fm" : {
+        "client_id" : "REDACTED",
+        "client_secret" : "REDACTED"
+    },
+    "clashfinder" : {
+        "username" : "REDACTED",
+        "public_key" : "REDACTED"
+    }
 }
