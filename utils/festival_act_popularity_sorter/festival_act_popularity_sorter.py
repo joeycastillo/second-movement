@@ -13,8 +13,8 @@ sp = None
 MAKE_ARR_FILE = 1 # 0 = Don't make the file; 1= Make the file; 2 = Make the file and print it to the console
 PRINT_RANKINGs = True
 IGNORE_STAGES = False
-USE_DAYINFO_FILE = True
-USE_LISTACTPOP_FILE = True
+USE_DAYINFO_FILE = True  # If True, we look for a file called day_info.json and load it. It contains what Clashfinder brings. It gets generated whenever we read from the internet.
+USE_LISTACTPOP_FILE = True  # If True, we look for a file called listActsPop.json and load it. It contains what Spotify or Last.fm bring. It gets generated whenever we read from the internet.
 PRINT_SEARCH_RESULTS = True
 SORT_POP_BY_FOLLOWERS = False
 GENRE_DEFAULT = "NO_GENRE"
@@ -22,9 +22,28 @@ POPULARITY_SOURCE = 'last.fm'
 STAGE_DEFAULT = "NO_STAGE"
 URL = 'https://clashfinder.com/data/event/bonnaroo2k26.json'
 
-duoActs = {"Torren B2B Airwolf" : ["Torren Foot", "Airwolf Paradise"]}
-forClashFinder = {"Chicago Youth Symphony Orchestra" : "Chicago Youth Orchestra", "Torren Foot B2B Airwolf Paradise" : "Torren B2B Airwolf"} # k:v is name in clash finder : name in genre list
+duoActs = {"Freddy Gibbs & the Alechemist" : ["Freddie Gibbs", "The Alchemist"]}
+replaceActName = {"Weird Al Yankovich: Bigger & Weirder Ruvue" : "Weird Al Yankovic",
+                  "Rachel Chinchouri" : "Rachel Chinouriri",
+                  "Waylon Wyett" : "Waylon Wyatt",
+                  "Kesha Presents Superjam Esoterica: The Alchemy of Pop" : "Ke$ha",
+                  "Gouldie Boutlier " : "Goldie Boutilier",
+                  "A Hundred Dtums" : "A Hundred Drums",
+                  "DJ Trixie Mattell" : "Trixie Mattel",
+                  "Laszwo" : "Łaszewo"}
+replaceGenres = {"8BIT" : "OTHER"}
 
+
+replaceWords = {
+                "RUFUS" : "R;F;S",
+                "BOA" : "B:A",
+                "A" : "a",
+                "D" : "d",
+                "." : "_",
+                "&" : "`n",
+#                "M" : "N%",
+#                "W" : "WJ"
+                }
 
 def get_artist(artist_name, client_id, client_secret):
     # Remove single quotes to avoid search issues
@@ -79,7 +98,8 @@ def get_artist_followers_popularity_lastfm(artist_name, client_id, client_secret
             "method": "artist.getinfo",
             "artist": artist_name,
             "api_key": api_key,
-            "format": "json"
+            "format": "json",
+            "autocorrect": 1 
         }
         r = requests.get(base_url, params=params)
         try:
@@ -114,12 +134,12 @@ def get_artist_followers_popularity_lastfm(artist_name, client_id, client_secret
         genre_list = [t["name"] for t in tags]
 
         # --- Top track ---
-        top_song = get_top_track(artist_name, api_key, base_url)
+        top_song = get_top_track_lastfm(artist_name, api_key, base_url)
         print(f"Found {artist['name']} | Top Track is: {top_song}")
         return followers, popularity, top_song, genre_list, True
 
 
-def get_top_track(artist_name, api_key, base_url):
+def get_top_track_lastfm(artist_name, api_key, base_url):
     while True:
         params = {
             "method": "artist.gettoptracks",
@@ -259,6 +279,7 @@ def get_html_data(content):
         events = venue.get('events')
         for act in events:
             artist = act.get('name')
+            artist = replaceActName.get(artist, artist)
             start_time = datetime.strptime(act.get('start'), date_str)
             end_time = datetime.strptime(act.get('end'), date_str)
             act_info = {"stage" : stage_name, "start_time" : start_time, "end_time" : end_time}
@@ -288,15 +309,21 @@ def popularity_sort(popList):
     use_monthly_listens = "monthly_listeners" in popList[0]
     if use_monthly_listens:
         pop_weights = [0.4, 0.3, 0.3]  # populary, follower, monthly listens 
-    else:
+    elif POPULARITY_SOURCE == "spotify":
         pop_weights = [0.7, 0.3, 0]  # populary, follower, N/A
+    elif POPULARITY_SOURCE == "last.fm":
+        pop_weights = [0.8, 0.2, 0]  # populary, follower, N/A
     maxPop = max(max(artist['popularity'] for artist in popList), 1)
     maxFol = max(max(artist['followers'] for artist in popList), 1)
     if use_monthly_listens:
         maxMonLis = max(max(artist['monthly_listeners'] for artist in popList), 1)
     else:
-        fol_pop_ratio = int((pop_weights[0] / pop_weights[1]) * (maxFol / maxPop))
-        print(f"Ratio for prioritizing followers to popularity: {fol_pop_ratio} followers for 1 pop")
+        fol_pop_ratio = ((pop_weights[0] / pop_weights[1]) * (maxFol / maxPop))
+        if fol_pop_ratio >= 1:
+            print(f"Ratio for prioritizing followers to popularity: {fol_pop_ratio:.2f} followers for 1 pop")
+        else:
+            fol_pop_ratio = 1 / fol_pop_ratio
+            print(f"Ratio for prioritizing popularity to followers: {fol_pop_ratio:.2f} followers for 1 pop")
     for pop in popList:
         popPercent = pop['popularity']/maxPop
         folPercent = pop['followers']/maxFol
@@ -344,9 +371,12 @@ def getFullArray(listActs):
         genre_list = []
         for artist in artists:
             fol, pop, _, genres, found = get_artist_followers_popularity(artist, client_id, client_secret)
-            genre_list.extend(genres)
-            followers += fol
-            popularity += pop
+            if not found:
+                listActsNotFound.append(act_spot)
+            else:
+                genre_list.extend(genres)
+                followers += fol
+                popularity += pop
         followers = int((followers / len(artists)) * duo_mult)
         popularity = int((popularity / len(artists)) * duo_mult)
         listActsPop.append({'name':duo, 'followers' : followers, "popularity" : popularity, "top_song" : "N/A", "genre_list" : genre_list})
@@ -357,7 +387,7 @@ def getFullArray(listActs):
     return listActsPop
 
 def print_md_lst(sorted_listing, day_info):
-    displayStage = True if day_info else False
+    displayStage = False #True if day_info else False
     displayTopSong = 'top_song' in sorted_listing[0]
     displayGenre = 'genre_list' in sorted_listing[0]
     displayMonLis = 'monthly_listeners' in sorted_listing[0]
@@ -440,17 +470,6 @@ def print_md_lst(sorted_listing, day_info):
             printText += f" {stage : ^{longestStg}} |"
         print(printText)
 
-replaceWords = {
-                "RUFUS" : "R;F;S",
-                "BOA" : "B:A",
-                "A" : "a",
-                "D" : "d",
-                "." : "_",
-                "&" : "`n",
-#                "M" : "N%",
-#                "W" : "WJ"
-                }
-
 def get_name_to_display(act, i=0, maxDisplayLen=None):
     actToDisp = unidecode(act)
     actToDisp = strip_word(actToDisp,["The"], True)
@@ -475,6 +494,7 @@ def print_array_for_watch(listActs, sorted_listing, day_info, filename):
             genre = info["genre_disp"].upper()
             genre = genre.replace(" ", "_")
             genre = genre.replace("-", "")
+            genre = replaceGenres.get(genre, genre)
             dict_genres[info["name"]] = genre
             if genre not in list_genres:
                 list_genres.append(genre)
@@ -485,6 +505,25 @@ def print_array_for_watch(listActs, sorted_listing, day_info, filename):
         return
     maxDisplayLen = None  # If None, then use the max length of the options, but 21 is a good option too.
     with open(f'{filename}.txt', 'w') as f:
+
+        writeAndPrint(f, "##############PASTE THIS PART INTO festival_schedule_face.h###############")
+        writeAndPrint(f, "typedef enum {")
+        writeAndPrint(f, f"    {enum_txt_start}NO_STAGE = 0,")
+        for stage in list_stages:
+            writeAndPrint(f, f"    {enum_txt_start}{stage},")
+        writeAndPrint(f, f"    {enum_txt_start}STAGE_COUNT")
+        writeAndPrint(f, "} festival_schedule_stage;")
+        writeAndPrint(f, "")
+        writeAndPrint(f, "typedef enum {")
+        writeAndPrint(f, f"    {enum_txt_start}NO_GENRE = 0,")
+        for genre in list_genres:
+            writeAndPrint(f, f"    {enum_txt_start}{genre},")
+        writeAndPrint(f, f"    {enum_txt_start}GENRE_COUNT")
+        writeAndPrint(f, "} festival_schedule_genre;")
+        writeAndPrint(f, "###########################################################################")
+
+
+
         artistDateNotFound = []
         writeAndPrint(f, f"// Line-up - {URL}")
         writeAndPrint(f, '#include "festival_schedule_face.h"')
@@ -511,20 +550,6 @@ def print_array_for_watch(listActs, sorted_listing, day_info, filename):
             print(f"Set festival_schedule_t.artist's length to {arrLenSchedule} due to {arrActLongestSchedule}")
         listActsPrint = sorted(listActsPrint, key=lambda d: d['dispAct'].lstrip().lower())
         writeAndPrint(f, f"#define {enum_txt_start}NUM_ACTS {totalActs}")
-        writeAndPrint(f, "")
-        writeAndPrint(f, "typedef enum {")
-        writeAndPrint(f, f"    {enum_txt_start}NO_STAGE = 0,")
-        for stage in list_stages:
-            writeAndPrint(f, f"    {enum_txt_start}{stage},")
-        writeAndPrint(f, f"    {enum_txt_start}STAGE_COUNT")
-        writeAndPrint(f, "} festival_schedule_stage;")
-        writeAndPrint(f, "")
-        writeAndPrint(f, "typedef enum {")
-        writeAndPrint(f, f"    {enum_txt_start}NO_GENRE = 0,")
-        for genre in list_genres:
-            writeAndPrint(f, f"    {enum_txt_start}{genre},")
-        writeAndPrint(f, f"    {enum_txt_start}GENRE_COUNT")
-        writeAndPrint(f, "} festival_schedule_genre;")
         writeAndPrint(f, "")
         writeAndPrint(f, f"const festival_schedule_t festival_acts[{enum_txt_start}NUM_ACTS + 1]=")
         writeAndPrint(f, "{")
