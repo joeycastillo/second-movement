@@ -28,50 +28,37 @@
 #include "festival_schedule_arr.h"
 #include "watch_utility.h"
 
-const char festival_name[2] = "LO";
+const char festival_name[2] = "BO";
 
 const char festival_stage[FESTIVAL_SCHEDULE_STAGE_COUNT + 1][2] =
 {
     [FESTIVAL_SCHEDULE_NO_STAGE]    = "  ",
-    [FESTIVAL_SCHEDULE_T_MOBILE]    = "TM",
-    [FESTIVAL_SCHEDULE_BUD_LIGHT]   = "BL",
-    [FESTIVAL_SCHEDULE_PERRYS]      = "PR",
-    [FESTIVAL_SCHEDULE_THE_GROVE]   = "GR",
-    [FESTIVAL_SCHEDULE_LAKESHORE]   = "L ",
-    [FESTIVAL_SCHEDULE_TITOS]       = "TI",
-    [FESTIVAL_SCHEDULE_BMI]         = "BM",
-    [FESTIVAL_SCHEDULE_MUSIC_DEN]   = "dE",
-    [FESTIVAL_SCHEDULE_BACKYARD]    = "YD",
+    [FESTIVAL_SCHEDULE_THAT_TENT]   = "TT",
+    [FESTIVAL_SCHEDULE_THE_OTHER]   = "OT",
+    [FESTIVAL_SCHEDULE_THIS_TENT]   = "TS",
+    [FESTIVAL_SCHEDULE_WHAT_STAGE]  = "WT",
+    [FESTIVAL_SCHEDULE_WHICH_STAGE] = "WC",
     [FESTIVAL_SCHEDULE_STAGE_COUNT] = "  "
 };
 
 const char festival_genre[FESTIVAL_SCHEDULE_GENRE_COUNT + 1][6] =
 {
     [FESTIVAL_SCHEDULE_NO_GENRE]    = " NONE ",
-    [FESTIVAL_SCHEDULE_POP]         = " POP  ",
-    [FESTIVAL_SCHEDULE_INDIE]       = " INdIE",
-    [FESTIVAL_SCHEDULE_DREAM_POP]   = "dream7",
-    [FESTIVAL_SCHEDULE_K_POP]       = " K-POP",
-    [FESTIVAL_SCHEDULE_ROCK]        = " ROCK ",
     [FESTIVAL_SCHEDULE_ALT]         = "   ALT",
-    [FESTIVAL_SCHEDULE_PUNK]        = "PUNK  ",
-    [FESTIVAL_SCHEDULE_NU_METAL]    = "Num&tL",
-    [FESTIVAL_SCHEDULE_PSYCH_ROCK]  = " PSYCH",
-    [FESTIVAL_SCHEDULE_HOUSE]       = " HOUSE",
-    [FESTIVAL_SCHEDULE_DUBSTEP]     = "DUBStP",
-    [FESTIVAL_SCHEDULE_TECHNO]      = " tECNO",
-    [FESTIVAL_SCHEDULE_BASS]        = " BASS ",
-    [FESTIVAL_SCHEDULE_DnB]         = " dnB  ",
-    [FESTIVAL_SCHEDULE_DANCE]       = " DaNCE",
-    [FESTIVAL_SCHEDULE_RAP]         = "  rAP ",
-    [FESTIVAL_SCHEDULE_TRAP]        = " trAP ",
-    [FESTIVAL_SCHEDULE_EMORAP]      = "sdcld ",
-    [FESTIVAL_SCHEDULE_SOUL]        = " SOUL ",
-    [FESTIVAL_SCHEDULE_RnB]         = " rnb  ",
     [FESTIVAL_SCHEDULE_COUNTRY]     = "Cuntry",
+    [FESTIVAL_SCHEDULE_DANCE]       = " DaNCE",
+    [FESTIVAL_SCHEDULE_DnB]         = " dnB  ",
+    [FESTIVAL_SCHEDULE_DUBSTEP]     = "DUBStP",
+    [FESTIVAL_SCHEDULE_EDM]         = "Edm&  ",
     [FESTIVAL_SCHEDULE_FOLK]        = " FOLK ",
-    [FESTIVAL_SCHEDULE_CLASSICAL]   = " ClASS",
+    [FESTIVAL_SCHEDULE_HOUSE]       = " HOUSE",
     [FESTIVAL_SCHEDULE_OTHER]       = "OTHEr ",
+    [FESTIVAL_SCHEDULE_POP]         = " POP  ",
+    [FESTIVAL_SCHEDULE_PUNK]        = "PUNK  ",
+    [FESTIVAL_SCHEDULE_RAP]         = "  rAP ",
+    [FESTIVAL_SCHEDULE_ROCK]        = " ROCK ",
+    [FESTIVAL_SCHEDULE_SOUL]        = " SOUL ",
+    [FESTIVAL_SCHEDULE_WORLD]       = " World",
     [FESTIVAL_SCHEDULE_GENRE_COUNT] = "      "
 };
 
