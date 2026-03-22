@@ -205,7 +205,8 @@ uint32_t watch_utility_date_time_to_unix_time(watch_date_time_t date_time, int32
 watch_date_time_t watch_utility_date_time_from_unix_time(uint32_t timestamp, int32_t utc_offset) {
     watch_date_time_t retval;
     retval.reg = 0;
-    int32_t days, secs;
+    uint32_t secs;
+    int32_t days;
     int32_t remdays, remsecs, remyears;
     int32_t qc_cycles, c_cycles, q_cycles;
     int32_t years, months;
@@ -275,6 +276,10 @@ watch_date_time_t watch_utility_date_time_from_unix_time(uint32_t timestamp, int
 watch_date_time_t watch_utility_date_time_convert_zone(watch_date_time_t date_time, uint32_t origin_utc_offset, uint32_t destination_utc_offset) {
     uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, origin_utc_offset);
     return watch_utility_date_time_from_unix_time(timestamp, destination_utc_offset);
+}
+
+uint32_t watch_utility_unix_time_convert_zone(uint32_t timestamp, uint32_t origin_utc_offset, uint32_t destination_utc_offset) {
+    return timestamp - origin_utc_offset + destination_utc_offset;
 }
 
 watch_duration_t watch_utility_seconds_to_duration(uint32_t seconds) {

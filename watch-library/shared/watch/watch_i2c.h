@@ -45,22 +45,25 @@ void watch_disable_i2c(void);
   * @param addr The address of the device you wish to talk to.
   * @param buf A series of unsigned bytes; the data you wish to transmit.
   * @param length The number of bytes in buf that you wish to send.
+  * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-void watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length);
+int8_t watch_i2c_send(int16_t addr, uint8_t *buf, uint16_t length);
 
 /** @brief Receives a series of values from a device on the I2C bus.
   * @param addr The address of the device you wish to hear from.
   * @param buf Storage for the incoming bytes; on return, it will contain the received data.
   * @param length The number of bytes that you wish to receive.
+  * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-void watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length);
+int8_t watch_i2c_receive(int16_t addr, uint8_t *buf, uint16_t length);
 
 /** @brief Writes a byte to a register in an I2C device.
   * @param addr The address of the device you wish to address.
   * @param reg The register on the device that you wish to set.
   * @param data The value that you wish to set the register to.
+  * @return 0 if no error code, otherwise a code via i2c_result_t
   */
-void watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data);
+int8_t watch_i2c_write8(int16_t addr, uint8_t reg, uint8_t data);
 
 /** @brief Reads a byte from a register in an I2C device.
   * @param addr The address of the device you wish to address.

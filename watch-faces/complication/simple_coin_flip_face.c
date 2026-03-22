@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "simple_coin_flip_face.h"
+#include "delay.h"
 
 void simple_coin_flip_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -36,7 +37,7 @@ void simple_coin_flip_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 }
 
 void simple_coin_flip_face_activate(void *context) {
-    simple_coin_flip_face_state_t *state = (simple_coin_flip_face_state_t *)context;
+    (void) context;
 }
 
 static uint32_t get_random(uint32_t max) {
@@ -48,7 +49,7 @@ static uint32_t get_random(uint32_t max) {
 
 }
 
-void draw_start_face() {
+static void draw_start_face(void) {
     watch_clear_display();
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
         watch_display_text(WATCH_POSITION_BOTTOM, " Flip");
@@ -57,7 +58,7 @@ void draw_start_face() {
     }
 }
 
-void set_pixels(int pixels[3][4][2], int j_len) {
+static void set_pixels(int pixels[3][4][2], int j_len) {
     for(int loopruns = 0; loopruns<2; loopruns++) {
         for(int i = 0; i<3; i++) {
             watch_clear_display();
@@ -69,7 +70,7 @@ void set_pixels(int pixels[3][4][2], int j_len) {
     }
 }
 
-void load_animation() {
+static void load_animation(void) {
     if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
         int j_len = 2;
         int pixels[3][4][2] = {
@@ -114,6 +115,7 @@ void load_animation() {
 }
 
 static void _blink_face_update_lcd(simple_coin_flip_face_state_t *state) {
+    (void) state;
     watch_clear_display();
     load_animation();
     watch_clear_display();

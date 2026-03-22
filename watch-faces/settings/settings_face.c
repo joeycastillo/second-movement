@@ -77,6 +77,64 @@ static void beep_setting_advance(void) {
     }
 }
 
+static void signal_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SIG", "SI");
+    watch_display_text(WATCH_POSITION_BOTTOM, "SIGNAL");
+    if (subsecond % 2) {
+        if (movement_signal_volume() == WATCH_BUZZER_VOLUME_LOUD) {
+            // H for HIGH
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+        }
+        else {
+            // L for LOW
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+        }
+    }
+}
+
+static void signal_setting_advance(void) {
+    if (movement_signal_volume() == WATCH_BUZZER_VOLUME_SOFT) {
+        // was soft. make it loud.
+        movement_set_signal_volume(WATCH_BUZZER_VOLUME_LOUD);
+    } else {
+        // was loud. make it soft.
+        movement_set_signal_volume(WATCH_BUZZER_VOLUME_SOFT);
+    }
+
+    signal_setting_display(1);
+    movement_play_signal();
+}
+
+
+static void alarm_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "ALM", "AL");
+    watch_display_text(WATCH_POSITION_BOTTOM, "ALARM ");
+    if (subsecond % 2) {
+        if (movement_alarm_volume() == WATCH_BUZZER_VOLUME_LOUD) {
+            // H for HIGH
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
+        }
+        else {
+            // L for LOW
+            watch_display_text(WATCH_POSITION_TOP_RIGHT, " L");
+        }
+    }
+}
+
+static void alarm_setting_advance(void) {
+    if (movement_alarm_volume() == WATCH_BUZZER_VOLUME_SOFT) {
+        // was soft. make it loud.
+        movement_set_alarm_volume(WATCH_BUZZER_VOLUME_LOUD);
+    } else {
+        // was loud. make it soft.
+        movement_set_alarm_volume(WATCH_BUZZER_VOLUME_SOFT);
+
+    }
+
+    alarm_setting_display(1);
+    movement_play_alarm();
+}
+
 static void timeout_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "TMOUt", "TO");
     if (subsecond % 2) {
@@ -235,7 +293,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         settings_state_t *state = (settings_state_t *)*context_ptr;
         int8_t current_setting = 0;
 
-        state->num_settings = 5; // baseline, without LED settings
+        state->num_settings = 7; // baseline, without LED settings
 #ifdef BUILD_GIT_HASH
         state->num_settings++;
 #endif
@@ -255,6 +313,12 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         current_setting++;
         state->settings_screens[current_setting].display = beep_setting_display;
         state->settings_screens[current_setting].advance = beep_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = signal_setting_display;
+        state->settings_screens[current_setting].advance = signal_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = alarm_setting_display;
+        state->settings_screens[current_setting].advance = alarm_setting_advance;
         current_setting++;
         state->settings_screens[current_setting].display = timeout_setting_display;
         state->settings_screens[current_setting].advance = timeout_setting_advance;
@@ -322,7 +386,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
         case EVENT_MODE_BUTTON_UP:
             movement_force_led_off();
             movement_move_to_next_face();
-            return false;
+            return true;
         case EVENT_ALARM_BUTTON_UP:
             state->settings_screens[state->current_page].advance();
             break;
@@ -339,7 +403,7 @@ bool settings_face_loop(movement_event_t event, void *context) {
         movement_force_led_on(color.red | color.red << 4,
                               color.green | color.green << 4,
                               color.blue | color.blue << 4);
-        return false;
+        return true;
     } else {
         movement_force_led_off();
         return true;
