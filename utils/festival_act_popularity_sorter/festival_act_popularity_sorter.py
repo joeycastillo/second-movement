@@ -8,6 +8,8 @@ from fake_useragent import UserAgent
 import requests
 import time
 import pandas as pd
+import shutil
+import os
 sp = None
 
 MAKE_ARR_FILE = 1 # 0 = Don't make the file; 1= Make the file; 2 = Make the file and print it to the console
@@ -22,15 +24,22 @@ POPULARITY_SOURCE = 'last.fm'
 STAGE_DEFAULT = "NO_STAGE"
 URL = 'https://clashfinder.com/data/event/bonnaroo2k26.json'
 
-duoActs = {"Freddy Gibbs & the Alechemist" : ["Freddie Gibbs", "The Alchemist"]}
+duoActs = {"Freddy Gibbs & the Alechemist" : ["Freddie Gibbs", "The Alchemist"],
+           "LSZEE" : ["LSDREAM", "Clozee"]}
 replaceActName = {"Weird Al Yankovich: Bigger & Weirder Ruvue" : "Weird Al Yankovic",
                   "Rachel Chinchouri" : "Rachel Chinouriri",
                   "Waylon Wyett" : "Waylon Wyatt",
-                  "Kesha Presents Superjam Esoterica: The Alchemy of Pop" : "Ke$ha",
+                  "Kesha Presents Superjam Esoterica: The Alchemy of Pop" : "Kesha",
                   "Gouldie Boutlier " : "Goldie Boutilier",
                   "A Hundred Dtums" : "A Hundred Drums",
                   "DJ Trixie Mattell" : "Trixie Mattel",
-                  "Laszwo" : "Łaszewo"}
+                  "Laszwo" : "Łaszewo",
+                  "Hemlock Springs" : "Hemlocke Springs",
+                  "Mother, Mother" : "Mother Mother",
+                  "Tedeschi-Trucks Band" : "Tedeschi Trucks Band",
+                  "Jessie Ware" : "Jessie Murph",
+                  "Amyl & the Sniffers" : "Amyl and the Sniffers",
+                  "Rufus Du Sol" : "RÜFÜS DU SOL"}
 replaceGenres = {"8BIT" : "OTHER"}
 
 
@@ -41,11 +50,12 @@ replaceWords = {
                 "D" : "d",
                 "." : "_",
                 "&" : "`n",
+                "Ü" : ";",
 #                "M" : "N%",
 #                "W" : "WJ"
                 }
 
-def get_artist(artist_name, client_id, client_secret):
+def get_artist_popularity_spotify(artist_name, client_id, client_secret):
     # Remove single quotes to avoid search issues
     top_track_not_found = 0
     global sp
@@ -112,7 +122,7 @@ def get_artist_followers_popularity_lastfm(artist_name, client_id, client_secret
                 continue
             data = []
         if "artist" not in data:
-            return 0, 0, 0, [], False
+            return 0, 0, 0, [], artist_name, False
         artist = data["artist"]
         # Followers → listeners
         try:
@@ -130,13 +140,14 @@ def get_artist_followers_popularity_lastfm(artist_name, client_id, client_secret
         # popularity = playcount / followers if followers else 0
 
         # Genres → tags
+        name = artist.get("name", artist_name)
         tags = artist.get("tags", {}).get("tag", [])
         genre_list = [t["name"] for t in tags]
 
         # --- Top track ---
-        top_song = get_top_track_lastfm(artist_name, api_key, base_url)
-        print(f"Found {artist['name']} | Top Track is: {top_song}")
-        return followers, popularity, top_song, genre_list, True
+        top_song = get_top_track_lastfm(name, api_key, base_url)
+        print(f"Found {name} | Top Track is: {top_song}")
+        return followers, popularity, top_song, genre_list, name, True
 
 
 def get_top_track_lastfm(artist_name, api_key, base_url):
@@ -233,13 +244,14 @@ def get_url_content(url):
 
 def get_artist_followers_popularity(artist_name, client_id, client_secret):
     if POPULARITY_SOURCE == "spotify":
-        artist_info, top_song = get_artist(artist_name, client_id, client_secret)
+        artist_info, top_song = get_artist_popularity_spotify(artist_name, client_id, client_secret)
         if artist_info is None:
-            return 0,0,0,[], False
+            return 0,0,0,[], artist_name, False
+        name_found = artist_info['name']
         followers = artist_info['followers']['total']
         popularity = artist_info['popularity']
         genre_list = artist_info['genres']
-        return followers, popularity, top_song, genre_list, True
+        return followers, popularity, top_song, genre_list, name_found, True
     elif POPULARITY_SOURCE == "last.fm":
         time.sleep(0.25)
         return get_artist_followers_popularity_lastfm(artist_name, client_id, client_secret)
@@ -355,8 +367,8 @@ def getFullArray(listActs):
         if isinstance(act_spot,list):
             listActsInListDuos.append(act)
             continue # We'll get and average the duos later.
-        followers, popularity, top_song, genre_list, found = get_artist_followers_popularity(act_spot, client_id, client_secret)
-        listActsPop.append({'name':act, 'followers' : followers, "popularity" : popularity, "top_song" : top_song, "genre_list" : genre_list})
+        followers, popularity, top_song, genre_list, name_found, found = get_artist_followers_popularity(act_spot, client_id, client_secret)
+        listActsPop.append({'name' : act, 'name_found' : name_found, 'followers' : followers, "popularity" : popularity, "top_song" : top_song, "genre_list" : genre_list})
         if not found:
             listActsNotFound.append(act_spot)
     # This logic is to average duos
@@ -370,20 +382,21 @@ def getFullArray(listActs):
         popularity = 0
         genre_list = []
         for artist in artists:
-            fol, pop, _, genres, found = get_artist_followers_popularity(artist, client_id, client_secret)
+            fol, pop, top_song, genres, name_found, found = get_artist_followers_popularity(artist, client_id, client_secret)
             if not found:
                 listActsNotFound.append(act_spot)
             else:
+                listActsPop.append({'name' : artist, 'name_found' : name_found, 'followers' : fol, "popularity" : pop, "top_song" : top_song, "genre_list" : genres})
                 genre_list.extend(genres)
                 followers += fol
                 popularity += pop
         followers = int((followers / len(artists)) * duo_mult)
         popularity = int((popularity / len(artists)) * duo_mult)
-        listActsPop.append({'name':duo, 'followers' : followers, "popularity" : popularity, "top_song" : "N/A", "genre_list" : genre_list})
+        listActsPop.append({'name':duo, 'name_found' : duo, 'followers' : followers, "popularity" : popularity, "top_song" : artists, "genre_list" : genre_list})
         if not found:
             listActsNotFound.append(act_spot)
     if PRINT_SEARCH_RESULTS and len(listActsNotFound) > 0:
-        print(f"Unable to find the following Acts: {listActsNotFound}")            
+        print(f"Unable to find the following Acts: {listActsNotFound}")
     return listActsPop
 
 def print_md_lst(sorted_listing, day_info):
@@ -411,7 +424,7 @@ def print_md_lst(sorted_listing, day_info):
     artist_genre = {} # Independent dict to avoid side-effects
     for item in sorted_listing:
         if displayStage:
-            stage, _, _, _ = dates_to_act(item['name'], day_info)
+            stage, _, _, _ = dates_to_act(item['name_found'], day_info)
             if stage is False:
                 continue
             stageDict[item['name']] = stage
@@ -451,7 +464,7 @@ def print_md_lst(sorted_listing, day_info):
         printText += f" {'-' * longestStg} |"
     print(printText)
     for item in sorted_listing:
-        act = item['name']
+        act = item['name_found']
         popularity = item['popularity']
         followers = item['followers']
         overall = item['overall']
@@ -460,13 +473,13 @@ def print_md_lst(sorted_listing, day_info):
             monthly_listeners = item['monthly_listeners']
             printText += f" {monthly_listeners : ^{longestMonLis}} |"
         if displayGenre:
-            genre = artist_genre[act]
+            genre = artist_genre[item['name']]
             printText += f" {genre : ^{longestGen}} |"
         if displayTopSong:
             top_song = item['top_song']
             printText += f" {top_song : ^{longestSng}} |"
         if displayStage:
-            stage = stageDict[act]
+            stage = stageDict[item['name']]
             printText += f" {stage : ^{longestStg}} |"
         print(printText)
 
@@ -484,7 +497,12 @@ def get_name_to_display(act, i=0, maxDisplayLen=None):
     return actToDisp
 
 def print_array_for_watch(listActs, sorted_listing, day_info, filename):
-    list_stages = sorted({info["stage"] for info in day_info.values() if info["stage"] is not None})
+    list_stages = sorted({
+        info_iter["stage"]
+        for info in day_info.values()
+        for info_iter in (info if isinstance(info, list) else [info])
+        if info_iter.get("stage") is not None
+    })
     dict_genres = {}
     list_genres = []
     for info in sorted_listing:
@@ -604,12 +622,21 @@ if __name__ == "__main__":
         with open("listActsPop.json", "r") as f:
             listActsPop = json.load(f)
     else:
+        start_time = time.perf_counter()
         listActsPop = getFullArray(listActs)
+        print(f"Getting All Artist Pop Data took: {((time.perf_counter() - start_time) / 60):.2f} minutes")
         for item in listActsPop:
             item['genre_disp'] = item['genre_list'][0] if item['genre_list'] else None
+        if os.path.exists("listActsPop.json"):
+            shutil.copy2("listActsPop.json", "listActsPop_bak.json")
+            print(f"Saved copy of previous listActsPop file")
         with open("listActsPop.json", "w") as f:
             json.dump(listActsPop, f, indent=2)
-
+        #  We store the individual acts that make up the duo in the JSON for review, so remove them.
+    for i in reversed(range(len(listActsPop))):
+        act_name = listActsPop[i]['name']
+        if any(act_name in lst for lst in duoActs.values()):
+            listActsPop.pop(i)
     if SORT_POP_BY_FOLLOWERS:  
         sortKey = lambda x: (x['followers'])
         sorted_listing = sorted(listActsPop, key=sortKey, reverse=True)
