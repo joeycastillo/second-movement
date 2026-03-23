@@ -2,6 +2,7 @@
 #include "festival_schedule_face.h"
 
 #define FESTIVAL_SCHEDULE_NUM_ACTS 101
+#define FESTIVAL_SCHEDULE_GCF_MINUTE 5
 
 const festival_schedule_t festival_acts[FESTIVAL_SCHEDULE_NUM_ACTS + 1]=
 {

@@ -481,8 +481,8 @@ static bool handle_tick(festival_schedule_state_t *state){
     handle_ts_ticks(state, movement_clock_mode_24h());
 
     if (state->cyc_through_all_acts) return false;
+    if (watch_rtc_get_unix_time() % (FESTIVAL_SCHEDULE_GCF_MINUTE * 60) != 0) return false;  // We check with unix time because it's a cheaper operation than movement_get_local_date_time
     curr_time = movement_get_local_date_time();
-    if (curr_time.unit.second != 0) return false;
     bool newDay = ((curr_time.reg >> 17) != (state -> prev_day));
     state -> prev_day = (curr_time.reg >> 17);
     state -> festival_occurring = _festival_occurring(curr_time, (newDay && !state->cyc_through_all_acts));

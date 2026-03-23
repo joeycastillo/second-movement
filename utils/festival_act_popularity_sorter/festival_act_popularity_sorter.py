@@ -10,6 +10,8 @@ import time
 import pandas as pd
 import shutil
 import os
+import math
+from functools import reduce
 sp = None
 
 MAKE_ARR_FILE = 1 # 0 = Don't make the file; 1= Make the file; 2 = Make the file and print it to the console
@@ -386,6 +388,23 @@ def popularity_sort(popList):
     return popList
 
 
+def gcf_minute_of_acts(day_info):
+    minutes_list = sorted({
+        val.minute
+        for info in day_info.values()
+        for val in (
+            [info["start_time"], info["end_time"]]
+            if not isinstance(info, list)
+            else [item[k] for item in info for k in ("start_time", "end_time")]
+        )
+        if val is not None
+    })
+    gcf = reduce(math.gcd, minutes_list)
+    if gcf == 0:
+        gcf = 60
+    return gcf
+
+
 def getFullArray(listActs):
     # Spits out the array of acts in alphabetically order
     duo_mult = 1.2  # Since duos are more hype, add a multiplier to their popularity and follower averages
@@ -578,8 +597,6 @@ def print_array_for_watch(listActs, sorted_listing, day_info, filename):
         writeAndPrint(f, "} festival_schedule_genre;")
         writeAndPrint(f, "###########################################################################")
 
-
-
         artistDateNotFound = []
         writeAndPrint(f, f"// Line-up - {URL}")
         writeAndPrint(f, '#include "festival_schedule_face.h"')
@@ -606,6 +623,7 @@ def print_array_for_watch(listActs, sorted_listing, day_info, filename):
             print(f"Set festival_schedule_t.artist's length to {arrLenSchedule} due to {arrActLongestSchedule}")
         listActsPrint = sorted(listActsPrint, key=lambda d: d['dispAct'].lstrip().lower())
         writeAndPrint(f, f"#define {enum_txt_start}NUM_ACTS {totalActs}")
+        writeAndPrint(f, f"#define {enum_txt_start}GCF_MINUTE {gcf_minute_of_acts(day_info)}")
         writeAndPrint(f, "")
         writeAndPrint(f, f"const festival_schedule_t festival_acts[{enum_txt_start}NUM_ACTS + 1]=")
         writeAndPrint(f, "{")
