@@ -27,3 +27,8 @@ fp-info-cache
 *.plan
 /.direnv
 /.emscripten_cache
+utils/festival_act_popularity_sorter/*.json
+!utils/festival_act_popularity_sorter/creds-example.json
+utils/festival_act_popularity_sorter/*festival_schedule_arr.txt
+utils/festival_act_popularity_sorter/.cache
+utils/festival_act_popularity_sorter/venv

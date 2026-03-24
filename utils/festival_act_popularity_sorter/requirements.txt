@@ -1,0 +1,4 @@
+fake-useragent==2.1.0
+pandas==2.2.3
+spotipy==2.24.0
+Unidecode==1.2.0

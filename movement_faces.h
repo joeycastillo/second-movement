@@ -82,4 +82,5 @@
 #include "rtccount_face.h"
 #include "tomato_face.h"
 #include "solar_time_face.h"
+#include "festival_schedule_face.h"
 // New includes go above this line.

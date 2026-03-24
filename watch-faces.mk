@@ -57,4 +57,5 @@ SRCS += \
   ./watch-faces/complication/ping_face.c \
   ./watch-faces/complication/tomato_face.c \
   ./watch-faces/clock/solar_time_face.c \
+  ./watch-faces/complication/festival_schedule_face.c \
 # New watch faces go above this line.
