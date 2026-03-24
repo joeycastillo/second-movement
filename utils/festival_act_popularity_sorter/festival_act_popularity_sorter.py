@@ -533,7 +533,7 @@ def print_md_lst(sorted_listing, day_info):
             genre = artist_genre[item['name']]
             printText += f" {genre : ^{longestGen}} |"
         if displayTopSong:
-            top_song = item['top_song']
+            top_song = str(item['top_song'])
             printText += f" {top_song : ^{longestSng}} |"
         if displayStage:
             stage = stageDict[item['name']]
@@ -657,18 +657,23 @@ def show_correlation(sorted_listing):
 
 
 if __name__ == "__main__":
+    today_date = (datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z"))
     if IGNORE_STAGES:
         day_info = {}
     else:
         if USE_DAYINFO_FILE:
             with open("day_info.json", "r") as f:
-                html_str = json.load(f)
+                html_str = json.load(f)['data']
         else:
             username, public_key = get_clashfinder_credentials()
             clashfinder_url = f"{URL}?authUsername={username}&authPublicKey={public_key}"
             html_str = get_url_content(clashfinder_url)
+            if os.path.exists("day_info.json"):
+                shutil.copy2("day_info.json", "day_info_bak.json")
+                print(f"Saved copy of previous day_info file")
             with open("day_info.json", "w") as f:
-                json.dump(html_str, f, indent=2)
+                html_str_dump = {'date' : today_date, 'data' : html_str}
+                json.dump(html_str_dump, f, indent=2)
         day_info = get_html_data(html_str)
         day_info = {key.split(" (")[0]: value for key, value in day_info.items()}
 
@@ -676,7 +681,7 @@ if __name__ == "__main__":
     listActsWatch = sorted(listActs, key=lambda x: x.lower().replace("the ", "") if x[0].startswith("the ") else x[0].lower())
     if USE_LISTACTPOP_FILE:
         with open("listActsPop.json", "r") as f:
-            listActsPop = json.load(f)
+            listActsPop = json.load(f)['data']
     else:
         start_time = time.perf_counter()
         listActsPop = getFullArray(listActs)
@@ -687,7 +692,8 @@ if __name__ == "__main__":
             shutil.copy2("listActsPop.json", "listActsPop_bak.json")
             print(f"Saved copy of previous listActsPop file")
         with open("listActsPop.json", "w") as f:
-            json.dump(listActsPop, f, indent=2)
+            listActsPopDump = {'date' : today_date, 'data' : listActsPop}
+            json.dump(listActsPopDump, f, indent=2)
         #  We store the individual acts that make up the duo in the JSON for review, so remove them.
     for i in reversed(range(len(listActsPop))):
         act_name = listActsPop[i]['name']
