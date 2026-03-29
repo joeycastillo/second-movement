@@ -341,6 +341,8 @@ uint8_t movement_claim_backup_register(void);
 
 int32_t movement_get_current_timezone_offset_for_zone(uint8_t zone_index);
 int32_t movement_get_current_timezone_offset(void);
+int32_t movement_get_timezone_offset_for_date_in_zone(watch_date_time_t date_time, uint8_t zone_index);
+int32_t movement_get_timezone_offset_for_date(watch_date_time_t date_time);
 
 int32_t movement_get_timezone_index(void);
 void movement_set_timezone_index(uint8_t value);
