@@ -47,9 +47,6 @@ typedef struct {
     // Selected program
     chirpy_demo_program_t program;
 
-    // Helps us handle 1/64 ticks during transmission; including countdown timer
-    chirpy_tick_state_t tick_state;
-
     // Used by chirpy encoder during transmission
     chirpy_encoder_state_t encoder_state;
 
@@ -150,46 +147,10 @@ static void _cdf_update_lcd(chirpy_demo_state_t *state) {
     }
 }
 
-static void _cdf_quit_chirping(chirpy_demo_state_t *state) {
-    state->mode = CDM_CHOOSE;
-    watch_set_buzzer_off();
-    watch_clear_indicator(WATCH_INDICATOR_BELL);
-    movement_request_tick_frequency(1);
-}
-
-static void _cdf_scale_tick(void *context) {
-    chirpy_demo_state_t *state = (chirpy_demo_state_t *)context;
-    chirpy_tick_state_t *tick_state = &state->tick_state;
-
-    // Scale goes in 200Hz increments from 700 Hz to 12.3 kHz -> 58 steps
-    if (tick_state->seq_pos == 58) {
-        _cdf_quit_chirping(state);
-        return;
-    }
-    uint32_t freq = 700 + tick_state->seq_pos * 200;
-    uint32_t period = 1000000 / freq;
-    watch_set_buzzer_period_and_duty_cycle(period, 25);
-    watch_set_buzzer_on();
-    ++tick_state->seq_pos;
-}
-
-static void _cdf_data_tick(void *context) {
-    chirpy_demo_state_t *state = (chirpy_demo_state_t *)context;
-
-    uint8_t tone = chirpy_get_next_tone(&state->encoder_state);
-    // Transmission over?
-    if (tone == 255) {
-        _cdf_quit_chirping(state);
-        return;
-    }
-    uint16_t period = chirpy_get_tone_period(tone);
-    watch_set_buzzer_period_and_duty_cycle(period, 25);
-    watch_set_buzzer_on();
-}
-
 static uint8_t *curr_data_ptr;
 static uint16_t curr_data_ix;
 static uint16_t curr_data_len;
+static chirpy_demo_state_t *curr_state;
 
 static uint8_t _cdf_get_next_byte(uint8_t *next_byte) {
     if (curr_data_ix == curr_data_len)
@@ -199,59 +160,60 @@ static uint8_t _cdf_get_next_byte(uint8_t *next_byte) {
     return 1;
 }
 
-static void _cdf_countdown_tick(void *context) {
-    chirpy_demo_state_t *state = (chirpy_demo_state_t *)context;
-    chirpy_tick_state_t *tick_state = &state->tick_state;
-
-    // Countdown over: start actual broadcast
-    if (tick_state->seq_pos == 8 * 3) {
-        tick_state->tick_compare = 3;
-        tick_state->tick_count = -1;
-        tick_state->seq_pos = 0;
-        // We'll be chirping out a scale
-        if (false) { // state->program == CDP_CLEAR) {
-            tick_state->tick_fun = _cdf_scale_tick;
-        }
-        // We'll be chirping out data
-        else {
-            // Set up the encoder
-            chirpy_init_encoder(&state->encoder_state, _cdf_get_next_byte);
-            tick_state->tick_fun = _cdf_data_tick;
-            // Set up the data
-            curr_data_ix = 0;
-            if (state->program == CDP_INFO_SHORT) {
-                curr_data_ptr = short_data;
-                curr_data_len = short_data_len;
-            } else if (state->program == CDP_INFO_LONG) {
-                curr_data_ptr = long_data_str;
-                curr_data_len = strlen((const char *)long_data_str);
-            } else if (state->program == CDP_INFO_NANOSEC) {
-                curr_data_ptr = activity_buffer;
-                curr_data_len = activity_buffer_size;
-            }
-        }
-        return;
+static void _cdf_on_chirping_done(void) {
+    if (curr_state) {
+        curr_state->mode = CDM_CHOOSE;
     }
-    // Sound or turn off buzzer
-    if ((tick_state->seq_pos % 8) == 0) {
-        watch_set_buzzer_period_and_duty_cycle(NotePeriods[BUZZER_NOTE_A5], 25);
-        watch_set_buzzer_on();
-    } else if ((tick_state->seq_pos % 8) == 1) {
-        watch_set_buzzer_off();
-    }
-    ++tick_state->seq_pos;
+    watch_clear_indicator(WATCH_INDICATOR_BELL);
 }
 
-static void _cdm_setup_chirp(chirpy_demo_state_t *state) {
-    // We want frequent callbacks from now on
-    movement_request_tick_frequency(64);
+static bool _cdm_raw_source_fn(uint16_t position, void* userdata, uint16_t* period, uint16_t* duration) {
+    // Beep countdown
+    if (position < 6) {
+        if (position % 2) {
+            *period = WATCH_BUZZER_PERIOD_REST;
+            *duration = 56;
+        } else {
+            *period = NotePeriods[BUZZER_NOTE_A5];
+            *duration = 8;
+        }
+        return false;
+    }
+
+    chirpy_demo_state_t *state = (chirpy_demo_state_t *)userdata;
+
+    uint8_t tone = chirpy_get_next_tone(&state->encoder_state);
+    // Transmission over?
+    if (tone == 255) {
+        return true;
+    }
+
+    *period = chirpy_get_tone_period(tone);
+    *duration = 3;
+
+    return false;
+}
+
+static void _cdm_start_transmission(chirpy_demo_state_t *state) {
     watch_set_indicator(WATCH_INDICATOR_BELL);
     state->mode = CDM_CHIRPING;
-    // Set up tick state; start with countdown
-    state->tick_state.tick_count = -1;
-    state->tick_state.tick_compare = 8;
-    state->tick_state.seq_pos = 0;
-    state->tick_state.tick_fun = _cdf_countdown_tick;
+
+    // Set up the data
+    curr_state = state;
+    curr_data_ix = 0;
+    if (state->program == CDP_INFO_SHORT) {
+        curr_data_ptr = short_data;
+        curr_data_len = short_data_len;
+    } else if (state->program == CDP_INFO_LONG) {
+        curr_data_ptr = long_data_str;
+        curr_data_len = strlen((const char *)long_data_str);
+    } else if (state->program == CDP_INFO_NANOSEC) {
+        curr_data_ptr = activity_buffer;
+        curr_data_len = activity_buffer_size;
+    }
+
+    chirpy_init_encoder(&state->encoder_state, _cdf_get_next_byte);
+    watch_buzzer_play_raw_source(_cdm_raw_source_fn, state, _cdf_on_chirping_done);
 }
 
 bool chirpy_demo_face_loop(movement_event_t event, void *context) {
@@ -261,12 +223,7 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             _cdf_update_lcd(state);
             break;
-        case EVENT_MODE_BUTTON_UP:
-            // Do not exit face while we're chirping
-            if (state->mode != CDM_CHIRPING) {
-                movement_move_to_next_face();
-            }
-            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
         case EVENT_LIGHT_BUTTON_UP:
             // We don't do light.
             break;
@@ -286,10 +243,6 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
                     state->program = CDP_CLEAR;
                 _cdf_update_lcd(state);
             }
-            // If chirping: stoppit
-            else if (state->mode == CDM_CHIRPING) {
-                _cdf_quit_chirping(state);
-            }
             break;
         case EVENT_ALARM_LONG_PRESS:
             // If in choose mode: start chirping
@@ -299,16 +252,7 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
                     movement_force_led_off();
                     movement_move_to_next_face();
                 } else {
-                    _cdm_setup_chirp(state);
-                }
-            }
-            break;
-        case EVENT_TICK:
-            if (state->mode == CDM_CHIRPING) {
-                ++state->tick_state.tick_count;
-                if (state->tick_state.tick_count == state->tick_state.tick_compare) {
-                    state->tick_state.tick_count = 0;
-                    state->tick_state.tick_fun(context);
+                    _cdm_start_transmission(state);
                 }
             }
             break;
@@ -317,15 +261,13 @@ bool chirpy_demo_face_loop(movement_event_t event, void *context) {
             if (state->mode != CDM_CHIRPING) {
                 movement_move_to_face(0);
             }
+            // fall through
         default:
+            movement_default_loop_handler(event);
             break;
     }
 
-    // Return true if the watch can enter standby mode. False needed when chirping.
-    if (state->mode == CDM_CHIRPING)
-        return false;
-    else
-        return true;
+    return true;
 }
 
 void chirpy_demo_face_resign(void *context) {

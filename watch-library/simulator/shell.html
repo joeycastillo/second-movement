@@ -64,22 +64,22 @@
   <h1 style="text-align: center;">Sensor Watch Emulator</h1>
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1271 1311" width="320">
     <defs>
-      <radialGradient id="Dégradé_sans_nom_3" data-name="Dégradé sans nom 3" cx="635" cy="687" fx="260.1751499985994" r="374.83" gradientUnits="userSpaceOnUse">
-        <stop offset="0.28" stop-color="lime"/>
-        <stop offset="0.46" stop-color="#00b200" stop-opacity="0.7"/>
-        <stop offset="0.65" stop-color="#006700" stop-opacity="0.4"/>
-        <stop offset="0.82" stop-color="#002f00" stop-opacity="0.19"/>
-        <stop offset="0.94" stop-color="#000d00" stop-opacity="0.05"/>
-        <stop offset="1" stop-opacity="0"/>
+      <radialGradient id="Dégradé_sans_nom_3" data-name="Dégradé sans nom 3"
+                      cx="635" cy="687" fx="260.1751499985994" r="374.83" gradientUnits="userSpaceOnUse">
+        <stop offset="0.28" stop-color="white"/>
+        <stop offset="0.46" stop-color="#ccc" stop-opacity="0.7"/>
+        <stop offset="0.65" stop-color="#999" stop-opacity="0.4"/>
+        <stop offset="0.82" stop-color="#666" stop-opacity="0.19"/>
+        <stop offset="0.94" stop-color="#333" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#000" stop-opacity="0"/>
       </radialGradient>
-      <filter id="ledcolor">
-        <feColorMatrix in="SourceGraphic" type="matrix"
-                       values=" 0      0      0      0 0
-                                0      1      0      0 0
-                                0      0      0      0 0
-                                0      0      0      1 0  "/>
-
-      </filter>
+        <filter id="ledcolor">
+          <feColorMatrix in="SourceGraphic" type="matrix"
+                 values="1 0 0 0 0
+                         0 1 0 0 0
+                         0 0 1 0 0
+                         0 0 0 1 0"/>
+        </filter>
     </defs>
     <g id="Calque">
       <path id="btn3" d="M1226,777h39.08a5.92,5.92,0,0,1,5.92,5.92v58.16a5.92,5.92,0,0,1-5.92,5.92H1226a0,0,0,0,1,0,0V777A0,0,0,0,1,1226,777Z" style="fill: #999"/>

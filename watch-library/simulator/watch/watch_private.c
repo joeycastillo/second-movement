@@ -51,8 +51,6 @@ int _gettimeofday(struct timeval *tv, void *tzvp) {
     return 0;
 }
 
-void _watch_disable_tcc(void) {}
-
 void _watch_enable_usb(void) {}
 
 void watch_disable_TRNG() {}

@@ -55,19 +55,22 @@
 #include "movement.h"
 
 typedef struct {
-    bool light_on_button;   // determines whether the light button actually triggers the led
+    rtc_counter_t start_counter; // rtc counter when the stopwatch was started
+    rtc_counter_t lap_counter;   // rtc counter when the stopwatch was lapped
+    rtc_counter_t stop_counter;  // rtc counter when the stopwatch was stopped
+    uint8_t status;              // the status the stopwatch is in (idle, running, stopped)
+    bool slow_refresh;           // update the display slowly (same 128Hz timekeeping accuracy)
+    struct {
+        rtc_counter_t seconds;
+        rtc_counter_t minutes;
+        rtc_counter_t hours;
+    } old_display;               // the digits currently being displayed on screen
 } fast_stopwatch_state_t;
 
 void fast_stopwatch_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void fast_stopwatch_face_activate(void *context);
 bool fast_stopwatch_face_loop(movement_event_t event, void *context);
 void fast_stopwatch_face_resign(void *context);
-
-#if __EMSCRIPTEN__
-void em_cb_handler(void *userData);
-#else
-void TC2_Handler(void);
-#endif
 
 #define fast_stopwatch_face ((const watch_face_t){ \
     fast_stopwatch_face_setup, \

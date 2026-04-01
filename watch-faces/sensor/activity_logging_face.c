@@ -86,6 +86,13 @@ void activity_logging_face_activate(void *context) {
 bool activity_logging_face_loop(movement_event_t event, void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     switch (event.event_type) {
+        case EVENT_LIGHT_LONG_PRESS:
+            movement_illuminate_led();
+            break;
+        case EVENT_LIGHT_BUTTON_DOWN:
+            state->display_index = (state->display_index + ACTIVITY_LOGGING_NUM_DAYS - 1) % ACTIVITY_LOGGING_NUM_DAYS;
+            _activity_logging_face_update_display(state);
+            break;
         case EVENT_ALARM_BUTTON_DOWN:
             state->display_index = (state->display_index + 1) % ACTIVITY_LOGGING_NUM_DAYS;
             // fall through
