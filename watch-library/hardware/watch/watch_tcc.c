@@ -230,7 +230,7 @@ void watch_buzzer_abort_sequence(void) {
 }
 
 void watch_buzzer_register_global_callbacks(watch_cb_t cb_start, watch_cb_t cb_stop) {
-    _cb_stop_global = cb_start;
+    _cb_start_global = cb_start;
     _cb_stop_global = cb_stop;
 }
 
