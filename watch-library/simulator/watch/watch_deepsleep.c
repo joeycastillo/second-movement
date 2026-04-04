@@ -80,10 +80,6 @@ void watch_enter_sleep_mode(void) {
     // disable tick interrupt
     watch_rtc_disable_all_periodic_callbacks();
 
-    // // disable all buttons but alarm
-    watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), NULL, INTERRUPT_TRIGGER_NONE);
-    watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), NULL, INTERRUPT_TRIGGER_NONE);
-
     sleep(4);
 
     // call app_setup so the app can re-enable everything we disabled.

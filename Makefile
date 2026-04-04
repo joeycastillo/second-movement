@@ -7,10 +7,10 @@ GOSSAMER_PATH=gossamer
 # - sensorwatch_green
 # - sensorwatch_red (also known as Sensor Watch Lite)
 # - sensorwatch_blue
-# BOARD=sensorwatch_pro
+BOARD=sensorwatch_pro
 
 # Set this to the type of display in your watch: classic or custom. Commented out to force a choice when building.
-# DISPLAY=classic
+DISPLAY=custom
 
 # End of user configurable options.
 
@@ -77,7 +77,10 @@ INCLUDES += \
   -I./lib/base32 \
   -I./lib/TOTP \
   -I./lib/chirpy_tx \
+  -I./lib/fesk_tx \
+  -I./lib/lux_rx \
   -I./lib/base64 \
+  -I./lib/embedded_pedometer \
   -I./watch-library/shared/watch \
   -I./watch-library/shared/driver \
   -I./watch-faces/clock \
@@ -104,7 +107,11 @@ SRCS += \
   ./lib/TOTP/sha512.c \
   ./lib/TOTP/TOTP.c \
   ./lib/chirpy_tx/chirpy_tx.c \
+  ./lib/fesk_tx/fesk_tx.c \
+  ./lib/fesk_tx/fesk_session.c \
   ./lib/base64/base64.c \
+  ./lib/lux_rx/lux_rx.c \
+  ./lib/embedded_pedometer/count_steps.c \
   ./watch-library/shared/driver/thermistor_driver.c \
   ./watch-library/shared/watch/watch_common_buzzer.c \
   ./watch-library/shared/watch/watch_common_display.c \
@@ -112,8 +119,12 @@ SRCS += \
 
 
 SRCS += ./watch-library/shared/driver/lis2dw.c
+SRCS += ./watch-library/shared/driver/opt3001.c
 
 ifdef EMSCRIPTEN
+
+# Replace gossamer's ADC with our simulator stub (which provides adc_get_analog_value).
+SRCS := $(filter-out %/adc.c,$(SRCS))
 
 INCLUDES += \
   -I./watch-library/simulator/watch \

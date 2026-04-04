@@ -45,6 +45,7 @@
 #include "evsys.h"
 #include "delay.h"
 #include "thermistor_driver.h"
+#include "count_steps.h"
 
 #include "movement_config.h"
 
@@ -62,6 +63,7 @@ void * watch_face_contexts[MOVEMENT_NUM_FACES];
 watch_date_time_t scheduled_tasks[MOVEMENT_NUM_FACES];
 const int32_t movement_le_inactivity_deadlines[8] = {INT_MAX, 600, 3600, 7200, 21600, 43200, 86400, 604800};
 const int16_t movement_timeout_inactivity_deadlines[4] = {60, 120, 300, 1800};
+const uint8_t movement_step_count_disable_delay_sec = 5;
 
 const uint32_t _movement_mode_button_events_mask = 0b11111 << EVENT_MODE_BUTTON_DOWN;
 const uint32_t _movement_light_button_events_mask = 0b11111 << EVENT_LIGHT_BUTTON_DOWN;
@@ -85,6 +87,11 @@ typedef struct {
 typedef struct {
     volatile uint32_t pending_events;
     volatile bool turn_led_off;
+    volatile bool rainbow_active;
+    volatile uint8_t rainbow_index;
+    volatile uint8_t rainbow_ticks;
+    volatile uint8_t rainbow_waypoint; // Current waypoint index (0-6)
+    volatile uint8_t rainbow_phase; // Phase within current waypoint (0-28)
     volatile bool has_pending_sequence;
     volatile bool enter_sleep_mode;
     volatile bool exit_sleep_mode;
@@ -92,6 +99,8 @@ typedef struct {
     volatile uint8_t subsecond;
     volatile rtc_counter_t minute_counter;
     volatile bool minute_alarm_fired;
+    volatile bool tick_fired_second;
+    volatile bool step_count_needs_updating;
     volatile bool is_buzzing;
     volatile uint8_t pending_sequence_priority;
     volatile bool schedule_next_comp;
@@ -108,6 +117,9 @@ typedef struct {
 
 movement_volatile_state_t movement_volatile_state;
 
+static uint8_t _awake_state_lis2dw = 0;  // 0 = asleep, 1 = just woke up, 2 = awake
+static uint8_t _step_fifo_timeout_lis2dw = LIS2DW_FIFO_TIMEOUT;
+static uint32_t _total_step_count = 0;
 // The last sequence that we have been asked to play while the watch was in deep sleep
 static int8_t *_pending_sequence;
 
@@ -128,9 +140,54 @@ int8_t alarm_tune[] = {
 int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
 #define TIMEZONE_DOES_NOT_OBSERVE (-127)
 
+typedef struct { uint8_t r, g, b; } RGB;
+
+// 4-color rainbow: Pink, Yellow, Green, Purple
+// Vibrant colors cycling through 4 distinct hues
+static const RGB rainbow_lut[256] = {
+    {255,20,147},{255,23,144},{255,27,142},{255,31,140},{255,34,137},{255,38,135},{255,42,133},{255,45,130},
+    {255,49,128},{255,53,126},{255,56,124},{255,60,121},{255,64,119},{255,67,117},{255,71,114},{255,75,112},
+    {255,78,110},{255,82,107},{255,86,105},{255,89,103},{255,93,101},{255,97,98},{255,100,96},{255,104,94},
+    {255,108,91},{255,111,89},{255,115,87},{255,119,84},{255,122,82},{255,126,80},{255,130,78},{255,133,75},
+    {255,137,73},{255,141,71},{255,144,68},{255,148,66},{255,152,64},{255,155,62},{255,159,59},{255,163,57},
+    {255,166,55},{255,170,52},{255,174,50},{255,177,48},{255,181,45},{255,185,43},{255,188,41},{255,192,39},
+    {255,196,36},{255,199,34},{255,203,32},{255,207,29},{255,210,27},{255,214,25},{255,218,22},{255,221,20},
+    {255,225,18},{255,229,16},{255,232,13},{255,236,11},{255,240,9},{255,243,6},{255,247,4},{255,251,2},
+    {255,255,0},{251,255,0},{247,255,0},{243,255,0},{239,255,0},{235,255,0},{231,255,0},{227,255,0},
+    {223,255,0},{219,255,0},{215,255,0},{211,255,0},{207,255,0},{203,255,0},{199,255,0},{195,255,0},
+    {191,255,0},{187,255,0},{183,255,0},{179,255,0},{175,255,0},{171,255,0},{167,255,0},{163,255,0},
+    {159,255,0},{155,255,0},{151,255,0},{147,255,0},{143,255,0},{139,255,0},{135,255,0},{131,255,0},
+    {127,255,0},{123,255,0},{119,255,0},{115,255,0},{111,255,0},{107,255,0},{103,255,0},{99,255,0},
+    {95,255,0},{91,255,0},{87,255,0},{83,255,0},{79,255,0},{75,255,0},{71,255,0},{67,255,0},
+    {63,255,0},{59,255,0},{55,255,0},{51,255,0},{47,255,0},{43,255,0},{39,255,0},{35,255,0},
+    {31,255,0},{27,255,0},{23,255,0},{19,255,0},{15,255,0},{11,255,0},{7,255,0},{3,255,0},
+    {0,255,0},{2,251,3},{4,247,6},{6,243,9},{9,239,13},{11,235,16},{13,231,19},{16,227,23},
+    {18,223,26},{20,219,29},{23,215,32},{25,211,36},{27,207,39},{30,203,42},{32,199,46},{34,195,49},
+    {37,191,52},{39,187,56},{41,183,59},{43,179,62},{46,175,65},{48,171,69},{50,167,72},{53,163,75},
+    {55,159,79},{57,155,82},{60,151,85},{62,147,89},{64,143,92},{67,139,95},{69,135,98},{71,131,102},
+    {74,127,105},{76,123,108},{78,119,112},{80,115,115},{83,111,118},{85,107,121},{87,103,125},{90,99,128},
+    {92,95,131},{94,91,135},{97,87,138},{99,83,141},{101,79,145},{104,75,148},{106,71,151},{108,67,154},
+    {111,63,158},{113,59,161},{115,55,164},{117,51,168},{120,47,171},{122,43,174},{124,39,178},{127,35,181},
+    {129,31,184},{131,27,187},{134,23,191},{136,19,194},{138,15,197},{141,11,201},{143,7,204},{145,3,207},
+    {148,0,211},{149,0,210},{151,0,209},{153,0,208},{154,1,207},{156,1,206},{158,1,205},{159,2,204},
+    {161,2,203},{163,2,202},{164,3,201},{166,3,200},{168,3,199},{169,4,198},{171,4,197},{173,4,196},
+    {174,5,195},{176,5,194},{178,5,193},{179,5,192},{181,6,191},{183,6,190},{184,6,189},{186,7,188},
+    {188,7,187},{189,7,186},{191,8,185},{193,8,184},{194,8,183},{196,9,182},{198,9,181},{199,9,180},
+    {201,10,179},{203,10,178},{204,10,177},{206,10,176},{208,11,175},{209,11,174},{211,11,173},{213,12,172},
+    {214,12,171},{216,12,170},{218,13,169},{219,13,168},{221,13,167},{223,14,166},{224,14,165},{226,14,164},
+    {228,15,163},{229,15,162},{231,15,161},{233,15,160},{234,16,159},{236,16,158},{238,16,157},{239,17,156},
+    {241,17,155},{243,17,154},{244,18,153},{246,18,152},{248,18,151},{249,19,150},{251,19,149},{253,19,148}
+};
+
+// Key color waypoints for hold-and-transition animation
+// Pink, Yellow, Green, Purple
+static const uint8_t rainbow_waypoints[4] = {0, 64, 128, 192};
+
 void cb_mode_btn_interrupt(void);
 void cb_light_btn_interrupt(void);
 void cb_alarm_btn_interrupt(void);
+void cb_mode_btn_extwake(void);
+void cb_light_btn_extwake(void);
 void cb_alarm_btn_extwake(void);
 void cb_minute_alarm_fired(void);
 void cb_tick(void);
@@ -138,6 +195,7 @@ void cb_mode_btn_timeout_interrupt(void);
 void cb_light_btn_timeout_interrupt(void);
 void cb_alarm_btn_timeout_interrupt(void);
 void cb_led_timeout_interrupt(void);
+void cb_rainbow_timeout_interrupt(void);
 void cb_resign_timeout_interrupt(void);
 void cb_sleep_timeout_interrupt(void);
 void cb_buzzer_start(void);
@@ -145,6 +203,7 @@ void cb_buzzer_stop(void);
 
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
+void cb_accelerometer_wake_event(void);
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -279,20 +338,32 @@ static void _movement_renew_top_of_minute_alarm(void) {
     movement_volatile_state.schedule_next_comp = true;
 }
 
+#define PRINT_LIS_EVENTS false
 static uint32_t _movement_get_accelerometer_events() {
     uint32_t accelerometer_events = 0;
+#ifdef I2C_SERCOM
+    if (movement_state.has_lis2dw) {
+        uint8_t int_src = lis2dw_get_interrupt_source();
+#if PRINT_LIS_EVENTS
+        printf("_movement_get_accelerometer_events\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_SLEEP_CHANGE_IA)  printf("Sleep Change IA\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_6D_IA)            printf("6D IA\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP)       printf("Single Tap\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP)       printf("Double Tap\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_WU_IA)            printf("Wake Up\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_FF_IA)            printf("Free Fall\r\n");
+#endif
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) {
+            accelerometer_events |= 1 << EVENT_DOUBLE_TAP;
+            printf("Double tap!\r\n");
+        }
 
-    uint8_t int_src = lis2dw_get_interrupt_source();
-
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_DOUBLE_TAP) {
-        accelerometer_events |= 1 << EVENT_DOUBLE_TAP;
-        printf("Double tap!\r\n");
+        if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) {
+            accelerometer_events |= 1 << EVENT_SINGLE_TAP;
+            printf("Single tap!\r\n");
+        }
     }
-
-    if (int_src & LIS2DW_REG_ALL_INT_SRC_SINGLE_TAP) {
-        accelerometer_events |= 1 << EVENT_SINGLE_TAP;
-        printf("Single tap!\r\n");
-    }
+#endif
 
     return accelerometer_events;
 }
@@ -366,12 +437,14 @@ static void _movement_handle_button_presses(uint32_t pending_events) {
 }
 
 static void _movement_handle_top_of_minute(void) {
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
 
     // update the DST offset cache every 30 minutes, since someplace in the world could change.
     if (date_time.unit.minute % 30 == 0) {
         _movement_update_dst_offset_cache();
     }
+
+    enable_disable_step_count_times(date_time);
 
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
         // For each face that offers an advisory...
@@ -432,6 +505,11 @@ void movement_request_tick_frequency(uint8_t freq) {
     // 0x01 (1 Hz) will have 7 leading zeros for PER7. 0x80 (128 Hz) will have no leading zeroes for PER0.
     uint8_t per_n = __builtin_clz(tmp);
 
+    // While we try to count steps when the tick faster than 1 second, it may be inaccurate since
+    // all 12-13 samples in the FIFO may not be read.
+    if (movement_state.has_lis2dw) {
+        _step_fifo_timeout_lis2dw = LIS2DW_FIFO_TIMEOUT / freq;
+    }
     movement_state.tick_frequency = freq;
     movement_state.tick_pern = per_n;
 
@@ -473,8 +551,40 @@ void movement_force_led_off(void) {
     movement_state.light_on = false;
     // The led timeout probably already triggered, but still disable just in case we are switching off the light by other means
     watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
+    watch_rtc_disable_comp_callback_no_schedule(RAINBOW_TIMEOUT);
+    movement_volatile_state.rainbow_active = false;
     movement_volatile_state.schedule_next_comp = true;
     watch_set_led_off();
+}
+
+void movement_rainbow_led(void) {
+    // Start rainbow animation (2.3 seconds, hold-and-transition effect, 4 colors)
+    movement_state.light_on = true;
+    movement_volatile_state.rainbow_active = true;
+    movement_volatile_state.rainbow_index = 0;
+    movement_volatile_state.rainbow_ticks = 0;
+    movement_volatile_state.rainbow_waypoint = 0; // Start at first waypoint (pink)
+    movement_volatile_state.rainbow_phase = 0;
+
+    // Disable any existing LED timeout
+    watch_rtc_disable_comp_callback_no_schedule(LED_TIMEOUT);
+
+    // Set first color (pink)
+    RGB color = rainbow_lut[rainbow_waypoints[0]];
+    watch_set_led_color_rgb(color.r, color.g, color.b);
+
+    // Schedule first update (20ms intervals for smooth animation)
+    // 4 waypoints × 29 ticks = 116 total ticks = 2320ms total duration
+    rtc_counter_t counter = watch_rtc_get_counter();
+    uint32_t freq = watch_rtc_get_frequency();
+    uint32_t update_interval = freq / 50; // 20ms intervals
+
+    watch_rtc_register_comp_callback_no_schedule(
+        cb_rainbow_timeout_interrupt,
+        counter + update_interval,
+        RAINBOW_TIMEOUT
+    );
+    movement_volatile_state.schedule_next_comp = true;
 }
 
 bool movement_default_loop_handler(movement_event_t event) {
@@ -483,11 +593,12 @@ bool movement_default_loop_handler(movement_event_t event) {
             movement_move_to_next_face();
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
-            movement_illuminate_led();
+            movement_rainbow_led();
             break;
         case EVENT_LIGHT_BUTTON_UP:
         case EVENT_LIGHT_LONG_UP:
-            if (movement_state.settings.bit.led_duration == 0) {
+            // Don't turn off LED if rainbow is active
+            if (!movement_volatile_state.rainbow_active && movement_state.settings.bit.led_duration == 0) {
                 movement_force_led_off();
             }
             break;
@@ -555,6 +666,9 @@ void movement_request_sleep(void) {
 void movement_request_wake() {
     movement_volatile_state.exit_sleep_mode = true;
     _movement_reset_inactivity_countdown();
+#if __EMSCRIPTEN__
+    _wake_up_simulator();
+#endif
 }
 
 void cb_buzzer_start(void) {
@@ -727,6 +841,26 @@ void movement_set_local_date_time(watch_date_time_t date_time) {
     movement_set_utc_timestamp(watch_utility_date_time_to_unix_time(date_time, current_offset));
 }
 
+uint8_t get_step_count_start_hour(void) {
+    return MOVEMENT_STEP_COUNT_START;
+}
+
+uint8_t get_step_count_end_hour(void) {
+    return MOVEMENT_STEP_COUNT_END;
+}
+
+bool movement_in_step_counter_interval(uint8_t hour) {
+    switch (movement_get_when_to_count_steps())
+    {
+    case MOVEMENT_SC_ALWAYS:
+        return true;
+    case MOVEMENT_SC_DAYTIME:
+        return hour >= MOVEMENT_STEP_COUNT_START && hour < MOVEMENT_STEP_COUNT_END;
+    default:
+        return false;
+    }
+}
+
 void movement_set_utc_timestamp(uint32_t timestamp) {
     watch_rtc_set_unix_time(timestamp);
 
@@ -761,6 +895,15 @@ watch_buzzer_volume_t movement_signal_volume(void) {
 }
 void movement_set_signal_volume(watch_buzzer_volume_t value) {
     movement_state.signal_volume = value;
+}
+
+movement_step_count_option_t movement_get_when_to_count_steps(void) {
+    if (movement_state.has_lis2dw) return movement_state.when_to_count_steps;
+    return MOVEMENT_SC_NOT_INSTALLED;
+}
+
+void movement_set_when_to_count_steps(movement_step_count_option_t value) {
+    movement_state.when_to_count_steps = value;
 }
 
 watch_buzzer_volume_t movement_alarm_volume(void) {
@@ -843,6 +986,12 @@ void movement_set_alarm_enabled(bool value) {
 
 bool movement_enable_tap_detection_if_available(void) {
     if (movement_state.has_lis2dw) {
+        if (movement_state.counting_steps) {
+            movement_state.count_steps_keep_off = true;
+            // Step Counter uses a frequency of 12.5Hz, so the 4000Hz reading of tap detection will throw things off
+            movement_disable_step_count(true);
+        }
+
         // configure tap duration threshold and enable Z axis
         lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
         lis2dw_configure_tap_duration(2, 2, 2);
@@ -858,6 +1007,7 @@ bool movement_enable_tap_detection_if_available(void) {
 
         // enable tap detection on INT1/A3.
         lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP);
+        movement_state.tap_enabled = true;
 
         return true;
     }
@@ -867,6 +1017,7 @@ bool movement_enable_tap_detection_if_available(void) {
 
 bool movement_disable_tap_detection_if_available(void) {
     if (movement_state.has_lis2dw) {
+        movement_state.count_steps_keep_off = false;
         // Ramp data rate back down to the usual lowest rate to save power.
         lis2dw_set_low_noise_mode(false);
         lis2dw_set_data_rate(movement_state.accelerometer_background_rate);
@@ -874,10 +1025,20 @@ bool movement_disable_tap_detection_if_available(void) {
         lis2dw_disable_double_tap();
         // ...disable Z axis (not sure if this is needed, does this save power?)...
         lis2dw_configure_tap_threshold(0, 0, 0, 0);
+        movement_state.tap_enabled = false;
 
         return true;
     }
 
+    return false;
+}
+
+bool movement_has_lis2dw(void) {
+    return movement_state.has_lis2dw;
+}
+
+bool movement_still_sees_accelerometer(void) {
+    return lis2dw_get_device_id() == LIS2DW_WHO_AM_I_VAL;
     return false;
 }
 
@@ -917,6 +1078,167 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
     return false;
 }
 
+void enable_disable_step_count_times(watch_date_time_t date_time) {
+    if (movement_state.has_lis2dw) {
+        if (movement_volatile_state.is_sleeping) return;
+        movement_step_count_option_t when_to_count_steps = movement_get_when_to_count_steps();
+        if (when_to_count_steps == MOVEMENT_SC_OFF || when_to_count_steps == MOVEMENT_SC_NOT_INSTALLED) {
+            if (movement_state.counting_steps) {
+                movement_disable_step_count(false);
+            }
+            return;
+        }
+        bool in_count_step_hours = movement_in_step_counter_interval(date_time.unit.hour);
+        if (movement_state.counting_steps && !in_count_step_hours && !movement_state.count_steps_keep_on) {
+            movement_disable_step_count(false);
+        } else if (!movement_state.counting_steps && in_count_step_hours && !movement_state.count_steps_keep_off) {
+            movement_enable_step_count_multiple_attempts(3, false);
+        }
+    }
+}
+
+bool movement_enable_step_count(bool force_enable) {
+    if (movement_state.count_steps_keep_off) return false;
+    movement_state.step_count_disable_req_sec = -1;
+    if (!force_enable && movement_state.counting_steps) return true;
+    if (movement_state.has_lis2dw) {
+#if COUNT_STEPS_USE_ESPRUINO
+        count_steps_espruino_init();
+#endif
+        bool low_noise = true;
+        lis2dw_data_rate_t data_rate = LIS2DW_DATA_RATE_12_5_HZ;
+        lis2dw_filter_t filter_type = LIS2DW_FILTER_LOW_PASS;
+        lis2dw_low_power_mode_t power_mode = LIS2DW_LP_MODE_1;
+        lis2dw_bandwidth_filtering_mode_t bandwidth_filtering = LIS2DW_BANDWIDTH_FILTER_DIV2;
+        lis2dw_range_t range = LIS2DW_RANGE_4_G;
+        lis2dw_mode_t mode = LIS2DW_MODE_LOW_POWER;
+        uint8_t threshold = 2;  // 0.06Gs; Used to see if the watch is awake.
+
+        lis2dw_set_low_noise_mode(low_noise);  // Inntesting, this didn't read back True after setting ever...so we're not checking it
+        movement_set_accelerometer_background_rate(data_rate);
+        if (lis2dw_get_data_rate() != data_rate) return false;
+        lis2dw_set_filter_type(filter_type);
+        if (lis2dw_get_filter_type() != filter_type) return false;
+        lis2dw_set_low_power_mode(power_mode);
+        if (lis2dw_get_low_power_mode() != power_mode) return false;
+        lis2dw_set_bandwidth_filtering(bandwidth_filtering);
+        if (lis2dw_get_bandwidth_filtering() != bandwidth_filtering) return false;
+        lis2dw_set_range(range);
+        if (lis2dw_get_range() != range) return false;
+        lis2dw_set_mode(mode);
+        if (lis2dw_get_mode() != mode) return false;
+        movement_set_accelerometer_motion_threshold(threshold);
+        if (movement_get_accelerometer_motion_threshold() != threshold) return false;
+        watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake_event, INTERRUPT_TRIGGER_BOTH);
+        lis2dw_enable_fifo();
+        lis2dw_clear_fifo();
+        movement_state.counting_steps = true;
+        return true;
+    }
+
+    movement_state.counting_steps = false;
+    return false;
+}
+
+bool movement_enable_step_count_multiple_attempts(uint8_t max_tries, bool force_enable) {
+    for (uint8_t i = 0; i < max_tries; i++)
+    {  // Truly a hack, but we'll try multiple times to enable the get the step counter working
+        if (movement_still_sees_accelerometer()) {
+            if (movement_enable_step_count(force_enable)) {
+                return true;
+            }
+        }
+        if (i < max_tries - 1) {
+            delay_ms(10);
+        }
+    }
+    return false;
+}
+
+bool movement_disable_step_count(bool disable_immedietly) {
+    if (!disable_immedietly && movement_state.count_steps_keep_on) {
+        return false;
+    }
+    if (!disable_immedietly) {
+        // Also reused to make sure we don't turn off step counting immedietly when we leave a screen
+        // It's silly to leave the screen, disable the count, and immedietly go to a face that also enables the count.
+        movement_state.step_count_disable_req_sec = movement_step_count_disable_delay_sec;
+        return false;
+    }
+    if (movement_state.has_lis2dw) {
+        _awake_state_lis2dw = 0;
+        movement_state.counting_steps = false;
+        movement_set_accelerometer_motion_threshold(32); // 1G
+        lis2dw_clear_fifo();
+        lis2dw_disable_fifo();
+        if (movement_state.tap_enabled) return true;
+        lis2dw_set_low_noise_mode(false);
+        movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_POWERDOWN);
+        lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
+        return true;
+    }
+
+    return false;
+}
+
+bool movement_step_count_is_enabled(void) {
+    return movement_state.counting_steps;
+}
+
+bool movement_step_count_keep_on(void) {
+    return movement_state.count_steps_keep_on;
+}
+
+bool movement_step_count_keep_off(void) {
+    return movement_state.count_steps_keep_off;
+}
+
+void movement_set_step_count_keep_on(bool keep_on) {
+    movement_state.count_steps_keep_on = keep_on;
+}
+
+void movement_set_step_count_keep_off(bool keep_off) {
+    movement_state.count_steps_keep_off = keep_off;
+}
+
+static uint8_t movement_count_new_steps_lis2dw(void)
+{
+    uint8_t new_steps = 0;
+    if (_awake_state_lis2dw == 0) {
+        return new_steps;
+    }
+    if (_awake_state_lis2dw == 1) {
+        _awake_state_lis2dw = 2;
+        lis2dw_clear_fifo();  // likely stale data at this point.
+        return new_steps;
+    }
+    lis2dw_fifo_t fifo = {0};
+    lis2dw_read_fifo(&fifo, _step_fifo_timeout_lis2dw);
+#if COUNT_STEPS_USE_ESPRUINO
+    new_steps = count_steps_espruino(&fifo);
+#else
+    new_steps = count_steps_simple(&fifo);
+#endif
+    _total_step_count += new_steps;
+    lis2dw_clear_fifo();
+    return new_steps;
+}
+
+void movement_reset_step_count(void) {
+    _total_step_count = 0;
+}
+
+uint32_t movement_get_step_count(void) {
+    return _total_step_count;
+}
+
+uint8_t movement_get_lis2dw_awake(void) {
+    if (movement_state.has_lis2dw) {
+        return _awake_state_lis2dw;
+    }
+    return 0;
+}
+
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
 #if __EMSCRIPTEN__
@@ -929,10 +1251,11 @@ float movement_get_temperature(void) {
         thermistor_driver_enable();
         temperature_c = thermistor_driver_get_temperature();
         thermistor_driver_disable();
-    } else if (movement_state.has_lis2dw) {
-            int16_t val = lis2dw_get_temperature();
-            val = val >> 4;
-            temperature_c = 25 + (float)val / 16.0;
+    }
+    else if (movement_state.has_lis2dw) {
+        int16_t val = lis2dw_get_temperature();
+        val = val >> 4;
+        temperature_c = 25 + (float)val / 16.0;
     }
 #endif
 
@@ -960,6 +1283,7 @@ void app_init(void) {
     movement_volatile_state.turn_led_off = false;
 
     movement_volatile_state.minute_alarm_fired = false;
+    movement_volatile_state.tick_fired_second = false;
     movement_volatile_state.minute_counter = 0;
 
     movement_volatile_state.enter_sleep_mode = false;
@@ -1055,12 +1379,20 @@ void app_init(void) {
 
     movement_state.signal_volume = MOVEMENT_DEFAULT_SIGNAL_VOLUME;
     movement_state.alarm_volume = MOVEMENT_DEFAULT_ALARM_VOLUME;
+    movement_state.when_to_count_steps = MOVEMENT_DEFAULT_COUNT_STEPS;
+    movement_state.counting_steps = false;
+    movement_state.count_steps_keep_on = false;
+    movement_state.count_steps_keep_off = false;
+    movement_state.tap_enabled = false;
+    movement_state.step_count_disable_req_sec = -1;
     movement_state.light_on = false;
     movement_state.next_available_backup_register = 2;
     _movement_reset_inactivity_countdown();
 
     // set up the 1 minute alarm (for background tasks and low power updates)
     _movement_set_top_of_minute_alarm();
+
+    watch_enable_external_interrupts();
 }
 
 void app_wake_from_backup(void) {
@@ -1092,6 +1424,7 @@ void app_setup(void) {
                 break;
             }
         }
+        watch_register_interrupt_callback(HAL_GPIO_A3_pin(), cb_accelerometer_event, INTERRUPT_TRIGGER_RISING);
 #endif
     }
 
@@ -1107,16 +1440,17 @@ void app_setup(void) {
         watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_interrupt, INTERRUPT_TRIGGER_BOTH);
 
 #ifdef I2C_SERCOM
-        static bool lis2dw_checked = false;
-        if (!lis2dw_checked) {
+        static bool accessory_port_checked = false;
+        if (!accessory_port_checked) {
+            bool device_found = false;
+            movement_state.has_lis2dw = false;
             watch_enable_i2c();
-            if (lis2dw_begin()) {
-                movement_state.has_lis2dw = true;
-            } else {
-                movement_state.has_lis2dw = false;
+            movement_state.has_lis2dw = lis2dw_begin();
+            device_found |= movement_state.has_lis2dw;
+            if (!device_found) {
                 watch_disable_i2c();
             }
-            lis2dw_checked = true;
+            accessory_port_checked = true;
         } else if (movement_state.has_lis2dw) {
             watch_enable_i2c();
             lis2dw_begin();
@@ -1173,6 +1507,18 @@ void app_setup(void) {
 
         watch_faces[movement_state.current_face_idx].activate(watch_face_contexts[movement_state.current_face_idx]);
         movement_volatile_state.pending_events |=  1 << EVENT_ACTIVATE;
+
+        if (movement_state.has_lis2dw) {
+            if (movement_state.count_steps_keep_on) {
+                movement_enable_step_count_multiple_attempts(3, true);
+            } else {
+                enable_disable_step_count_times(movement_get_local_date_time());
+            }
+
+            if (movement_state.tap_enabled) {
+                movement_enable_tap_detection_if_available();
+            }
+        }
     }
 }
 
@@ -1242,6 +1588,7 @@ static bool _switch_face(void) {
     movement_event_t event;
     event.subsecond = 0;
     event.event_type = EVENT_ACTIVATE;
+    enable_disable_step_count_times(movement_get_local_date_time());
     movement_state.watch_face_changed = false;
     bool can_sleep = wf->loop(event, watch_face_contexts[movement_state.current_face_idx]);
 
@@ -1322,6 +1669,19 @@ bool app_loop(void) {
         event_type = event_type + next_event + 1;
     }
 
+    if (movement_volatile_state.tick_fired_second)
+    {
+        movement_volatile_state.tick_fired_second = false;
+        if (movement_state.counting_steps) {
+            if (movement_state.step_count_disable_req_sec > 0 && --movement_state.step_count_disable_req_sec == 0) {
+                if (!movement_state.count_steps_keep_on) movement_disable_step_count(true);
+            }
+            else {
+                movement_count_new_steps_lis2dw();
+            }
+        }
+    }
+
     // handle top-of-minute tasks, if the alarm handler told us we need to
     if (movement_volatile_state.minute_alarm_fired) {
         movement_volatile_state.minute_alarm_fired = false;
@@ -1349,7 +1709,18 @@ bool app_loop(void) {
         // No need to fire resign and sleep interrupts while in sleep mode
         _movement_disable_inactivity_countdown();
 
-        watch_register_extwake_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_extwake, true);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_MODE_pin(), cb_mode_btn_extwake, INTERRUPT_TRIGGER_RISING);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_LIGHT_pin(), cb_light_btn_extwake, INTERRUPT_TRIGGER_RISING);
+        watch_register_interrupt_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_extwake, INTERRUPT_TRIGGER_RISING);
+
+        if (movement_state.counting_steps) {
+            movement_disable_step_count(true);
+        }
+
+        if (movement_state.tap_enabled) {
+            movement_disable_tap_detection_if_available();
+            movement_state.tap_enabled = true; // This is to come back and reset it on wake
+        }
 
         // _sleep_mode_app_loop takes over at this point and loops until exit_sleep_mode is set by the extwake handler,
         // or wake is requested using the movement_request_wake function.
@@ -1518,6 +1889,66 @@ void cb_led_timeout_interrupt(void) {
     movement_volatile_state.turn_led_off = true;
 }
 
+void cb_rainbow_timeout_interrupt(void) {
+    if (!movement_volatile_state.rainbow_active) return;
+
+    movement_volatile_state.rainbow_ticks++;
+    movement_volatile_state.rainbow_phase++;
+
+    // Check if animation is complete (116 ticks at 20ms each = 2320ms for 4 colors)
+    // 4 waypoints × 29 ticks per waypoint = 116 ticks
+    if (movement_volatile_state.rainbow_ticks >= 116) {
+        movement_volatile_state.rainbow_active = false;
+        movement_volatile_state.turn_led_off = true;
+        return;
+    }
+
+    // Each waypoint cycle is 29 ticks (580ms)
+    // Phase 0-14 (300ms): Hold on current waypoint color
+    // Phase 15-28 (280ms): Transition to next waypoint color
+    if (movement_volatile_state.rainbow_phase >= 29) {
+        movement_volatile_state.rainbow_phase = 0;
+        movement_volatile_state.rainbow_waypoint++;
+        if (movement_volatile_state.rainbow_waypoint >= 4) {
+            movement_volatile_state.rainbow_waypoint = 3; // Stay on last color
+        }
+    }
+
+    uint8_t current_waypoint_idx = rainbow_waypoints[movement_volatile_state.rainbow_waypoint];
+
+    if (movement_volatile_state.rainbow_phase < 15) {
+        // HOLD phase - stay on current waypoint color
+        movement_volatile_state.rainbow_index = current_waypoint_idx;
+    } else {
+        // TRANSITION phase - interpolate to next waypoint
+        uint8_t next_waypoint = movement_volatile_state.rainbow_waypoint + 1;
+        if (next_waypoint >= 4) next_waypoint = 3; // Don't go past last waypoint
+
+        uint8_t next_waypoint_idx = rainbow_waypoints[next_waypoint];
+        uint8_t transition_step = movement_volatile_state.rainbow_phase - 15; // 0-13
+
+        // Linear interpolation between waypoints
+        int16_t delta = next_waypoint_idx - current_waypoint_idx;
+        movement_volatile_state.rainbow_index = current_waypoint_idx + (delta * transition_step) / 14;
+    }
+
+    // Set the color
+    RGB color = rainbow_lut[movement_volatile_state.rainbow_index];
+    watch_set_led_color_rgb(color.r, color.g, color.b);
+
+    // Schedule next update (20ms intervals)
+    rtc_counter_t counter = watch_rtc_get_counter();
+    uint32_t freq = watch_rtc_get_frequency();
+    uint32_t update_interval = freq / 50; // 20ms
+
+    watch_rtc_register_comp_callback_no_schedule(
+        cb_rainbow_timeout_interrupt,
+        counter + update_interval,
+        RAINBOW_TIMEOUT
+    );
+    movement_volatile_state.schedule_next_comp = true;
+}
+
 void cb_resign_timeout_interrupt(void) {
     movement_volatile_state.pending_events |= 1 << EVENT_TIMEOUT;
 }
@@ -1526,9 +1957,19 @@ void cb_sleep_timeout_interrupt(void) {
     movement_request_sleep();
 }
 
-void cb_alarm_btn_extwake(void) {
-    // wake up!
+void cb_mode_btn_extwake(void) {
     movement_request_wake();
+    cb_mode_btn_interrupt();
+}
+
+void cb_light_btn_extwake(void) {
+    movement_request_wake();
+    cb_light_btn_interrupt();
+}
+
+void cb_alarm_btn_extwake(void) {
+    movement_request_wake();
+    cb_alarm_btn_interrupt();
 }
 
 void cb_minute_alarm_fired(void) {
@@ -1546,10 +1987,15 @@ void cb_tick(void) {
     uint32_t subsecond_mask = freq - 1;
     movement_volatile_state.pending_events |= 1 << EVENT_TICK;
     movement_volatile_state.subsecond = ((counter + half_freq) & subsecond_mask) >> movement_state.tick_pern;
+    movement_volatile_state.tick_fired_second = movement_volatile_state.subsecond == 0;
 }
 
 void cb_accelerometer_event(void) {
     movement_volatile_state.has_pending_accelerometer = true;
+}
+
+void cb_accelerometer_wake_event(void) {
+    _awake_state_lis2dw = !HAL_GPIO_A4_read();
 }
 
 void cb_accelerometer_wake(void) {

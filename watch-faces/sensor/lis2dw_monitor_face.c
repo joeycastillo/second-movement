@@ -27,6 +27,7 @@
 #include "lis2dw_monitor_face.h"
 #include "watch.h"
 #include "watch_utility.h"
+#include "count_steps.h"
 
 /* Display frequency */
 #define DISPLAY_FREQUENCY 8
@@ -387,7 +388,7 @@ static void _monitor_display(lis2dw_monitor_state_t *state)
 {
     char buf[10];
 
-    snprintf(buf, sizeof(buf), " %C ", "XYZ"[state->axis]);
+    snprintf(buf, sizeof(buf), " %c ", "XYZA"[state->axis]);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, buf, buf);
 
     snprintf(buf, sizeof(buf), "%2d", state->axis + 1);
@@ -408,9 +409,11 @@ static void _monitor_display(lis2dw_monitor_state_t *state)
     } else if (state->axis == 1) {
         char sign = (state->reading.y) >= 0 ? ' ' : '-';
         snprintf(buf, sizeof(buf), "%c%.5d", sign, abs(state->reading.y));
-    } else {
+    } else if (state->axis == 2) {
         char sign = (state->reading.z) >= 0 ? ' ' : '-';
         snprintf(buf, sizeof(buf), "%c%.5d", sign, abs(state->reading.z));
+    } else {
+        snprintf(buf, sizeof(buf), "%.6lu",  count_steps_approx_l2_norm(state->reading));
     }
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
 }
@@ -464,6 +467,31 @@ static bool _monitor_loop(movement_event_t event, void *context)
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
+            if (!movement_has_lis2dw()) {  // Skip the lis2dw isn't installed
+                movement_move_to_next_face();
+                return false;
+            }
+
+            // Force the Step Counter to be turned off 
+            // immedietly in case it's on so this face can use the LIS2DW
+            movement_set_step_count_keep_off(true);
+            if (movement_step_count_is_enabled()) {
+                movement_disable_step_count(true);
+            }
+
+            /* Setup lis2dw to run in background at 12.5 Hz sampling rate. */
+            movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_12_5_HZ);
+
+            /* Enable fifo and clear it. */
+            lis2dw_enable_fifo();
+            lis2dw_clear_fifo();
+
+            /* Print lis2dw status to console. */
+            _lis2dw_get_state(&state->ds);
+            _lis2dw_print_state(&state->ds);
+
+            /* Switch to monitor page. */
+            _switch_to_monitor(state);
             watch_clear_colon();
             _monitor_update(state);
             _monitor_display(state);
@@ -474,7 +502,7 @@ static bool _monitor_loop(movement_event_t event, void *context)
             state->show_title = (state->show_title > 0) ? state->show_title - 1 : 0;
             break;
         case EVENT_ALARM_BUTTON_UP:
-            state->axis = (state->axis + 1) % 3;
+            state->axis = (state->axis + 1) % 4;
             _monitor_display(state);
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -567,21 +595,7 @@ void lis2dw_monitor_face_setup(uint8_t watch_face_index, void **context_ptr)
 
 void lis2dw_monitor_face_activate(void *context)
 {
-    lis2dw_monitor_state_t *state = (lis2dw_monitor_state_t *) context;
-
-    /* Setup lis2dw to run in background at 12.5 Hz sampling rate. */
-    movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_12_5_HZ);
-
-    /* Enable fifo and clear it. */
-    lis2dw_enable_fifo();
-    lis2dw_clear_fifo();
-
-    /* Print lis2dw status to console. */
-    _lis2dw_get_state(&state->ds);
-    _lis2dw_print_state(&state->ds);
-
-    /* Switch to monitor page. */
-    _switch_to_monitor(state);
+    (void) context;
 }
 
 bool lis2dw_monitor_face_loop(movement_event_t event, void *context)
@@ -602,6 +616,7 @@ void lis2dw_monitor_face_resign(void *context)
     (void) context;
     lis2dw_clear_fifo();
     lis2dw_disable_fifo();
+    movement_set_step_count_keep_off(false);
 }
 
 movement_watch_face_advisory_t lis2dw_monitor_face_advise(void *context)

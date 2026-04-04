@@ -39,7 +39,7 @@ void irda_upload_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         *context_ptr = malloc(sizeof(irda_demo_state_t));
         memset(*context_ptr, 0, sizeof(irda_demo_state_t));
         // Do any one-time tasks in here; the inside of this conditional happens only at boot.
-    }    
+    }
 }
 
 void irda_upload_face_activate(void *context) {

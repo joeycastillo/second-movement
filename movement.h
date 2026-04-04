@@ -57,6 +57,13 @@ typedef enum {
     MOVEMENT_NUM_CLOCK_MODES
 } movement_clock_mode_t;
 
+typedef enum {
+    MOVEMENT_SC_OFF = 0,
+    MOVEMENT_SC_ALWAYS,
+    MOVEMENT_SC_DAYTIME,
+    MOVEMENT_SC_NOT_INSTALLED
+} movement_step_count_option_t;
+
 /// struct for Movement LED color
 typedef struct {
     uint8_t red : 4;
@@ -84,7 +91,7 @@ typedef union {
         // altimeter to display feet or meters as easily as it tells a thermometer to display degrees in F or C.
         bool clock_mode_24h : 1;            // indicates whether clock should use 12 or 24 hour mode.
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
-        
+
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
     } bit;
     uint32_t reg;
@@ -147,6 +154,7 @@ typedef enum {
     MODE_BUTTON_TIMEOUT,        // Mode button longpress timeout
     ALARM_BUTTON_TIMEOUT,       // Alarm button longpress timeout
     LED_TIMEOUT,                // LED off timeout
+    RAINBOW_TIMEOUT,            // Rainbow LED animation update timeout
     RESIGN_TIMEOUT,             // Resign active face timeout
     SLEEP_TIMEOUT,              // Low-energy begin timeout
     MINUTE_TIMEOUT,             // Top of the Minute timeout
@@ -303,6 +311,13 @@ typedef struct {
     // signal and alarm volumes
     watch_buzzer_volume_t signal_volume;
     watch_buzzer_volume_t alarm_volume;
+
+    uint8_t when_to_count_steps : 4;
+    uint8_t counting_steps      : 1;
+    uint8_t count_steps_keep_on : 1;
+    uint8_t count_steps_keep_off: 1;
+    uint8_t tap_enabled         : 1;
+    int8_t step_count_disable_req_sec;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -368,6 +383,13 @@ void movement_set_signal_volume(watch_buzzer_volume_t value);
 watch_buzzer_volume_t movement_alarm_volume(void);
 void movement_set_alarm_volume(watch_buzzer_volume_t value);
 
+movement_step_count_option_t movement_get_when_to_count_steps(void);
+void movement_set_when_to_count_steps(movement_step_count_option_t value);
+
+uint8_t get_step_count_start_hour(void);
+uint8_t get_step_count_end_hour(void);
+bool movement_in_step_counter_interval(uint8_t hour);
+
 movement_clock_mode_t movement_clock_mode_24h(void);
 void movement_set_clock_mode_24h(movement_clock_mode_t value);
 
@@ -398,6 +420,9 @@ void movement_set_alarm_enabled(bool value);
 bool movement_enable_tap_detection_if_available(void);
 bool movement_disable_tap_detection_if_available(void);
 
+bool movement_has_lis2dw(void);
+bool movement_still_sees_accelerometer(void);
+
 // gets and sets the accelerometer data rate in the background
 lis2dw_data_rate_t movement_get_accelerometer_background_rate(void);
 bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
@@ -405,6 +430,20 @@ bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
 // gets and sets the accelerometer motion threshold
 uint8_t movement_get_accelerometer_motion_threshold(void);
 bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
+
+// if the board has an accelerometer, these functions will enable or disable step_counting
+void enable_disable_step_count_times(watch_date_time_t date_time);
+bool movement_enable_step_count(bool force_enable);
+bool movement_enable_step_count_multiple_attempts(uint8_t max_tries, bool force_enable);
+bool movement_disable_step_count(bool disable_immedietly);
+bool movement_step_count_is_enabled(void);
+bool movement_step_count_keep_on(void);
+bool movement_step_count_keep_off(void);
+void movement_set_step_count_keep_on(bool keep_on);
+void movement_set_step_count_keep_off(bool keep_off);
+void movement_reset_step_count(void);
+uint32_t movement_get_step_count(void);
+uint8_t movement_get_lis2dw_awake(void);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

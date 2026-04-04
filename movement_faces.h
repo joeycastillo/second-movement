@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include "unit_counter_face.h"
+#include "atb_countdown_face.h"
 #include "clock_face.h"
 #include "beats_face.h"
 #include "world_clock_face.h"
@@ -73,14 +75,21 @@
 #include "wareki_face.h"
 #include "deadline_face.h"
 #include "wordle_face.h"
+#include "fesk_demo_lite_face.h"
 #include "blackjack_face.h"
 #include "endless_runner_face.h"
 #include "higher_lower_game_face.h"
 #include "lander_face.h"
 #include "simon_face.h"
+#include "uptime_face.h"
+#include "fesk_demo_face.h"
+#include "fesk_lite_demo_face.h"
+#include "rtccount_face.h"
+#include "step_counter_face.h"
 #include "ping_face.h"
 #include "rtccount_face.h"
 #include "tomato_face.h"
 #include "solar_time_face.h"
 #include "tide_face.h"
+#include "lux_rx_demo_face.h"
 // New includes go above this line.

@@ -154,7 +154,6 @@ static void _watch_disable_all_peripherals_except_slcd(void) {
     watch_disable_leds();
     watch_disable_buzzer();
     watch_disable_adc();
-    watch_disable_external_interrupts();
 
     /// TODO: Actually disable all these peripherals? Disabling I2C seems to have no impact fwiw.
     // watch_disable_i2c();
@@ -171,9 +170,6 @@ void watch_enter_sleep_mode(void) {
 
     // disable brownout detector interrupt, which could inadvertently wake us up.
     SUPC->INTENCLR.bit.BOD33DET = 1;
-
-    // disable all pins
-    _watch_disable_all_pins_except_rtc();
 
     // enter standby (4); we basically hang out here until an interrupt wakes us.
     sleep(4);

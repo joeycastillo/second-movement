@@ -1550,6 +1550,25 @@
       <input type="number" min="-100" max="120" id="temp-c" />C
       <button onclick="setTemp()">Set</button>
     </div>
+    <h2>Light</h2>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <div class="light-swatch" onclick="setLight(0)" title="Dark"
+           style="width:36px;height:36px;background:#000;border:2px solid #555;border-radius:4px;cursor:pointer;"></div>
+      <div class="light-swatch" onclick="setLight(100)" title="Dim"
+           style="width:36px;height:36px;background:#444;border:2px solid #555;border-radius:4px;cursor:pointer;"></div>
+      <div class="light-swatch" onclick="setLight(5000)" title="Indoor"
+           style="width:36px;height:36px;background:#aaa;border:2px solid #555;border-radius:4px;cursor:pointer;"></div>
+      <div class="light-swatch" onclick="setLight(40000)" title="Bright"
+           style="width:36px;height:36px;background:#fff;border:2px solid #555;border-radius:4px;cursor:pointer;"></div>
+      <span id="light-level-display" style="font-size:0.85em;">0</span>
+    </div>
+    <h3 style="margin:8px 0 4px;">Light TX</h3>
+    <textarea id="light-tx-text" rows="2" style="width:100%;box-sizing:border-box;" placeholder="Text to transmit via light"></textarea>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+      <button onclick="lightTxTransmit()">Transmit</button>
+      <button onclick="lightTxStop()">Stop</button>
+      <span id="light-tx-status" style="font-size:0.85em;"></span>
+    </div>
   </div>
 
   <form onSubmit="sendText(); return false" style="display: flex; flex-direction: column; width: 100%">
@@ -1608,6 +1627,7 @@
   lon = 0;
   tx = "";
   temp_c = 25.0;
+  light_level = 0.0;
   function updateLocation(location) {
     lat = Math.round(location.coords.latitude * 100);
     lon = Math.round(location.coords.longitude * 100);
@@ -1700,6 +1720,108 @@
       return console.warn("input value is not a valid float:", tempInput.value,  e);
     }
   }
+
+  function setLight(level) {
+    light_level = level;
+    var display = document.getElementById("light-level-display");
+    if (display) display.textContent = level;
+    // Highlight the active swatch
+    var swatches = document.querySelectorAll(".light-swatch");
+    swatches.forEach(function(s) { s.style.outline = "none"; });
+    var levelValues = [0, 100, 5000, 40000];
+    var idx = levelValues.indexOf(level);
+    if (idx >= 0 && swatches[idx]) {
+      swatches[idx].style.outline = "2px solid #0e57a9";
+    }
+  }
+
+  // --- Light TX encoder (mirrors lux_rx.c protocol) ---
+
+  var symToChar = [
+    0,
+    'a','b','c','d','e','f','g','h','i','j','k','l','m',
+    'n','o','p','q','r','s','t','u','v','w','x','y','z',
+    ' ',
+    '0','1','2','3','4','5','6','7','8','9',
+    '.',',','!','?',"'",'-',':',';','(',')','/',
+    '@','#','&','+','=','_','~','*','"','%','\n',
+    'A','B',
+    '\\'
+    // index 63 = START (not a printable char)
+  ];
+
+  var charToSym = {};
+  (function buildCharToSym() {
+    for (var i = 1; i <= 62; i++) {
+      var c = symToChar[i];
+      if (c) charToSym[c] = i;
+    }
+    // Map uppercase C-Z to lowercase equivalents
+    for (var code = 67; code <= 90; code++) { // 'C' to 'Z'
+      var lower = String.fromCharCode(code + 32);
+      if (charToSym[lower]) charToSym[String.fromCharCode(code)] = charToSym[lower];
+    }
+  })();
+
+  function lightTxEncode(text) {
+    var symbols = [];
+    var xorAcc = 0;
+    for (var i = 0; i < text.length; i++) {
+      var sym = charToSym[text[i]];
+      if (!sym) continue; // skip unmappable
+      symbols.push(sym);
+      xorAcc ^= sym;
+    }
+    var crc = 1 + (xorAcc % 62);
+
+    // Build bit sequence: START(6) + DATA(n*6) + CRC(6) + END(6)
+    var bits = [];
+    // START: 6 bright bits
+    for (var b = 0; b < 6; b++) bits.push(1);
+    // DATA: each symbol as 6 bits, MSB first
+    for (var s = 0; s < symbols.length; s++) {
+      for (var b = 5; b >= 0; b--) bits.push((symbols[s] >> b) & 1);
+    }
+    // CRC: 6 bits
+    for (var b = 5; b >= 0; b--) bits.push((crc >> b) & 1);
+    // END: 6 dark bits
+    for (var b = 0; b < 6; b++) bits.push(0);
+
+    return bits;
+  }
+
+  function lightTxTransmit() {
+    var text = document.getElementById("light-tx-text").value;
+    if (!text) return;
+
+    // Force dark baseline so the ADC fallback after queue drains is 0,
+    // not whatever bright swatch the user previously selected.
+    setLight(0);
+
+    var bits = lightTxEncode(text);
+    var status = document.getElementById("light-tx-status");
+
+    // Build a queue of ADC values consumed one-per-firmware-tick.
+    // The ADC read function in watch_adc.c pops from this queue,
+    // so timing is perfectly synchronized with the receiver's tick.
+    var queue = [];
+    // Preamble: dark samples to establish ambient baseline
+    for (var i = 0; i < 12; i++) queue.push(0);
+    // Protocol bits
+    for (var i = 0; i < bits.length; i++) queue.push(bits[i] ? 400 : 0);
+    // Dark tail: give receiver time to process END before queue drains
+    for (var i = 0; i < 12; i++) queue.push(0);
+
+    window.light_tx_queue = queue;
+    status.textContent = "TX: " + bits.length + " bits queued";
+  }
+
+  function lightTxStop() {
+    window.light_tx_queue = [];
+    setLight(0);
+    document.getElementById("light-tx-status").textContent = "Stopped";
+  }
+
   loadPrefs();
 </script>
 {{{ SCRIPT }}}

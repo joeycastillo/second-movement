@@ -25,6 +25,10 @@
 #include "lis2dw.h"
 #include "watch.h"
 
+#if __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 bool lis2dw_begin(void) {
 #ifdef I2C_SERCOM
     if (lis2dw_get_device_id() != LIS2DW_WHO_AM_I_VAL) {
@@ -291,6 +295,10 @@ bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout) {
             break;
         }
         fifo_data->readings[i] = lis2dw_get_raw_reading();
+        if (fifo_data->readings[i].x == 0 && fifo_data->readings[i].y == 0 && fifo_data->readings[i].z == 0) {
+            fifo_data->count = i;
+            break;
+        }
     }
 
     return overrun;
@@ -482,7 +490,13 @@ lis2dw_wakeup_source_t lis2dw_get_wakeup_source() {
 
 lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void) {
 #ifdef I2C_SERCOM
+    #if __EMSCRIPTEN__
+        return (lis2dw_interrupt_source_t) EM_ASM_INT({
+            return window.LIS2DW_INTERRUPT_SRC || 0; // Fallback to 0 if not defined
+        });
+    #else
     return (lis2dw_interrupt_source_t) watch_i2c_read8(LIS2DW_ADDRESS, LIS2DW_REG_ALL_INT_SRC);
+    #endif
 #else
     return 0;
 #endif
