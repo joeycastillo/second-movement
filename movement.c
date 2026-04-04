@@ -257,11 +257,15 @@ static inline void _movement_reset_inactivity_countdown(void) {
 
     movement_volatile_state.enter_sleep_mode = false;
 
-    watch_rtc_register_comp_callback_no_schedule(
-        cb_sleep_timeout_interrupt,
-        counter + movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval] * freq,
-        SLEEP_TIMEOUT
-    );
+    if (movement_state.settings.bit.le_interval == 0) {
+        watch_rtc_disable_comp_callback_no_schedule(SLEEP_TIMEOUT);
+    } else {
+        watch_rtc_register_comp_callback_no_schedule(
+            cb_sleep_timeout_interrupt,
+            counter + movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval] * freq,
+            SLEEP_TIMEOUT
+        );
+    }
 
     movement_volatile_state.schedule_next_comp = true;
 }
