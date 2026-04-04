@@ -31,9 +31,9 @@ static const int8_t WAIT_TIME_SECONDS = 10;
 static const int8_t INDOOR_RUN_MINUTES = 2;
 static const int8_t OUTDOOR_RUN_MINUTES = 4;
 
-static const int8_t _sound_seq_prepare[] = {BUZZER_NOTE_C6, 30, BUZZER_NOTE_REST, 30, -2, 1, 0};
-static const int8_t _sound_seq_start[] = {BUZZER_NOTE_C7, 40, 0};
-static const int8_t _sound_seq_end[] = {BUZZER_NOTE_C7, 30, BUZZER_NOTE_REST, 30, -2, 2, 0};
+static const int8_t _sound_seq_prepare[] = {BUZZER_NOTE_C6, 16, BUZZER_NOTE_REST, 16, -2, 1, 0};
+static const int8_t _sound_seq_start[] = {BUZZER_NOTE_C7, 24, 0};
+static const int8_t _sound_seq_end[] = {BUZZER_NOTE_C7, 28, BUZZER_NOTE_REST, 36, -2, 2, 0};
 
 static inline void button_beep() {
     // play a beep as confirmation for a button press (if applicable)
