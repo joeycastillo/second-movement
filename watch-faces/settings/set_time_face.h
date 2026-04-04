@@ -37,9 +37,7 @@
  *
  * For features like World Clock and Sunrise/Sunset to work correctly, you
  * must set the time to your local time, and the time zone to your local time
- * zone. This allows Sensor Watch to correctly offset the time. This also
- * means that when daylight savings time starts or ends, you must update
- * both the time and the time zone on this screen.
+ * zone. This allows Sensor Watch to correctly offset the time.
  */
 
 #include "movement.h"
