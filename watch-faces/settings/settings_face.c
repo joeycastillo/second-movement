@@ -293,7 +293,10 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         settings_state_t *state = (settings_state_t *)*context_ptr;
         int8_t current_setting = 0;
 
-        state->num_settings = 7; // baseline, without LED settings
+        state->num_settings = 6; // baseline, without LED settings
+#ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+        state->num_settings++;
+#endif
 #ifdef BUILD_GIT_HASH
         state->num_settings++;
 #endif
