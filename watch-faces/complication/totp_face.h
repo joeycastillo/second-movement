@@ -55,12 +55,17 @@
  *    TOTP credentials. The file includes two examples that you can use as a
  *    reference. Credentials are added with the `CREDENTIAL` macro in the form
  *    `CREDENTIAL(label, key, algorithm, timestep)` where:
- *      o `label` is a 2 character label that is displayed in the weekday digits
- *        to identify the TOTP credential.
+ *      o `label` is a 2 or 3 character label that is displayed in the weekday
+ *        digits to identify the TOTP credential (only the first 2 characters
+ *        are displayed on the classic LCD).
  *      o `key` is a string with the base32 encoded secret.
  *      o `algorithm` is one of the supported hashing algorithms listed above.
  *      o `timestep` is how often the TOTP refreshes in seconds. This is usually
  *        30 seconds.
+ *  o Alternatively, place the `credentials` variable as-is in a file named
+ *    `totp_face.secrets.h` in this directory, and it will be included instead.
+ *    This lowers the risk of commiting your OTP secrets to GitHub as that file
+ *    is listed in the .gitignore file.
  *
  * If you have more than one secret key, press ALARM to cycle through them.
  * Press LIGHT to cycle in the other direction or keep it pressed longer to

@@ -660,6 +660,26 @@ int32_t movement_get_current_timezone_offset(void) {
     return movement_get_current_timezone_offset_for_zone(movement_state.settings.bit.time_zone);
 }
 
+int32_t movement_get_timezone_offset_for_date_in_zone(watch_date_time_t date_time, uint8_t zone_index) {
+    int8_t cached_dst_offset = _movement_dst_offset_cache[zone_index];
+
+    if (cached_dst_offset == TIMEZONE_DOES_NOT_OBSERVE) {
+        return (int32_t)zone_defns[zone_index].offset_inc_minutes * OFFSET_INCREMENT * 60;
+    }
+
+    // Compute the offset for the given date using the zone's DST rules
+    uzone_t local_zone;
+    unpack_zone(&zone_defns[zone_index], "", &local_zone);
+    udatetime_t udt = _movement_convert_date_time_to_udate(date_time);
+    uoffset_t offset;
+    get_current_offset(&local_zone, &udt, &offset);
+    return (int32_t)(offset.hours * 60 + offset.minutes) * 60;
+}
+
+int32_t movement_get_timezone_offset_for_date(watch_date_time_t date_time) {
+    return movement_get_timezone_offset_for_date_in_zone(date_time, movement_state.settings.bit.time_zone);
+}
+
 int32_t movement_get_timezone_index(void) {
     return movement_state.settings.bit.time_zone;
 }
