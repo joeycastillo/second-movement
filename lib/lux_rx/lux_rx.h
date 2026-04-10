@@ -29,21 +29,25 @@
 #include <stdbool.h>
 
 /*
- * lux_rx — 6-bit optical text receiver.
+ * lux_rx — 6-bit optical text receiver with Manchester encoding.
+ *
+ * Each logical bit is transmitted as two ticks (Manchester):
+ *   bit 1 = dark tick, then bright tick  (dark→bright transition)
+ *   bit 0 = bright tick, then dark tick  (bright→dark transition)
  *
  * Frame: [START] [data symbols...] [CRC6] [END]
- *   START = 0b111111 (6 bright bits, also calibrates bright level)
- *   END   = 0b000000 (6 dark bits)
+ *   START = 0b111111 (6 Manchester-encoded 1-bits = alternating D,B pattern)
+ *   END   = 0b000000 (6 Manchester-encoded 0-bits = alternating B,D pattern)
  *   Data  = 6-bit symbols (values 1-62), mapped to ASCII
  *   CRC   = 1 + (XOR of all data symbols) % 62
  *
- * No sync preamble — the dark-to-bright edge at START aligns bit timing.
+ * Bright/dark determined by fixed ADC threshold (LUX_RX_BRIGHT_THRESHOLD).
  * 62-char alphabet: a-z, space, 0-9, common punctuation.
  *
  * Usage (receiver):
  *   lux_rx_t rx;
  *   lux_rx_init(&rx);
- *   // each tick:
+ *   // each tick at 16 Hz:
  *   if (lux_rx_feed(&rx, adc_val) == LUX_RX_DONE) {
  *       use(rx.payload);  // null-terminated string
  *       lux_rx_reset(&rx);
@@ -52,11 +56,12 @@
  * Usage (encoder):
  *   lux_rx_encoder_t enc;
  *   lux_rx_encode(&enc, "hello world");
- *   uint8_t bit;
- *   while (lux_rx_encode_next(&enc, &bit)) { transmit(bit); }
+ *   uint8_t tick;
+ *   while (lux_rx_encode_next(&enc, &tick)) { transmit(tick); }
  */
 
 #define LUX_RX_MAX_PAYLOAD 128
+#define LUX_RX_BRIGHT_THRESHOLD 65440  // ADC value below this = bright
 
 #define LUX_RX_SYM_END    0   // 0b000000
 #define LUX_RX_SYM_START  63  // 0b111111
@@ -73,12 +78,11 @@ typedef struct {
     uint8_t payload_len;
 
     // --- private ---
-    uint16_t ambient;
-    uint16_t bright;
-    uint16_t threshold;
-    uint32_t bright_accum;
     uint8_t state;
-    uint8_t start_count;
+    uint8_t start_count;      // alternating ticks seen during START
+    bool expect_bright;       // next expected value during START
+    bool first_half_bright;   // first tick of Manchester pair
+    uint8_t pair_phase;       // 0 = first half, 1 = second half
     uint8_t bit_buf;
     uint8_t bit_count;
     uint8_t prev_symbol;

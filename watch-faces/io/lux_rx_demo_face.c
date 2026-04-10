@@ -26,26 +26,20 @@
 #include <string.h>
 #include <stdio.h>
 #include "lux_rx_demo_face.h"
-#include "opt3001.h"
-#include "watch_i2c.h"
-
-#define OPT3001_ADDR 0x44
-
-static const opt3001_Config_t lux_rx_continuous = {
-    .RangeNumber = 0b1100,
-    .ConversionTime = 0,
-    .ModeOfConversionOperation = 0b11,
-};
-
-static const opt3001_Config_t lux_rx_shutdown = {
-    .ModeOfConversionOperation = 0b00,
-};
+#include "adc.h"
 
 static uint16_t read_light(void) {
-    opt3001_t result = opt3001_readResult(OPT3001_ADDR);
-    float scaled = result.lux * 100.0f;
-    if (scaled > 65535.0f) return 65535;
-    return (uint16_t)scaled;
+    HAL_GPIO_IR_ENABLE_out();
+    HAL_GPIO_IR_ENABLE_clr();
+    HAL_GPIO_IRSENSE_pmuxen(HAL_GPIO_PMUX_ADC);
+    adc_init();
+    adc_enable();
+    uint16_t val = adc_get_analog_value(HAL_GPIO_IRSENSE_pin());
+    adc_disable();
+    HAL_GPIO_IRSENSE_pmuxdis();
+    HAL_GPIO_IRSENSE_off();
+    HAL_GPIO_IR_ENABLE_off();
+    return val;
 }
 
 void lux_rx_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -59,12 +53,9 @@ void lux_rx_demo_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void lux_rx_demo_face_activate(void *context) {
     lux_rx_demo_context_t *ctx = (lux_rx_demo_context_t *)context;
 
-    watch_enable_i2c();
-    opt3001_writeConfig(OPT3001_ADDR, lux_rx_continuous);
-
     lux_rx_init(&ctx->rx);
 
-    movement_request_tick_frequency(8);
+    movement_request_tick_frequency(16);
 }
 
 bool lux_rx_demo_face_loop(movement_event_t event, void *context) {
@@ -79,7 +70,8 @@ bool lux_rx_demo_face_loop(movement_event_t event, void *context) {
 
         case EVENT_TICK:
         {
-            lux_rx_status_t status = lux_rx_feed(&ctx->rx, read_light());
+            uint16_t adc_val = read_light();
+            lux_rx_status_t status = lux_rx_feed(&ctx->rx, adc_val);
             ctx->last_status = status;
 
             switch (status) {
@@ -129,7 +121,6 @@ bool lux_rx_demo_face_loop(movement_event_t event, void *context) {
 
 void lux_rx_demo_face_resign(void *context) {
     (void) context;
+    movement_request_tick_frequency(1);
     movement_force_led_off();
-    opt3001_writeConfig(OPT3001_ADDR, lux_rx_shutdown);
-    watch_disable_i2c();
 }

@@ -1801,19 +1801,40 @@
     var bits = lightTxEncode(text);
     var status = document.getElementById("light-tx-status");
 
+    // ADC is active-low: low value = bright light, high value = dark (no light).
+    // LUX_RX_BRIGHT_THRESHOLD = 65440, so dark requires ADC >= 65440.
+    var DARK = 65535;
+    var BRIGHT = 400;
+
     // Build a queue of ADC values consumed one-per-firmware-tick.
     // The ADC read function in watch_adc.c pops from this queue,
     // so timing is perfectly synchronized with the receiver's tick.
+    // Each raw bit becomes two Manchester ticks:
+    //   bit 1 = dark then bright (dark→bright transition)
+    //   bit 0 = bright then dark (bright→dark transition)
     var queue = [];
-    // Preamble: dark samples to establish ambient baseline
-    for (var i = 0; i < 12; i++) queue.push(0);
-    // Protocol bits
-    for (var i = 0; i < bits.length; i++) queue.push(bits[i] ? 400 : 0);
-    // Dark tail: give receiver time to process END before queue drains
-    for (var i = 0; i < 12; i++) queue.push(0);
+    // Preamble: dark samples to flush receiver to ST_IDLE
+    for (var i = 0; i < 12; i++) queue.push(DARK);
+    // Protocol bits with Manchester encoding
+    for (var i = 0; i < bits.length; i++) {
+      if (bits[i]) {
+        queue.push(DARK);   // first half of bit 1
+        queue.push(BRIGHT); // second half of bit 1
+      } else {
+        queue.push(BRIGHT); // first half of bit 0
+        queue.push(DARK);   // second half of bit 0
+      }
+    }
+    // Tail: dark samples to prevent bright fallback corrupting END processing
+    for (var i = 0; i < 12; i++) queue.push(DARK);
 
+    window._lux_tx_started = false;
     window.light_tx_queue = queue;
-    status.textContent = "TX: " + bits.length + " bits queued";
+    var bitStr = bits.join('');
+    var manchStr = bits.map(function(b) { return b ? '01' : '10'; }).join('');
+    console.log("LUX TX raw (" + bits.length + "): " + bitStr);
+    console.log("LUX TX manchester (" + manchStr.length + "): " + manchStr);
+    status.textContent = "TX: " + bits.length + " bits (" + (bits.length * 2) + " Manchester ticks) queued";
   }
 
   function lightTxStop() {

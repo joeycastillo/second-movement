@@ -26,12 +26,11 @@
 #include <string.h>
 #include <stdio.h>
 #include "light_sensor_face.h"
+#include "lux_rx.h"
 #include "tc.h"
 #include "eic.h"
 #include "usb.h"
 #include "adc.h"
-
-#define LIGHT_SENSOR_BORDER 65440
 
 typedef enum {
     LIGHT_SENSOR_MODE_LEVEL,
@@ -54,7 +53,7 @@ static void display_reading(void) {
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
             break;
         case LIGHT_SENSOR_MODE_BINARY:
-            if (light_level < LIGHT_SENSOR_BORDER) {
+            if (light_level < LUX_RX_BRIGHT_THRESHOLD) {
                 watch_display_text(WATCH_POSITION_BOTTOM, "BRIGHT");
             } else {
                 watch_display_text(WATCH_POSITION_BOTTOM, " DARK ");

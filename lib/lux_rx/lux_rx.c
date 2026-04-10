@@ -81,14 +81,11 @@ uint8_t lux_rx_char_to_symbol(char c) {
     return char_to_sym[(uint8_t)c];
 }
 
-// Max ticks before auto-reset (covers max 128-char frame at 8 Hz with margin)
-#define LUX_RX_TIMEOUT_TICKS 800
+// Manchester doubles tick count; timeout covers max 128-char frame with margin
+#define LUX_RX_TIMEOUT_TICKS 1600
 
-// Bright detection margin: at least ambient/4 or 500 counts
-static bool is_bright(uint16_t sample, uint16_t ambient) {
-    uint16_t margin = ambient >> 2;
-    if (margin < 500) margin = 500;
-    return sample > ambient + margin;
+static bool is_bright(uint16_t sample) {
+    return sample < LUX_RX_BRIGHT_THRESHOLD;
 }
 
 // --- Public API ---
@@ -97,6 +94,36 @@ void lux_rx_init(lux_rx_t *rx) {
     memset(rx, 0, sizeof(*rx));
     rx->state = ST_IDLE;
     build_reverse_table();
+}
+
+static void process_symbol(lux_rx_t *rx, uint8_t symbol) {
+    if (symbol == LUX_RX_SYM_END) {
+        if (!rx->has_prev) {
+            rx->state = ST_ERROR;
+            return;
+        }
+        // prev_symbol was the CRC; remove it from payload
+        rx->payload_len--;
+        uint8_t data_xor = rx->crc_accum ^ rx->prev_symbol;
+        uint8_t expected = 1 + (data_xor % 62);
+        if (rx->prev_symbol == expected) {
+            rx->payload[rx->payload_len] = '\0';
+            rx->state = ST_DONE;
+        } else {
+            rx->state = ST_ERROR;
+        }
+    } else if (symbol == LUX_RX_SYM_START) {
+        rx->state = ST_ERROR;
+    } else {
+        if (rx->payload_len >= LUX_RX_MAX_PAYLOAD) {
+            rx->state = ST_ERROR;
+            return;
+        }
+        rx->payload[rx->payload_len++] = sym_to_char[symbol];
+        rx->crc_accum ^= symbol;
+        rx->prev_symbol = symbol;
+        rx->has_prev = true;
+    }
 }
 
 lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
@@ -110,27 +137,31 @@ lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
         }
     }
 
+    bool bright = is_bright(adc_val);
+
     switch (rx->state) {
         case ST_IDLE:
-            // Track ambient with exponential moving average
-            rx->ambient = (uint16_t)(((uint32_t)rx->ambient * 7 + adc_val) >> 3);
-            if (is_bright(adc_val, rx->ambient)) {
+            // START bit 1 in Manchester = dark,bright.
+            // In idle we see dark. First bright tick = second half of first START bit.
+            if (bright) {
                 rx->state = ST_START;
                 rx->start_count = 1;
-                rx->bright_accum = adc_val;
+                rx->expect_bright = false; // next should be dark (first half of bit 2)
                 rx->tick_count = 1;
             }
             break;
 
         case ST_START:
-            if (is_bright(adc_val, rx->ambient)) {
+            // Expect alternating D,B,D,B... pattern for remaining START bits.
+            // START = 111111 = D,B,D,B,D,B,D,B,D,B,D,B (12 ticks)
+            // We entered on the first B (tick 2), so we need 10 more alternating ticks.
+            if (bright == rx->expect_bright) {
                 rx->start_count++;
-                rx->bright_accum += adc_val;
-                if (rx->start_count >= 6) {
-                    // START confirmed — compute threshold
-                    rx->bright = (uint16_t)(rx->bright_accum / 6);
-                    rx->threshold = (rx->ambient + rx->bright) / 2;
+                rx->expect_bright = !rx->expect_bright;
+                if (rx->start_count >= 11) {
+                    // START confirmed. Next tick is first half of first data bit.
                     rx->state = ST_DATA;
+                    rx->pair_phase = 0;
                     rx->bit_buf = 0;
                     rx->bit_count = 0;
                     rx->payload_len = 0;
@@ -139,69 +170,40 @@ lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
                     rx->has_prev = false;
                 }
             } else {
-                // False alarm — back to idle
                 rx->state = ST_IDLE;
             }
             break;
 
-        case ST_DATA: {
-            uint8_t bit = (adc_val > rx->threshold) ? 1 : 0;
-            rx->bit_buf = (rx->bit_buf << 1) | bit;
-            rx->bit_count++;
-
-            if (rx->bit_count >= 6) {
-                uint8_t symbol = rx->bit_buf & 0x3F;
-                rx->bit_buf = 0;
-                rx->bit_count = 0;
-
-                if (symbol == LUX_RX_SYM_END) {
-                    // Frame complete — verify CRC
-                    if (!rx->has_prev) {
-                        #ifdef LUX_RX_DEBUG
-                        printf("ERROR: empty frame\n");
-                        #endif
-                        rx->state = ST_ERROR; // empty frame
-                        break;
-                    }
-                    // prev_symbol was the CRC; remove it from payload
-                    rx->payload_len--;
-                    uint8_t data_xor = rx->crc_accum ^ rx->prev_symbol;
-                    uint8_t expected = 1 + (data_xor % 62);
-                    if (rx->prev_symbol == expected) {
-                        rx->payload[rx->payload_len] = '\0';
-                        rx->state = ST_DONE;
-                    } else {
-                        #ifdef LUX_RX_DEBUG
-                        printf("ERROR: CRC mismatch (got %u, expected %u)\n", rx->prev_symbol, expected);
-                        #endif
-                        rx->state = ST_ERROR;
-                    }
-                } else if (symbol == LUX_RX_SYM_START) {
-                    #ifdef LUX_RX_DEBUG
-                    printf("ERROR: unexpected START symbol\n");
-                    #endif
-                    rx->state = ST_ERROR; // unexpected START in data
+        case ST_DATA:
+            if (rx->pair_phase == 0) {
+                // First half of Manchester pair
+                rx->first_half_bright = bright;
+                rx->pair_phase = 1;
+            } else {
+                // Second half — decode the bit
+                rx->pair_phase = 0;
+                uint8_t bit;
+                if (!rx->first_half_bright && bright) {
+                    bit = 1; // dark→bright = 1
+                } else if (rx->first_half_bright && !bright) {
+                    bit = 0; // bright→dark = 0
                 } else {
-                    // Data symbol
-                    if (rx->payload_len >= LUX_RX_MAX_PAYLOAD) {
-                        #ifdef LUX_RX_DEBUG
-                        printf("ERROR: payload overflow\n");
-                        #endif
-                        rx->state = ST_ERROR; // overflow
-                        break;
-                    }
-                    char c = sym_to_char[symbol];
-                    #ifdef LUX_RX_DEBUG
-                    printf("DATA: symbol=%u char='%c' crc_accum=%u\n", symbol, c, rx->crc_accum);
-                    #endif
-                    rx->payload[rx->payload_len++] = c;
-                    rx->crc_accum ^= symbol;
-                    rx->prev_symbol = symbol;
-                    rx->has_prev = true;
+                    // No transition = invalid Manchester
+                    rx->state = ST_ERROR;
+                    break;
+                }
+
+                rx->bit_buf = (rx->bit_buf << 1) | bit;
+                rx->bit_count++;
+
+                if (rx->bit_count >= 6) {
+                    uint8_t symbol = rx->bit_buf & 0x3F;
+                    rx->bit_buf = 0;
+                    rx->bit_count = 0;
+                    process_symbol(rx, symbol);
                 }
             }
             break;
-        }
     }
 
     if (rx->state == ST_DONE) return LUX_RX_DONE;
@@ -210,13 +212,42 @@ lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
 }
 
 void lux_rx_reset(lux_rx_t *rx) {
-    uint16_t amb = rx->ambient;
     memset(rx, 0, sizeof(*rx));
-    rx->ambient = amb;
     rx->state = ST_IDLE;
 }
 
 // --- Encoder ---
+
+// Get the original (pre-Manchester) bit at a given index.
+static uint8_t get_original_bit(lux_rx_encoder_t *enc, uint16_t idx) {
+    // START symbol (0b111111)
+    if (idx < 6) return 1;
+    idx -= 6;
+
+    // Data symbols
+    uint16_t data_bits = (uint16_t)enc->text_len * 6;
+    if (idx < data_bits) {
+        uint16_t sym_index = idx / 6;
+        uint8_t bit_pos = idx % 6;
+        uint16_t count = 0;
+        uint8_t sym = 0;
+        for (const char *p = enc->text; *p; p++) {
+            sym = lux_rx_char_to_symbol(*p);
+            if (sym == 0) continue;
+            if (count == sym_index) break;
+            count++;
+        }
+        return (sym >> (5 - bit_pos)) & 1;
+    }
+    idx -= data_bits;
+
+    // CRC symbol
+    if (idx < 6) return (enc->crc >> (5 - idx)) & 1;
+    idx -= 6;
+
+    // END symbol (0b000000)
+    return 0;
+}
 
 void lux_rx_encode(lux_rx_encoder_t *enc, const char *text) {
     build_reverse_table();
@@ -227,61 +258,28 @@ void lux_rx_encode(lux_rx_encoder_t *enc, const char *text) {
     uint8_t xor = 0;
     for (const char *p = text; *p; p++) {
         uint8_t sym = lux_rx_char_to_symbol(*p);
-        if (sym == 0) continue; // skip unmappable chars
+        if (sym == 0) continue;
         xor ^= sym;
         enc->text_len++;
     }
     enc->crc = 1 + (xor % 62);
 
     enc->bit_index = 0;
-    // START(6) + data(text_len*6) + CRC(6) + END(6)
-    enc->total_bits = 6 + (uint16_t)enc->text_len * 6 + 6 + 6;
+    // Each original bit becomes 2 Manchester ticks
+    uint16_t orig_bits = 6 + (uint16_t)enc->text_len * 6 + 6 + 6;
+    enc->total_bits = orig_bits * 2;
 }
 
 bool lux_rx_encode_next(lux_rx_encoder_t *enc, uint8_t *out_bit) {
     if (enc->bit_index >= enc->total_bits) return false;
     uint16_t i = enc->bit_index++;
 
-    // START symbol (0b111111)
-    if (i < 6) {
-        *out_bit = 1;
-        return true;
-    }
-    i -= 6;
+    uint16_t orig_idx = i / 2;
+    uint8_t tick = i % 2; // 0 = first half, 1 = second half
+    uint8_t orig = get_original_bit(enc, orig_idx);
 
-    // Data symbols
-    uint16_t data_bits = (uint16_t)enc->text_len * 6;
-    if (i < data_bits) {
-        uint16_t sym_index = i / 6;
-        uint8_t bit_pos = i % 6;
-
-        // Walk the text to find the sym_index'th encodable char
-        uint16_t count = 0;
-        uint8_t sym = 0;
-        for (const char *p = enc->text; *p; p++) {
-            sym = lux_rx_char_to_symbol(*p);
-            if (sym == 0) continue;
-            if (count == sym_index) break;
-            count++;
-        }
-
-        *out_bit = (sym >> (5 - bit_pos)) & 1;
-        return true;
-    }
-    i -= data_bits;
-
-    // CRC symbol
-    if (i < 6) {
-        *out_bit = (enc->crc >> (5 - i)) & 1;
-        return true;
-    }
-    i -= 6;
-
-    // END symbol (0b000000)
-    if (i < 6) {
-        *out_bit = 0;
-        return true;
-    }
-
-    return false;
+    // Manchester: bit 1 = dark(0),bright(1); bit 0 = bright(1),dark(0)
+    // First half is inverted, second half matches original.
+    *out_bit = (tick == 0) ? !orig : orig;
+    return true;
 }

@@ -31,7 +31,19 @@ static uint16_t _sim_get_light_adc_value(void) {
     // Otherwise fall back to the static light_level set by the swatches.
     double level = EM_ASM_DOUBLE({
         if (window.light_tx_queue && window.light_tx_queue.length > 0) {
-            return window.light_tx_queue.shift();
+            if (!window._lux_tx_started) {
+                window._lux_tx_started = true;
+                window._lux_tx_start_ms = Date.now();
+                console.log("LUX TX start: " + window._lux_tx_start_ms + " ms");
+            }
+            var val = window.light_tx_queue.shift();
+            if (window.light_tx_queue.length === 0) {
+                var now = Date.now();
+                console.log("LUX TX done: " + now + " ms (elapsed: " + (now - window._lux_tx_start_ms) + " ms)");
+                window._lux_tx_started = false;
+                window._lux_tx_start_ms = 0;
+            }
+            return val;
         }
         return window.light_level || 0.0;
     });
