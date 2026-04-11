@@ -29,17 +29,22 @@
 #include <stdbool.h>
 
 /*
- * lux_rx — 6-bit optical text receiver with Manchester encoding.
+ * lux_rx — 6-bit optical text receiver, NRZ with per-bit oversampling.
  *
- * Each logical bit is transmitted as two ticks (Manchester):
- *   bit 1 = dark tick, then bright tick  (dark→bright transition)
- *   bit 0 = bright tick, then dark tick  (bright→dark transition)
+ * Each logical bit is transmitted as LUX_RX_SAMPLES_PER_BIT consecutive
+ * samples at the same level: bright for 1, dark for 0. The receiver decodes
+ * each bit by majority voting over the window, which tolerates small phase
+ * offsets and isolated sample noise.
  *
  * Frame: [START] [data symbols...] [CRC6] [END]
- *   START = 0b111111 (6 Manchester-encoded 1-bits = alternating D,B pattern)
- *   END   = 0b000000 (6 Manchester-encoded 0-bits = alternating B,D pattern)
+ *   START = 0b111111 (6 bright bits = LUX_RX_SAMPLES_PER_BIT*6 bright samples)
+ *   END   = 0b000000 (6 dark bits   = LUX_RX_SAMPLES_PER_BIT*6 dark samples)
  *   Data  = 6-bit symbols (values 1-62), mapped to ASCII
  *   CRC   = 1 + (XOR of all data symbols) % 62
+ *
+ * Sync: while idle, the first bright sample is treated as sample 0 of the
+ * first bit window of the START symbol. Because the previous sample was dark,
+ * receiver and transmitter are aligned to within a single sample period.
  *
  * Bright/dark determined by fixed ADC threshold (LUX_RX_BRIGHT_THRESHOLD).
  * 62-char alphabet: a-z, space, 0-9, common punctuation.
@@ -47,7 +52,7 @@
  * Usage (receiver):
  *   lux_rx_t rx;
  *   lux_rx_init(&rx);
- *   // each tick at 16 Hz:
+ *   // each tick at 64 Hz:
  *   if (lux_rx_feed(&rx, adc_val) == LUX_RX_DONE) {
  *       use(rx.payload);  // null-terminated string
  *       lux_rx_reset(&rx);
@@ -62,6 +67,7 @@
 
 #define LUX_RX_MAX_PAYLOAD 128
 #define LUX_RX_BRIGHT_THRESHOLD 65440  // ADC value below this = bright
+#define LUX_RX_SAMPLES_PER_BIT 8       // samples per bit window at 64 Hz
 
 #define LUX_RX_SYM_END    0   // 0b000000
 #define LUX_RX_SYM_START  63  // 0b111111
@@ -79,10 +85,9 @@ typedef struct {
 
     // --- private ---
     uint8_t state;
-    uint8_t start_count;      // alternating ticks seen during START
-    bool expect_bright;       // next expected value during START
-    bool first_half_bright;   // first tick of Manchester pair
-    uint8_t pair_phase;       // 0 = first half, 1 = second half
+    uint8_t start_count;      // START bits confirmed so far
+    uint8_t sample_idx;       // 0..LUX_RX_SAMPLES_PER_BIT-1 within current bit window
+    uint8_t bright_count;     // bright samples seen so far in current window
     uint8_t bit_buf;
     uint8_t bit_count;
     uint8_t prev_symbol;

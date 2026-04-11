@@ -1806,35 +1806,31 @@
     var DARK = 65535;
     var BRIGHT = 400;
 
+    // Each logical bit is held for SAMPLES_PER_BIT samples (NRZ). The receiver
+    // runs at 64 Hz and decodes each bit by majority vote over the window.
+    var SAMPLES_PER_BIT = 8;
+
     // Build a queue of ADC values consumed one-per-firmware-tick.
     // The ADC read function in watch_adc.c pops from this queue,
     // so timing is perfectly synchronized with the receiver's tick.
-    // Each raw bit becomes two Manchester ticks:
-    //   bit 1 = dark then bright (dark→bright transition)
-    //   bit 0 = bright then dark (bright→dark transition)
     var queue = [];
-    // Preamble: dark samples to flush receiver to ST_IDLE
-    for (var i = 0; i < 12; i++) queue.push(DARK);
-    // Protocol bits with Manchester encoding
+    // Preamble: dark samples to flush receiver to ST_IDLE (one full bit window
+    // plus a little slack is plenty).
+    for (var i = 0; i < SAMPLES_PER_BIT + 4; i++) queue.push(DARK);
+    // Protocol bits: SAMPLES_PER_BIT copies of BRIGHT/DARK per bit
     for (var i = 0; i < bits.length; i++) {
-      if (bits[i]) {
-        queue.push(DARK);   // first half of bit 1
-        queue.push(BRIGHT); // second half of bit 1
-      } else {
-        queue.push(BRIGHT); // first half of bit 0
-        queue.push(DARK);   // second half of bit 0
-      }
+      var level = bits[i] ? BRIGHT : DARK;
+      for (var j = 0; j < SAMPLES_PER_BIT; j++) queue.push(level);
     }
     // Tail: dark samples to prevent bright fallback corrupting END processing
-    for (var i = 0; i < 12; i++) queue.push(DARK);
+    for (var i = 0; i < SAMPLES_PER_BIT + 4; i++) queue.push(DARK);
 
     window._lux_tx_started = false;
     window.light_tx_queue = queue;
     var bitStr = bits.join('');
-    var manchStr = bits.map(function(b) { return b ? '01' : '10'; }).join('');
     console.log("LUX TX raw (" + bits.length + "): " + bitStr);
-    console.log("LUX TX manchester (" + manchStr.length + "): " + manchStr);
-    status.textContent = "TX: " + bits.length + " bits (" + (bits.length * 2) + " Manchester ticks) queued";
+    console.log("LUX TX samples (" + (bits.length * SAMPLES_PER_BIT) + ")");
+    status.textContent = "TX: " + bits.length + " bits (" + (bits.length * SAMPLES_PER_BIT) + " samples) queued";
   }
 
   function lightTxStop() {

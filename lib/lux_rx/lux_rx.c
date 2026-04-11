@@ -81,8 +81,14 @@ uint8_t lux_rx_char_to_symbol(char c) {
     return char_to_sym[(uint8_t)c];
 }
 
-// Manchester doubles tick count; timeout covers max 128-char frame with margin
-#define LUX_RX_TIMEOUT_TICKS 1600
+// Timeout covers max 128-char frame with margin.
+// At 64 Hz with 8 samples per bit and an 8 bits/s effective rate, the
+// longest frame is (6 + 128*6 + 6 + 6)*8 = 6288 samples (~98s).
+#define LUX_RX_TIMEOUT_TICKS 6400
+
+// Majority threshold: bit is 1 iff at least this many of the N samples in
+// the window are bright. For N=8 this is 4 (ties resolve to 1).
+#define LUX_RX_BIT_MAJORITY ((LUX_RX_SAMPLES_PER_BIT + 1) / 2)
 
 static bool is_bright(uint16_t sample) {
     return sample < LUX_RX_BRIGHT_THRESHOLD;
@@ -141,27 +147,34 @@ lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
 
     switch (rx->state) {
         case ST_IDLE:
-            // START bit 1 in Manchester = dark,bright.
-            // In idle we see dark. First bright tick = second half of first START bit.
+            // Wait for the first bright sample. The previous sample was dark,
+            // so this sample is treated as sample 0 of the first START bit
+            // window. Any phase offset vs. the transmitter is < 1 sample.
             if (bright) {
                 rx->state = ST_START;
-                rx->start_count = 1;
-                rx->expect_bright = false; // next should be dark (first half of bit 2)
+                rx->start_count = 0;
+                rx->sample_idx = 1;   // sample 0 has just been consumed
+                rx->bright_count = 1;
                 rx->tick_count = 1;
             }
             break;
 
         case ST_START:
-            // Expect alternating D,B,D,B... pattern for remaining START bits.
-            // START = 111111 = D,B,D,B,D,B,D,B,D,B,D,B (12 ticks)
-            // We entered on the first B (tick 2), so we need 10 more alternating ticks.
-            if (bright == rx->expect_bright) {
+            // Accumulate samples of the current START bit window.
+            if (bright) rx->bright_count++;
+            rx->sample_idx++;
+            if (rx->sample_idx >= LUX_RX_SAMPLES_PER_BIT) {
+                // All six START bits must be 1 (majority bright).
+                if (rx->bright_count < LUX_RX_BIT_MAJORITY) {
+                    lux_rx_reset(rx);
+                    break;
+                }
                 rx->start_count++;
-                rx->expect_bright = !rx->expect_bright;
-                if (rx->start_count >= 11) {
-                    // START confirmed. Next tick is first half of first data bit.
+                rx->sample_idx = 0;
+                rx->bright_count = 0;
+                if (rx->start_count >= 6) {
+                    // START confirmed. Next sample starts the first data bit.
                     rx->state = ST_DATA;
-                    rx->pair_phase = 0;
                     rx->bit_buf = 0;
                     rx->bit_count = 0;
                     rx->payload_len = 0;
@@ -169,33 +182,18 @@ lux_rx_status_t lux_rx_feed(lux_rx_t *rx, uint16_t adc_val) {
                     rx->prev_symbol = 0;
                     rx->has_prev = false;
                 }
-            } else {
-                rx->state = ST_IDLE;
             }
             break;
 
         case ST_DATA:
-            if (rx->pair_phase == 0) {
-                // First half of Manchester pair
-                rx->first_half_bright = bright;
-                rx->pair_phase = 1;
-            } else {
-                // Second half — decode the bit
-                rx->pair_phase = 0;
-                uint8_t bit;
-                if (!rx->first_half_bright && bright) {
-                    bit = 1; // dark→bright = 1
-                } else if (rx->first_half_bright && !bright) {
-                    bit = 0; // bright→dark = 0
-                } else {
-                    // No transition = invalid Manchester
-                    rx->state = ST_ERROR;
-                    break;
-                }
-
+            if (bright) rx->bright_count++;
+            rx->sample_idx++;
+            if (rx->sample_idx >= LUX_RX_SAMPLES_PER_BIT) {
+                uint8_t bit = (rx->bright_count >= LUX_RX_BIT_MAJORITY) ? 1 : 0;
+                rx->sample_idx = 0;
+                rx->bright_count = 0;
                 rx->bit_buf = (rx->bit_buf << 1) | bit;
                 rx->bit_count++;
-
                 if (rx->bit_count >= 6) {
                     uint8_t symbol = rx->bit_buf & 0x3F;
                     rx->bit_buf = 0;
@@ -218,7 +216,7 @@ void lux_rx_reset(lux_rx_t *rx) {
 
 // --- Encoder ---
 
-// Get the original (pre-Manchester) bit at a given index.
+// Get the logical bit (pre-oversampling) at a given index in the frame.
 static uint8_t get_original_bit(lux_rx_encoder_t *enc, uint16_t idx) {
     // START symbol (0b111111)
     if (idx < 6) return 1;
@@ -265,21 +263,17 @@ void lux_rx_encode(lux_rx_encoder_t *enc, const char *text) {
     enc->crc = 1 + (xor % 62);
 
     enc->bit_index = 0;
-    // Each original bit becomes 2 Manchester ticks
+    // Each logical bit is held for LUX_RX_SAMPLES_PER_BIT samples (NRZ).
     uint16_t orig_bits = 6 + (uint16_t)enc->text_len * 6 + 6 + 6;
-    enc->total_bits = orig_bits * 2;
+    enc->total_bits = orig_bits * LUX_RX_SAMPLES_PER_BIT;
 }
 
 bool lux_rx_encode_next(lux_rx_encoder_t *enc, uint8_t *out_bit) {
     if (enc->bit_index >= enc->total_bits) return false;
     uint16_t i = enc->bit_index++;
 
-    uint16_t orig_idx = i / 2;
-    uint8_t tick = i % 2; // 0 = first half, 1 = second half
-    uint8_t orig = get_original_bit(enc, orig_idx);
-
-    // Manchester: bit 1 = dark(0),bright(1); bit 0 = bright(1),dark(0)
-    // First half is inverted, second half matches original.
-    *out_bit = (tick == 0) ? !orig : orig;
+    uint16_t orig_idx = i / LUX_RX_SAMPLES_PER_BIT;
+    // NRZ: every sample within the window carries the same level as the bit.
+    *out_bit = get_original_bit(enc, orig_idx);
     return true;
 }

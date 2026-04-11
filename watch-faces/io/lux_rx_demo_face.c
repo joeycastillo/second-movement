@@ -55,7 +55,7 @@ void lux_rx_demo_face_activate(void *context) {
 
     lux_rx_init(&ctx->rx);
 
-    movement_request_tick_frequency(16);
+    movement_request_tick_frequency(64);
 }
 
 bool lux_rx_demo_face_loop(movement_event_t event, void *context) {
