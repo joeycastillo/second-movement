@@ -62,12 +62,12 @@
 #define KT_MAX_TIMERS 4
 
 typedef enum {
-    kt_paused,
-    kt_running,
-    kt_setting,
-    kt_reset,
-    kt_overtime,
-    kt_overtime_paused
+    KITCHEN_TIMER_MODE_PAUSED = 0,
+    KITCHEN_TIMER_MODE_RUNNING,
+    KITCHEN_TIMER_MODE_SETTING,
+    KITCHEN_TIMER_MODE_RESET,
+    KITCHEN_TIMER_MODE_OVERTIME,
+    KITCHEN_TIMER_MODE_OVERTIME_PAUSED
 } kitchen_timer_mode_t;
 
 typedef struct {
