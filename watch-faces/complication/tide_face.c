@@ -81,6 +81,7 @@ typedef struct {
 } tide_state_t;
 
 void tide_face_setup(uint8_t watch_face_index, void** state_ptr) {
+    (void) watch_face_index;
     if (*state_ptr == NULL) {
         // Boot time initialization.
         *state_ptr = malloc(sizeof(tide_state_t));
@@ -89,11 +90,11 @@ void tide_face_setup(uint8_t watch_face_index, void** state_ptr) {
     }
 }
 
-uint32_t _get_current_unix_time() {
+static uint32_t _get_current_unix_time() {
     return watch_utility_date_time_to_unix_time(movement_get_utc_date_time(), 0);
 }
 
-void _move_next_high_tide(tide_state_t* state, uint32_t now) {
+static void _move_next_high_tide(tide_state_t* state, uint32_t now) {
     while (state->next_high_tide > now + SEMI_DIURNAL_TIDAL_PERIOD) {
         state->next_high_tide -= SEMI_DIURNAL_TIDAL_PERIOD;
     }
@@ -129,8 +130,10 @@ static void _draw_tide_amplitude(uint32_t time) {
     switch (_get_tide_amplitude(time)) {
         case spring_tide:
             _set_pixel(digit_mapping[9].segment[0]);  // top horizontal bar on the bottom-right character.
+            // fall-through
         case medium_tide:
             _set_pixel(digit_mapping[9].segment[6]);  // mid horizontal bar on the bottom-right character.
+            // fall-through
         case neap_tide:
             _set_pixel(digit_mapping[9].segment[3]);  // bottom horizontal bar on the bottom-right character.
             break;
@@ -341,7 +344,7 @@ bool tide_face_loop(movement_event_t event, void* context) {
             switch(state->mode) {
                 case empty:
                   state->next_high_tide = _get_current_unix_time();
-                  // fallthrough intended.
+                  // fall-through
                 case current:
                 case future:
                     state->mode = setting_hour;
@@ -382,7 +385,7 @@ bool tide_face_loop(movement_event_t event, void* context) {
                 state->mode = current;
                 _draw(state, now, event.subsecond);
             }
-            // Passthrough intended:
+            // fall-through
             // Delegate the resign behavior to the default loop handler.
         default:
             return movement_default_loop_handler(event);

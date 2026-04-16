@@ -149,7 +149,7 @@ static void totp_display_code(totp_state_t *totp_state) {
     sprintf(buf, "%2d", valid_for);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
 
-    sprintf(buf, "%06u", totp_state->current_code);
+    sprintf(buf, "%06u", (unsigned int)totp_state->current_code);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 

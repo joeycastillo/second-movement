@@ -102,7 +102,7 @@ static int32_t _lst_seconds(watch_date_time_t dt, float TC) {
 }
 
 static void _update_display(solar_time_state_t *state, watch_date_time_t dt) {
-    char bottom[7];
+    char bottom[9];
 
     if (_load_location().reg == 0) {
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "SOL", "SO");
