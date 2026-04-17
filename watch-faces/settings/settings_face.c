@@ -346,12 +346,6 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 #endif
 
         state->settings_screens = malloc(state->num_settings * sizeof(settings_screen_t));
-        state->settings_screens[current_setting].display = quiet_time_start_setting_display;
-        state->settings_screens[current_setting].advance = quiet_time_start_setting_advance;
-        current_setting++;
-        state->settings_screens[current_setting].display = quiet_time_stop_setting_display;
-        state->settings_screens[current_setting].advance = quiet_time_stop_setting_advance;
-        current_setting++;
         state->settings_screens[current_setting].display = clock_setting_display;
         state->settings_screens[current_setting].advance = clock_setting_advance;
         current_setting++;
@@ -363,6 +357,12 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         current_setting++;
         state->settings_screens[current_setting].display = alarm_setting_display;
         state->settings_screens[current_setting].advance = alarm_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = quiet_time_start_setting_display;
+        state->settings_screens[current_setting].advance = quiet_time_start_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = quiet_time_stop_setting_display;
+        state->settings_screens[current_setting].advance = quiet_time_stop_setting_advance;
         current_setting++;
         state->settings_screens[current_setting].display = timeout_setting_display;
         state->settings_screens[current_setting].advance = timeout_setting_advance;
