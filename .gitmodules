@@ -9,4 +9,4 @@
 	url = https://github.com/joeycastillo/gossamer.git
 [submodule "utz"]
 	path = utz
-	url = https://github.com/joeycastillo/utz.git
+	url = https://github.com/tree-s/utz.git
