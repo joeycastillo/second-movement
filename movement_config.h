@@ -71,9 +71,11 @@ const watch_face_t watch_faces[] = {
 #define MOVEMENT_DEFAULT_SIGNAL_VOLUME WATCH_BUZZER_VOLUME_LOUD
 #define MOVEMENT_DEFAULT_ALARM_VOLUME WATCH_BUZZER_VOLUME_LOUD
 
-/* Do not beep on button presses nor sound the hourly chimes between these hours */
-#define MOVEMENT_DEFAULT_QUIET_TIME_START 8
-#define MOVEMENT_DEFAULT_QUIET_TIME_STOP 13
+/* Do not beep on button presses nor sound the hourly chimes between these hours 
+ * Set them to the same value here or at runtime to disable the feature
+ */
+#define MOVEMENT_DEFAULT_QUIET_TIME_START 0
+#define MOVEMENT_DEFAULT_QUIET_TIME_STOP 0
 
 /* Set the timeout before switching back to the main watch face
  * Valid values are:
