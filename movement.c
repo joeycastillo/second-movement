@@ -585,7 +585,7 @@ void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms) {
 }
 
 void movement_play_signal(void) {
-    movement_play_sequence(signal_tune, BUZZER_PRIORITY_SIGNAL);
+    if (!movement_is_quiet_time()) movement_play_sequence(signal_tune, BUZZER_PRIORITY_SIGNAL);
 }
 
 void movement_play_alarm(void) {
@@ -743,9 +743,14 @@ void movement_set_utc_timestamp(uint32_t timestamp) {
     _movement_update_dst_offset_cache();
 }
 
+bool movement_button_sound_enabled(void) {
+    // This is the value set by the user
+    return movement_state.settings.bit.button_should_sound;
+}
 
 bool movement_button_should_sound(void) {
-    return movement_state.settings.bit.button_should_sound;
+    // This is a combination of the setting and if we are outside of quiet time
+    return movement_state.settings.bit.button_should_sound && !movement_is_quiet_time();
 }
 
 void movement_set_button_should_sound(bool value) {
@@ -781,6 +786,18 @@ watch_buzzer_volume_t movement_signal_volume(void) {
 }
 void movement_set_signal_volume(watch_buzzer_volume_t value) {
     movement_state.signal_volume = value;
+}
+
+bool movement_is_quiet_time(void) {
+    uint8_t start = movement_state.settings.bit.quiet_time_start;
+    uint8_t stop = movement_state.settings.bit.quiet_time_stop;
+    uint32_t hours = movement_get_local_date_time().unit.hour;
+    // Normalize around the clock so we can manage both start > stop and start < stop
+    // Adding 24 avoids negative numbers which would overflow
+    stop = (24 + stop - start) % 24;
+    hours = (24 + hours - start) % 24;
+    if (0 <= hours && hours < stop) return true;
+    return false;
 }
 
 watch_buzzer_volume_t movement_alarm_volume(void) {
@@ -1254,7 +1271,7 @@ static bool _switch_face(void) {
     watch_clear_display();
     movement_request_tick_frequency(1);
 
-    if (movement_state.settings.bit.button_should_sound) {
+    if (movement_button_should_sound()) {
         // low note for nonzero case, high note for return to watch_face 0
         movement_play_note(movement_state.next_face_idx ? BUZZER_NOTE_C7 : BUZZER_NOTE_C8, 50);
     }

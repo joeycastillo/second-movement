@@ -42,7 +42,7 @@ static void beep_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BTN", "BT");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "beep  ", " beep ");
     if (subsecond % 2) {
-        if (movement_button_should_sound()) {
+        if (movement_button_sound_enabled()) {
             if (movement_button_volume() == WATCH_BUZZER_VOLUME_LOUD) {
                 // H for HIGH
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
@@ -59,7 +59,7 @@ static void beep_setting_display(uint8_t subsecond) {
 }
 
 static void beep_setting_advance(void) {
-    if (!movement_button_should_sound()) {
+    if (!movement_button_sound_enabled()) {
         // was muted. make it soft.
         movement_set_button_should_sound(true);
         movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
