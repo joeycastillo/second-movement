@@ -292,6 +292,15 @@ static void quiet_time_start_setting_display(uint8_t subsecond) {
     uint8_t hours = movement_get_quiet_time_start();
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "mute", "mute");
     watch_display_text(WATCH_POSITION_BOTTOM, "  strt");
+    if (movement_clock_mode_24h()) {
+        watch_set_indicator(WATCH_INDICATOR_24H);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_24H);
+        if (hours >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
+        else watch_clear_indicator(WATCH_INDICATOR_PM);
+        // Format the hours value for display since we don't neeto to perform more checks
+        hours = (hours % 12) ? (hours % 12) : 12;
+    }
     if (subsecond % 2) {
         sprintf(buf, "%2d", hours);
         watch_display_text(WATCH_POSITION_HOURS, buf);
@@ -309,6 +318,15 @@ static void quiet_time_stop_setting_display(uint8_t subsecond) {
     uint8_t hours = movement_get_quiet_time_stop();
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "mute", "mute");
     watch_display_text(WATCH_POSITION_BOTTOM, "  stop");
+    if (movement_clock_mode_24h()) {
+        watch_set_indicator(WATCH_INDICATOR_24H);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_24H);
+        if (hours >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
+        else watch_clear_indicator(WATCH_INDICATOR_PM);
+        // Format the hours value for display since we don't neeto to perform more checks
+        hours = (hours % 12) ? (hours % 12) : 12;
+    }
     if (subsecond % 2) {
         sprintf(buf, "%2d", hours);
         watch_display_text(WATCH_POSITION_HOURS, buf);
