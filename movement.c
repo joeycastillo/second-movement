@@ -756,6 +756,22 @@ watch_buzzer_volume_t movement_button_volume(void) {
     return movement_state.settings.bit.button_volume;
 }
 
+uint8_t movement_get_quiet_time_start(void) {
+    return movement_state.settings.bit.quiet_time_start;
+}
+
+void movement_set_quiet_time_start(uint8_t value) {
+    movement_state.settings.bit.quiet_time_start = value;
+}
+
+uint8_t movement_get_quiet_time_stop(void) {
+    return movement_state.settings.bit.quiet_time_stop;
+}
+
+void movement_set_quiet_time_stop(uint8_t value) {
+    movement_state.settings.bit.quiet_time_stop = value;
+}
+
 void movement_set_button_volume(watch_buzzer_volume_t value) {
     movement_state.settings.bit.button_volume = value;
 }
@@ -1029,6 +1045,8 @@ void app_init(void) {
     #endif
         movement_state.settings.bit.button_should_sound = MOVEMENT_DEFAULT_BUTTON_SOUND;
         movement_state.settings.bit.button_volume = MOVEMENT_DEFAULT_BUTTON_VOLUME;
+        movement_state.settings.bit.quiet_time_start = MOVEMENT_DEFAULT_QUIET_TIME_START;
+        movement_state.settings.bit.quiet_time_stop = MOVEMENT_DEFAULT_QUIET_TIME_STOP;
         movement_state.settings.bit.to_interval = MOVEMENT_DEFAULT_TIMEOUT_INTERVAL;
 #ifdef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         movement_state.settings.bit.le_interval = 0;

@@ -86,6 +86,9 @@ typedef union {
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
+
+        uint8_t quiet_time_start: 5;
+        uint8_t quiet_time_stop: 5;
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -361,6 +364,12 @@ void movement_set_button_should_sound(bool value);
 
 watch_buzzer_volume_t movement_button_volume(void);
 void movement_set_button_volume(watch_buzzer_volume_t value);
+
+uint8_t movement_get_quiet_time_start(void);
+void movement_set_quiet_time_start(uint8_t value);
+
+uint8_t movement_get_quiet_time_stop(void);
+void movement_set_quiet_time_stop(uint8_t value);
 
 watch_buzzer_volume_t movement_signal_volume(void);
 void movement_set_signal_volume(watch_buzzer_volume_t value);
