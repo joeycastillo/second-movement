@@ -253,7 +253,7 @@ static void filesystem_cat(char *filename) {
 
 bool filesystem_write_file(char *filename, char *text, int32_t length) {
     if (filesystem_get_free_space() <= 256) {
-        printf("No free space!\n");
+        printf("No free space!\r\n");
         return false;    
     }
 
@@ -266,7 +266,7 @@ bool filesystem_write_file(char *filename, char *text, int32_t length) {
 
 bool filesystem_append_file(char *filename, char *text, int32_t length) {
     if (filesystem_get_free_space() <= 256) {
-        printf("No free space!\n");
+        printf("No free space!\r\n");
         return false;    
     }
 
@@ -305,7 +305,7 @@ int filesystem_cmd_b64encode(int argc, char *argv[]) {
                 lfs_size_t len = min(12, info.size - i);
                 char base64_line[17];
                 b64_encode((unsigned char *)buf + i, len, (unsigned char *)base64_line);
-                printf("%s\n", base64_line);
+                printf("%s\r\n", base64_line);
                 delay_ms(10);
             }
             free(buf);
