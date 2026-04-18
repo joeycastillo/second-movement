@@ -291,6 +291,10 @@ bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout) {
             break;
         }
         fifo_data->readings[i] = lis2dw_get_raw_reading();
+        if (fifo_data->readings[i].x == 0 && fifo_data->readings[i].y == 0 && fifo_data->readings[i].z == 0) {
+            fifo_data->count = i;
+            break;
+        }
     }
 
     return overrun;
