@@ -42,7 +42,7 @@ static void beep_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "BTN", "BT");
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "beep  ", " beep ");
     if (subsecond % 2) {
-        if (movement_button_should_sound()) {
+        if (movement_button_sound_enabled()) {
             if (movement_button_volume() == WATCH_BUZZER_VOLUME_LOUD) {
                 // H for HIGH
                 watch_display_text(WATCH_POSITION_TOP_RIGHT, " H");
@@ -59,7 +59,7 @@ static void beep_setting_display(uint8_t subsecond) {
 }
 
 static void beep_setting_advance(void) {
-    if (!movement_button_should_sound()) {
+    if (!movement_button_sound_enabled()) {
         // was muted. make it soft.
         movement_set_button_should_sound(true);
         movement_set_button_volume(WATCH_BUZZER_VOLUME_SOFT);
@@ -286,6 +286,59 @@ static void git_hash_setting_advance(void) {
     return;
 }
 
+
+static void quiet_time_start_setting_display(uint8_t subsecond) {
+    char buf[3];
+    uint8_t hours = movement_get_quiet_time_start();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Amute", "AM");
+    watch_display_text(WATCH_POSITION_BOTTOM, "  strt");
+    if (movement_clock_mode_24h()) {
+        watch_set_indicator(WATCH_INDICATOR_24H);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_24H);
+        if (hours >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
+        else watch_clear_indicator(WATCH_INDICATOR_PM);
+        // Format the hours value for display since we don't neeto to perform more checks
+        hours = (hours % 12) ? (hours % 12) : 12;
+    }
+    if (subsecond % 2) {
+        sprintf(buf, "%2d", hours);
+        watch_display_text(WATCH_POSITION_HOURS, buf);
+    }
+}
+
+static void quiet_time_start_setting_advance(void) {
+    uint8_t hours = movement_get_quiet_time_start();
+    hours = (hours + 1) % 24;
+    movement_set_quiet_time_start(hours);
+}
+
+static void quiet_time_stop_setting_display(uint8_t subsecond) {
+    char buf[3];
+    uint8_t hours = movement_get_quiet_time_stop();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Amute", "AM");
+    watch_display_text(WATCH_POSITION_BOTTOM, "  stop");
+    if (movement_clock_mode_24h()) {
+        watch_set_indicator(WATCH_INDICATOR_24H);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_24H);
+        if (hours >= 12) watch_set_indicator(WATCH_INDICATOR_PM);
+        else watch_clear_indicator(WATCH_INDICATOR_PM);
+        // Format the hours value for display since we don't neeto to perform more checks
+        hours = (hours % 12) ? (hours % 12) : 12;
+    }
+    if (subsecond % 2) {
+        sprintf(buf, "%2d", hours);
+        watch_display_text(WATCH_POSITION_HOURS, buf);
+    }
+}
+
+static void quiet_time_stop_setting_advance(void) {
+    uint8_t hours = movement_get_quiet_time_stop();
+    hours = (hours + 1) % 24;
+    movement_set_quiet_time_stop(hours);
+}
+
 void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
     if (*context_ptr == NULL) {
@@ -293,7 +346,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         settings_state_t *state = (settings_state_t *)*context_ptr;
         int8_t current_setting = 0;
 
-        state->num_settings = 6; // baseline, without LED settings
+        state->num_settings = 8; // baseline, without LED settings
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
         state->num_settings++;
 #endif
@@ -322,6 +375,12 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         current_setting++;
         state->settings_screens[current_setting].display = alarm_setting_display;
         state->settings_screens[current_setting].advance = alarm_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = quiet_time_start_setting_display;
+        state->settings_screens[current_setting].advance = quiet_time_start_setting_advance;
+        current_setting++;
+        state->settings_screens[current_setting].display = quiet_time_stop_setting_display;
+        state->settings_screens[current_setting].advance = quiet_time_stop_setting_advance;
         current_setting++;
         state->settings_screens[current_setting].display = timeout_setting_display;
         state->settings_screens[current_setting].advance = timeout_setting_advance;

@@ -86,6 +86,9 @@ typedef union {
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
         
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
+
+        uint8_t quiet_time_start: 5;
+        uint8_t quiet_time_stop: 5;
     } bit;
     uint32_t reg;
 } movement_settings_t;
@@ -333,6 +336,7 @@ void movement_request_wake(void);
 
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
+bool movement_is_quiet_time(void);
 void movement_play_alarm(void);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority);
@@ -356,11 +360,18 @@ void movement_set_utc_date_time(watch_date_time_t date_time);
 void movement_set_local_date_time(watch_date_time_t date_time);
 void movement_set_utc_timestamp(uint32_t timestamp);
 
+bool movement_button_sound_enabled(void);
 bool movement_button_should_sound(void);
 void movement_set_button_should_sound(bool value);
 
 watch_buzzer_volume_t movement_button_volume(void);
 void movement_set_button_volume(watch_buzzer_volume_t value);
+
+uint8_t movement_get_quiet_time_start(void);
+void movement_set_quiet_time_start(uint8_t value);
+
+uint8_t movement_get_quiet_time_stop(void);
+void movement_set_quiet_time_stop(uint8_t value);
 
 watch_buzzer_volume_t movement_signal_volume(void);
 void movement_set_signal_volume(watch_buzzer_volume_t value);
