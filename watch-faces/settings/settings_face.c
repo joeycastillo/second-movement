@@ -290,7 +290,7 @@ static void git_hash_setting_advance(void) {
 static void quiet_time_start_setting_display(uint8_t subsecond) {
     char buf[3];
     uint8_t hours = movement_get_quiet_time_start();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "mute", "mute");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Amute", "AM");
     watch_display_text(WATCH_POSITION_BOTTOM, "  strt");
     if (movement_clock_mode_24h()) {
         watch_set_indicator(WATCH_INDICATOR_24H);
@@ -316,7 +316,7 @@ static void quiet_time_start_setting_advance(void) {
 static void quiet_time_stop_setting_display(uint8_t subsecond) {
     char buf[3];
     uint8_t hours = movement_get_quiet_time_stop();
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "mute", "mute");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "Amute", "AM");
     watch_display_text(WATCH_POSITION_BOTTOM, "  stop");
     if (movement_clock_mode_24h()) {
         watch_set_indicator(WATCH_INDICATOR_24H);
