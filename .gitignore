@@ -27,3 +27,4 @@ fp-info-cache
 *.plan
 /.direnv
 /.emscripten_cache
+movement_config_local.h
