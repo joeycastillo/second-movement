@@ -374,7 +374,7 @@ static void _deadline_settings_display(movement_event_t event,
     if (state->current_page > 2) {
         /* Time settings */
         watch_set_colon();
-        if (movement_clock_mode_24h() == MOVEMENT_CLOCK_MODE_24H) {
+        if (movement_clock_mode_24h()) {
             /* 24h format */
             watch_set_indicator(WATCH_INDICATOR_24H);
             sprintf(buf, "%2d%02d  ", date_time.unit.hour, date_time.unit.minute);
