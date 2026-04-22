@@ -67,6 +67,9 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
         if (currentday > phase_changes[phase_index] && currentday <= phase_changes[phase_index + 1]) break;
     }
 
+    movement_location_t loc = (movement_location_t) { .reg = watch_get_backup_data(1) };
+    bool southern = (loc.bit.latitude < 0);
+
     sprintf(buf, "%2d", date_time.unit.day);
     watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     switch (phase_index) {
@@ -79,30 +82,51 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
             watch_display_text(WATCH_POSITION_BOTTOM, "CresNt");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                if (currentfrac > 0.125) watch_set_pixel(1, 13);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    if (currentfrac > 0.125) watch_set_pixel(1, 13);
+                } else {
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                    if (currentfrac > 0.125) watch_set_pixel(2, 14);
+                }
             }
             break;
         case 2:
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "1stQtr", " 1st q");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, southern ? "3rdQtr" : "1stQtr", southern ? " 3rd q" : " 1st q");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                watch_set_pixel(1, 13);
-                watch_set_pixel(1, 14);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 14);
+                } else {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                }
             }
             break;
         case 3:
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "GbboUs", " Gibb ");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                watch_set_pixel(1, 14);
-                watch_set_pixel(1, 13);
-                watch_set_pixel(1, 15);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 15);
+                } else {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(1, 15);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                }
             }
             break;
         case 4:
@@ -123,30 +147,51 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "GbboUs", " Gibb ");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(1, 14);
-                watch_set_pixel(2, 14);
-                watch_set_pixel(1, 15);
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
+                if (!southern) {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(1, 15);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 15);
+                }
             }
             break;
         case 6:
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "3rdQtr", " 3rd q");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, southern ? "1stQtr" : "3rdQtr", southern ? " 1st q" : " 3rd q");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(1, 14);
-                watch_set_pixel(2, 14);
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
+                if (!southern) {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 14);
+                }
             }
             break;
         case 7:
             watch_display_text(WATCH_POSITION_BOTTOM, "CresNt");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
-                if (currentfrac < 0.875) watch_set_pixel(2, 14);
+                if (!southern) {
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                    if (currentfrac < 0.875) watch_set_pixel(2, 14);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    if (currentfrac < 0.875) watch_set_pixel(1, 13);
+                }
             }
             break;
     }
