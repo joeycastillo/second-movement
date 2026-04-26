@@ -218,7 +218,7 @@ void countdown_face_activate(void *context) {
 
     movement_request_tick_frequency(1);
     quick_ticks_running = false;
-    if (state->mode != cd_running && movement_enable_tap_detection_if_available()) {
+    if (state->mode != cd_running && movement_enable_tap_detection_if_available(false)) {
         state->tap_detection_ticks = TAP_DETECTION_SECONDS;
         state->has_tapped_once = false;
     }

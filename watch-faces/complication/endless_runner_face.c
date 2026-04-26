@@ -327,7 +327,7 @@ static void toggle_sound(endless_runner_state_t *state) {
 
 static void enable_tap_control(endless_runner_state_t *state) {
     if (!state->tap_control_on) {
-        movement_enable_tap_detection_if_available();
+        movement_enable_tap_detection_if_available(true);
         state->tap_control_on = true;
     }
 }

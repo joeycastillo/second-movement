@@ -354,7 +354,7 @@ static void handle_button_presses(bool tap_control_on, bool hit) {
     {
     case BJ_TITLE_SCREEN:
         if (!tap_turned_on && tap_control_on) {
-            if (movement_enable_tap_detection_if_available()) tap_turned_on = true;
+            if (movement_enable_tap_detection_if_available(true)) tap_turned_on = true;
         }
         begin_playing(tap_control_on);
         break;
@@ -384,7 +384,7 @@ static void toggle_tap_control(blackjack_face_state_t *state) {
         state->tap_control_on = false;
         watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
     } else {
-        bool tap_could_enable = movement_enable_tap_detection_if_available();
+        bool tap_could_enable = movement_enable_tap_detection_if_available(true);
         if (tap_could_enable) {
             state->tap_control_on = true;
             watch_set_indicator(WATCH_INDICATOR_SIGNAL);

@@ -845,7 +845,7 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
 }
 
-bool movement_enable_tap_detection_if_available(void) {
+bool movement_enable_tap_detection_if_available(bool enable_double_tap) {
     if (movement_state.has_lis2dw) {
         // configure tap duration threshold and enable Z axis
         lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
@@ -855,13 +855,20 @@ bool movement_enable_tap_detection_if_available(void) {
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
-        lis2dw_enable_double_tap();
+
+        if (enable_double_tap) {
+            lis2dw_enable_double_tap();
+        }
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
 
         // enable tap detection on INT1/A3.
-        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP);
+        uint8_t int1_sources = LIS2DW_CTRL4_INT1_SINGLE_TAP;
+        if (enable_double_tap) {
+            int1_sources |= LIS2DW_CTRL4_INT1_DOUBLE_TAP;
+        }
+        lis2dw_configure_int1(int1_sources);
 
         return true;
     }
