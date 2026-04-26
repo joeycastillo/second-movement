@@ -237,7 +237,7 @@ void probability_face_activate(void *context)
     movement_request_tick_frequency(1);
 
     // Enable tap detection for a few seconds when face is activated
-    if (movement_enable_tap_detection_if_available()) {
+    if (movement_enable_tap_detection_if_available(true)) {
         state->tap_detection_ticks = TAP_DETECTION_SECONDS;
     }
 }

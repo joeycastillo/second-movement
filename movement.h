@@ -395,7 +395,7 @@ bool movement_alarm_enabled(void);
 void movement_set_alarm_enabled(bool value);
 
 // if the board has an accelerometer, these functions will enable or disable tap detection.
-bool movement_enable_tap_detection_if_available(void);
+bool movement_enable_tap_detection_if_available(bool enable_double_tap);
 bool movement_disable_tap_detection_if_available(void);
 
 // gets and sets the accelerometer data rate in the background
