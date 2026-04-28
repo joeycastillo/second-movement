@@ -21,6 +21,7 @@
             pkgs.gnumake
             pkgs.emscripten
             pkgs.gcc-arm-embedded
+            pkgs.python313
           ];
           shellHook = ''
             export EM_CACHE=$(pwd)/.emscripten_cache/
