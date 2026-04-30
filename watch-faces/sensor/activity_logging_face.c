@@ -29,6 +29,16 @@
 #include "watch.h"
 #include "watch_utility.h"
 
+static char _activity_logging_get_mood_face(uint16_t active_minutes) {
+    if (active_minutes >= 150) {
+        return ')';  // happy: 150+ minutes
+    } else if (active_minutes >= 30) {
+        return '1';  // neutral: 30-149 minutes
+    } else {
+        return '(';  // sad: 0-29 minutes
+    }
+}
+
 static void _activity_logging_face_update_display(activity_logging_state_t *state) {
     char buf[8];
     watch_date_time_t timestamp = movement_get_local_date_time();
@@ -37,10 +47,18 @@ static void _activity_logging_face_update_display(activity_logging_state_t *stat
 
     if (state->display_index == 0) {
         // if we are at today, just show the count so far
-        snprintf(buf, 8, "%2d", timestamp.unit.day);
+        sprintf(buf, "%2d", timestamp.unit.day);
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
-        snprintf(buf, 8, "%4d  ", state->active_minutes_today);
-        watch_display_text(WATCH_POSITION_BOTTOM, buf);
+
+        if (state->show_emoticon) {
+            char mood_face = _activity_logging_get_mood_face(state->active_minutes_today);
+            sprintf(buf, "  %c  ", mood_face);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+            watch_set_colon();
+        } else {
+            sprintf(buf, "%4d  ", state->active_minutes_today);
+            watch_display_text(WATCH_POSITION_BOTTOM, buf);
+        }
 
         // also indicate that this is the active day — we are still sensing active minutes!
         watch_set_indicator(WATCH_INDICATOR_SIGNAL);
@@ -81,6 +99,8 @@ void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr) 
 void activity_logging_face_activate(void *context) {
     activity_logging_state_t *state = (activity_logging_state_t *)context;
     state->display_index = 0;
+    state->show_emoticon = true;
+    state->emoticon_tick_count = 0;
 }
 
 bool activity_logging_face_loop(movement_event_t event, void *context) {
@@ -106,6 +126,16 @@ bool activity_logging_face_loop(movement_event_t event, void *context) {
             {
                 if (movement_get_local_date_time().unit.second == 0 && state->display_index == 0) {
                     _activity_logging_face_update_display(state);
+                }
+
+                // Handle emoticon display timing using tick counter
+                if (state->show_emoticon) {
+                    state->emoticon_tick_count++;
+                    if (state->emoticon_tick_count > 1) {
+                        state->show_emoticon = false;
+                        watch_clear_colon();
+                        _activity_logging_face_update_display(state);
+                    }
                 }
             }
             break;

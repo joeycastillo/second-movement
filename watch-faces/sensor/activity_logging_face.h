@@ -56,6 +56,8 @@ typedef struct {
     uint8_t display_index;                              // the index we are displaying on screen
     uint16_t active_minutes_today;                      // the number of active minutes logged today
     bool previous_minute_was_active;                    // we only want to count two or more consecutive active minutes
+    bool show_emoticon;                                 // whether to show emoticon instead of count
+    uint8_t emoticon_tick_count;                        // tick counter for emoticon display (1 second = 1 tick)
 } activity_logging_state_t;
 
 void activity_logging_face_setup(uint8_t watch_face_index, void ** context_ptr);
