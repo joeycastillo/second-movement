@@ -49,6 +49,7 @@ SRCS += \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
   ./watch-faces/complication/deadline_face.c \
+  ./watch-faces/clock/world_clock2_face.c \
   ./watch-faces/complication/blackjack_face.c \
   ./watch-faces/complication/endless_runner_face.c \
   ./watch-faces/complication/higher_lower_game_face.c \
