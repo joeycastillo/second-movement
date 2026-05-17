@@ -62,6 +62,8 @@ typedef struct {
     bool caterpillar; //true to enable smooth movement
     bool door_is_open; //true if door is open
     bool food_set; //true if food is placed
+    uint8_t shit_set; //numbers of shits currently placed
+    uint32_t next_shit_ts; //next time to shit
     uint8_t ticks; 
     int8_t seg;
     int8_t com;
@@ -71,11 +73,12 @@ void tamagotchi_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void tamagotchi_face_activate(void *context);
 bool tamagotchi_face_loop(movement_event_t event, void *context);
 void tamagotchi_face_resign(void *context);
+movement_watch_face_advisory_t tamagotchi_face_advise(void *context);
 
 #define tamagotchi_face ((const watch_face_t){ \
     tamagotchi_face_setup, \
     tamagotchi_face_activate, \
     tamagotchi_face_loop, \
     tamagotchi_face_resign, \
-    NULL, \
+    tamagotchi_face_advise, \
 })

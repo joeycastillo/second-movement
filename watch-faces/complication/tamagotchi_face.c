@@ -24,7 +24,68 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "watch_utility.h"
 #include "tamagotchi_face.h"#
+
+static void tamagotchi_face_set_smiley_pixel(tamagotchi_state_t * state, uint8_t index) {
+    watch_set_pixel(state->smiley_segments[index].com, state->smiley_segments[index].seg);
+}
+
+static void tamagotchi_face_clear_smiley_pixel(tamagotchi_state_t * state, uint8_t index) {
+    watch_clear_pixel(state->smiley_segments[index].com, state->smiley_segments[index].seg);
+}
+
+static void tamagotchi_face_draw_smiley(tamagotchi_state_t * state, bool clear, tamagotchi_smiley_eyes eyes, tamagotchi_smiley_mouth mouth) {
+    if (clear) {
+        for (int i=0; i < 14; i++) {
+            watch_clear_pixel(state->smiley_segments[i].com, state->smiley_segments[i].seg);
+        }    
+    }
+
+    switch (eyes) {
+        case TAMAGOTCHI_EYES_BLINK:
+            tamagotchi_face_set_smiley_pixel(state, 6);
+            tamagotchi_face_set_smiley_pixel(state, 13);
+            break;
+        case TAMAGOTCHI_EYES_NORMAL:
+            tamagotchi_face_set_smiley_pixel(state, 5);
+            tamagotchi_face_set_smiley_pixel(state, 11);
+            break;
+    }
+    
+    switch (mouth) {
+        case TAMAGOTCHI_MOUTCH_SMILE:
+            tamagotchi_face_set_smiley_pixel(state, 1);
+            tamagotchi_face_set_smiley_pixel(state, 0);
+            tamagotchi_face_set_smiley_pixel(state, 7);
+            tamagotchi_face_set_smiley_pixel(state, 9);
+            break;
+    }
+}
+
+static void tamagotchi_face_draw_shit(tamagotchi_state_t *state) {
+    tamagotchi_face_set_smiley_pixel(state, 0);
+    if (state->shit_set >= 2) tamagotchi_face_set_smiley_pixel(state, 3);
+    if (state->shit_set >= 3) tamagotchi_face_set_smiley_pixel(state, 7);
+    if (state->shit_set >= 4) tamagotchi_face_set_smiley_pixel(state, 10);
+    if (state->shit_set > 4) 
+        for (int i = 0; i <= 13; i++)   
+            tamagotchi_face_set_smiley_pixel(state, i);
+}
+
+static void tamagotchi_face_init_segment(tamagotchi_state_t * state, uint8_t segment_index, uint8_t com, uint8_t seg, uint8_t adj1, uint8_t adj2, uint8_t adj3, uint8_t adj4) {
+    state->segments[segment_index].com = com;
+    state->segments[segment_index].seg = seg;
+    state->segments[segment_index].adjacent[0] = adj1;
+    state->segments[segment_index].adjacent[1] = adj2;
+    state->segments[segment_index].adjacent[2] = adj3;
+    state->segments[segment_index].adjacent[3] = adj4;
+}
+
+static void tamagotchi_face_init_smiley_segment(tamagotchi_state_t * state, uint8_t segment_index, uint8_t com, uint8_t seg) {
+    state->smiley_segments[segment_index].com = com;
+    state->smiley_segments[segment_index].seg = seg;
+}
 
 void tamagotchi_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -94,8 +155,31 @@ void tamagotchi_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->length = 1;
         state->caterpillar = true;
         state->indexes[0] = 25;
+
+
+        watch_date_time_t now = watch_rtc_get_date_time();
+        uint32_t now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
+        state->next_shit_ts = watch_utility_offset_timestamp(now_ts, 0, 1, 0);
     }
     // Do any pin or peripheral setup here; this will be called whenever the watch wakes from deep sleep.
+}
+
+static void tamagotchi_face_handle_shitting(tamagotchi_state_t * state) {
+    watch_date_time_t now = watch_rtc_get_date_time();
+    uint32_t now_ts = watch_utility_date_time_to_unix_time(now, movement_get_current_timezone_offset());
+    if (now_ts >= state->next_shit_ts) {
+        state->next_shit_ts = watch_utility_offset_timestamp(now_ts, 0, 1, 0);
+        state->shit_set++;
+        state->food_set = false;
+
+        tamagotchi_face_draw_shit(state);
+
+        if(state->shit_set > 4 && state->length > 1)
+            state->length--;
+
+        state->length++;
+
+    }
 }
 
 static uint32_t tamagotchi_face_get_random(uint32_t max) {
@@ -104,20 +188,6 @@ static uint32_t tamagotchi_face_get_random(uint32_t max) {
     #else
         return arc4random_uniform(max);
     #endif
-}
-
-static void tamagotchi_face_init_segment(tamagotchi_state_t * state, uint8_t segment_index, uint8_t com, uint8_t seg, uint8_t adj1, uint8_t adj2, uint8_t adj3, uint8_t adj4) {
-    state->segments[segment_index].com = com;
-    state->segments[segment_index].seg = seg;
-    state->segments[segment_index].adjacent[0] = adj1;
-    state->segments[segment_index].adjacent[1] = adj2;
-    state->segments[segment_index].adjacent[2] = adj3;
-    state->segments[segment_index].adjacent[3] = adj4;
-}
-
-static void tamagotchi_face_init_smiley_segment(tamagotchi_state_t * state, uint8_t segment_index, uint8_t com, uint8_t seg) {
-    state->smiley_segments[segment_index].com = com;
-    state->smiley_segments[segment_index].seg = seg;
 }
 
 static void tamagotchi_face_draw_door(tamagotchi_state_t * state) {
@@ -132,43 +202,7 @@ static void tamagotchi_face_draw_door(tamagotchi_state_t * state) {
         watch_clear_pixel(1, 22);
         watch_clear_pixel(2, 22);
     }
-}
-
-static void tamagotchi_face_set_smiley_pixel(tamagotchi_state_t * state, uint8_t index) {
-    watch_set_pixel(state->smiley_segments[index].com, state->smiley_segments[index].seg);
-}
-
-static void tamagotchi_face_clear_smiley_pixel(tamagotchi_state_t * state, uint8_t index) {
-    watch_clear_pixel(state->smiley_segments[index].com, state->smiley_segments[index].seg);
-}
-
-static void tamagotchi_face_draw_smiley(tamagotchi_state_t * state, bool clear, tamagotchi_smiley_eyes eyes, tamagotchi_smiley_mouth mouth) {
-    if (clear) {
-        for (int i=0; i < 14; i++) {
-            watch_clear_pixel(state->smiley_segments[i].com, state->smiley_segments[i].seg);
-        }    
-    }
-
-    switch (eyes) {
-        case TAMAGOTCHI_EYES_BLINK:
-            tamagotchi_face_set_smiley_pixel(state, 6);
-            tamagotchi_face_set_smiley_pixel(state, 13);
-            break;
-        case TAMAGOTCHI_EYES_NORMAL:
-            tamagotchi_face_set_smiley_pixel(state, 5);
-            tamagotchi_face_set_smiley_pixel(state, 11);
-            break;
-    }
-    
-    switch (mouth) {
-        case TAMAGOTCHI_MOUTCH_SMILE:
-            tamagotchi_face_set_smiley_pixel(state, 1);
-            tamagotchi_face_set_smiley_pixel(state, 0);
-            tamagotchi_face_set_smiley_pixel(state, 7);
-            tamagotchi_face_set_smiley_pixel(state, 9);
-            break;
-    }
-}
+} 
 
 void tamagotchi_face_activate(void *context) {
     tamagotchi_state_t *state = (tamagotchi_state_t *)context;
@@ -188,6 +222,7 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
             state->door_is_open = !state->door_is_open; //TODO: for fallthrough
             //fallthrough
         case EVENT_ALARM_BUTTON_UP:       
+            //handle door
             state->door_is_open = !state->door_is_open;
             if (!state->door_is_open) {
                 state->segments[18].adjacent[0] = -1;
@@ -205,7 +240,11 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
             speed = speed == freq ? 1 : speed * 2;
             break;
         case EVENT_LIGHT_BUTTON_UP:
-            if(!state->food_set) {
+            if(state->shit_set) {
+                for (int i = 0; i <= 13; i++)   
+                    tamagotchi_face_clear_smiley_pixel(state, i);
+                state->shit_set = 0;
+            } else if(!state->food_set) {
                 tamagotchi_face_set_smiley_pixel(state, 0);
                 tamagotchi_face_set_smiley_pixel(state, 1);
                 tamagotchi_face_set_smiley_pixel(state, 2);
@@ -220,7 +259,10 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
         case EVENT_TICK: 
             state->ticks = (state->ticks + 1) % freq;  
 
+            tamagotchi_face_handle_shitting(state);
+
             if(state->ticks % (freq / speed) == 0) {         
+
                 //eat food
                 if (state->food_set && (state->indexes[0] == 1 || state->indexes[0] == 5)) {
                     tamagotchi_face_clear_smiley_pixel(state, 0);
@@ -274,6 +316,10 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
                     tamagotchi_face_set_smiley_pixel(state, 1);
                     tamagotchi_face_set_smiley_pixel(state, 2);
                     tamagotchi_face_set_smiley_pixel(state, 3);
+                }
+
+                if (state->shit_set) {
+                     tamagotchi_face_draw_shit(state);
                 }
                 
                 //draw door
@@ -355,6 +401,10 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
             // You should also consider starting the tick animation, to show the wearer that this is sleep mode:
             // watch_start_sleep_animation(500);
             break;
+        case EVENT_BACKGROUND_TASK: 
+            // this will get called at the top of each minute
+            tamagotchi_face_handle_shitting(state);
+            break;
         default:
             // Movement's default loop handler will step in for any cases you don't handle above:
             // * EVENT_LIGHT_BUTTON_DOWN lights the LED
@@ -366,6 +416,19 @@ bool tamagotchi_face_loop(movement_event_t event, void *context) {
 
     // return true if the watch can enter standby mode. Generally speaking, you should always return true.
     return true;
+}
+
+movement_watch_face_advisory_t tamagotchi_face_advise(void *context) {
+    (void) context;
+    movement_watch_face_advisory_t retval = { 0 };
+
+    // this will get called at the top of each minute
+
+    //TODO
+    //retval.wants_background_task = watch_rtc_get_date_time().unit.minute == 0;
+    retval.wants_background_task = true;
+
+    return retval;
 }
 
 void tamagotchi_face_resign(void *context) {
