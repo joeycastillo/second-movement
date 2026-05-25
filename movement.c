@@ -111,19 +111,7 @@ movement_volatile_state_t movement_volatile_state;
 // The last sequence that we have been asked to play while the watch was in deep sleep
 static int8_t *_pending_sequence;
 
-// The note sequence of the default alarm
-int8_t alarm_tune[] = {
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 3,
-    BUZZER_NOTE_REST, 4,
-    BUZZER_NOTE_C8, 5,
-    BUZZER_NOTE_REST, 38,
-    -8, 9,
-    0
-};
+int8_t* alarm_tune = alarm_tune_default;
 
 int8_t _movement_dst_offset_cache[NUM_ZONE_NAMES] = {0};
 #define TIMEZONE_DOES_NOT_OBSERVE (-127)
