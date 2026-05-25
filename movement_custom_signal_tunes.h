@@ -270,4 +270,4 @@ static const int8_t* tunes_table[] =
     tune_evangelion
 };
 
-int8_t* signal_tune = signal_tune_default;
+static int8_t* signal_tune = signal_tune_default;
