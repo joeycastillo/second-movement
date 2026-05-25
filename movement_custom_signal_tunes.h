@@ -255,10 +255,267 @@ static const int8_t tune_evangelion[] =
     0
 };
 
+/* -------------------- MISSING ADDED TUNES -------------------- */
+
+static const int8_t tune_mario_1up[] =
+{
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_E7, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_D7, 4,
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_G7, 4,
+    0
+};
+
+static const int8_t tune_mario_pup[] =
+{
+    BUZZER_NOTE_C5, 2,
+    BUZZER_NOTE_C5, 2,
+    BUZZER_NOTE_E5, 2,
+    BUZZER_NOTE_G5, 2,
+    BUZZER_NOTE_C6, 2,
+    BUZZER_NOTE_G5, 2,
+    BUZZER_NOTE_C6, 2,
+    BUZZER_NOTE_E6, 2,
+    BUZZER_NOTE_G6, 2,
+    BUZZER_NOTE_C7, 2,
+    0
+};
+
+static const int8_t tune_whatsapp[] =
+{
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 7,
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    BUZZER_NOTE_REST, 7,
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, 7,
+    BUZZER_NOTE_G6, 2,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, 13,
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    0
+};
+
+static const int8_t tune_ff_victory[] =
+{
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_B5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_G5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_A5, 8,
+    BUZZER_NOTE_REST, 19,
+    BUZZER_NOTE_B5, 8,
+    0
+};
+
+static const int8_t tune_game_boy[] =
+{
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_C7, 8,
+    BUZZER_NOTE_REST, 4,
+    0
+};
+
+static const int8_t tune_game_boy_pause[] =
+{
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, 5,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 5,
+    -4, 1,
+    0
+};
+
+static const int8_t tune_westminster[] =
+{
+    BUZZER_NOTE_G7SHARP_A7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2, 2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_E7, 1,
+    BUZZER_NOTE_REST, 1,
+    -2, 2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_F7SHARP_G7FLAT, 1,
+    BUZZER_NOTE_REST, 1,
+    -2, 2,
+    BUZZER_NOTE_REST, 34,
+    BUZZER_NOTE_B6, 1,
+    BUZZER_NOTE_REST, 1,
+    -2, 2,
+    BUZZER_NOTE_REST, 74,
+    0
+};
+
+static const int8_t tune_ocean[] =
+{
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_REST, 3,
+    BUZZER_NOTE_B4, 1,
+    BUZZER_NOTE_G5, 1,
+    BUZZER_NOTE_D6, 1,
+    0
+};
+
+static const int8_t tune_kirby_victory[] =
+{
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_REST, 20,
+    0
+};
+
+static const int8_t tune_third_sanctuary[] =
+{
+    BUZZER_NOTE_C7, 3,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_REST, 8,
+    BUZZER_NOTE_C7, 4,
+    0
+};
+
+static const int8_t tune_minecraft[] =
+{
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_REST, 68,
+    BUZZER_NOTE_A6, 4,
+    BUZZER_NOTE_REST, 33,
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_REST, 68,
+    BUZZER_NOTE_G6, 4,
+    0
+};
+
+static const int8_t tune_sonic_ring[] =
+{
+    BUZZER_NOTE_E6, 4,
+    BUZZER_NOTE_G6, 4,
+    BUZZER_NOTE_C7, 5,
+    0
+};
+
+static const int8_t tune_neo_geo[] =
+{
+    BUZZER_NOTE_D5, 4,
+    BUZZER_NOTE_F5, 4,
+    BUZZER_NOTE_A5, 4,
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_D7, 4,
+    BUZZER_NOTE_E7, 4,
+    0
+};
+
+static const int8_t tune_bosun_whistle[] =
+{
+    BUZZER_NOTE_B6, 4,
+    BUZZER_NOTE_C7, 4,
+    BUZZER_NOTE_C7SHARP_D7FLAT, 4,
+    BUZZER_NOTE_D7SHARP_E7FLAT, 52,
+    BUZZER_NOTE_C7, 2,
+    BUZZER_NOTE_B6, 6,
+    0
+};
+
+static const int8_t tune_among_us[] =
+{
+    BUZZER_NOTE_C6, 4,
+    BUZZER_NOTE_REST, 20,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    BUZZER_NOTE_REST, 20,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_REST, 20,
+    BUZZER_NOTE_F6SHARP_G6FLAT, 4,
+    BUZZER_NOTE_REST, 20,
+    BUZZER_NOTE_F6, 4,
+    BUZZER_NOTE_D6SHARP_E6FLAT, 4,
+    0
+};
+
+
+static const int8_t tune_gigi_dag[] =
+{
+    BUZZER_NOTE_F6SHARP_G6FLAT, 5,
+    BUZZER_NOTE_REST, ((12 * 2) - 5),
+    BUZZER_NOTE_F6SHARP_G6FLAT, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_D7, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_C7SHARP_D7FLAT, 5,
+    BUZZER_NOTE_REST, ((2 * 12 * 2) - 5),
+
+    BUZZER_NOTE_C7SHARP_D7FLAT, 5,
+    BUZZER_NOTE_REST, ((12 * 2) - 5),
+    BUZZER_NOTE_C7SHARP_D7FLAT, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_D7, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, ((2 * 12 * 2) - 5),
+
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, ((12 * 2) - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_A6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, ((12 * 2) - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, ((12 * 2) - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_A6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_B6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_A6, 5,
+    BUZZER_NOTE_REST, (12 - 5),
+    BUZZER_NOTE_F6SHARP_G6FLAT, 5,
+    BUZZER_NOTE_REST, ((2 * 12 * 2) - 5),
+
+    -36, 1,
+    0
+};
+
+/* -------------------- TABLE -------------------- */
+
 static const int8_t* tunes_table[] =
 {
     alarm_tune_default, //rename to tune_alarm_default
     tune_zelda_secret,
+    tune_gigi_dag,
     tune_mario_theme,
     tune_mgs_codec,
     tune_kim_possible,
@@ -267,9 +524,24 @@ static const int8_t* tunes_table[] =
     tune_harry_potter_short,
     tune_harry_potter_long,
     tune_jurassic_park,
-    tune_evangelion
+    tune_evangelion,
+    tune_mario_1up,
+    tune_mario_pup,
+    tune_whatsapp,
+    tune_ff_victory,
+    tune_game_boy,
+    tune_game_boy_pause,
+    tune_westminster,
+    tune_ocean,
+    tune_kirby_victory,
+    tune_third_sanctuary,
+    tune_minecraft,
+    tune_sonic_ring,
+    tune_neo_geo,
+    tune_bosun_whistle,
+    tune_among_us,
 };
 
-static const int8_t MELODY_CNT = 11;
+static const int8_t MELODY_CNT = 27;
 
 static int8_t* signal_tune = signal_tune_default;
