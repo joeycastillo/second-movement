@@ -30,6 +30,7 @@
 #include "watch_utility.h"
 #include "watch_common_display.h"
 #include "delay.h"
+#include "movement_custom_signal_tunes.h"
 
 typedef enum {
     alarm_setting_idx_alarm,
@@ -49,6 +50,8 @@ static const watch_buzzer_note_t _buzzer_notes[3] = {BUZZER_NOTE_B6, BUZZER_NOTE
 // This mapping is for classic LCD; if custom LCD is in use, we change it in the setup function.
 static uint8_t _buzzer_segdata[3][2] = {{0, 3}, {1, 3}, {2, 2}};
 
+static int8_t* _alarm_tune = alarm_tune_default;
+
 static int8_t _wait_ticks;
 
 static uint8_t _get_weekday_idx(watch_date_time_t date_time) {
@@ -58,6 +61,10 @@ static uint8_t _get_weekday_idx(watch_date_time_t date_time) {
         date_time.unit.year--;
     }
     return (date_time.unit.day + 13 * (date_time.unit.month + 1) / 5 + date_time.unit.year + date_time.unit.year / 4 + 525 - 2) % 7;
+}
+
+static void _alarm_set_tune(int8_t melody_idx) {
+    _alarm_tune = tunes_table[melody_idx];
 }
 
 static void _alarm_set_signal(alarm_state_t *state) {
@@ -220,7 +227,7 @@ static void _alarm_indicate_beep(alarm_state_t *state) {
         _alarm_play_short_beep(1);
     } else {
         // regular alarm beep
-        movement_play_alarm();
+        movement_play_sequence(_alarm_tune, BUZZER_PRIORITY_ALARM);
     }
 }
 
@@ -391,7 +398,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
             case alarm_setting_idx_melody:
                 // pitch level
                 state->alarm[state->alarm_idx].melody = (state->alarm[state->alarm_idx].melody + 1) % 3;
-                movement_set_alarm_tune(state->alarm[state->alarm_idx].melody); 
+                _alarm_set_tune(state->alarm[state->alarm_idx].melody); 
                 // play sound to show user what this is for
                 _alarm_indicate_beep(state);
                 break;
@@ -448,7 +455,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
         } else {
             // regular alarm beeps
             for (int i = 0; i < state->alarm[state->alarm_playing_idx].beeps == (ALARM_MAX_BEEP_ROUNDS - 1) ? 20 : state->alarm[state->alarm_playing_idx].beeps; i++) {
-                movement_play_alarm();
+                movement_play_sequence(_alarm_tune, BUZZER_PRIORITY_ALARM);
             }
         }
         // one time alarm? -> erase it
