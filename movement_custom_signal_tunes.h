@@ -270,4 +270,6 @@ static const int8_t* tunes_table[] =
     tune_evangelion
 };
 
+static const int8_t MELODY_CNT = 11;
+
 static int8_t* signal_tune = signal_tune_default;

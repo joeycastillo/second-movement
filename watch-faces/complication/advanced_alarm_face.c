@@ -397,7 +397,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
                 break;
             case alarm_setting_idx_melody:
                 // pitch level
-                state->alarm[state->alarm_idx].melody = (state->alarm[state->alarm_idx].melody + 1) % 3;
+                state->alarm[state->alarm_idx].melody = (state->alarm[state->alarm_idx].melody + 1) % MELODY_CNT;
                 _alarm_set_tune(state->alarm[state->alarm_idx].melody); 
                 // play sound to show user what this is for
                 _alarm_indicate_beep(state);
