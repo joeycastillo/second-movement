@@ -334,6 +334,7 @@ void movement_request_wake(void);
 void movement_play_note(watch_buzzer_note_t note, uint16_t duration_ms);
 void movement_play_signal(void);
 void movement_play_alarm(void);
+void movement_set_alarm_tune(int8_t melody_idx);
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note);
 void movement_play_sequence(int8_t *note_sequence, movement_buzzer_priority_t priority);
 

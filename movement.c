@@ -580,6 +580,10 @@ void movement_play_alarm(void) {
     movement_play_sequence(alarm_tune, BUZZER_PRIORITY_ALARM);
 }
 
+void movement_set_alarm_tune(int8_t melody_idx) {
+    alarm_tune = tunes_table[melody_idx];
+}
+
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
     // Ugly but necessary to avoid breaking backward compatibility with some faces.
     // Create an alarm tune on the fly with the specified note and repetition.

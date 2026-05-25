@@ -255,4 +255,19 @@ static const int8_t tune_evangelion[] =
     0
 };
 
-const int8_t* signal_tune = signal_tune_default;
+static const int8_t* tunes_table[] =
+{
+    alarm_tune_default, //rename to tune_alarm_default
+    tune_zelda_secret,
+    tune_mario_theme,
+    tune_mgs_codec,
+    tune_kim_possible,
+    tune_power_rangers,
+    tune_layla,
+    tune_harry_potter_short,
+    tune_harry_potter_long,
+    tune_jurassic_park,
+    tune_evangelion
+};
+
+int8_t* signal_tune = signal_tune_default;
