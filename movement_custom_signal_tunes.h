@@ -24,6 +24,8 @@
 
 #pragma once
 
+static const int8_t DEFAULT_NOTE_DURATION = 4;
+
 static const int8_t alarm_tune_default[] = {
     BUZZER_NOTE_C8, 3,
     BUZZER_NOTE_REST, 4,
@@ -5626,9 +5628,54 @@ static const int8_t* tunes_table[] =
     tune_neo_geo,
     tune_bosun_whistle,
     tune_among_us,
-    tune_gigi_dag,
+    alarm_tune_gigi_dag,
+    alarm_tune_twinkle,
+    alarm_tune_baby,
+    alarm_tune_inter,
+    alarm_tune_elmo,
+    alarm_tune_farm,
+    alarm_tune_days,
+    alarm_tune_bad_apple,
+    alarm_tune_to_heart,
+    alarm_tune_nokia,
+    alarm_tune_flowering_night,
+    alarm_tune_pictionary,
+    alarm_tune_e1m1,
+    alarm_tune_nazrin,
+    alarm_tune_cirnos_perfect_math_class,
+    alarm_tune_lucky_star,
+    alarm_tune_skype,
+    alarm_tune_crazy_frog,
+    alarm_tune_caramelldansen,
+    alarm_tune_iphone,
+    alarm_tune_butterfly,
+    alarm_tune_running_in_the_90s,
+    alarm_tune_ford,
+    alarm_tune_party_night,
+    alarm_tune_six_trillion_years,
+    alarm_tune_god_knows,
+    alarm_tune_levan_polkka,
+    alarm_tune_cbat,
+    alarm_tune_pacman,
+    alarm_tune_samsung,
+    alarm_tune_cheetahmen,
+    alarm_tune_crab_rave,
+    alarm_tune_sonic_1_invincibility,
+    alarm_tune_brain_power,
+    alarm_tune_magical_sound_shower,
+    alarm_tune_sailor_moon,
+    alarm_tune_drillchu,
+    alarm_tune_unwelcome_school,
+    alarm_tune_you,
+    alarm_tune_calamari_inkantation,
+    alarm_tune_innocent_starter,
+    alarm_tune_smack_my,
+    alarm_tune_lonely_rolling_star,
+    alarm_tune_voices,
+    alarm_tune_dk_island_swing,
+    alarm_tune_lease,
 };
 
-static const int8_t MELODY_CNT = 27;
+static const int8_t MELODY_CNT = 72;
 
 static int8_t* signal_tune = signal_tune_default;
