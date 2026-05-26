@@ -588,6 +588,10 @@ uint8_t movement_get_alarm_tune_index() {
     return _alarm_tune_index;   
 }
 
+int8_t* movement_get_alarm_tune() {
+    return tunes_table[_alarm_tune_index];   
+}
+
 void movement_play_alarm_beeps(uint8_t rounds, watch_buzzer_note_t alarm_note) {
     // Ugly but necessary to avoid breaking backward compatibility with some faces.
     // Create an alarm tune on the fly with the specified note and repetition.

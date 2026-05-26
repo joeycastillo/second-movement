@@ -39,7 +39,8 @@ static uint8_t _beeps_to_play;    // temporary counter for ring signals playing
 static void _signal_callback() {
     if (_beeps_to_play) {
         _beeps_to_play--;
-        watch_buzzer_play_sequence((int8_t *)_sound_seq_beep, _signal_callback);
+        //watch_buzzer_play_sequence((int8_t *)_sound_seq_beep, _signal_callback);
+        watch_buzzer_play_sequence((int8_t *)(movement_get_alarm_tune()), _signal_callback);
     }
 }
 
