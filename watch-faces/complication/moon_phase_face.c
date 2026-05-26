@@ -158,7 +158,7 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
         percent = (int)((200.0 * (1.0 - currentfrac)) + 0.5);
     }
 
-    watch_display_text(WATCH_POSITION_BOTTOM, percent == 100 ?  " FUL" : ((percent == 0 ? " NEU" : (currentfrac < 0.5 ? "2u  " : " Ab "))));
+    watch_display_text(WATCH_POSITION_BOTTOM, percent == 100 ?  " FUL" : ((percent == 0 ? " NEU" : (currentfrac < 0.5 ? "2U  " : "abne"))));
     
     sprintf(buf, "%2d", percent == 100 ? 99 : percent);
     watch_display_text(WATCH_POSITION_SECONDS, buf);
