@@ -221,7 +221,7 @@ static void _alarm_indicate_beep(alarm_state_t *state) {
         _alarm_play_short_beep(state->alarm[state->alarm_idx].pitch);
     } else {
         // regular alarm beep
-        movement_play_sequence(_alarm_tune, BUZZER_PRIORITY_ALARM);
+        movement_play_alarm();
     }
 }
 
@@ -448,7 +448,7 @@ bool advanced_alarm_face_loop(movement_event_t event, void *context) {
         } else {
             // regular alarm beeps
             for (int i = 0; i < state->alarm[state->alarm_playing_idx].beeps == (ALARM_MAX_BEEP_ROUNDS - 1) ? 20 : state->alarm[state->alarm_playing_idx].beeps; i++) {
-                movement_play_sequence(_alarm_tune, BUZZER_PRIORITY_ALARM);
+                movement_play_alarm();
             }
         }
         // one time alarm? -> erase it
