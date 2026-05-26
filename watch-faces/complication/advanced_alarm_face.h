@@ -70,7 +70,7 @@ typedef struct {
     uint8_t hour : 5;
     uint8_t minute : 6;
     uint8_t beeps : 4;
-    uint8_t melody :8;
+    uint8_t pitch :8;
     bool enabled : 1;
 } alarm_setting_t;
 
