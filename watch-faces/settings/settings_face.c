@@ -119,6 +119,7 @@ static void tune_setting_advance(void) {
     uint8_t current_value = movement_get_alarm_tune_index();
     current_value = (current_value + 1) % 72; // there are 72 tunes 
     movement_set_alarm_tune_index(current_value);
+    movement_play_alarm();
 }
 
 static void alarm_setting_display(uint8_t subsecond) {
