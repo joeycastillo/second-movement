@@ -25,8 +25,12 @@
 #include <stdlib.h>
 #include "settings_face.h"
 #include "watch.h"
+#include "movement_custom_signal_tunes.h"
+
+static bool show_song_name;
 
 static void clock_setting_display(uint8_t subsecond) {
+    show_song_name = false; //first setting: reset
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "CLOCK", "CL");
     if (subsecond % 2) {
         if (movement_clock_mode_24h()) watch_display_text(WATCH_POSITION_BOTTOM, "24h");
@@ -108,7 +112,8 @@ static void signal_setting_advance(void) {
 static void tune_setting_display(uint8_t subsecond) {
     char buf[8];
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "song", "SO");
-    watch_display_text(WATCH_POSITION_BOTTOM, " SONG ");
+    if (!show_song_name) watch_display_text(WATCH_POSITION_BOTTOM, " SONG ");
+    else watch_display_text(WATCH_POSITION_BOTTOM, tunesnamestable[movement_get_alarm_tune_index()]);
     if (subsecond % 2) {
         sprintf(buf, "%2d", movement_get_alarm_tune_index());
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
@@ -119,6 +124,8 @@ static void tune_setting_advance(void) {
     uint8_t current_value = movement_get_alarm_tune_index();
     current_value = (current_value + 1) % 72; // there are 72 tunes 
     movement_set_alarm_tune_index(current_value);
+    watch_display_text(WATCH_POSITION_BOTTOM, tunesnamestable[current_value]);
+    show_song_name = true;
     movement_play_alarm();
 }
 
