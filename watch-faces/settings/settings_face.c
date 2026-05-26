@@ -110,15 +110,15 @@ static void tune_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "song", "SO");
     watch_display_text(WATCH_POSITION_BOTTOM, " SONG ");
     if (subsecond % 2) {
-        sprintf(buf, "%2d", movement_get_tune_setting());
+        sprintf(buf, "%2d", movement_get_alarm_tune_index());
         watch_display_text(WATCH_POSITION_TOP_RIGHT, buf);
     }
 }
 
 static void tune_setting_advance(void) {
-    uint8_t current_value = movement_get_tune_setting();
-    current_value = (current_value + 1) % 74;
-    movement_set_tune_setting(current_value);
+    uint8_t current_value = movement_get_alarm_tune_index();
+    current_value = (current_value + 1) % 72; // there are 72 tunes 
+    movement_set_alarm_tune_index(current_value);
 }
 
 static void alarm_setting_display(uint8_t subsecond) {

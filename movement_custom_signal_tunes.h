@@ -5676,6 +5676,4 @@ static const int8_t* tunes_table[] =
     alarm_tune_lease,
 };
 
-static const int8_t MELODY_CNT = 72;
-
 static int8_t* signal_tune = signal_tune_default;
