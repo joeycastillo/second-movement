@@ -58,11 +58,19 @@ int _write(int file, char *ptr, int len) {
     int bytes_written = 0;
 
     for (int i = 0; i < len; i++) {
+        // If buffer is full, flush it first
+        if (s_write_buf_len >= CDC_WRITE_BUF_SZ) {
+            tud_task();
+            cdc_task();
+            // If still full after flush, stop
+            if (s_write_buf_len >= CDC_WRITE_BUF_SZ) {
+                break;
+            }
+        }
+
         s_write_buf[s_write_buf_pos] = ptr[i];
         s_write_buf_pos = CDC_WRITE_BUF_IDX(s_write_buf_pos + 1);
-        if (s_write_buf_len < CDC_WRITE_BUF_SZ) {
-            s_write_buf_len++;
-        }
+        s_write_buf_len++;
         bytes_written++;
     }
 
@@ -114,7 +122,8 @@ static void prv_handle_writes(void) {
     if (s_write_buf_len > 0) {
         const size_t start_pos =
             CDC_WRITE_BUF_IDX(s_write_buf_pos - s_write_buf_len);
-        for (size_t i = 0; i < (size_t) s_write_buf_len; i++) {
+        const size_t len = s_write_buf_len;
+        for (size_t i = 0; i < len; i++) {
             const size_t idx = CDC_WRITE_BUF_IDX(start_pos + i);
             if (tud_cdc_available() > 0) {
                 // If we receive data while doing a large write, we need to
@@ -124,9 +133,12 @@ static void prv_handle_writes(void) {
             }
             if (tud_cdc_write_available()) {
                 tud_cdc_write(&s_write_buf[idx], 1);
+                s_write_buf[idx] = 0;
+                s_write_buf_len--;
+            } else {
+                // USB TX buffer full, stop and retry next time
+                break;
             }
-            s_write_buf[idx] = 0;
-            s_write_buf_len--;
         }
         tud_cdc_write_flush();
     }
