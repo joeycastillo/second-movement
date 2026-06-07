@@ -162,6 +162,8 @@ include watch-faces.mk
 
 SRCS += \
   ./movement.c \
+  ./movement_custom_signal_tunes.c \
+  ./movement_custom_alarm_tunes.c \
 
 # Finally, leave this line at the bottom of the file.
 include $(GOSSAMER_PATH)/rules.mk

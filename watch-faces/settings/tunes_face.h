@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Jeremy O'Brien
+ * Copyright (c) 2025 Alessandro Genova
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,21 @@
 
 #pragma once
 
-#include <stdint.h>
+/*
+ * Set the preferred custom tunes that should play for hourly chime and alarms
+ */
 
-void movement_custom_signal_tunes_init(void);
-uint8_t movement_custom_signal_tunes_get_active_tune_index();
-void movement_custom_signal_tunes_set_active_tune_index(uint8_t index);
+#include "movement.h"
 
-extern const int8_t default_signal_tune[];
-extern int8_t* signal_tune;
+void tunes_face_setup(uint8_t watch_face_index, void **context_ptr);
+void tunes_face_activate(void *context);
+bool tunes_face_loop(movement_event_t event, void *context);
+void tunes_face_resign(void *context);
 
-#define MOVEMENT_N_SIGNAL_TUNES 40
-
-extern const int8_t* signal_tunes[MOVEMENT_N_SIGNAL_TUNES];
-extern const char* signal_tunes_names[MOVEMENT_N_SIGNAL_TUNES];
+#define tunes_face ((const watch_face_t){ \
+    tunes_face_setup, \
+    tunes_face_activate, \
+    tunes_face_loop, \
+    tunes_face_resign, \
+    NULL \
+})
