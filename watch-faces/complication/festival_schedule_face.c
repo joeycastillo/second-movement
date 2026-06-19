@@ -377,6 +377,8 @@ static void _handle_btn_up(festival_schedule_state_t *state, bool clock_mode_24h
         state->curr_act = _find_first_available_act(state->curr_stage, curr_time, handling_light);
         state->curr_stage = festival_acts[state->curr_act].stage;
     }
+    state->prev_stage = state->curr_stage;
+    state->prev_act = state->curr_act;
     state->curr_screen = FESTIVAL_SCHEDULE_SCREEN_ACT;
     _display_screen(state, clock_mode_24h);
 }
