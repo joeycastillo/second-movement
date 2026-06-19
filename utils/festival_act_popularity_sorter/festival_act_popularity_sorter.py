@@ -17,8 +17,8 @@ sp = None
 MAKE_ARR_FILE = 1 # 0 = Don't make the file; 1= Make the file; 2 = Make the file and print it to the console
 PRINT_RANKINGs = True
 IGNORE_STAGES = False
-USE_DAYINFO_FILE = True  # If True, we look for a file called day_info.json and load it. It contains what Clashfinder brings. It gets generated whenever we read from the internet.
-USE_LISTACTPOP_FILE = True  # If True, we look for a file called listActsPop.json and load it. It contains what Spotify or Last.fm bring. It gets generated whenever we read from the internet.
+USE_DAYINFO_FILE = False  # If True, we look for a file called day_info.json and load it. It contains what Clashfinder brings. It gets generated whenever we read from the internet.
+USE_LISTACTPOP_FILE = False  # If True, we look for a file called listActsPop.json and load it. It contains what Spotify or Last.fm bring. It gets generated whenever we read from the internet.
 PRINT_SEARCH_RESULTS = True
 SORT_POP_BY_FOLLOWERS = False
 GENRE_DEFAULT = "NO_GENRE"
