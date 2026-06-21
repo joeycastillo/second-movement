@@ -83,4 +83,5 @@
 #include "tomato_face.h"
 #include "solar_time_face.h"
 #include "tide_face.h"
+#include "met_face.h"
 // New includes go above this line.
