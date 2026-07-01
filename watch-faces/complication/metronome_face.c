@@ -98,7 +98,71 @@ static void metronome_stop_ticking(metronome_state_t *metronome) {
     metronome->ticking = false;
 }
 
-static void settings_increment(metronome_state_t *metronome) {
+// Tick handler while metronome->ticking is true.
+static void running_tick(metronome_state_t *metronome) {
+    if (metronome->ticks_countdown)
+        metronome->ticks_countdown--;
+    if (metronome->ticks_countdown == 0) {
+        // A metronome beat has occurred.
+        // Reset the countdown.
+        metronome->ticks_countdown = metronome->ticks_calc;
+        // Update the remainder counter. If it overflows, increase the next countdown.
+        // This provides more accurate BPM on average, at the cost of some jitter in the short term.
+        metronome->ticks_count_remainder += metronome->ticks_calc_remainder;
+        if (metronome->ticks_count_remainder >= metronome->bpm) {
+            metronome->ticks_count_remainder -= metronome->bpm;
+            if (metronome->ticks_count_remainder >= metronome->bpm)
+                metronome->ticks_count_remainder = 0;
+            metronome->ticks_countdown++;
+        }
+        // Display the tick or tock in the seconds position.
+        metronome->ticktock = !metronome->ticktock;
+        if (metronome->ticktock)
+            watch_display_text(WATCH_POSITION_SECONDS, "# ");
+        else
+            watch_display_text(WATCH_POSITION_SECONDS, " #");
+        // Beep if enabled.
+        if (metronome->beep)
+            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
+    }
+}
+
+// Increment the BPM while running.
+static void running_bpm_inc(metronome_state_t *metronome) {
+    if (metronome->bpm < METRONOME_BPM_MAX) {
+        metronome->bpm++;
+        metronome_ticks_calc(metronome);
+        metronome_display_bpm(metronome);
+    }
+}
+
+// Decrement the BPM while running.
+static void running_bpm_dec(metronome_state_t *metronome) {
+    if (metronome->bpm > METRONOME_BPM_MIN) {
+        metronome->bpm--;
+        metronome_ticks_calc(metronome);
+        metronome_display_bpm(metronome);
+    }
+}
+
+// Enter setting mode, stop ticking and reset settings.
+static void setting_enter(metronome_state_t *metronome) {
+    metronome->setting = true;
+    metronome->setting_flasher = false;
+    metronome->setting_scroll = false;
+    metronome->setting_item = 0;
+    metronome_stop_ticking(metronome);
+    watch_display_text(WATCH_POSITION_SECONDS, "  ");
+    movement_request_tick_frequency(4);
+}
+
+static void setting_exit(metronome_state_t *metronome) {
+    metronome->setting = false;
+    metronome_display_bpm(metronome);
+    metronome_start_ticking(metronome);
+}
+
+static void setting_digit_inc(metronome_state_t *metronome) {
     if (metronome->setting_item == 0) {
         // Increment the tens digit of the BPM, with wrap-around.
         if (metronome->bpm + 10u <= METRONOME_BPM_MAX)
@@ -107,50 +171,67 @@ static void settings_increment(metronome_state_t *metronome) {
             metronome->bpm = (METRONOME_BPM_MIN - (METRONOME_BPM_MIN % 10u)) + (metronome->bpm % 10u);
     } else {
         // Increment the ones digit of the BPM, with wrap-around.
-        metronome->bpm = metronome->bpm - (metronome->bpm % 10u) + ((metronome->bpm + 1u) % 10u);
+        metronome->bpm = metronome->bpm + (((metronome->bpm + 1u) % 10u) ? 1 : -9);
     }
 }
 
-static void metronome_tick(metronome_state_t *metronome) {
-    if (metronome->setting) {
-        if (metronome->setting_scroll) {
-            if (HAL_GPIO_BTN_ALARM_read()) {
-                settings_increment(metronome);
-                metronome_ticks_calc(metronome);
-            }
-        } else {
-            // Flash the item being set.
-            metronome->setting_flasher = !metronome->setting_flasher;
-        }
-        metronome_display_bpm(metronome);
+static void setting_button_up_inc(metronome_state_t *metronome) {
+    if (metronome->setting_scroll) {
+        // Stop scroll.
+        metronome->setting_scroll = false;
+        movement_request_tick_frequency(4);
+    } else {
+        // Increment the digit being set, then recalculate the ticks for the new BPM.
+        setting_digit_inc(metronome);
+        metronome_ticks_calc(metronome);
     }
-    if (metronome->ticking) {
-        if (metronome->ticks_countdown)
-            metronome->ticks_countdown--;
-        if (metronome->ticks_countdown == 0) {
-            // A metronome beat has occurred.
-            // Reset the countdown.
-            metronome->ticks_countdown = metronome->ticks_calc;
-            // Update the remainder counter. If it overflows, increase the next countdown.
-            // This provides more accurate BPM on average, at the cost of some jitter in the short term.
-            metronome->ticks_count_remainder += metronome->ticks_calc_remainder;
-            if (metronome->ticks_count_remainder >= metronome->bpm) {
-                metronome->ticks_count_remainder -= metronome->bpm;
-                if (metronome->ticks_count_remainder >= metronome->bpm)
-                    metronome->ticks_count_remainder = 0;
-                metronome->ticks_countdown++;
-            }
-            // Display the tick or tock in the seconds position.
-            metronome->ticktock = !metronome->ticktock;
-            if (metronome->ticktock)
-                watch_display_text(WATCH_POSITION_SECONDS, "# ");
-            else
-                watch_display_text(WATCH_POSITION_SECONDS, " #");
-            // Beep if enabled.
-            if (metronome->beep)
-                watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
-        }
+}
+
+static void setting_button_long_start_scroll(metronome_state_t *metronome) {
+    if (!metronome->setting_scroll) {
+        // Start to scroll the BPM number.
+        metronome->setting_scroll = true;
+        metronome->setting_flasher = false;
+        movement_request_tick_frequency(8);
     }
+}
+
+static void setting_button_long_up_stop_scroll(metronome_state_t *metronome) {
+    if (metronome->setting_scroll) {
+        // Stop scroll.
+        metronome->setting_scroll = false;
+        movement_request_tick_frequency(4);
+    }
+}
+
+static void setting_reset_default(metronome_state_t *metronome) {
+    // Reset to default BPM.
+    metronome->bpm = METRONOME_BPM_DEFAULT;
+    metronome_ticks_calc(metronome);
+    metronome->setting_item = 0;
+}
+
+static void setting_next(metronome_state_t *metronome) {
+    if (metronome->setting_item == 0) {
+        // Move to the ones digit of the BPM.
+        metronome->setting_item = 1;
+    } else {
+        // Exit setting mode, start ticking again.
+        setting_exit(metronome);
+    }
+}
+
+static void setting_tick(metronome_state_t *metronome) {
+    if (metronome->setting_scroll) {
+        if (HAL_GPIO_BTN_ALARM_read()) {
+            setting_digit_inc(metronome);
+            metronome_ticks_calc(metronome);
+        }
+    } else {
+        // Flash the item being set.
+        metronome->setting_flasher = !metronome->setting_flasher;
+    }
+    metronome_display_bpm(metronome);
 }
 
 void metronome_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -191,46 +272,22 @@ bool metronome_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ALARM_BUTTON_UP:
             if (metronome->setting) {
-                if (metronome->setting_scroll) {
-                    metronome->setting_scroll = false;
-                    movement_request_tick_frequency(4);
-                } else {
-                    settings_increment(metronome);
-                    metronome_ticks_calc(metronome);
-                }
+                setting_button_up_inc(metronome);
             } else {
-                if (metronome->bpm < METRONOME_BPM_MAX) {
-                    metronome->bpm++;
-                    metronome_ticks_calc(metronome);
-                    metronome_display_bpm(metronome);
-                }
+                running_bpm_inc(metronome);
             }
             break;
         case EVENT_ALARM_LONG_UP:
             if (metronome->setting) {
-                if (metronome->setting_scroll) {
-                    metronome->setting_scroll = false;
-                    movement_request_tick_frequency(4);
-                }
+                setting_button_long_up_stop_scroll(metronome);
             }
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (metronome->setting) {
-                if (!metronome->setting_scroll) {
-                    // Start to scroll the BPM number.
-                    metronome->setting_scroll = true;
-                    metronome->setting_flasher = false;
-                    movement_request_tick_frequency(8);
-                }
-                metronome->setting_scroll = true;
+                setting_button_long_start_scroll(metronome);
             } else {
-                // Entering setting mode, stop ticking and reset settings.
-                metronome->setting = true;
-                metronome->setting_flasher = false;
-                metronome->setting_scroll = false;
-                metronome->setting_item = 0;
-                metronome_stop_ticking(metronome);
-                movement_request_tick_frequency(4);
+                // Enter setting mode, stop ticking and reset settings.
+                setting_enter(metronome);
             }
             break;
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -238,30 +295,14 @@ bool metronome_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_UP:
             if (metronome->setting) {
-                if (metronome->setting_item == 0) {
-                    // Move to the ones digit of the BPM.
-                    metronome->setting_item = 1;
-                } else {
-                    // Exit setting mode, start ticking again.
-                    metronome->setting = false;
-                    metronome_display_bpm(metronome);
-                    metronome_start_ticking(metronome);
-                }
+                setting_next(metronome);
             } else {
-                // Decrement the BPM.
-                if (metronome->bpm > METRONOME_BPM_MIN) {
-                    metronome->bpm--;
-                    metronome_ticks_calc(metronome);
-                    metronome_display_bpm(metronome);
-                }
+                running_bpm_dec(metronome);
             }
             break;
         case EVENT_LIGHT_LONG_PRESS:
             if (metronome->setting) {
-                // Reset to default BPM.
-                metronome->bpm = METRONOME_BPM_DEFAULT;
-                metronome_ticks_calc(metronome);
-                metronome->setting_item = 0;
+                setting_reset_default(metronome);
             } else {
                 // Toggle beep on/off.
                 metronome->beep = !metronome->beep;
@@ -269,7 +310,18 @@ bool metronome_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TICK:
-            metronome_tick(metronome);
+            if (metronome->setting) {
+                setting_tick(metronome);
+            }
+            if (metronome->ticking) {
+                running_tick(metronome);
+            }
+            break;
+        case EVENT_TIMEOUT:
+            if (metronome->setting) {
+                // Exit setting mode, start ticking again.
+                setting_exit(metronome);
+            }
             break;
         default:
             movement_default_loop_handler(event);
