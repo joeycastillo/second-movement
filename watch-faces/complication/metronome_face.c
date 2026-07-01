@@ -55,7 +55,7 @@ typedef struct {
 
 static void metronome_display_title(metronome_state_t *metronome) {
     (void) metronome;
-    watch_display_text_with_fallback(WATCH_POSITION_TOP, "METRO", "ME");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "MET", "ME");
 }
 
 static void metronome_display_bpm(metronome_state_t *metronome) {
