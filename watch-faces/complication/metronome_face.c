@@ -31,12 +31,8 @@
 #include "watch.h"
 #include "watch_common_display.h"
 
-// tick frequency will be 2 to this power Hz (0 for 1 Hz, 2 for 4 Hz, etc.)
-#ifndef METRONOME_FACE_FREQUENCY_FACTOR
-#define METRONOME_FACE_FREQUENCY_FACTOR (6ul)
-#endif
-
-#define METRONOME_FACE_FREQUENCY (1 << METRONOME_FACE_FREQUENCY_FACTOR)
+// tick frequency must be a power of two, between 1 and 128 Hz.
+#define METRONOME_FACE_FREQUENCY (64u)
 
 #define METRONOME_BPM_DEFAULT (120u)
 #define METRONOME_BPM_MIN     (40u)
@@ -44,6 +40,8 @@
 
 typedef struct {
     bool ticking;
+    bool beep;
+    bool ticktock;
     uint8_t bpm;
     uint16_t ticks_calc;
     uint16_t ticks_calc_remainder;
@@ -62,10 +60,18 @@ static void metronome_display_bpm(metronome_state_t *metronome) {
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
+static void metronome_indicate_beep(metronome_state_t *metronome) {
+    if (metronome->beep) {
+        watch_set_indicator(WATCH_INDICATOR_BELL);
+    } else {
+        watch_clear_indicator(WATCH_INDICATOR_BELL);
+    }
+}
+
 static void metronome_ticks_calc(metronome_state_t *metronome) {
-    div_t result = div(METRONOME_FACE_FREQUENCY * 60, metronome->bpm);
-    metronome->ticks_calc = result.quot;
-    metronome->ticks_calc_remainder = result.rem;
+    uint16_t numerator = METRONOME_FACE_FREQUENCY * 60u;
+    metronome->ticks_calc = numerator / metronome->bpm;
+    metronome->ticks_calc_remainder = numerator % metronome->bpm;
 }
 
 static void metronome_start_ticking(metronome_state_t *metronome) {
@@ -95,7 +101,13 @@ static void metronome_tick(metronome_state_t *metronome) {
             }
             metronome->ticks_countdown++;
         }
-        watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
+        metronome->ticktock = !metronome->ticktock;
+        if (metronome->ticktock)
+            watch_display_text(WATCH_POSITION_SECONDS, "# ");
+        else
+            watch_display_text(WATCH_POSITION_SECONDS, " #");
+        if (metronome->beep)
+            watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
     }
 }
 
@@ -118,6 +130,7 @@ void metronome_face_activate(void *context) {
     metronome_state_t *metronome = context;
 
     metronome->ticking = false;
+    metronome->beep = false;
 
     if (metronome->bpm < METRONOME_BPM_MIN || metronome->bpm > METRONOME_BPM_MAX) {
         metronome->bpm = METRONOME_BPM_DEFAULT;
@@ -134,10 +147,7 @@ bool metronome_face_loop(movement_event_t event, void *context) {
     metronome_state_t *metronome = (metronome_state_t *) context;
 
     switch (event.event_type) {
-        case EVENT_ALARM_BUTTON_DOWN:
-            break;
         case EVENT_ALARM_BUTTON_UP:
-        case EVENT_ALARM_LONG_UP:
             if (metronome->bpm < METRONOME_BPM_MAX) {
                 metronome->bpm++;
                 metronome_ticks_calc(metronome);
@@ -148,18 +158,18 @@ bool metronome_face_loop(movement_event_t event, void *context) {
             // Inhibit the LED
             break;
         case EVENT_LIGHT_BUTTON_UP:
-        case EVENT_LIGHT_LONG_UP:
             if (metronome->bpm > METRONOME_BPM_MIN) {
                 metronome->bpm--;
                 metronome_ticks_calc(metronome);
                 metronome_display_bpm(metronome);
             }
             break;
+        case EVENT_LIGHT_LONG_PRESS:
+            metronome->beep = !metronome->beep;
+            metronome_indicate_beep(metronome);
+            break;
         case EVENT_TICK:
             metronome_tick(metronome);
-            break;
-        case EVENT_TIMEOUT:
-            movement_move_to_face(0);
             break;
         default:
             movement_default_loop_handler(event);
