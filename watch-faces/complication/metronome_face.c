@@ -253,6 +253,7 @@ void metronome_face_activate(void *context) {
     metronome_state_t *metronome = context;
 
     metronome->ticking = false;
+    metronome->setting = false;
     metronome->beep = false;
 
     if (metronome->bpm < METRONOME_BPM_MIN || metronome->bpm > METRONOME_BPM_MAX) {
