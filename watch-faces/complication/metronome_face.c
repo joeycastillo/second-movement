@@ -47,10 +47,11 @@ typedef struct {
     bool setting_flasher;
     uint8_t setting_item;
     uint8_t bpm;
-    uint16_t ticks_calc;
-    uint16_t ticks_calc_remainder;
-    uint16_t ticks_countdown;
-    uint16_t ticks_count_remainder;
+
+    rtc_counter_t counter_calc;
+    uint16_t counter_calc_remainder;
+    rtc_counter_t counter_next;
+    uint16_t counter_remainder;
 } metronome_state_t;
 
 static void metronome_display_title(metronome_state_t *metronome) {
@@ -80,16 +81,18 @@ static void metronome_indicate_beep(metronome_state_t *metronome) {
     }
 }
 
-static void metronome_ticks_calc(metronome_state_t *metronome) {
-    uint16_t numerator = METRONOME_FACE_FREQUENCY * 60u;
-    metronome->ticks_calc = numerator / metronome->bpm;
-    metronome->ticks_calc_remainder = numerator % metronome->bpm;
+static void metronome_counter_calc(metronome_state_t *metronome) {
+    uint16_t numerator = watch_rtc_get_frequency() * 60u;
+    metronome->counter_calc = numerator / metronome->bpm;
+    metronome->counter_calc_remainder = numerator % metronome->bpm;
 }
 
 static void metronome_start_ticking(metronome_state_t *metronome) {
     metronome->ticking = true;
-    metronome->ticks_countdown = 1;
-    metronome->ticks_count_remainder = 0;
+
+    metronome->counter_next = watch_rtc_get_counter() + 8u;
+    metronome->counter_remainder = 0;
+
     movement_request_tick_frequency(METRONOME_FACE_FREQUENCY);
 }
 
@@ -100,27 +103,36 @@ static void metronome_stop_ticking(metronome_state_t *metronome) {
 
 // Tick handler while metronome->ticking is true.
 static void running_tick(metronome_state_t *metronome) {
-    if (metronome->ticks_countdown)
-        metronome->ticks_countdown--;
-    if (metronome->ticks_countdown == 0) {
+    uint32_t counter = watch_rtc_get_counter();
+    if ((counter - metronome->counter_next) < 0x80000000u) {
         // A metronome beat has occurred.
-        // Reset the countdown.
-        metronome->ticks_countdown = metronome->ticks_calc;
+        // Set new counter_next.
+        metronome->counter_next += metronome->counter_calc;
+#if __EMSCRIPTEN__
+    if ((counter - metronome->counter_next) < 0x80000000u) {
+        // If the counter_next is still in the past, we must have missed a beat.
+        // This can happen if the browser stops running the simulation for a while, eg if the tab is in the background.
+        // In this case, we will skip to the next beat.
+        metronome->counter_next = counter + metronome->counter_calc;
+    }
+#endif
         // Update the remainder counter. If it overflows, increase the next countdown.
         // This provides more accurate BPM on average, at the cost of some jitter in the short term.
-        metronome->ticks_count_remainder += metronome->ticks_calc_remainder;
-        if (metronome->ticks_count_remainder >= metronome->bpm) {
-            metronome->ticks_count_remainder -= metronome->bpm;
-            if (metronome->ticks_count_remainder >= metronome->bpm)
-                metronome->ticks_count_remainder = 0;
-            metronome->ticks_countdown++;
+        metronome->counter_remainder += metronome->counter_calc_remainder;
+        if (metronome->counter_remainder >= metronome->bpm) {
+            metronome->counter_remainder -= metronome->bpm;
+            if (metronome->counter_remainder >= metronome->bpm)
+                metronome->counter_remainder = 0;
+            metronome->counter_next++;
         }
+
         // Display the tick or tock in the seconds position.
         metronome->ticktock = !metronome->ticktock;
         if (metronome->ticktock)
             watch_display_text(WATCH_POSITION_SECONDS, "# ");
         else
             watch_display_text(WATCH_POSITION_SECONDS, " #");
+
         // Beep if enabled.
         if (metronome->beep)
             watch_buzzer_play_note(BUZZER_NOTE_C8, 50);
@@ -131,7 +143,7 @@ static void running_tick(metronome_state_t *metronome) {
 static void running_bpm_inc(metronome_state_t *metronome) {
     if (metronome->bpm < METRONOME_BPM_MAX) {
         metronome->bpm++;
-        metronome_ticks_calc(metronome);
+        metronome_counter_calc(metronome);
         metronome_display_bpm(metronome);
     }
 }
@@ -140,7 +152,7 @@ static void running_bpm_inc(metronome_state_t *metronome) {
 static void running_bpm_dec(metronome_state_t *metronome) {
     if (metronome->bpm > METRONOME_BPM_MIN) {
         metronome->bpm--;
-        metronome_ticks_calc(metronome);
+        metronome_counter_calc(metronome);
         metronome_display_bpm(metronome);
     }
 }
@@ -183,7 +195,7 @@ static void setting_button_up_inc(metronome_state_t *metronome) {
     } else {
         // Increment the digit being set, then recalculate the ticks for the new BPM.
         setting_digit_inc(metronome);
-        metronome_ticks_calc(metronome);
+        metronome_counter_calc(metronome);
     }
 }
 
@@ -207,7 +219,7 @@ static void setting_button_long_up_stop_scroll(metronome_state_t *metronome) {
 static void setting_reset_default(metronome_state_t *metronome) {
     // Reset to default BPM.
     metronome->bpm = METRONOME_BPM_DEFAULT;
-    metronome_ticks_calc(metronome);
+    metronome_counter_calc(metronome);
     metronome->setting_item = 0;
 }
 
@@ -225,7 +237,7 @@ static void setting_tick(metronome_state_t *metronome) {
     if (metronome->setting_scroll) {
         if (HAL_GPIO_BTN_ALARM_read()) {
             setting_digit_inc(metronome);
-            metronome_ticks_calc(metronome);
+            metronome_counter_calc(metronome);
         }
     } else {
         // Flash the item being set.
@@ -243,7 +255,7 @@ void metronome_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         memset(metronome, 0, sizeof(metronome_state_t));
 
         metronome->bpm = METRONOME_BPM_DEFAULT;
-        metronome_ticks_calc(metronome);
+        metronome_counter_calc(metronome);
 
         *context_ptr = metronome;
     }
@@ -259,7 +271,7 @@ void metronome_face_activate(void *context) {
     if (metronome->bpm < METRONOME_BPM_MIN || metronome->bpm > METRONOME_BPM_MAX) {
         metronome->bpm = METRONOME_BPM_DEFAULT;
     }
-    metronome_ticks_calc(metronome);
+    metronome_counter_calc(metronome);
 
     metronome_start_ticking(metronome);
 
