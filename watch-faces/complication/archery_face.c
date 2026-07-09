@@ -174,6 +174,11 @@ bool archery_face_loop(movement_event_t event, void *context) {
             }
             draw(state, event.subsecond);
             break;
+#ifdef FORCE_GSHOCK_LCD_TYPE
+        case EVENT_LIGHT_BUTTON_DOWN:
+            movement_illuminate_led();
+            break;
+#else
         case EVENT_LIGHT_BUTTON_DOWN:
             if (state->mode == archery_paused) {
                 reset(state);
@@ -183,6 +188,7 @@ bool archery_face_loop(movement_event_t event, void *context) {
             }
             draw(state, event.subsecond);
             break;
+#endif
         case EVENT_ALARM_BUTTON_DOWN:
             switch (state->mode) {
                 case archery_prepare:
@@ -207,11 +213,20 @@ bool archery_face_loop(movement_event_t event, void *context) {
             }
             draw(state, event.subsecond);
             break;
+#ifdef FORCE_GSHOCK_LCD_TYPE
+        case EVENT_ADJUST_BUTTON_DOWN:
+#else
         case EVENT_LIGHT_LONG_PRESS:
+#endif
             switch (state->mode) {
+                case archery_paused:
+#ifdef FORCE_GSHOCK_LCD_TYPE
+                    reset(state);
+                    button_beep();
+                    break;
+#endif
                 case archery_prepare:
                 case archery_running:
-                case archery_paused:
                     break;
                 case archery_reset:
                     if (state->round == wa_indoor) {
