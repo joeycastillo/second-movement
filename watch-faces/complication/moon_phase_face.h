@@ -56,6 +56,7 @@
 
 typedef struct {
     uint32_t offset;
+    bool southern_hemisphere;
 } moon_phase_state_t;
 
 void moon_phase_face_setup(uint8_t watch_face_index, void ** context_ptr);

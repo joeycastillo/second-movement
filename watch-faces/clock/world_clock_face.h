@@ -41,9 +41,7 @@
  * to the time zone setting, and press ALARM to cycle through the available time
  * zones. Press LIGHT one last time to return to the world clock display.
  *
- * Note that the second slot cannot display all letters or numbers. Also note
- * that at this time, time zones do not automatically update for daylight saving
- * time; you will need to manually adjust this field each spring and fall.
+ * Note that the second slot cannot display all letters or numbers.
  */
 
 #include "movement.h"

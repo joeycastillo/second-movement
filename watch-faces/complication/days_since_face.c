@@ -56,7 +56,7 @@ static uint32_t _days_since_face_juliandaynum(uint16_t year, uint16_t month, uin
 
 static void _days_since_face_update(days_since_state_t *state) {
     char buf[15];
-    watch_date_time_t date_time = watch_rtc_get_date_time();
+    watch_date_time_t date_time = movement_get_local_date_time();
     uint32_t julian_now_date = _days_since_face_juliandaynum(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
     uint32_t julian_since_date = _days_since_face_juliandaynum(state->working_year, state->working_month, state->working_day);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "DAY", "DA");
@@ -179,7 +179,7 @@ bool days_since_face_loop(movement_event_t event, void *context) {
                     break;
                 // otherwise, check if we have to update. the display only needs to change at midnight!
                 case PAGE_DISPLAY: {
-                    watch_date_time_t date_time = watch_rtc_get_date_time();
+                    watch_date_time_t date_time = movement_get_local_date_time();
                     if (date_time.unit.hour == 0 &&  date_time.unit.minute == 0 && date_time.unit.second == 0) {
                         _days_since_face_update(state);
                     }
@@ -244,7 +244,7 @@ bool days_since_face_loop(movement_event_t event, void *context) {
                     break;
                 case PAGE_DISPLAY:
                 {
-                    watch_date_time_t date_time = watch_rtc_get_date_time();
+                    watch_date_time_t date_time = movement_get_local_date_time();
                     uint32_t julian_now_date = _days_since_face_juliandaynum(date_time.unit.year + WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
                     uint32_t julian_since_date = _days_since_face_juliandaynum(state->working_year, state->working_month, state->working_day);
                     if (julian_now_date < julian_since_date) {

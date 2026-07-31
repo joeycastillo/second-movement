@@ -87,7 +87,7 @@ static void finetune_update_display(void) {
             float correction = finetune_get_correction();
             watch_display_text(WATCH_POSITION_TOP_RIGHT, (total_adjustment < 0) ? " -" : "  ");
 
-            sprintf(buf, "%2d%04d", (int)fabsf(correction), (int)(remainderf(fabsf(correction), 1.) * 10000));
+            sprintf(buf, "%2d%04d", (int)fabsf(correction), (int)(fmodf(fabsf(correction), 1.) * 10000));
             watch_display_text(WATCH_POSITION_BOTTOM, buf);
         }
     }

@@ -257,11 +257,15 @@ static inline void _movement_reset_inactivity_countdown(void) {
 
     movement_volatile_state.enter_sleep_mode = false;
 
-    watch_rtc_register_comp_callback_no_schedule(
-        cb_sleep_timeout_interrupt,
-        counter + movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval] * freq,
-        SLEEP_TIMEOUT
-    );
+    if (movement_state.settings.bit.le_interval == 0) {
+        watch_rtc_disable_comp_callback_no_schedule(SLEEP_TIMEOUT);
+    } else {
+        watch_rtc_register_comp_callback_no_schedule(
+            cb_sleep_timeout_interrupt,
+            counter + movement_le_inactivity_deadlines[movement_state.settings.bit.le_interval] * freq,
+            SLEEP_TIMEOUT
+        );
+    }
 
     movement_volatile_state.schedule_next_comp = true;
 }
@@ -660,6 +664,26 @@ int32_t movement_get_current_timezone_offset(void) {
     return movement_get_current_timezone_offset_for_zone(movement_state.settings.bit.time_zone);
 }
 
+int32_t movement_get_timezone_offset_for_date_in_zone(watch_date_time_t date_time, uint8_t zone_index) {
+    int8_t cached_dst_offset = _movement_dst_offset_cache[zone_index];
+
+    if (cached_dst_offset == TIMEZONE_DOES_NOT_OBSERVE) {
+        return (int32_t)zone_defns[zone_index].offset_inc_minutes * OFFSET_INCREMENT * 60;
+    }
+
+    // Compute the offset for the given date using the zone's DST rules
+    uzone_t local_zone;
+    unpack_zone(&zone_defns[zone_index], "", &local_zone);
+    udatetime_t udt = _movement_convert_date_time_to_udate(date_time);
+    uoffset_t offset;
+    get_current_offset(&local_zone, &udt, &offset);
+    return (int32_t)(offset.hours * 60 + offset.minutes) * 60;
+}
+
+int32_t movement_get_timezone_offset_for_date(watch_date_time_t date_time) {
+    return movement_get_timezone_offset_for_date_in_zone(date_time, movement_state.settings.bit.time_zone);
+}
+
 int32_t movement_get_timezone_index(void) {
     return movement_state.settings.bit.time_zone;
 }
@@ -821,7 +845,7 @@ void movement_set_alarm_enabled(bool value) {
     movement_state.alarm_enabled = value;
 }
 
-bool movement_enable_tap_detection_if_available(void) {
+bool movement_enable_tap_detection_if_available(bool enable_double_tap) {
     if (movement_state.has_lis2dw) {
         // configure tap duration threshold and enable Z axis
         lis2dw_configure_tap_threshold(0, 0, 12, LIS2DW_REG_TAP_THS_Z_Z_AXIS_ENABLE);
@@ -831,13 +855,20 @@ bool movement_enable_tap_detection_if_available(void) {
         lis2dw_set_low_noise_mode(true);
         lis2dw_set_data_rate(LIS2DW_DATA_RATE_HP_400_HZ);
         lis2dw_set_mode(LIS2DW_MODE_LOW_POWER);
-        lis2dw_enable_double_tap();
+
+        if (enable_double_tap) {
+            lis2dw_enable_double_tap();
+        }
 
         // Settling time (1 sample duration, i.e. 1/400Hz)
         delay_ms(3);
 
         // enable tap detection on INT1/A3.
-        lis2dw_configure_int1(LIS2DW_CTRL4_INT1_SINGLE_TAP | LIS2DW_CTRL4_INT1_DOUBLE_TAP);
+        uint8_t int1_sources = LIS2DW_CTRL4_INT1_SINGLE_TAP;
+        if (enable_double_tap) {
+            int1_sources |= LIS2DW_CTRL4_INT1_DOUBLE_TAP;
+        }
+        lis2dw_configure_int1(int1_sources);
 
         return true;
     }

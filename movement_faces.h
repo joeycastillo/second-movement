@@ -81,4 +81,7 @@
 #include "ping_face.h"
 #include "rtccount_face.h"
 #include "pi_face.h"
+#include "tomato_face.h"
+#include "solar_time_face.h"
+#include "tide_face.h"
 // New includes go above this line.

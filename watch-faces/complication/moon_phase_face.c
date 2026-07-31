@@ -33,6 +33,7 @@
 #include <math.h>
 #include "moon_phase_face.h"
 #include "watch_utility.h"
+#include "filesystem.h"
 
 #define LUNAR_DAYS 29.53058770576
 #define LUNAR_SECONDS (LUNAR_DAYS * (24 * 60 * 60))
@@ -40,6 +41,13 @@
 #define NUM_PHASES 8
 
 static const float phase_changes[] = {0, 1, 6.38264692644, 8.38264692644, 13.76529385288, 15.76529385288, 21.14794077932, 23.14794077932, 28.53058770576, 29.53058770576};
+
+static void is_southern_hemisphere(moon_phase_state_t *state) {
+    movement_location_t location = {0};
+    if (filesystem_read_file("location.u32", (char *) &location.reg, sizeof(movement_location_t))) {
+        state->southern_hemisphere = (int16_t)location.bit.latitude < 0;
+    }
+}
 
 void moon_phase_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     (void) watch_face_index;
@@ -53,11 +61,11 @@ void moon_phase_face_activate(void *context) {
     (void) context;
 }
 
-static void _update(moon_phase_state_t *state, uint32_t offset) {
-    (void)state;
+static void _update(moon_phase_state_t *state) {
     char buf[4];
+    bool southern = state->southern_hemisphere;
     watch_date_time_t date_time = watch_rtc_get_date_time();
-    uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset()) + offset;
+    uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset()) + state->offset;
     date_time = watch_utility_date_time_from_unix_time(now, movement_get_current_timezone_offset());
     double currentfrac = fmod(now - FIRST_MOON, LUNAR_SECONDS) / LUNAR_SECONDS;
     double currentday = currentfrac * LUNAR_DAYS;
@@ -79,30 +87,51 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
             watch_display_text(WATCH_POSITION_BOTTOM, "CresNt");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                if (currentfrac > 0.125) watch_set_pixel(1, 13);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    if (currentfrac > 0.125) watch_set_pixel(1, 13);
+                } else {
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                    if (currentfrac > 0.125) watch_set_pixel(2, 14);
+                }
             }
             break;
         case 2:
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "1stQtr", " 1st q");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, southern ? "3rdQtr" : "1stQtr", southern ? " 3rd q" : " 1st q");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                watch_set_pixel(1, 13);
-                watch_set_pixel(1, 14);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 14);
+                } else {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                }
             }
             break;
         case 3:
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "GbboUs", " Gibb ");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAX", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(2, 13);
-                watch_set_pixel(2, 15);
-                watch_set_pixel(1, 14);
-                watch_set_pixel(1, 13);
-                watch_set_pixel(1, 15);
+                if (!southern) {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 15);
+                } else {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(1, 15);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                }
             }
             break;
         case 4:
@@ -123,30 +152,51 @@ static void _update(moon_phase_state_t *state, uint32_t offset) {
             watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "GbboUs", " Gibb ");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(1, 14);
-                watch_set_pixel(2, 14);
-                watch_set_pixel(1, 15);
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
+                if (!southern) {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(1, 15);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 15);
+                }
             }
             break;
         case 6:
-            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "3rdQtr", " 3rd q");
+            watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, southern ? "1stQtr" : "3rdQtr", southern ? " 1st q" : " 3rd q");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(1, 14);
-                watch_set_pixel(2, 14);
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
+                if (!southern) {
+                    watch_set_pixel(1, 14);
+                    watch_set_pixel(2, 14);
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    watch_set_pixel(1, 13);
+                    watch_set_pixel(1, 14);
+                }
             }
             break;
         case 7:
             watch_display_text(WATCH_POSITION_BOTTOM, "CresNt");
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WAN", "  ");
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
-                watch_set_pixel(0, 14);
-                watch_set_pixel(0, 13);
-                if (currentfrac < 0.875) watch_set_pixel(2, 14);
+                if (!southern) {
+                    watch_set_pixel(0, 14);
+                    watch_set_pixel(0, 13);
+                    if (currentfrac < 0.875) watch_set_pixel(2, 14);
+                } else {
+                    watch_set_pixel(2, 13);
+                    watch_set_pixel(2, 15);
+                    if (currentfrac < 0.875) watch_set_pixel(1, 13);
+                }
             }
             break;
     }
@@ -159,17 +209,21 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_ACTIVATE:
             if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
-            _update(state, state->offset);
+            is_southern_hemisphere(state);
+            _update(state);
             break;
         case EVENT_TICK:
             // only update once an hour
             date_time = watch_rtc_get_date_time();
-            if ((date_time.unit.minute == 0) && (date_time.unit.second == 0)) _update(state, state->offset);
+            if ((date_time.unit.minute == 0) && (date_time.unit.second == 0)) _update(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // update at the top of the hour OR if we're entering sleep mode with an offset.
             // also, in sleep mode, always show the current moon phase (offset = 0).
-            if (state->offset || (watch_rtc_get_date_time().unit.minute == 0)) _update(state, 0);
+            if (state->offset || (watch_rtc_get_date_time().unit.minute == 0)) {
+                state->offset = 0;
+                _update(state);
+            }
             // and kill the offset so when the wearer wakes up, it matches what's on screen.
             state->offset = 0;
             if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) {
@@ -182,17 +236,17 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
             // Pressing the alarm adds an offset of one day to the displayed value,
             // so you can see moon phases in the future.
             state->offset += 86400;
-            _update(state, state->offset);
+            _update(state);
             break;
-	    case EVENT_ALARM_LONG_PRESS:
-	        state->offset = 0;
-            _update(state, state->offset);
-	        break;
+        case EVENT_ALARM_LONG_PRESS:
+            state->offset = 0;
+            _update(state);
+            break;
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_LIGHT_BUTTON_UP:
             state->offset -= 86400;
-            _update(state, state->offset);
+            _update(state);
             break;
         case EVENT_LIGHT_LONG_PRESS:
             movement_illuminate_led();

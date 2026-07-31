@@ -57,7 +57,6 @@ static void _start(timer_state_t *state, bool with_beep) {
     watch_date_time_t target_dt = watch_utility_date_time_from_unix_time(state->target_ts, movement_get_current_timezone_offset());
     state->mode = running;
     movement_schedule_background_task_for_face(state->watch_face_index, target_dt);
-    watch_set_indicator(WATCH_INDICATOR_BELL);
     if (with_beep) watch_buzzer_play_sequence((int8_t *)_sound_seq_start, NULL);
 }
 
@@ -86,6 +85,7 @@ static void _draw(timer_state_t *state, uint8_t subsecond) {
             min = result.rem;
             h = result.quot;
             sprintf(bottom_time, "%02u%02u%02u", h, min, sec);
+            watch_set_indicator(WATCH_INDICATOR_BELL);
             break;
         case setting:
             if (state->settings_state == 1) {
