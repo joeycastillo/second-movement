@@ -301,8 +301,6 @@ typedef enum {
 #define LIS2DW_CTRL7_VAL_HP_REF_MODE        0b00000010
 #define LIS2DW_CTRL7_VAL_LPASS_ON6D         0b00000001
 
-#define LIS2DW_FIFO_TIMEOUT                 100  // timeout is in terms of 1/RTC_CNT_HZ seconds (likely 128 timeouts is one second)
-
 bool lis2dw_begin(void);
 
 uint8_t lis2dw_get_device_id(void);
@@ -318,6 +316,8 @@ uint16_t lis2dw_get_temperature(void);
 void lis2dw_set_data_rate(lis2dw_data_rate_t dataRate);
 
 lis2dw_data_rate_t lis2dw_get_data_rate(void);
+
+float lis2dw_get_data_rate_hz(void);
 
 void lis2dw_set_mode(lis2dw_mode_t mode);
 
@@ -347,7 +347,7 @@ void lis2dw_enable_fifo(void);
 
 void lis2dw_disable_fifo(void);
 
-bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data, uint32_t timeout);
+bool lis2dw_read_fifo(lis2dw_fifo_t *fifo_data);
 
 void lis2dw_clear_fifo(void);
 
@@ -370,6 +370,10 @@ void lis2dw_disable_tap_detection(void);
 void lis2dw_configure_wakeup_threshold(uint8_t threshold);
 
 void lis2dw_configure_6d_threshold(uint8_t threshold);
+
+void lis2dw_configure_sleep_duration(uint8_t duration);
+
+void lis2dw_configure_wake_duration(uint8_t duration);
 
 void lis2dw_configure_tap_threshold(uint8_t threshold_x, uint8_t threshold_y, uint8_t threshold_z, uint8_t axes_to_enable);
 
@@ -396,5 +400,9 @@ lis2dw_interrupt_source_t lis2dw_get_interrupt_source(void);
 lis2dw_wakeup_source_t lis2dw_get_wakeup_source(void);
 
 uint8_t lis2dw_get_wakeup_threshold(void);
+
+uint8_t lis2dw_get_sleep_duration(void);
+
+uint8_t lis2dw_get_wake_duration(void);
 
 #endif // LIS2DW_H

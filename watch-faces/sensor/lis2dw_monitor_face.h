@@ -56,13 +56,16 @@ typedef struct {
     void (*advance)(void *);
 } lis2dw_settings_t;
 
+/* Number of settings pages */
+#define NUM_SETTINGS 7
+
 typedef struct {
     uint8_t axis:2;             /* Axis to display */
     lis2dw_reading_t reading;   /* Current reading */
     lis2dw_monitor_page_t page; /* Displayed page */
     lis2dw_device_state_t ds;   /* Device state */
     uint8_t settings_page:3;    /* Subpage in settings */
-    lis2dw_settings_t *settings;        /* Settings config */
+    lis2dw_settings_t settings[NUM_SETTINGS]; /* Settings config */
     uint8_t show_title:6;       /* Display face title */
 } lis2dw_monitor_state_t;
 

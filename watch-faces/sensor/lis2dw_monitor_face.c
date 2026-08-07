@@ -32,9 +32,6 @@
 /* Display frequency */
 #define DISPLAY_FREQUENCY 8
 
-/* Settings */
-#define NUM_SETTINGS 7
-
 static void _settings_title_display(lis2dw_monitor_state_t *state, char *buf1, char *buf2)
 {
     char buf[10];
@@ -423,7 +420,7 @@ static void _monitor_update(lis2dw_monitor_state_t *state)
     lis2dw_fifo_t fifo;
     float x = 0, y = 0, z = 0;
 
-    lis2dw_read_fifo(&fifo, LIS2DW_FIFO_TIMEOUT / DISPLAY_FREQUENCY);
+    lis2dw_read_fifo(&fifo);
     if (fifo.count == 0) {
         return;
     }
@@ -569,7 +566,6 @@ void lis2dw_monitor_face_setup(uint8_t watch_face_index, void **context_ptr)
 
     /* Initialize settings */
     uint8_t settings_page = 0;
-    state->settings = malloc(NUM_SETTINGS * sizeof(lis2dw_settings_t));
     state->settings[settings_page].display = _settings_mode_display;
     state->settings[settings_page].advance = _settings_mode_advance;
     settings_page++;
