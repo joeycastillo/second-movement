@@ -309,7 +309,7 @@ uint8_t count_steps_espruino_sample(uint32_t accMag) {
   accFilteredHist[1] = accFiltered;
   int a = AccelFilter_get(&accelFilter);
   if (a>32767) a=32767;
-  if (a<-32768) a=32768;
+  if (a<-32768) a=-32768;
   accFiltered = a;
 
   if (v > RAW_THRESHOLD || v < -1*RAW_THRESHOLD) {

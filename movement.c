@@ -112,9 +112,21 @@ typedef struct {
 
 movement_volatile_state_t movement_volatile_state;
 
-static uint8_t _awake_state_lis2dw = 0;  // 0 = asleep, 1 = just woke up, 2 = awake
-static uint8_t _step_fifo_timeout_lis2dw = LIS2DW_FIFO_TIMEOUT;
+typedef enum {
+    MOVEMENT_AWAKE_LIS2DW_ASLEEP = 0,
+    MOVEMENT_AWAKE_LIS2DW_JUST_WOKE,
+    MOVEMENT_AWAKE_LIS2DW_FIRST_SECOND,
+    MOVEMENT_AWAKE_LIS2DW_SECOND_SECOND,
+    MOVEMENT_AWAKE_LIS2DW_READY_TO_CLEAR_BUFFER,
+    MOVEMENT_AWAKE_LIS2DW_COUNTING
+} movement_awake_state_lis2dw_t;
+
+static movement_awake_state_lis2dw_t _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_ASLEEP;
 static uint32_t _total_step_count = 0;
+#if COUNT_STEPS_USE_ESPRUINO
+static int8_t _lis2dw_reinit_timer = 0;  // We reset the espruino logic when this hits zero
+#endif
+
 // The last sequence that we have been asked to play while the watch was in deep sleep
 static int8_t *_pending_sequence;
 
@@ -152,7 +164,7 @@ void cb_buzzer_stop(void);
 
 void cb_accelerometer_event(void);
 void cb_accelerometer_wake(void);
-void cb_accelerometer_wake_event(void);
+void cb_accelerometer_sleep_change_event(void);
 
 #if __EMSCRIPTEN__
 void yield(void) {
@@ -458,11 +470,6 @@ void movement_request_tick_frequency(uint8_t freq) {
     // 0x01 (1 Hz) will have 7 leading zeros for PER7. 0x80 (128 Hz) will have no leading zeroes for PER0.
     uint8_t per_n = __builtin_clz(tmp);
 
-    // While we try to count steps when the tick faster than 1 second, it may be inaccurate since
-    // all 12-13 samples in the FIFO may not be read.
-    if (movement_state.has_lis2dw) {
-        _step_fifo_timeout_lis2dw = LIS2DW_FIFO_TIMEOUT / freq;
-    }
     movement_state.tick_frequency = freq;
     movement_state.tick_pern = per_n;
 
@@ -1055,7 +1062,7 @@ bool movement_enable_step_count(bool force_enable) {
         if (lis2dw_get_mode() != mode) return false;
         movement_set_accelerometer_motion_threshold(threshold);
         if (movement_get_accelerometer_motion_threshold() != threshold) return false;
-        watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake_event, INTERRUPT_TRIGGER_BOTH);
+        watch_register_interrupt_callback(HAL_GPIO_A4_pin(), cb_accelerometer_sleep_change_event, INTERRUPT_TRIGGER_BOTH);
         lis2dw_enable_fifo();
         lis2dw_clear_fifo();
         movement_state.counting_steps = true;
@@ -1092,7 +1099,9 @@ bool movement_disable_step_count(bool disable_immedietly) {
         return false;
     }
     if (movement_state.has_lis2dw) {
-        _awake_state_lis2dw = 0;
+#if COUNT_STEPS_USE_ESPRUINO
+        _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_ASLEEP;
+#endif
         movement_state.counting_steps = false;
         movement_set_accelerometer_motion_threshold(32); // 1G
         lis2dw_clear_fifo();
@@ -1130,16 +1139,16 @@ void movement_set_step_count_keep_off(bool keep_off) {
 static uint8_t movement_count_new_steps_lis2dw(void)
 {
     uint8_t new_steps = 0;
-    if (_awake_state_lis2dw == 0) {
-        return new_steps;
+    if (_awake_state_lis2dw == MOVEMENT_AWAKE_LIS2DW_ASLEEP) {
+        return 0;
     }
-    if (_awake_state_lis2dw == 1) {
-        _awake_state_lis2dw = 2;
+    if (_awake_state_lis2dw == MOVEMENT_AWAKE_LIS2DW_READY_TO_CLEAR_BUFFER) {
+        _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_COUNTING;
         lis2dw_clear_fifo();  // likely stale data at this point.
-        return new_steps;
+        return 0;
     }
     lis2dw_fifo_t fifo = {0};
-    lis2dw_read_fifo(&fifo, _step_fifo_timeout_lis2dw);
+    lis2dw_read_fifo(&fifo);
 #if COUNT_STEPS_USE_ESPRUINO
     new_steps = count_steps_espruino(&fifo);
 #else
@@ -1156,13 +1165,6 @@ void movement_reset_step_count(void) {
 
 uint32_t movement_get_step_count(void) {
     return _total_step_count;
-}
-
-uint8_t movement_get_lis2dw_awake(void) {
-    if (movement_state.has_lis2dw) {
-        return _awake_state_lis2dw;
-    }
-    return 0;
 }
 
 float movement_get_temperature(void) {
@@ -1385,6 +1387,8 @@ void app_setup(void) {
             lis2dw_set_low_power_mode(LIS2DW_LP_MODE_1);    // lowest power mode, 12-bit
             lis2dw_set_low_noise_mode(false);               // low noise mode raises power consumption slightly; we don't need it
             lis2dw_enable_stationary_motion_detection();    // stationary/motion detection mode keeps the data rate at 1.6 Hz even in sleep
+            lis2dw_configure_wake_duration(3);            // In terms of 1/ODR (so 3 is 3 * 1 / 12.5 = 240ms)
+            lis2dw_configure_sleep_duration(0);             // In terms of 512/ODR (so 0 is 16 * 1 / 12.5 = 1.28s)
             lis2dw_set_range(LIS2DW_RANGE_2_G);             // Application note AN5038 recommends 2g range
             lis2dw_enable_sleep();                          // allow acceleromter to sleep and wake on activity
             lis2dw_configure_wakeup_threshold(movement_state.accelerometer_motion_threshold); // g threshold to wake up: (THS * FS / 64) where FS is "full scale" of ±2g.
@@ -1601,7 +1605,16 @@ bool app_loop(void) {
                 if (!movement_state.count_steps_keep_on) movement_disable_step_count(true);
             }
             else {
-                movement_count_new_steps_lis2dw();
+#if COUNT_STEPS_USE_ESPRUINO
+                if (_lis2dw_reinit_timer > 0 && --_lis2dw_reinit_timer == 0) {
+                    count_steps_espruino_init();
+                }
+#endif
+                if (_awake_state_lis2dw >= MOVEMENT_AWAKE_LIS2DW_JUST_WOKE && _awake_state_lis2dw < MOVEMENT_AWAKE_LIS2DW_READY_TO_CLEAR_BUFFER) {
+                    _awake_state_lis2dw++;
+                } else {
+                    movement_count_new_steps_lis2dw();
+                }
             }
         }
     }
@@ -1846,8 +1859,9 @@ void cb_accelerometer_event(void) {
     movement_volatile_state.has_pending_accelerometer = true;
 }
 
-void cb_accelerometer_wake_event(void) {
-    _awake_state_lis2dw = !HAL_GPIO_A4_read();
+void cb_accelerometer_sleep_change_event(void) {
+    _awake_state_lis2dw = HAL_GPIO_A4_read() ? MOVEMENT_AWAKE_LIS2DW_ASLEEP : MOVEMENT_AWAKE_LIS2DW_JUST_WOKE;
+    _lis2dw_reinit_timer = _awake_state_lis2dw == MOVEMENT_AWAKE_LIS2DW_ASLEEP ? COUNT_STEPS_ESPRUINO_TIMEOUT_SEC : -1;
 }
 
 void cb_accelerometer_wake(void) {

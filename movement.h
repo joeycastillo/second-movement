@@ -443,7 +443,6 @@ void movement_set_step_count_keep_on(bool keep_on);
 void movement_set_step_count_keep_off(bool keep_off);
 void movement_reset_step_count(void);
 uint32_t movement_get_step_count(void);
-uint8_t movement_get_lis2dw_awake(void);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.
