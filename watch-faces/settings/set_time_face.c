@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "set_time_face.h"
+#include "delay.h"
 #include "watch.h"
 #include "watch_utility.h"
 #include "zones.h"
@@ -60,9 +61,38 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
         case 5: // minute
             date_time.unit.minute = (date_time.unit.minute + 1) % 60;
             break;
-        case 6: // second
+        case 6: { // second
+            uint32_t counter = watch_rtc_get_counter();
+            uint32_t freq = watch_rtc_get_frequency();
+            uint32_t half_freq = freq >> 1;
+            uint32_t subsecond_mask = freq - 1;
+            uint32_t subseconds = counter & subsecond_mask;
+
+            uint32_t delta;
+
+            // Like a casio watch we reset the seconds to 0 to the nearest minute
+            bool to_next_minute = date_time.unit.second >= 30;
+
+            if (subseconds >= half_freq) {
+                delta = (subseconds - half_freq) * 8;
+            } else {
+                delta = (half_freq + subseconds) * 8;
+            }
+
             date_time.unit.second = 0;
+
+            if (to_next_minute) {
+                uint32_t timestamp = watch_utility_date_time_to_unix_time(date_time, 0);
+                timestamp += 60;
+                date_time = watch_utility_date_time_from_unix_time(timestamp, 0);
+            }
+
+            watch_rtc_enable(false);
+            delay_ms(delta);
+            watch_rtc_enable(true);
+
             break;
+        }
     }
     movement_set_local_date_time(date_time);
 }
@@ -112,8 +142,7 @@ bool set_time_face_loop(movement_event_t event, void *context) {
             current_page = (current_page + 1) % SET_TIME_FACE_NUM_SETTINGS;
             *((uint8_t *)context) = current_page;
             break;
-        case EVENT_ALARM_BUTTON_UP:
-            _abort_quick_ticks();
+        case EVENT_ALARM_BUTTON_DOWN:
             _handle_alarm_button(date_time, current_page);
             break;
         case EVENT_TIMEOUT:
