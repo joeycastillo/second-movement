@@ -60,4 +60,11 @@ SRCS += \
   ./watch-faces/clock/solar_time_face.c \
   ./watch-faces/complication/tide_face.c \
   ./watch-faces/clock/world_clock2_face.c \
+  ./watch-faces/complication/stopwatch_game_timing.c \
+  ./watch-faces/complication/stopwatch_football_face.c \
+  ./watch-faces/complication/stopwatch_basketball_face.c \
+  ./watch-faces/complication/stopwatch_bullseye_face.c \
+  ./watch-faces/complication/stopwatch_blind_ten_face.c \
+  ./watch-faces/complication/stopwatch_blackjack_face.c \
+  ./watch-faces/complication/stopwatch_f1_pit_stop_face.c \
 # New watch faces go above this line.
