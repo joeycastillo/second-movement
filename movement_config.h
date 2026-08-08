@@ -29,16 +29,6 @@
 
 const watch_face_t watch_faces[] = {
     baby_511_face,
-    clock_face,
-    timer_face,
-    beats_face,
-    sunrise_sunset_face,
-    periodic_table_face,
-    probability_face,
-    tally_face,
-    moon_phase_face,
-    stopwatch_face,
-    alarm_face,
     temperature_display_face,
     pi_face,
     settings_face,

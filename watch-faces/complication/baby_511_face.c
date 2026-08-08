@@ -28,80 +28,74 @@
 #include "watch.h"
 #include "watch_utility.h"
 
-static uint8_t _get_minutes(uint32_t utc_secs)
-{
-    return utc_secs / 60;
-}
-
-static uint8_t _get_seconds(uint32_t utc_secs)
-{
-    return utc_secs % 60;
-}
-
-static void add_contraction(baby_state_t * state, uint32_t now) {
-    state->con_last = (state->con_last + 1) % MAX_LOGGED_CONTRACTIONS;
-    if (state->con_log_full) {
-        state->con_first = state->con_last;
-    }
-    else if (state->con_first == state->con_last)
+static void add_contraction(baby_state_t *state, uint32_t now) {
+    if ((state->con_newest == state->con_oldest) && !(state->con_log_empty))
     {
-        state->con_log_full = true;
+        //ran out of room!
+        //need to overwrite the oldest value
+        state->con_oldest = (state->con_oldest + 1) % MAX_LOGGED_CONTRACTIONS;
     }
-    state->con_log[state->con_last] = now;
+    state->con_log_empty = false;
+    state->con_log[state->con_newest] = now;
+    state->con_newest = (state->con_newest + 1) % MAX_LOGGED_CONTRACTIONS;
 }
 
-static void clear_old_contractions(baby_state_t * state) {
+static void clear_old_contractions(baby_state_t *state) {
+    if (state->con_log_empty) {
+        return;
+    }
     uint32_t now = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
-    uint8_t first = state->con_first;
-    uint32_t hour_ago = now - (SECS_PER_MIN * MINS_PER_HOUR);
-    uint32_t oldest = state->con_log[first];
-    while (oldest < hour_ago && (first != state->con_last))
+    uint32_t hour_ago = now - 10;//(SECS_PER_MIN * MINS_PER_HOUR);
+    uint32_t oldest = state->con_log[state->con_oldest];
+    while (oldest < hour_ago && !(state->con_log_empty))
     {
-        first = (first + 1) % MAX_LOGGED_CONTRACTIONS;
+        state->con_oldest = (state->con_oldest + 1) % MAX_LOGGED_CONTRACTIONS;
+
+        if (state->con_oldest == state->con_newest) {
+            state->con_log_empty = true;
+        }
+
+        oldest = state->con_log[state->con_oldest];
     }
-    state->con_first = first;
 }
 
-static uint8_t get_con_count(baby_state_t * state)
+static uint8_t get_con_count(baby_state_t *state)
 {
-    uint8_t count;
-    if (state->con_log_full)
-    {
-        count = MAX_LOGGED_CONTRACTIONS;
+    uint8_t count = 2;
+    if (state->con_log_empty == true) {
+        count = 0;
     }
     else
     {
-        if (state->con_first > state->con_last)
+        if (state->con_oldest >= state->con_newest)
         {
-            count = (state->con_last + MAX_LOGGED_CONTRACTIONS) - state->con_first;
+            count = (state->con_newest + MAX_LOGGED_CONTRACTIONS) - state->con_oldest;
         }
         else
         {
-            count = (state->con_last - state->con_first);
+            count = (state->con_newest - state->con_oldest);
         }
     }
     return count;
 }
 
-static uint32_t get_average_contraction_spacing_sec(baby_state_t * state)
-{
-    clear_old_contractions(state);
-    
-    uint32_t seconds = (state->con_log[state->con_last] - state->con_log[state->con_first]);
-
-    uint8_t count = get_con_count(state);
-    if (count <= 1) {
+static uint32_t get_average_contraction_spacing_sec(baby_state_t * state) {
+    if (state->con_log_empty) {
         return MINS_PER_HOUR * 60;
     }
     else {
+        uint32_t seconds = (state->con_log[state->con_newest] - state->con_log[state->con_oldest]);
+        uint8_t count = get_con_count(state);
         // dividing by gaps between contractions, so subtract 1.
-        return (seconds / (count - 1));
+        return (seconds / (count));
     }
+    return -1;
     
 }
 
 static void _contract(baby_state_t *state) {
     state->con_state = contracting;
+    state->now_ts = 0;
     state->last_con_start = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
 }
 
@@ -113,25 +107,41 @@ static void _rest(baby_state_t *state) {
     if ((unix_now - state->last_con_start) > (MIN_SECS_PER_CONTRACTION)) {
         // Real contraction!
         add_contraction(state, unix_now);
+        state->last_con_start = unix_now;
     }
     clear_old_contractions(state);
 }
 
 static void _draw(baby_state_t *state) {
-    char mins[2];
-    char secs[2];
-    char cons[2];
-    char state_string[3];
+    char mins[3];
+    char secs[3];
+    char cons[3];
+    char state_string[4];
+    uint32_t time_to_display;
 
-    if (state->con_state == resting){
+    if (state->con_state == resting) {
         sprintf(state_string, "RES");
+        //time_to_display = get_average_contraction_spacing_sec(state);
     }
     else {
         sprintf(state_string, "CON");
+        time_to_display = state->now_ts;
     }
 
-    sprintf(mins, "%02u", state->now_ts / 60);
-    sprintf(secs, "%02u", state->now_ts % 60);
+    if (state->con_log_empty) {
+        sprintf(state_string, "em");
+    }
+    else {
+        sprintf(state_string, "fl");
+    }
+
+
+    //sprintf(mins, "%02u", (time_to_display / 60));
+    //sprintf(secs, "%02u", (time_to_display % 60));
+    sprintf(mins, "%02u", state->con_oldest);
+    sprintf(secs, "%02u", state->con_newest);
+
+
     sprintf(cons, "%02u", get_con_count(state));
     watch_set_colon();
 
@@ -149,6 +159,10 @@ void baby_511_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         baby_state_t *state = (baby_state_t *)*context_ptr;
         memset(*context_ptr, 0, sizeof(baby_state_t));
         state->watch_face_index = watch_face_index;
+        state->con_oldest = 0;
+        state->con_newest = 0;
+        state->con_state = resting;
+        state->con_log_empty = true;
     }
 }
 
@@ -164,7 +178,9 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
             _draw(state);
             break;
         case EVENT_TICK:
-            state->now_ts++;
+            if (state->con_state == contracting){
+                state->now_ts++;
+            }
             clear_old_contractions(state);
             _draw(state);
             break;
@@ -180,9 +196,9 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_LONG_PRESS:
             state->con_state = resting;
             state->now_ts = 0;
-            state->con_first = 0;
-            state->con_last = 0;
-            state->con_log_full = false;
+            state->con_oldest = 0;
+            state->con_newest = 0;
+            state->con_log_empty = true;
             _draw(state);
             break;
         default:

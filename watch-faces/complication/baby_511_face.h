@@ -52,9 +52,8 @@
 
 #include "movement.h"
 
-#define MAX_LOGGED_CONTRACTIONS 40
-#define MAX_MINS_BETWEEN_CONTRACTIONS 5
-#define MIN_SECS_PER_CONTRACTION 30
+#define MAX_LOGGED_CONTRACTIONS 5
+#define MIN_SECS_PER_CONTRACTION 1
 #define MINS_PER_HOUR 60
 #define SECS_PER_MIN 60
 
@@ -67,10 +66,10 @@ typedef struct {
     uint32_t now_ts;
     contraction_state_t con_state;
     uint32_t last_con_start;
+    uint8_t con_oldest;
+    uint8_t con_newest;
+    bool con_log_empty;
     uint32_t con_log[MAX_LOGGED_CONTRACTIONS];
-    uint8_t con_first;
-    uint8_t con_last;
-    bool con_log_full;
     uint8_t watch_face_index;
 } baby_state_t;
 
