@@ -70,7 +70,6 @@
 #include "timer_face.h"
 #include "simple_coin_flip_face.h"
 #include "lis2dw_monitor_face.h"
-#include "wareki_face.h"
 #include "deadline_face.h"
 #include "wordle_face.h"
 #include "blackjack_face.h"
