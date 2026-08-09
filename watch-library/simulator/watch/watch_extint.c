@@ -56,14 +56,17 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
         switch (key[0]) {
             case 'A':
             case 'a':
+            case '6':   // corresponds to right-arrow on the numpad, in num-lock mode
                 button_id = BTN_ID_ALARM;
                 break;
             case 'L':
             case 'l':
+            case '7':   // corresponds to Home above the left-arrow on the numpad, in num-lock mode
                 button_id = BTN_ID_LIGHT;
                 break;
             case 'M':
             case 'm':
+            case '4':   // corresponds to left-arrow on the numpad, in num-lock mode
                 button_id = BTN_ID_MODE;
                 break;
             default:
@@ -85,6 +88,8 @@ static EM_BOOL watch_invoke_key_callback(int eventType, const EmscriptenKeyboard
             default:
                 return EM_FALSE;
         }
+    } else if (strcmp(key, "Home") == 0) {
+        button_id = BTN_ID_LIGHT;  // Home is normally above the left-arrow on the numpad
     } else {
         // another kind of key
         return EM_FALSE;
