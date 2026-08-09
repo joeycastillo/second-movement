@@ -28,10 +28,10 @@
 #include "movement_faces.h"
 
 const watch_face_t watch_faces[] = {
-    baby_511_face,
     clock_face,
     timer_face,
     beats_face,
+    baby_511_face,
     sunrise_sunset_face,
     periodic_table_face,
     probability_face,
