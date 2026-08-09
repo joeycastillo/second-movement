@@ -45,10 +45,10 @@
  * - Press and hold the light button to enter settings mode for each interval
  *   timer slot.
  *
- * - Each interval timer has 1 to 4 phases of customizable length like so:
- *   (1) prepare/warum up --> (2) work --> (3) break --> (4) cool down.
+ * - Each interval timer has 1 to 5 phases of customizable length like so:
+ *   (1) prepare/warum up --> (2) work --> (3) sprint —> (4) break --> (5) cool down.
  *   When setting up or running a timer, each of these phases is displayed by
- *   the letters "PR" (prepare), "WO" (work), "BR" (break), "CD" (cool down).
+ *   the letters "PR" (prepare), "WO" (work), "SP" (Sprint), "BR" (break), "CD" (cool down).
  *
  * - Each of these phases is optional, you can set the corresponding
  *   minutes and seconds to zero. But at least one phase needs to be set, if
@@ -86,6 +86,8 @@ typedef struct {
     uint8_t warmup_seconds;
     uint8_t work_minutes;
     uint8_t work_seconds;
+    uint8_t sprint_minutes;
+    uint8_t sprint_seconds;
     uint8_t break_minutes;
     uint8_t break_seconds;
     uint8_t cooldown_minutes;
