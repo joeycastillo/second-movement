@@ -303,6 +303,8 @@ typedef struct {
     // signal and alarm volumes
     watch_buzzer_volume_t signal_volume;
     watch_buzzer_volume_t alarm_volume;
+    bool signal_should_sound;
+    bool muted;
 } movement_state_t;
 
 void movement_move_to_face(uint8_t watch_face_index);
@@ -362,6 +364,9 @@ void movement_set_button_should_sound(bool value);
 watch_buzzer_volume_t movement_button_volume(void);
 void movement_set_button_volume(watch_buzzer_volume_t value);
 
+bool movement_signal_should_sound(void);
+void movement_set_signal_should_sound(bool value);
+
 watch_buzzer_volume_t movement_signal_volume(void);
 void movement_set_signal_volume(watch_buzzer_volume_t value);
 
@@ -387,6 +392,9 @@ uint8_t movement_get_backlight_dwell(void);
 void movement_set_backlight_dwell(uint8_t value);
 
 void movement_store_settings(void);
+
+bool movement_is_muted(void);
+void movement_mute(bool value);
 
 /// TODO: For #SecondMovement: Should we have a counter that watch faces increment when they enable an alarm, and decrement when they disable it?
 /// Or should there be a watch face function where watch faces can tell us if they have an alarm enabled?

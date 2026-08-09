@@ -162,6 +162,13 @@ void watch_set_buzzer_on(void);
   */
 void watch_set_buzzer_off(void);
 
+/** @brief Registers a callback that is consulted before playing any buzzer sequence.
+  *        If the callback returns false, the sequence will not be played.
+  *        Pass NULL to remove the gate and restore default behavior.
+  * @param gate_fn A callback function which takes no input and returns a boolean. true=gate is open; false=watch is muted.
+  */
+void watch_buzzer_set_gate(bool (*gate_fn)(void));
+
 /** @brief Plays the given note for a set duration at the loudest possible volume.
   * @param note The note you wish to play, or BUZZER_NOTE_REST to disable output for the given duration.
   * @param duration_ms The duration of the note.

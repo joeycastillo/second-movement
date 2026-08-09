@@ -81,11 +81,26 @@ static void _tc0_initialize() {
     NVIC_EnableIRQ (TC0_IRQn);
 }
 
+// _buzzer_gate_fn contains pointer to function used to determine the gate state
+static bool (*_buzzer_gate_fn)(void) = NULL;
+
+// sets _buzzer_gate_fn to a function to override the initial state of NULL
+void watch_buzzer_set_gate(bool (*gate_fn)(void)) {
+    _buzzer_gate_fn = gate_fn;
+}
+
 void watch_buzzer_play_sequence(int8_t *note_sequence, void (*callback_on_end)(void)) {
     watch_buzzer_play_sequence_with_volume(note_sequence, callback_on_end, WATCH_BUZZER_VOLUME_LOUD);
 }
 
 void watch_buzzer_play_sequence_with_volume(int8_t *note_sequence, void (*callback_on_end)(void), watch_buzzer_volume_t volume) {
+    // if gate function doesn't point to NULL, i.e. is registered && gate function returns false, i.e. movement says we're muted
+    if (_buzzer_gate_fn && !_buzzer_gate_fn()) {
+        if (callback_on_end) callback_on_end();
+        // No need to enable TCC, or initialize timer, or let is_buzzing block sleep
+        return;
+    }
+
     // Abort any previous sequence
     watch_buzzer_abort_sequence();
 
@@ -153,6 +168,13 @@ void watch_buzzer_play_raw_source(watch_buzzer_raw_source_t raw_source, void* us
 }
 
 void watch_buzzer_play_raw_source_with_volume(watch_buzzer_raw_source_t raw_source, void* userdata, watch_cb_t callback_on_end, watch_buzzer_volume_t volume) {
+    // if gate function doesn't point to NULL, i.e. is registered && gate function returns false, i.e. movement says we're muted
+    if (_buzzer_gate_fn && !_buzzer_gate_fn()) {
+        if (callback_on_end) callback_on_end();
+        // No need to enable TCC, or initialize timer, or let is_buzzing block sleep
+        return;
+    }
+
     // Abort any previous sequence
     watch_buzzer_abort_sequence();
 

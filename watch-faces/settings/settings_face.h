@@ -89,17 +89,20 @@ typedef struct {
     int8_t led_color_start;
     int8_t led_color_end;
     settings_screen_t *settings_screens;
+    bool time_signal_enabled;
 } settings_state_t;
 
 void settings_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void settings_face_activate(void *context);
 bool settings_face_loop(movement_event_t event, void *context);
 void settings_face_resign(void *context);
+movement_watch_face_advisory_t settings_face_advise(void *context);
 
 #define settings_face ((const watch_face_t){ \
     settings_face_setup, \
     settings_face_activate, \
     settings_face_loop, \
     settings_face_resign, \
+    settings_face_advise, \
     NULL, \
 })
