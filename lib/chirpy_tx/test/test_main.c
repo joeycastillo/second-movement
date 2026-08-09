@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include "../src/lib/chirpy_tx.h"
+#include "../chirpy_tx.h"
 #include "unity.h"
 
 

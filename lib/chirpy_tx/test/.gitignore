@@ -1,0 +1,3 @@
+# Build artifacts
+*.o
+test_chirpy
