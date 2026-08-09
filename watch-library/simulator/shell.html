@@ -1575,7 +1575,7 @@
       if (outputElement) outputElement.value = ''; // clear browser cache
       return function(text) {
         if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        console.log(text);
+        console.log(Date.now(), text);
         if (outputElement) {
           outputElement.value += text + "\n";
           outputElement.scrollTop = outputElement.scrollHeight; // focus on bottom
