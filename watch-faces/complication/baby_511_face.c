@@ -28,6 +28,27 @@
 #include "watch.h"
 #include "watch_utility.h"
 
+static const int8_t _con_beep[] = {BUZZER_NOTE_C8, 2, 0};
+static const int8_t _rest_beep[] = {BUZZER_NOTE_C8, 2, BUZZER_NOTE_REST, 2, BUZZER_NOTE_C8, 2, 0};
+
+static const int8_t _birthday_beep[] = {
+    BUZZER_NOTE_G5, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 8,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_A5, 16,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_G5, 16,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_C6, 16,
+    BUZZER_NOTE_REST, 1,
+    BUZZER_NOTE_B5, 32,
+0};
+
+
+
+
+
 static void add_contraction(baby_state_t *state, uint32_t now) {
     if ((state->con_newest == state->con_oldest) && !(state->con_log_empty))
     {
@@ -45,7 +66,7 @@ static void clear_old_contractions(baby_state_t *state) {
         return;
     }
     uint32_t now = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
-    uint32_t hour_ago = now - 10;//(SECS_PER_MIN * MINS_PER_HOUR);
+    uint32_t hour_ago = now - SECS_TO_TRACK;
     uint32_t oldest = state->con_log[state->con_oldest];
     while (oldest < hour_ago && !(state->con_log_empty))
     {
@@ -61,9 +82,13 @@ static void clear_old_contractions(baby_state_t *state) {
 
 static uint8_t get_con_count(baby_state_t *state)
 {
-    uint8_t count = 2;
-    if (state->con_log_empty == true) {
+    uint8_t count;
+    if (state->con_log_empty == true)
+    {
         count = 0;
+    }
+    else if (state->con_newest == state->con_oldest) {
+        return MAX_LOGGED_CONTRACTIONS;
     }
     else
     {
@@ -80,20 +105,27 @@ static uint8_t get_con_count(baby_state_t *state)
 }
 
 static uint32_t get_average_contraction_spacing_sec(baby_state_t * state) {
-    if (state->con_log_empty) {
-        return MINS_PER_HOUR * 60;
+    uint32_t newindex = state->con_newest;
+    if (newindex == 0) {
+        newindex = MAX_LOGGED_CONTRACTIONS - 1;
     }
     else {
-        uint32_t seconds = (state->con_log[state->con_newest] - state->con_log[state->con_oldest]);
-        uint8_t count = get_con_count(state);
-        // dividing by gaps between contractions, so subtract 1.
-        return (seconds / (count));
+        newindex--;
     }
-    return -1;
+    // If there's one or fewer timestamps, there's no time span.
+    if ((state->con_log_empty) || (newindex == state->con_oldest)) {
+        return 0;
+    }
+    else {
+        uint32_t seconds = (state->con_log[newindex] - state->con_log[state->con_oldest]);
+        uint8_t count = get_con_count(state);
+        return (seconds) / (count);
+    }
     
 }
 
 static void _contract(baby_state_t *state) {
+    watch_buzzer_play_sequence((int8_t *)_con_beep, NULL);
     state->con_state = contracting;
     state->now_ts = 0;
     state->last_con_start = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
@@ -109,7 +141,14 @@ static void _rest(baby_state_t *state) {
         add_contraction(state, unix_now);
         state->last_con_start = unix_now;
     }
-    clear_old_contractions(state);
+    uint32_t spacing = get_average_contraction_spacing_sec(state);
+    if ( spacing < CONTRACTION_GAP_THRESHOLD_SECS && spacing != 0)
+    {
+        watch_buzzer_play_sequence((int8_t *)_birthday_beep, NULL);
+    }
+    else{
+        watch_buzzer_play_sequence((int8_t *)_rest_beep, NULL);
+    }
 }
 
 static void _draw(baby_state_t *state) {
@@ -117,29 +156,29 @@ static void _draw(baby_state_t *state) {
     char secs[3];
     char cons[3];
     char state_string[4];
-    uint32_t time_to_display;
+    uint32_t time_to_display = 0;
 
-    if (state->con_state == resting) {
+    if (state->con_state == resting){
         sprintf(state_string, "RES");
-        //time_to_display = get_average_contraction_spacing_sec(state);
+        time_to_display = get_average_contraction_spacing_sec(state);
     }
     else {
         sprintf(state_string, "CON");
         time_to_display = state->now_ts;
     }
 
-    if (state->con_log_empty) {
+    /*if (state->con_log_empty) {
         sprintf(state_string, "em");
     }
     else {
         sprintf(state_string, "fl");
-    }
+    }*/
 
-
-    //sprintf(mins, "%02u", (time_to_display / 60));
-    //sprintf(secs, "%02u", (time_to_display % 60));
-    sprintf(mins, "%02u", state->con_oldest);
-    sprintf(secs, "%02u", state->con_newest);
+    if (time_to_display >=  MINS_PER_HOUR * SECS_PER_MIN) time_to_display = (MINS_PER_HOUR * SECS_PER_MIN) - 1;
+    sprintf(mins, "%02u", (time_to_display / 60));
+    sprintf(secs, "%02u", (time_to_display % 60));
+    //sprintf(mins, "%02u", state->con_oldest);
+    //sprintf(secs, "%02u", state->con_newest);
 
 
     sprintf(cons, "%02u", get_con_count(state));
@@ -178,13 +217,13 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
             _draw(state);
             break;
         case EVENT_TICK:
-            if (state->con_state == contracting){
+            if (state->con_state == contracting && state->now_ts < (MINS_PER_HOUR * SECS_PER_MIN)-1){
                 state->now_ts++;
             }
             clear_old_contractions(state);
             _draw(state);
             break;
-        case EVENT_LIGHT_BUTTON_DOWN:
+        case EVENT_ALARM_BUTTON_DOWN:
             if (state->con_state == resting) {
                 _contract(state);
             }
@@ -193,7 +232,7 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
             }
             _draw(state);
             break;
-        case EVENT_LIGHT_LONG_PRESS:
+        case EVENT_ALARM_LONG_PRESS:
             state->con_state = resting;
             state->now_ts = 0;
             state->con_oldest = 0;

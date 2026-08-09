@@ -52,10 +52,12 @@
 
 #include "movement.h"
 
-#define MAX_LOGGED_CONTRACTIONS 5
-#define MIN_SECS_PER_CONTRACTION 1
+#define MAX_LOGGED_CONTRACTIONS 40
+#define MIN_SECS_PER_CONTRACTION 30
 #define MINS_PER_HOUR 60
 #define SECS_PER_MIN 60
+#define SECS_TO_TRACK (SECS_PER_MIN * MINS_PER_HOUR)
+#define CONTRACTION_GAP_THRESHOLD_SECS (5 * SECS_PER_MIN)
 
 typedef enum {
     contracting,
