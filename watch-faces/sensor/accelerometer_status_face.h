@@ -25,21 +25,23 @@
 #pragma once
 
 /*
- * Accelerometer Status / Settings
+ * Accelerometer Status and Configuration
  *
- * Meant to be used in conjunction with the activity_logging_face. Shows the current
- * status of the accelerometer active/still status pin, and allows adjusting the
- * motion threshold via a long press of ALARM. Note that this will not work without
- * activity_logging_face in the lineup as activity_logging_face is the one that enables
- * background accelerometer sensing.
+ * This face shows whether the accelerometer currently senses motion (active) or
+ * not (still). It also lets you toggle wake-on-motion support.
+ *
+ * Long-press LIGHT to enter settings; ALARM toggles wake-on-motion on or off,
+ * and MODE leaves settings:
+ *   WAKE   whether motion wakes the watch out of low-energy mode
+ *
+ * The face also enables background accelerometer sensing, making it available to
+ * movement core and other faces.
  */
 
 #include "movement.h"
 #include "watch.h"
 
 typedef struct {
-    uint8_t new_threshold;
-    uint8_t threshold;
     bool is_setting;
 } accel_interrupt_count_state_t;
 

@@ -928,6 +928,14 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
     return false;
 }
 
+bool movement_get_wake_on_motion(void) {
+    return movement_state.wake_on_motion;
+}
+
+void movement_set_wake_on_motion(bool value) {
+    movement_state.wake_on_motion = value;
+}
+
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
 #if __EMSCRIPTEN__
@@ -1064,6 +1072,11 @@ void app_init(void) {
 
     if (movement_state.accelerometer_motion_threshold == 0) movement_state.accelerometer_motion_threshold = 32;
 
+    // support for wake on motion. if enabled motion will wake the watch from
+    // low-energy mode. this feature is off by default but can be enabled from the
+    // accelerometer status face.
+    movement_state.wake_on_motion = false;
+
     movement_state.signal_volume = MOVEMENT_DEFAULT_SIGNAL_VOLUME;
     movement_state.alarm_volume = MOVEMENT_DEFAULT_ALARM_VOLUME;
     movement_state.light_on = false;
@@ -1154,11 +1167,14 @@ void app_setup(void) {
             // next: INT2 is wired to pin A4. We'll configure the accelerometer to output the sleep state on INT2.
             // a falling edge on INT2 indicates the accelerometer has woken up.
             lis2dw_configure_int2(LIS2DW_CTRL5_INT2_SLEEP_STATE | LIS2DW_CTRL5_INT2_SLEEP_CHG);
-            HAL_GPIO_A4_in();
 
-            // Wake on motion seemed like a good idea when the threshold was lower, but the UX makes less sense now.
-            // Still if you want to wake on motion, you can do it by uncommenting this line:
-            // watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+            // wake on motion: A4 is armed as an extwake source at sleep entry (see app_loop)
+            // and disarmed here on wake, so while awake nothing monitors it.
+            if (movement_state.wake_on_motion) {
+                watch_disable_extwake_interrupt(HAL_GPIO_A4_pin());
+            } else {
+                HAL_GPIO_A4_in();
+            }
 
             // later on, we are going to use INT1 for tap detection. We'll set up that interrupt here,
             // but it will only fire once tap recognition is enabled.
@@ -1232,6 +1248,13 @@ static void _sleep_mode_app_loop(void) {
 }
 
 #endif
+
+// True if wake-on-motion is active and the accelerometer currently reports motion.
+static bool _movement_accelerometer_in_motion(void) {
+    if (!movement_state.wake_on_motion || !movement_state.has_lis2dw) return false;
+    if (movement_state.accelerometer_background_rate == LIS2DW_DATA_RATE_POWERDOWN) return false;
+    return !HAL_GPIO_A4_read();
+}
 
 static bool _switch_face(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
@@ -1352,6 +1375,14 @@ bool app_loop(void) {
     }
 
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+    // Wake-on-motion: if the countdown expired but the accelerometer still reports
+    // motion, restart the countdown and stay awake instead of sleeping.
+    if (movement_volatile_state.enter_sleep_mode && !movement_volatile_state.is_buzzing &&
+        _movement_accelerometer_in_motion()) {
+        movement_volatile_state.enter_sleep_mode = false;
+        _movement_reset_inactivity_countdown();
+    }
+
     // if we have timed out of our low energy mode countdown, enter low energy mode.
     if (movement_volatile_state.enter_sleep_mode && !movement_volatile_state.is_buzzing) {
         movement_volatile_state.enter_sleep_mode = false;
@@ -1361,6 +1392,20 @@ bool app_loop(void) {
         _movement_disable_inactivity_countdown();
 
         watch_register_extwake_callback(HAL_GPIO_BTN_ALARM_pin(), cb_alarm_btn_extwake, true);
+
+        if (movement_state.wake_on_motion && movement_state.has_lis2dw) {
+            // Configure the accelerometer directly. On wake, app_setup restores the original values from movement_state
+            lis2dw_set_data_rate(LIS2DW_DATA_RATE_LOWEST);
+            lis2dw_configure_wakeup_threshold(MOVEMENT_WAKE_ON_MOTION_THRESHOLD);
+
+            // Let the accelerometer settle after reconfiguration before arming the edge-triggered A4
+            // extwake source. Without this delay the wake-up condition is still asserted when we arm,
+            // so real motion produces no fresh edge and the watch never wakes.
+            delay_ms(50);
+
+            // Arm A4 as an extwake source so motion wakes the watch from sleep.
+            watch_register_extwake_callback(HAL_GPIO_A4_pin(), cb_accelerometer_wake, false);
+        }
 
         // _sleep_mode_app_loop takes over at this point and loops until exit_sleep_mode is set by the extwake handler,
         // or wake is requested using the movement_request_wake function.
@@ -1565,6 +1610,6 @@ void cb_accelerometer_event(void) {
 
 void cb_accelerometer_wake(void) {
     movement_volatile_state.pending_events |= 1 << EVENT_ACCELEROMETER_WAKE;
-    // also: wake up!
-    _movement_reset_inactivity_countdown();
+    if (!movement_state.wake_on_motion) return;
+    movement_request_wake();
 }
