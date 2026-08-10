@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef BABY_511_FACE_H_
-#define BABY_511_FACE_H_
+#ifndef CONTRACTION_FACE_H_
+#define CONTRACTION_FACE_H_
 
 /*
  * TIMER face
@@ -52,41 +52,52 @@
 
 #include "movement.h"
 
+// Length of log
 #define MAX_LOGGED_CONTRACTIONS 40
-#define MIN_SECS_PER_CONTRACTION 30
-#define MINS_PER_HOUR 60
-#define SECS_PER_MIN 60
+
+// The following constants are intended to follow the "5-1-1" rule.
+// Contractions lasting 1 minute every 5 minutes for 1 hour is a good
+// sign that it's time to head to the hospital.
+
+// Length of a contraction to be considered valid and logged.
+#define MIN_SECS_PER_VALID_CONTRACTION 40
+
+
 #define SECS_TO_TRACK (SECS_PER_MIN * MINS_PER_HOUR)
 #define CONTRACTION_GAP_THRESHOLD_SECS (5 * SECS_PER_MIN)
+
+#define MINS_PER_HOUR 60
+#define SECS_PER_MIN 60
 
 typedef enum {
     contracting,
     resting
-} contraction_state_t;
+} contraction_status_t;
 
 typedef struct {
     uint32_t now_ts;
-    contraction_state_t con_state;
+    contraction_status_t con_state;
     uint32_t last_con_start;
     uint8_t con_oldest;
     uint8_t con_newest;
     bool con_log_empty;
     uint32_t con_log[MAX_LOGGED_CONTRACTIONS];
     uint8_t watch_face_index;
-} baby_state_t;
+    bool chime_played;
+} contraction_state_t;
 
-void baby_511_face_setup(uint8_t watch_face_index, void ** context_ptr);
-void baby_511_face_activate(void *context);
-bool baby_511_face_loop(movement_event_t event, void *context);
-void baby_511_face_resign(void *context);
+void contraction_face_setup(uint8_t watch_face_index, void ** context_ptr);
+void contraction_face_activate(void *context);
+bool contraction_face_loop(movement_event_t event, void *context);
+void contraction_face_resign(void *context);
 
-#define baby_511_face ((const watch_face_t){ \
-    baby_511_face_setup, \
-    baby_511_face_activate, \
-    baby_511_face_loop, \
-    baby_511_face_resign, \
+#define contraction_face ((const watch_face_t){ \
+    contraction_face_setup, \
+    contraction_face_activate, \
+    contraction_face_loop, \
+    contraction_face_resign, \
     NULL, \
 })
 
 
-#endif // BABY_511_FACE_H_
+#endif // contraction_FACE_H_

@@ -46,7 +46,7 @@ SRCS += \
   ./watch-faces/complication/pulsometer_face.c \
   ./watch-faces/complication/interval_face.c \
   ./watch-faces/complication/timer_face.c \
-  ./watch-faces/complication/baby_511_face.c \
+  ./watch-faces/complication/contraction_face.c \
   ./watch-faces/complication/simple_coin_flip_face.c \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \

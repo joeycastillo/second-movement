@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "baby_511_face.h"
+#include "contraction_face.h"
 #include "watch.h"
 #include "watch_utility.h"
 
@@ -45,11 +45,7 @@ static const int8_t _birthday_beep[] = {
     BUZZER_NOTE_B5, 32,
 0};
 
-
-
-
-
-static void add_contraction(baby_state_t *state, uint32_t now) {
+static void _add_contraction(contraction_state_t *state, uint32_t now) {
     if ((state->con_newest == state->con_oldest) && !(state->con_log_empty))
     {
         //ran out of room!
@@ -61,7 +57,7 @@ static void add_contraction(baby_state_t *state, uint32_t now) {
     state->con_newest = (state->con_newest + 1) % MAX_LOGGED_CONTRACTIONS;
 }
 
-static void clear_old_contractions(baby_state_t *state) {
+static void _clear_old_contractions(contraction_state_t *state) {
     if (state->con_log_empty) {
         return;
     }
@@ -80,7 +76,7 @@ static void clear_old_contractions(baby_state_t *state) {
     }
 }
 
-static uint8_t get_con_count(baby_state_t *state)
+static uint8_t _get_con_count(contraction_state_t *state)
 {
     uint8_t count;
     if (state->con_log_empty == true)
@@ -104,7 +100,7 @@ static uint8_t get_con_count(baby_state_t *state)
     return count;
 }
 
-static uint32_t get_average_contraction_spacing_sec(baby_state_t * state) {
+static uint32_t get_average_contraction_spacing_sec(contraction_state_t * state) {
     uint32_t newindex = state->con_newest;
     if (newindex == 0) {
         newindex = MAX_LOGGED_CONTRACTIONS - 1;
@@ -118,40 +114,41 @@ static uint32_t get_average_contraction_spacing_sec(baby_state_t * state) {
     }
     else {
         uint32_t seconds = (state->con_log[newindex] - state->con_log[state->con_oldest]);
-        uint8_t count = get_con_count(state);
+        uint8_t count = _get_con_count(state);
         return (seconds) / (count);
     }
     
 }
 
-static void _contract(baby_state_t *state) {
+static void _contract(contraction_state_t *state) {
     watch_buzzer_play_sequence((int8_t *)_con_beep, NULL);
     state->con_state = contracting;
     state->now_ts = 0;
     state->last_con_start = watch_utility_date_time_to_unix_time(watch_rtc_get_date_time(), 0);
 }
 
-static void _rest(baby_state_t *state) {
+static void _rest(contraction_state_t *state) {
     state->con_state = resting;
     watch_date_time_t now = watch_rtc_get_date_time();
     uint32_t unix_now = watch_utility_date_time_to_unix_time(now, 0);
 
-    if ((unix_now - state->last_con_start) > (MIN_SECS_PER_CONTRACTION)) {
+    if ((unix_now - state->last_con_start) > (MIN_SECS_PER_VALID_CONTRACTION)) {
         // Real contraction!
-        add_contraction(state, unix_now);
+        _add_contraction(state, unix_now);
         state->last_con_start = unix_now;
     }
     uint32_t spacing = get_average_contraction_spacing_sec(state);
-    if ( spacing < CONTRACTION_GAP_THRESHOLD_SECS && spacing != 0)
+    if ( spacing < CONTRACTION_GAP_THRESHOLD_SECS && spacing != 0 && !state->chime_played)
     {
         watch_buzzer_play_sequence((int8_t *)_birthday_beep, NULL);
+        state->chime_played = true;
     }
     else{
         watch_buzzer_play_sequence((int8_t *)_rest_beep, NULL);
     }
 }
 
-static void _draw(baby_state_t *state) {
+static void _draw(contraction_state_t *state) {
     char mins[3];
     char secs[3];
     char cons[3];
@@ -167,23 +164,13 @@ static void _draw(baby_state_t *state) {
         time_to_display = state->now_ts;
     }
 
-    /*if (state->con_log_empty) {
-        sprintf(state_string, "em");
-    }
-    else {
-        sprintf(state_string, "fl");
-    }*/
-
     if (time_to_display >=  MINS_PER_HOUR * SECS_PER_MIN) time_to_display = (MINS_PER_HOUR * SECS_PER_MIN) - 1;
-    sprintf(mins, "%02u", (time_to_display / 60));
-    sprintf(secs, "%02u", (time_to_display % 60));
-    //sprintf(mins, "%02u", state->con_oldest);
-    //sprintf(secs, "%02u", state->con_newest);
+    snprintf(mins, 3, "%02u", (uint8_t) (time_to_display / 60));
+    snprintf(secs, 3, "%02u", (uint8_t) (time_to_display % 60));
 
-
-    sprintf(cons, "%02u", get_con_count(state));
+    // Modulo to suppress compiler warnings
+    snprintf(cons, 3, "%02u", _get_con_count(state) % MAX_LOGGED_CONTRACTIONS);
     watch_set_colon();
-
 
     watch_display_text_with_fallback(WATCH_POSITION_HOURS, mins, mins);
     watch_display_text_with_fallback(WATCH_POSITION_MINUTES, secs, secs);
@@ -191,26 +178,27 @@ static void _draw(baby_state_t *state) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, state_string, state_string);
 }
 
-void baby_511_face_setup(uint8_t watch_face_index, void ** context_ptr) {
+void contraction_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
     if (*context_ptr == NULL) {
-        *context_ptr = malloc(sizeof(baby_state_t));
-        baby_state_t *state = (baby_state_t *)*context_ptr;
-        memset(*context_ptr, 0, sizeof(baby_state_t));
+        *context_ptr = malloc(sizeof(contraction_state_t));
+        contraction_state_t *state = (contraction_state_t *)*context_ptr;
+        memset(*context_ptr, 0, sizeof(contraction_state_t));
         state->watch_face_index = watch_face_index;
         state->con_oldest = 0;
         state->con_newest = 0;
         state->con_state = resting;
         state->con_log_empty = true;
+        state->chime_played = false;
     }
 }
 
-void baby_511_face_activate(void *context) {
-    baby_state_t *state = (baby_state_t *)context;
+void contraction_face_activate(void *context) {
+    (void) context;
 }
 
-bool baby_511_face_loop(movement_event_t event, void *context) {
-    baby_state_t *state = (baby_state_t *)context;
+bool contraction_face_loop(movement_event_t event, void *context) {
+    contraction_state_t *state = (contraction_state_t *)context;
 
     switch (event.event_type) {
         case EVENT_ACTIVATE:
@@ -220,7 +208,7 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
             if (state->con_state == contracting && state->now_ts < (MINS_PER_HOUR * SECS_PER_MIN)-1){
                 state->now_ts++;
             }
-            clear_old_contractions(state);
+            _clear_old_contractions(state);
             _draw(state);
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -237,6 +225,7 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
             state->now_ts = 0;
             state->con_oldest = 0;
             state->con_newest = 0;
+            state->chime_played = false;
             state->con_log_empty = true;
             _draw(state);
             break;
@@ -247,5 +236,6 @@ bool baby_511_face_loop(movement_event_t event, void *context) {
 
     return true;
 }
-void baby_511_face_resign(void *context) {
+void contraction_face_resign(void *context) {
+    (void) context;
 }
