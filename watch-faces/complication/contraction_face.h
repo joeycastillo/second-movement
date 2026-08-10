@@ -26,28 +26,31 @@
 #define CONTRACTION_FACE_H_
 
 /*
- * TIMER face
- * Advanced timer/countdown face with pre-set timer lengths
- * 
- * This watch face provides the functionality of starting a countdown by choosing 
- * one out of nine programmable timer presets. A timer/countdown can be 23 hours,
- * 59 minutes, and 59 seconds max. A timer can also be set to auto-repeat, which
- * is indicated by the lap indicator.
+ * CONTRACTION face
+ * Face for counting contractions through the stages of labor
  *
- * How to use in NORMAL mode:
- *   - Short-pressing the alarm button cycles through all pre-set timer lengths.
- *     Find the current timer slot number in the upper right-hand corner.
- *   - Long-pressing the alarm button starts the timer.
- *   - Long-pressing the light button initiates settings mode.
+ * How to use:
+ *   - Press ALARM when a contraction starts. Press again when contraction stops.
+ *   - Long press ALARM to reset
  * 
- * How to use in SETTINGS mode:
- *   - There are up to nine slots for storing a timer setting. The current slot is 
- *     indicated by the number in the upper right-hand corner.
- *   - Short-pressing the light button cycles through the settings values of each
- *     timer slot in the following order: hours - minutes - seconds - timer repeat
- *   - Short-pressing the alarm button alters the current settings value.
- *   - Long-pressing the light button resumes to normal mode.
+ * Display:
+ *   - Upper section displays current state "CON" or "CO" for contracting,
+ *     "RES" or "RE" for resting.
+ *   - Right side displays number of contractions over the past hour.
+ *   - When Contracting
+ *     +  Display shows duration of current contraction.
+ *   - When Resting
+ *     +  HH:MM digits show minutes and seconds spacing of contractions over
+ *        the past hour.
  * 
+ * Notes:
+ *   - You will hear a special chime when contractions average 5 minutes apart
+ *     and are 1 minute long for the past 1 hour. Following the "5-1-1 rule,"
+ *     this means it's time to head to the hospital!
+ *   - Contractions lasting less than 40 seconds are not counted. This deviation
+ *     from the 1 minute in the rule is to allow some buffer in case you don't
+ *     press the button right on time.
+ *     These thresholds are adjustable in the constants below.
  */
 
 #include "movement.h"
@@ -55,16 +58,10 @@
 // Length of log
 #define MAX_LOGGED_CONTRACTIONS 40
 
-// The following constants are intended to follow the "5-1-1" rule.
-// Contractions lasting 1 minute every 5 minutes for 1 hour is a good
-// sign that it's time to head to the hospital.
+#define CONTRACTION_GAP_THRESHOLD_SECS (5 * SECS_PER_MIN) // 5 minutes
+#define MIN_SECS_PER_VALID_CONTRACTION 40                 // 1 minute
+#define SECS_TO_TRACK (SECS_PER_MIN * MINS_PER_HOUR)      // 1 hour
 
-// Length of a contraction to be considered valid and logged.
-#define MIN_SECS_PER_VALID_CONTRACTION 40
-
-
-#define SECS_TO_TRACK (SECS_PER_MIN * MINS_PER_HOUR)
-#define CONTRACTION_GAP_THRESHOLD_SECS (5 * SECS_PER_MIN)
 
 #define MINS_PER_HOUR 60
 #define SECS_PER_MIN 60

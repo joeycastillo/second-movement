@@ -116,7 +116,7 @@ static uint32_t get_average_contraction_spacing_sec(contraction_state_t * state)
         uint32_t seconds = (state->con_log[newindex] - state->con_log[state->con_oldest]);
         uint8_t count = _get_con_count(state);
 
-        // We're averaging gaps between contractions, 
+        // We're averaging gaps between contractions,
         // so subtract 1 from total contractions
         return (seconds) / (count - 1);
     }
