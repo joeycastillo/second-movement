@@ -1143,6 +1143,7 @@ static uint8_t movement_count_new_steps_lis2dw(void)
         return 0;
     }
     if (_awake_state_lis2dw == MOVEMENT_AWAKE_LIS2DW_READY_TO_CLEAR_BUFFER) {
+        _movement_reset_inactivity_countdown();
         _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_COUNTING;
         lis2dw_clear_fifo();  // likely stale data at this point.
         return 0;
@@ -1496,6 +1497,13 @@ static void _sleep_mode_app_loop(void) {
 
 #endif
 
+// True if wake-on-motion is active and the accelerometer currently reports motion.
+static bool _movement_accelerometer_in_motion(void) {
+    if (!movement_state.has_lis2dw) return false;
+    if (movement_state.accelerometer_background_rate == LIS2DW_DATA_RATE_POWERDOWN) return false;
+    return !(HAL_GPIO_A4_read());  // Alternatively, you can use lis2dw_get_wakeup_source() & LIS2DW_WAKEUP_SRC_SLEEP_STATE, but a digital read is cheaper than a serial call.
+}
+
 static bool _switch_face(void) {
     const watch_face_t *wf = &watch_faces[movement_state.current_face_idx];
 
@@ -1638,6 +1646,12 @@ bool app_loop(void) {
     }
 
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
+    // If we're moving, do not enter sleep mode.
+    if (movement_volatile_state.enter_sleep_mode && !movement_volatile_state.is_buzzing &&
+        movement_state.counting_steps && _movement_accelerometer_in_motion()) {
+        movement_volatile_state.enter_sleep_mode = false;
+        _movement_reset_inactivity_countdown();
+    }
     // if we have timed out of our low energy mode countdown, enter low energy mode.
     if (movement_volatile_state.enter_sleep_mode && !movement_volatile_state.is_buzzing) {
         movement_volatile_state.enter_sleep_mode = false;
