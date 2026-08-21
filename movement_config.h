@@ -29,7 +29,7 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    mario_tune_face,
+    music_player_face,
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))

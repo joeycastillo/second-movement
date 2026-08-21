@@ -22,26 +22,27 @@
  * SOFTWARE.
  */
 
-#ifndef MARIO_TUNE_FACE_H_
-#define MARIO_TUNE_FACE_H_
+#ifndef MUSIC_PLAYER_FACE_H_
+#define MUSIC_PLAYER_FACE_H_
 
 #include "movement.h"
+#include <stdbool.h>
 
 typedef struct {
     bool playing;
-} mario_tune_face_state_t;
+} music_player_face_state_t;
 
-void mario_tune_face_setup(uint8_t watch_face_index, void **context_ptr);
-void mario_tune_face_activate(void *context);
-bool mario_tune_face_loop(movement_event_t event, void *context);
-void mario_tune_face_resign(void *context);
+void music_player_face_setup(uint8_t watch_face_index, void **context_ptr);
+void music_player_face_activate(void *context);
+bool music_player_face_loop(movement_event_t event, void *context);
+void music_player_face_resign(void *context);
 
-#define mario_tune_face ((const watch_face_t){ \
-    mario_tune_face_setup, \
-    mario_tune_face_activate, \
-    mario_tune_face_loop, \
-    mario_tune_face_resign, \
+#define music_player_face ((const watch_face_t){ \
+    music_player_face_setup, \
+    music_player_face_activate, \
+    music_player_face_loop, \
+    music_player_face_resign, \
     NULL, \
 })
 
-#endif // MARIO_TUNE_FACE_H_
+#endif // MUSIC_PLAYER_FACE_H_
