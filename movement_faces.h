@@ -85,4 +85,5 @@
 #include "tide_face.h"
 #include "world_clock2_face.h"
 #include "hydration_face.h"
+#include "mario_tune_face.h"
 // New includes go above this line.
