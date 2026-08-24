@@ -25,6 +25,15 @@
 #ifndef MUSIC_PLAYER_FACE_H_
 #define MUSIC_PLAYER_FACE_H_
 
+/* Simple music player based on a notes array which plays the first riff I ever picked up on a guitar. 
+
+The watch face would display MUSIC in the top position and the current song state: STOP or PLAY.
+Pressing the alarm button will play trough the defined inside signal_tune[]
+
+
+
+*/
+
 #include "movement.h"
 #include <stdbool.h>
 
