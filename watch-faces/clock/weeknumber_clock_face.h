@@ -36,12 +36,13 @@
 #include "movement.h"
 
 typedef struct {
-    uint32_t previous_date_time;
+    struct {
+        watch_date_time_t previous;
+    } date_time;
     uint8_t last_battery_check;
     uint8_t watch_face_index;
-    bool signal_enabled;
+    bool time_signal_enabled;
     bool battery_low;
-    bool alarm_enabled;
 } weeknumber_clock_state_t;
 
 void weeknumber_clock_face_setup(uint8_t watch_face_index, void ** context_ptr);
