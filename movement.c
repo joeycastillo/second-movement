@@ -121,7 +121,7 @@ typedef enum {
     MOVEMENT_AWAKE_LIS2DW_COUNTING
 } movement_awake_state_lis2dw_t;
 
-static movement_awake_state_lis2dw_t _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_ASLEEP;
+static volatile movement_awake_state_lis2dw_t _awake_state_lis2dw = MOVEMENT_AWAKE_LIS2DW_ASLEEP;
 static uint32_t _total_step_count = 0;
 #if COUNT_STEPS_USE_ESPRUINO
 static int8_t _lis2dw_reinit_timer = 0;  // We reset the espruino logic when this hits zero
@@ -1011,6 +1011,7 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
     return false;
 }
 
+#if HAS_STEP_COUNT_FACE 
 void enable_disable_step_count_times(watch_date_time_t date_time) {
     if (movement_state.has_lis2dw) {
         if (movement_volatile_state.is_sleeping) return;
@@ -1167,6 +1168,53 @@ void movement_reset_step_count(void) {
 uint32_t movement_get_step_count(void) {
     return _total_step_count;
 }
+#else
+void enable_disable_step_count_times(watch_date_time_t date_time) {
+    (void)date_time;
+}
+
+bool movement_enable_step_count(bool force_enable) {
+    (void)force_enable;
+    return false;
+}
+
+bool movement_enable_step_count_multiple_attempts(uint8_t max_tries, bool force_enable) {
+    (void)max_tries;
+    (void)force_enable;
+    return false;
+}
+
+bool movement_disable_step_count(bool disable_immedietly) {
+    (void)disable_immedietly;
+    return false;
+}
+
+bool movement_step_count_is_enabled(void) {
+    return false;
+}
+bool movement_step_count_keep_on(void) {
+    return false;
+}
+
+bool movement_step_count_keep_off(void){
+    return false;
+}
+void movement_set_step_count_keep_on(bool keep_on) {
+    (void)keep_on;
+}
+
+void movement_set_step_count_keep_off(bool keep_off) {
+    (void)keep_off;
+}
+
+void movement_reset_step_count(void) {
+    return;
+}
+
+uint32_t movement_get_step_count(void) {
+    return 0;
+}
+#endif
 
 float movement_get_temperature(void) {
     float temperature_c = (float)0xFFFFFFFF;
@@ -1437,6 +1485,7 @@ void app_setup(void) {
         watch_faces[movement_state.current_face_idx].activate(watch_face_contexts[movement_state.current_face_idx]);
         movement_volatile_state.pending_events |=  1 << EVENT_ACTIVATE;
 
+#if HAS_STEP_COUNT_FACE
         if (movement_state.has_lis2dw) {
             if (movement_state.count_steps_keep_on) {
                 movement_enable_step_count_multiple_attempts(3, true);
@@ -1449,6 +1498,7 @@ void app_setup(void) {
             }
         }
     }
+#endif
 }
 
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN

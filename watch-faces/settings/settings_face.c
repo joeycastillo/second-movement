@@ -207,7 +207,7 @@ static void low_energy_setting_advance(void) {
     movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
 }
 
-#ifdef I2C_SERCOM
+#ifdef HAS_STEP_COUNT_FACE
 static void step_counter_setting_display(uint8_t subsecond) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "STEP", "SC");
     movement_step_count_option_t when_to_count_steps = movement_get_when_to_count_steps();
@@ -364,7 +364,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 #ifdef WATCH_BLUE_TCC_CHANNEL
         state->num_settings++;
 #endif
-#ifdef I2C_SERCOM
+#ifdef HAS_STEP_COUNT_FACE
         state->num_settings++;
 #endif
 
@@ -389,7 +389,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].advance = low_energy_setting_advance;
         current_setting++;
 #endif
-#ifdef I2C_SERCOM
+#ifdef HAS_STEP_COUNT_FACE
         state->settings_screens[current_setting].display = step_counter_setting_display;
         state->settings_screens[current_setting].advance = step_counter_setting_advance;
         current_setting++;

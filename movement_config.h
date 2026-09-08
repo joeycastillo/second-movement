@@ -27,9 +27,18 @@
 
 #include "movement_faces.h"
 
+/* Ability to count steps if the accelerometer board is installed.
+*/
+#ifdef I2C_SERCOM
+// To disable, set HAS_STEP_COUNT_FACE to 0 in the line below
+#define HAS_STEP_COUNT_FACE 1
+#else
+#define HAS_STEP_COUNT_FACE 0
+#endif
+
 const watch_face_t watch_faces[] = {
     clock_face,
-#ifdef I2C_SERCOM
+#ifdef HAS_STEP_COUNT_FACE
     step_counter_face,
 #endif
     world_clock_face,

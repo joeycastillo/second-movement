@@ -166,8 +166,8 @@ current one) in 3 seconds
 For each step it contains the number of iterations ago it occurred. 255 is the maximum
 */
 
-int16_t accFiltered; // last accel reading, after running through filter
-int16_t accFilteredHist[2]; // last 2 accel readings, 1=newest
+static int16_t accFiltered; // last accel reading, after running through filter
+static int16_t accFilteredHist[2]; // last 2 accel readings, 1=newest
 
 // ===============================================================
 
@@ -206,10 +206,10 @@ typedef enum {
 #define N_ACTIVE_SAMPLES 3
 
 StepState stepState;
-unsigned char holdSteps; // how many steps are we holding back?
-unsigned char stepLength; // how many poll intervals since the last step?
-int active_sample_count = 0;
-bool gate_open = false;        // start closed
+static unsigned char holdSteps; // how many steps are we holding back?
+static unsigned char stepLength; // how many poll intervals since the last step?
+static int active_sample_count = 0;
+static bool gate_open = false;        // start closed
 // ===============================================================
 
 // Init step count
