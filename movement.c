@@ -112,6 +112,7 @@ typedef struct {
 
 movement_volatile_state_t movement_volatile_state;
 
+#if HAS_STEP_COUNT_FACE
 typedef enum {
     MOVEMENT_AWAKE_LIS2DW_ASLEEP = 0,
     MOVEMENT_AWAKE_LIS2DW_JUST_WOKE,
@@ -125,6 +126,7 @@ static volatile movement_awake_state_lis2dw_t _awake_state_lis2dw = MOVEMENT_AWA
 static uint32_t _total_step_count = 0;
 #if COUNT_STEPS_USE_ESPRUINO
 static int8_t _lis2dw_reinit_timer = 0;  // We reset the espruino logic when this hits zero
+#endif
 #endif
 
 // The last sequence that we have been asked to play while the watch was in deep sleep
@@ -1011,7 +1013,7 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
     return false;
 }
 
-#if HAS_STEP_COUNT_FACE 
+#if HAS_STEP_COUNT_FACE
 void enable_disable_step_count_times(watch_date_time_t date_time) {
     if (movement_state.has_lis2dw) {
         if (movement_volatile_state.is_sleeping) return;
@@ -1497,8 +1499,8 @@ void app_setup(void) {
                 movement_enable_tap_detection_if_available(movement_state.double_tap_enabled);
             }
         }
-    }
 #endif
+    }
 }
 
 #ifndef MOVEMENT_LOW_ENERGY_MODE_FORBIDDEN
@@ -1655,6 +1657,7 @@ bool app_loop(void) {
         event_type = event_type + next_event + 1;
     }
 
+#if HAS_STEP_COUNT_FACE
     if (movement_volatile_state.tick_fired_second)
     {
         movement_volatile_state.tick_fired_second = false;
@@ -1676,6 +1679,7 @@ bool app_loop(void) {
             }
         }
     }
+#endif
 
     // handle top-of-minute tasks, if the alarm handler told us we need to
     if (movement_volatile_state.minute_alarm_fired) {
@@ -1924,8 +1928,10 @@ void cb_accelerometer_event(void) {
 }
 
 void cb_accelerometer_sleep_change_event(void) {
+#if HAS_STEP_COUNT_FACE
     _awake_state_lis2dw = HAL_GPIO_A4_read() ? MOVEMENT_AWAKE_LIS2DW_ASLEEP : MOVEMENT_AWAKE_LIS2DW_JUST_WOKE;
     _lis2dw_reinit_timer = _awake_state_lis2dw == MOVEMENT_AWAKE_LIS2DW_ASLEEP ? COUNT_STEPS_ESPRUINO_TIMEOUT_SEC : -1;
+#endif
 }
 
 void cb_accelerometer_wake(void) {
