@@ -411,7 +411,7 @@ static void _movement_handle_top_of_minute(void) {
         _movement_update_dst_offset_cache();
     }
 
-    enable_disable_step_count_times(date_time);
+    movement_enable_disable_step_count_times(date_time);
 
     for(uint8_t i = 0; i < MOVEMENT_NUM_FACES; i++) {
         // For each face that offers an advisory...
@@ -1014,7 +1014,11 @@ bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold) {
 }
 
 #if HAS_STEP_COUNT_FACE
-void enable_disable_step_count_times(watch_date_time_t date_time) {
+bool movement_has_step_count_face(void) {
+    return true;
+}
+
+void movement_enable_disable_step_count_times(watch_date_time_t date_time) {
     if (movement_state.has_lis2dw) {
         if (movement_volatile_state.is_sleeping) return;
         movement_step_count_option_t when_to_count_steps = movement_get_when_to_count_steps();
@@ -1171,7 +1175,11 @@ uint32_t movement_get_step_count(void) {
     return _total_step_count;
 }
 #else
-void enable_disable_step_count_times(watch_date_time_t date_time) {
+bool movement_has_step_count_face(void) {
+    return false;
+}
+
+void movement_enable_disable_step_count_times(watch_date_time_t date_time) {
     (void)date_time;
 }
 
@@ -1492,7 +1500,7 @@ void app_setup(void) {
             if (movement_state.count_steps_keep_on) {
                 movement_enable_step_count_multiple_attempts(3, true);
             } else {
-                enable_disable_step_count_times(movement_get_local_date_time());
+                movement_enable_disable_step_count_times(movement_get_local_date_time());
             }
 
             if (movement_state.tap_enabled) {
@@ -1576,7 +1584,7 @@ static bool _switch_face(void) {
     movement_event_t event;
     event.subsecond = 0;
     event.event_type = EVENT_ACTIVATE;
-    enable_disable_step_count_times(movement_get_local_date_time());
+    movement_enable_disable_step_count_times(movement_get_local_date_time());
     movement_state.watch_face_changed = false;
     bool can_sleep = wf->loop(event, watch_face_contexts[movement_state.current_face_idx]);
 
