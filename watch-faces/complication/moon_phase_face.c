@@ -64,9 +64,8 @@ void moon_phase_face_activate(void *context) {
 static void _update(moon_phase_state_t *state) {
     char buf[4];
     bool southern = state->southern_hemisphere;
-    watch_date_time_t date_time = watch_rtc_get_date_time();
-    uint32_t now = watch_utility_date_time_to_unix_time(date_time, movement_get_current_timezone_offset()) + state->offset;
-    date_time = watch_utility_date_time_from_unix_time(now, movement_get_current_timezone_offset());
+    uint32_t now = movement_get_utc_timestamp() + state->offset;
+    watch_date_time_t date_time = watch_utility_date_time_from_unix_time(now, movement_get_current_timezone_offset());
     double currentfrac = fmod(now - FIRST_MOON, LUNAR_SECONDS) / LUNAR_SECONDS;
     double currentday = currentfrac * LUNAR_DAYS;
     uint8_t phase_index = 0;
@@ -214,13 +213,13 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_TICK:
             // only update once an hour
-            date_time = watch_rtc_get_date_time();
+            date_time = movement_get_local_date_time();
             if ((date_time.unit.minute == 0) && (date_time.unit.second == 0)) _update(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             // update at the top of the hour OR if we're entering sleep mode with an offset.
             // also, in sleep mode, always show the current moon phase (offset = 0).
-            if (state->offset || (watch_rtc_get_date_time().unit.minute == 0)) {
+            if (state->offset || (movement_get_local_date_time().unit.minute == 0)) {
                 state->offset = 0;
                 _update(state);
             }
