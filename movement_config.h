@@ -27,8 +27,20 @@
 
 #include "movement_faces.h"
 
+/* Ability to count steps if the accelerometer board is installed.
+*/
+#ifdef I2C_SERCOM
+// To disable, set HAS_STEP_COUNT_FACE to 0 in the line below
+#define HAS_STEP_COUNT_FACE 1
+#else
+#define HAS_STEP_COUNT_FACE 0
+#endif
+
 const watch_face_t watch_faces[] = {
     clock_face,
+#ifdef HAS_STEP_COUNT_FACE
+    step_counter_face,
+#endif
     world_clock_face,
     sunrise_sunset_face,
     moon_phase_face,
@@ -101,6 +113,21 @@ const watch_face_t watch_faces[] = {
  * 3: 5 seconds
  */
 #define MOVEMENT_DEFAULT_LED_DURATION 1
+
+/* Sets how steps are counted when on the clock_face
+ * Valid values are:
+ * MOVEMENT_SC_OFF: Don't count steps on clock_face
+ * MOVEMENT_SC_ALWAYS: Always count steps on clock_face
+ * MOVEMENT_SC_DAYTIME: Count steps between MOVEMENT_STEP_COUNT_START and MOVEMENT_STEP_COUNT_END
+ * MOVEMENT_SC_NOT_INSTALLED: The LIS2DW isn't installed (the code handles this without it needing to be manally set)
+ */
+#define MOVEMENT_DEFAULT_COUNT_STEPS MOVEMENT_SC_OFF
+
+/* If the settings are set to use this start and end hor,
+    We only count steps when the step counter face is on.
+*/
+#define MOVEMENT_STEP_COUNT_START 5
+#define MOVEMENT_STEP_COUNT_END 22
 
 /* Optionally debounce button presses (disable by default).
  * A value of 4 is a good starting point if you have issues

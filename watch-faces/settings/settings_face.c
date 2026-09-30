@@ -207,6 +207,39 @@ static void low_energy_setting_advance(void) {
     movement_set_low_energy_timeout((movement_get_low_energy_timeout() + 1));
 }
 
+static void step_counter_setting_display(uint8_t subsecond) {
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "STEP", "SC");
+    movement_step_count_option_t when_to_count_steps = movement_get_when_to_count_steps();
+    if (when_to_count_steps == MOVEMENT_SC_NOT_INSTALLED) {
+        watch_display_text(WATCH_POSITION_BOTTOM, "NO SNS");
+        return;
+    }
+    char buf[9];
+    if (subsecond % 2) {
+        switch (when_to_count_steps) {
+            case MOVEMENT_SC_OFF:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "OFF", "   OFF");
+                break;
+            case MOVEMENT_SC_ALWAYS:
+                watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Always"," Alway");
+                break;
+            case MOVEMENT_SC_DAYTIME:
+                sprintf(buf, "%d-%d", get_step_count_start_hour(), get_step_count_end_hour());
+                watch_display_text(WATCH_POSITION_BOTTOM, buf);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+static void step_counter_setting_advance(void) {
+    movement_step_count_option_t when_to_count_steps = movement_get_when_to_count_steps();
+    if (when_to_count_steps == MOVEMENT_SC_NOT_INSTALLED) return;
+    movement_step_count_option_t next_mode = (when_to_count_steps + 1) % MOVEMENT_SC_NOT_INSTALLED;
+    movement_set_when_to_count_steps(next_mode);
+}
+
 static void led_duration_setting_display(uint8_t subsecond) {
     char buf[8];
 
@@ -311,6 +344,7 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(settings_state_t));
         settings_state_t *state = (settings_state_t *)*context_ptr;
+        bool has_step_count_face = movement_has_step_count_face();
         int8_t current_setting = 0;
 
         state->num_settings = 6; // baseline, without LED settings
@@ -329,6 +363,9 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 #ifdef WATCH_BLUE_TCC_CHANNEL
         state->num_settings++;
 #endif
+        if (has_step_count_face) {
+            state->num_settings++;
+        }
 
         state->settings_screens = malloc(state->num_settings * sizeof(settings_screen_t));
         state->settings_screens[current_setting].display = clock_setting_display;
@@ -351,6 +388,14 @@ void settings_face_setup(uint8_t watch_face_index, void ** context_ptr) {
         state->settings_screens[current_setting].advance = low_energy_setting_advance;
         current_setting++;
 #endif
+        if (has_step_count_face) {
+            state->settings_screens[current_setting].display = step_counter_setting_display;
+            state->settings_screens[current_setting].advance = step_counter_setting_advance;
+            current_setting++;
+        } else {
+            (void)step_counter_setting_display;
+            (void)step_counter_setting_advance;
+        }
         state->settings_screens[current_setting].display = led_duration_setting_display;
         state->settings_screens[current_setting].advance = led_duration_setting_advance;
         current_setting++;
