@@ -213,31 +213,22 @@ static void _watch_process_periodic_callbacks(void) {
      * 32Hz:  2, 6, 10, ..., 126
      * 64Hz:  1, 3, 5, ..., 127
      * 128Hz: 0, 1, 2, ..., 127
-     * 
+     *
      * Which means that only one periodic interrupt can fire for a given counter value
      * (except 128Hz which can always fire)
      */
 
-    uint32_t freq = watch_rtc_get_frequency();
-    uint32_t subsecond_mask = freq - 1;
-    uint32_t subseconds = counter & subsecond_mask;
-
-    // Find the firs non-zero bit in the counter, which can be used to determine the appropriate period (see table above).
-    uint8_t per_n = 0;
-
-    for (uint8_t i = 0; i < 7; i++) {
-        if (subseconds & (1 << i)) {
-            per_n = i + 1;
-            break;
+    uint32_t subseconds = counter & RTC_CNT_SUBSECOND_MASK;
+    // Find the first non-zero bit in the counter, which can be used to determine the appropriate period (see table above).
+    if (subseconds) {
+        uint8_t per_n = __builtin_ctz(subseconds) + 1u;
+        if (tick_callbacks[per_n]) {
+            tick_callbacks[per_n]();
         }
     }
 
-    if (tick_callbacks[per_n]) {
-        tick_callbacks[per_n]();
-    }
-
-    // 128Hz is always a match
-    if (per_n != 0 && tick_callbacks[0]) {
+    // 128Hz is every tick
+    if (tick_callbacks[0]) {
         tick_callbacks[0]();
     }
 }
@@ -263,7 +254,7 @@ void watch_rtc_register_periodic_callback(watch_cb_t callback, uint8_t frequency
     // this left-justifies the period in a 32-bit integer.
     uint32_t tmp = (frequency & 0xFF) << 24;
     // now we can count the leading zeroes to get the value we need.
-    // 0x01 (1 Hz) will have 7 leading zeros for PER7. 0xF0 (128 Hz) will have no leading zeroes for PER0.
+    // 0x01 (1 Hz) will have RTC_CNT_DIV leading zeros for PER7. 0x80 (128 Hz) will have no leading zeroes for PER0.
     uint8_t per_n = __builtin_clz(tmp);
 
     tick_callbacks[per_n] = callback;
