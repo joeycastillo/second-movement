@@ -29,14 +29,24 @@
  * CHARACTER SET FACE
  *
  * This watch face displays all of the characters in the Sensor Watch character
- * set. You can advance from one character to the next with a short press of the
- * ALARM button.
+ * set.
+ *
+ * Controls:
+ * - ALARM short press: advance to next character
+ * - ALARM long press: fast scroll forward
+ * - LIGHT short press: go back to previous character
+ * - LIGHT long press: fast scroll backward
  *
  * This watch face may be useful to watch face developers, in that it can help
  * them to understand which characters will work in different positions.
  */
 
 #include "movement.h"
+
+typedef struct {
+    char current_char;
+    bool quick_ticks_running;
+} character_set_state_t;
 
 void character_set_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void character_set_face_activate(void *context);
