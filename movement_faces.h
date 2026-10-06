@@ -85,4 +85,10 @@
 #include "tide_face.h"
 #include "world_clock2_face.h"
 #include "hydration_face.h"
+#include "stopwatch_football_face.h"
+#include "stopwatch_basketball_face.h"
+#include "stopwatch_bullseye_face.h"
+#include "stopwatch_blind_ten_face.h"
+#include "stopwatch_blackjack_face.h"
+#include "stopwatch_f1_pit_stop_face.h"
 // New includes go above this line.
