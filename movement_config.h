@@ -108,4 +108,14 @@ const watch_face_t watch_faces[] = {
 */
 #define MOVEMENT_DEBOUNCE_TICKS 0
 
+/* Optionally pre-define your location
+ * as lat*100 and lon*100 and it will be
+ * loaded in the build at initialisation.
+ * This can be overwritten subsequently
+ * on the watch via the usual method.
+*/
+// Cape Byron, NSW
+// #define MOVEMENT_DEFAULT_LATITUDE -2864
+// #define MOVEMENT_DEFAULT_LONGITUDE 15364
+
 #endif // MOVEMENT_CONFIG_H_
