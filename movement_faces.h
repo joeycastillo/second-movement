@@ -50,6 +50,7 @@
 #include "finetune_face.h"
 #include "nanosec_face.h"
 #include "mars_time_face.h"
+#include "sidereal_time_face.h"
 #include "peek_memory_face.h"
 #include "ish_face.h"
 #include "breathing_face.h"
