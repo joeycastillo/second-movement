@@ -18,6 +18,7 @@ SRCS += \
   ./watch-faces/complication/totp_lfs_face.c \
   ./watch-faces/complication/tally_face.c \
   ./watch-faces/complication/wordle_face.c \
+  ./watch-faces/complication/day_and_week_number_face.c \
   ./watch-faces/demo/all_segments_face.c \
   ./watch-faces/demo/character_set_face.c \
   ./watch-faces/demo/light_sensor_face.c \
