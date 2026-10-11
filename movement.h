@@ -84,7 +84,7 @@ typedef union {
         // altimeter to display feet or meters as easily as it tells a thermometer to display degrees in F or C.
         bool clock_mode_24h : 1;            // indicates whether clock should use 12 or 24 hour mode.
         bool use_imperial_units : 1;        // indicates whether to use metric units (the default) or imperial.
-        
+
         bool button_volume : 1;             // 0 for soft beep, 1 for loud beep. If button_should_sound (above) is false, this is ignored.
     } bit;
     uint32_t reg;
@@ -299,6 +299,8 @@ typedef struct {
     lis2dw_data_rate_t accelerometer_background_rate;
     // threshold for considering the wearer is in motion
     uint8_t accelerometer_motion_threshold;
+    // wake on motion from low-energy mode
+    bool wake_on_motion;
 
     // signal and alarm volumes
     watch_buzzer_volume_t signal_volume;
@@ -405,6 +407,12 @@ bool movement_set_accelerometer_background_rate(lis2dw_data_rate_t new_rate);
 // gets and sets the accelerometer motion threshold
 uint8_t movement_get_accelerometer_motion_threshold(void);
 bool movement_set_accelerometer_motion_threshold(uint8_t new_threshold);
+
+#define MOVEMENT_HAS_WAKE_ON_MOTION
+
+// gets and sets the wake on motion feature
+bool movement_get_wake_on_motion(void);
+void movement_set_wake_on_motion(bool value);
 
 // If the board has a temperature sensor, this function will give you the temperature in degrees celsius.
 // If the board has multiple temperature sensors, it will use the most accurate one available.

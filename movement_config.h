@@ -93,6 +93,12 @@ const watch_face_t watch_faces[] = {
  */
 #define MOVEMENT_DEFAULT_LOW_ENERGY_INTERVAL 2
 
+/* Motion sensitivity used to wake the watch from low energy mode when
+ * wake-on-motion is enabled. The value is in wake-up threshold steps of
+ * (2g / 64), so 8 corresponds to roughly 0.25 g.
+ */
+#define MOVEMENT_WAKE_ON_MOTION_THRESHOLD 8
+
 /* Set the led duration
  * Valid values are:
  * 0: No LED
