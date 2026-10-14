@@ -458,17 +458,18 @@ void sunrise_sunset_face_activate(void *context) {
     if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
 
 #if __EMSCRIPTEN__
-    int16_t browser_lat = EM_ASM_INT({
-        return lat;
-    });
-    int16_t browser_lon = EM_ASM_INT({
-        return lon;
-    });
-    if ((watch_get_backup_data(1) == 0) && (browser_lat || browser_lon)) {
-        movement_location_t browser_loc;
-        browser_loc.bit.latitude = browser_lat;
-        browser_loc.bit.longitude = browser_lon;
-        watch_store_backup_data(browser_loc.reg, 1);
+    /* In the simulator the browser exposes lat/lon as JS globals.
+     * Write them to location.u32 if not already set. */
+    int16_t browser_lat = EM_ASM_INT({ return lat; });
+    int16_t browser_lon = EM_ASM_INT({ return lon; });
+    if (browser_lat || browser_lon) {
+        movement_location_t browser_loc = {0};
+        filesystem_read_file("location.u32", (char *)&browser_loc.reg, sizeof(browser_loc.reg));
+        if (browser_loc.reg == 0) {
+            browser_loc.bit.latitude  = browser_lat;
+            browser_loc.bit.longitude = browser_lon;
+            filesystem_write_file("location.u32", (char *)&browser_loc.reg, sizeof(browser_loc.reg));
+        }
     }
 #endif
 
