@@ -161,6 +161,9 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_DOWN:
             // don't light up every time light is hit
             break;
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             movement_default_loop_handler(event);
             break;
@@ -172,4 +175,3 @@ bool mars_time_face_loop(movement_event_t event, void *context) {
 void mars_time_face_resign(void *context) {
     (void) context;
 }
-

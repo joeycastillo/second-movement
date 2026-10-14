@@ -331,6 +331,13 @@ bool fast_stopwatch_face_loop(movement_event_t event, void *context) {
             _draw_indicators(state, event, elapsed);
             _display_elapsed(state, elapsed);
             break;
+        case EVENT_TIMEOUT:
+            if (state->status == SW_STATUS_RUNNING || state->status == SW_STATUS_RUNNING_LAPPING) {
+                // explicitly ignore the timeout event so we stay on screen
+                break;
+            }
+            // otherwise we defer the timeout behavior to the default handler.
+            // fall through
         default:
             movement_default_loop_handler(event);
             break;

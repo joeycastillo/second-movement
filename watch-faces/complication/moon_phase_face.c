@@ -251,8 +251,7 @@ bool moon_phase_face_loop(movement_event_t event, void *context) {
             movement_illuminate_led();
             break;
         case EVENT_TIMEOUT:
-            // QUESTION: Should timeout reset offset to 0?
-            break;
+            // We defer the timeout behavior to the default handler.
         default:
             return movement_default_loop_handler(event);
     }

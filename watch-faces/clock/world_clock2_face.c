@@ -314,6 +314,9 @@ static bool _clock_loop(movement_event_t event, world_clock2_state_t *state)
             movement_request_tick_frequency(1);
             movement_move_to_next_face();
             break;
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             return movement_default_loop_handler(event);
     }

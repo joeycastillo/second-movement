@@ -571,12 +571,17 @@ bool sunrise_sunset_face_loop(movement_event_t event, void *context) {
             if (load_location_from_filesystem().reg == 0) {
                 // if no location set, return home
                 movement_move_to_face(0);
-            } else if (state->page || state->rise_index) {
-                // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
-                state->page = 0;
-                state->rise_index = 0;
-                movement_request_tick_frequency(1);
-                _sunrise_sunset_face_update(state);
+            } else {
+                if (state->page || state->rise_index) {
+                    // otherwise on timeout, exit settings mode and return to the next sunrise or sunset
+                    state->page = 0;
+                    state->rise_index = 0;
+                    movement_request_tick_frequency(1);
+                    _sunrise_sunset_face_update(state);
+                }
+                // Finally, we defer the timeout behavior to the default handler
+                // that may resign this watch face.
+                return movement_default_loop_handler(event);
             }
             break;
         default:

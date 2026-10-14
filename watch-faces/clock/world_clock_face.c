@@ -224,11 +224,24 @@ static bool world_clock_face_do_display_mode(movement_event_t event, world_clock
             movement_request_tick_frequency(4);
             state->current_screen = 1;
             break;
+        case EVENT_TIMEOUT:
+            // we never resign this clock face.
+            break;
         default:
             return movement_default_loop_handler(event);
     }
 
     return true;
+}
+
+// Saves the settings and switches back to the display mode.
+static bool _world_clock_face_exit_settings_mode(movement_event_t event, world_clock_state_t *state) {
+    movement_request_tick_frequency(1);
+    _update_timezone_offset(state);
+    state->current_screen = 0;
+    persist_world_clock_settings(state);
+    event.event_type = EVENT_ACTIVATE;
+    return world_clock_face_do_display_mode(event, state);
 }
 
 static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clock_state_t *state) {
@@ -243,12 +256,7 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             state->current_screen++;
             is_custom_lcd = watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM;
             if ((is_custom_lcd && state->current_screen > 4) || (!is_custom_lcd && state->current_screen > 3)) {
-                movement_request_tick_frequency(1);
-                _update_timezone_offset(state);
-                state->current_screen = 0;
-                persist_world_clock_settings(state);
-                event.event_type = EVENT_ACTIVATE;
-                return world_clock_face_do_display_mode(event, state);
+                return _world_clock_face_exit_settings_mode(event, state);
             }
             break;
         case EVENT_ALARM_BUTTON_DOWN:
@@ -272,9 +280,8 @@ static bool _world_clock_face_do_settings_mode(movement_event_t event, world_clo
             }
             break;
         case EVENT_TIMEOUT:
-            persist_world_clock_settings(state);
-            movement_move_to_face(0);
-            break;
+            // cancel the settings screen and go back to the display mode.
+            return _world_clock_face_exit_settings_mode(event, state);
         default:
             break;
     }
