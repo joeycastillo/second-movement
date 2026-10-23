@@ -36,6 +36,9 @@ static bool blink_state;
 static long blink_interval_id = - 1;
 static bool tick_state;
 static long tick_interval_id = -1;
+static uint8_t indicator_blink_com;
+static bool indicator_blink_state;
+static long indicator_blink_interval_id = -1;
 
 watch_lcd_type_t watch_get_lcd_type(void) {
 #if defined(FORCE_CUSTOM_LCD_TYPE)
@@ -104,14 +107,55 @@ void watch_start_character_blink(char character, uint32_t duration) {
     blink_interval_id = emscripten_set_interval(watch_invoke_blink_callback, (double)duration, NULL);
 }
 
+static void watch_invoke_indicator_blink_callback(void *userData) {
+    indicator_blink_state = !indicator_blink_state;
+    // on hardware, indicator blink toggles segment 0 of the selected common
+    if (indicator_blink_state) {
+        watch_set_pixel(indicator_blink_com, 0);
+    } else {
+        watch_clear_pixel(indicator_blink_com, 0);
+    }
+}
+
 void watch_start_indicator_blink_if_possible(watch_indicator_t indicator, uint32_t duration) {
-    /// TODO: For #SecondMovement, implement this on simulator
+    // Indicators can only blink on the custom LCD.
+    if (watch_get_lcd_type() != WATCH_LCD_TYPE_CUSTOM) return;
+
+    switch (indicator) {
+    case WATCH_INDICATOR_COLON:
+        indicator_blink_com = 0;
+        break;
+    case WATCH_INDICATOR_LAP:
+        indicator_blink_com = 1;
+        break;
+    case WATCH_INDICATOR_ARROWS:
+        indicator_blink_com = 2;
+        break;
+    case WATCH_INDICATOR_SLEEP:
+        indicator_blink_com = 3;
+        break;
+    default:
+        return;
+    }
+
+    if (indicator_blink_interval_id != -1) emscripten_clear_interval(indicator_blink_interval_id);
+    watch_set_pixel(indicator_blink_com, 0);
+    indicator_blink_state = true;
+    indicator_blink_interval_id = emscripten_set_interval(watch_invoke_indicator_blink_callback, (double)duration, NULL);
 }
 
 void watch_stop_blink(void) {
-    emscripten_clear_timeout(blink_interval_id);
+    emscripten_clear_interval(blink_interval_id);
     blink_interval_id = -1;
     blink_state = false;
+
+    if (indicator_blink_interval_id != -1) {
+        emscripten_clear_interval(indicator_blink_interval_id);
+        indicator_blink_interval_id = -1;
+        // the segment stays set after blinking stops, like on hardware
+        watch_set_pixel(indicator_blink_com, 0);
+    }
+    indicator_blink_state = false;
 }
 
 static void watch_invoke_tick_callback(void *userData) {
@@ -126,21 +170,40 @@ static void watch_invoke_tick_callback(void *userData) {
 }
 
 void watch_start_sleep_animation(uint32_t duration) {
-    if (tick_interval_id != -1) return;
-    watch_display_character(' ', 8);
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        // on pro LCD, we just show the sleep indicator
+        watch_set_indicator(WATCH_INDICATOR_SLEEP);
+    } else {
+        // on classic LCD we do the "tick/tock" animation
+        if (tick_interval_id != -1) return;
+        watch_display_character(' ', 8);
+        watch_display_character(' ', 9);
 
-    tick_state = true;
-    tick_interval_id = emscripten_set_interval(watch_invoke_tick_callback, (double)duration, NULL);
+        tick_state = true;
+        tick_interval_id = emscripten_set_interval(watch_invoke_tick_callback, (double)duration, NULL);
+    }
 }
 
 bool watch_sleep_animation_is_running(void) {
-    return tick_interval_id != -1;
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        // COM3, SEG0 contains the half moon icon
+        return EM_ASM_INT({
+            const e = document.querySelector("[data-com='3'][data-seg='0']");
+            return e && e.style.opacity == 1 ? 1 : 0;
+        });
+    } else {
+        return tick_interval_id != -1;
+    }
 }
 
 void watch_stop_sleep_animation(void) {
-    emscripten_clear_timeout(tick_interval_id);
-    tick_interval_id = -1;
-    tick_state = false;
+    if (watch_get_lcd_type() == WATCH_LCD_TYPE_CUSTOM) {
+        watch_clear_indicator(WATCH_INDICATOR_SLEEP);
+    } else {
+        emscripten_clear_interval(tick_interval_id);
+        tick_interval_id = -1;
+        tick_state = false;
 
-    watch_display_character(' ', 8);
+        watch_display_character(' ', 8);
+    }
 }
