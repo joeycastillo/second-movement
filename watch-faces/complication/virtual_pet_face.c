@@ -1145,7 +1145,7 @@ static bool _handle_action_menu_choice(void *context) {
             }
             break;
         case VIRTUAL_PET_ACTION_MENU_ITEM_CLEAN:
-            if (state->poops > 0 && state->sickness == 0) {
+            if (state->poops > 0) {
                 state->poops = 0;
                 return true;
             } else {
