@@ -87,6 +87,11 @@
  * - Press Alarm to go back.
  * At the end of the game, the score is displayed.
  * Did you win? Your pet will be very happy!
+ * 
+ * By the way, this watch face will consume more power than your average watch face.
+ * Game updates are always done in the background and you should not expect this to last a long time on a single CR2016 coin cell.
+ * Game updates are done every minute, only when needed. But the logic can be expensive in terms of processing power.
+ * average power consumption is to be determined.
  */
 
 
