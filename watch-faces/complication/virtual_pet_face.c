@@ -1459,6 +1459,46 @@ static bool _should_evolve(void *context) {
     }
 }
 
+uint8_t _get_time_hunger(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    switch(state->phase) {
+        case VIRTUAL_PET_PHASE_EGG:
+        case VIRTUAL_PET_PHASE_DEAD:
+            return 0;
+        case VIRTUAL_PET_PHASE_BABY:
+        case VIRTUAL_PET_PHASE_CHILD:
+            return virtual_pet_phase_attributes[state->phase].time_hunger;
+        default:
+            return virtual_pet_type_attributes[state->type].time_hunger;
+    }
+}
+uint8_t _get_time_happiness(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    switch(state->phase) {
+        case VIRTUAL_PET_PHASE_EGG:
+        case VIRTUAL_PET_PHASE_DEAD:
+            return 0;
+        case VIRTUAL_PET_PHASE_BABY:
+        case VIRTUAL_PET_PHASE_CHILD:
+            return virtual_pet_phase_attributes[state->phase].time_happiness;
+        default:
+            return virtual_pet_type_attributes[state->type].time_happiness;
+    }
+}
+uint8_t _get_time_needs(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    switch(state->phase) {
+        case VIRTUAL_PET_PHASE_EGG:
+        case VIRTUAL_PET_PHASE_DEAD:
+            return 0;
+        case VIRTUAL_PET_PHASE_BABY:
+        case VIRTUAL_PET_PHASE_CHILD:
+            return virtual_pet_phase_attributes[state->phase].time_needs;
+        default:
+            return virtual_pet_type_attributes[state->type].time_needs;
+    }
+}
+
 static void _game_logic_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
@@ -1548,25 +1588,9 @@ static void _game_logic_loop(movement_event_t event, void *context) {
     state->time_alive = get_time_alive(state);
 
     if (state->time_alive > 0 && (current_time.unit.second == 0 || event.event_type == EVENT_BACKGROUND_TASK)) {
-        uint8_t time_hunger;
-        uint8_t time_happiness;
-        uint8_t time_needs;
-        switch(state->phase) {
-            case VIRTUAL_PET_PHASE_EGG:
-            case VIRTUAL_PET_PHASE_DEAD:
-                return;
-            case VIRTUAL_PET_PHASE_BABY:
-            case VIRTUAL_PET_PHASE_CHILD:
-                time_hunger = virtual_pet_phase_attributes[state->phase].time_hunger;
-                time_happiness = virtual_pet_phase_attributes[state->phase].time_happiness;
-                time_needs = virtual_pet_phase_attributes[state->phase].time_needs;
-                break;
-            default:
-                time_hunger = virtual_pet_type_attributes[state->type].time_hunger;
-                time_happiness = virtual_pet_type_attributes[state->type].time_happiness;
-                time_needs = virtual_pet_type_attributes[state->type].time_needs;
-                break;
-        }
+        uint8_t time_hunger = _get_time_hunger(state);
+        uint8_t time_happiness = _get_time_happiness(state);
+        uint8_t time_needs = _get_time_needs(state);
 
         // Hunger
         if (state->time_alive % time_hunger == 0) {
