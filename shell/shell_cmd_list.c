@@ -29,11 +29,13 @@
 #include <stdlib.h>
 
 #include "filesystem.h"
+#include "movement.h"
 #include "watch.h"
 #include "delay.h"
 
 static int help_cmd(int argc, char *argv[]);
 static int flash_cmd(int argc, char *argv[]);
+static int settime_cmd(int argc, char *argv[]);
 static int stress_cmd(int argc, char *argv[]);
 
 shell_command_t g_shell_commands[] = {
@@ -108,6 +110,13 @@ shell_command_t g_shell_commands[] = {
         .cb = filesystem_cmd_echo,
     },
     {
+        .name = "settime",
+        .help = "set the clock; usage: settime <unix_utc>",
+        .min_args = 1,
+        .max_args = 1,
+        .cb = settime_cmd,
+    },
+    {
         .name = "stress",
         .help = "test CDC write; usage: stress [LEN] [DELAY_MS]",
         .min_args = 0,
@@ -138,6 +147,33 @@ static int flash_cmd(int argc, char *argv[]) {
     (void) argv;
 
     watch_reset_to_bootloader();
+    return 0;
+}
+
+// Set the clock from a UTC Unix timestamp, e.g. from the host:
+//   echo "settime $(date +%s)" > /dev/cu.usbmodem*
+static int settime_cmd(int argc, char *argv[]) {
+    (void) argc;
+
+    char *end = NULL;
+    uint32_t timestamp = strtoul(argv[1], &end, 10);
+    if (end == argv[1] || *end != '\0') {
+        printf("usage: settime <unix_utc>\r\n");
+        return -1;
+    }
+
+    // The RTC epoch is 2020; earlier timestamps underflow into a garbage date.
+    if (timestamp < 1577836800u /* 2020-01-01T00:00:00Z */) {
+        printf("error: timestamp must be at or after 2020-01-01\r\n");
+        return -1;
+    }
+
+    movement_set_utc_timestamp(timestamp);
+
+    watch_date_time_t dt = movement_get_local_date_time();
+    printf("time set: %04d-%02d-%02d %02d:%02d:%02d (local)\r\n",
+           dt.unit.year + WATCH_RTC_REFERENCE_YEAR, dt.unit.month, dt.unit.day,
+           dt.unit.hour, dt.unit.minute, dt.unit.second);
     return 0;
 }
 
