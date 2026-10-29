@@ -103,19 +103,19 @@
 #define VIRTUAL_PET_CHARACTER_STRING_LENGTH 3
 #define VIRTUAL_PET_DEFAULT_BUZZER_ENABLED 1
 #define VIRTUAL_PET_GRIEVING_TIME 2 // minutes after death, the game won't respond to anything.
-#define VIRTUAL_PET_WAKE_UP_HUNGRY 1
 
 #define VIRTUAL_PET_MAX_HUNGER 6
 #define VIRTUAL_PET_MAX_HAPPINESS 6
 #define VIRTUAL_PET_MAX_NEEDS 6
 #define VIRTUAL_PET_MAX_POOPS 2
 #define VIRTUAL_PET_MAX_SICKNESS 5
+#define VIRTUAL_PET_MAX_SNACKS_DAILY 35
 
 #define VIRTUAL_PET_POOP_SICKNESS_CHANCE 3 // 0-9
 #define VIRTUAL_PET_SNACK_SICKNESS_CHANCE 1 // 0-9
 #define VIRTUAL_PET_METER_EMPTY_SICKNESS_CHANCE 0 // 0-9
 #define VIRTUAL_PET_ADULT_RANDOM_SICKNESS_CHANCE 1 // 0-9
-#define VIRTUAL_PET_MEDS_NOT_WORKING_CHANCE 1 // 0-9
+#define VIRTUAL_PET_MEDS_NOT_WORKING_CHANCE 3 // 0-9
 #define VIRTUAL_PET_SLEEPING_ANIMATION_CHANCE 0 // 0-9
 
 #define VIRTUAL_PET_MAX_GAME_ROUNDS 5
@@ -275,6 +275,7 @@ typedef struct {
     uint8_t care_mistakes : 3;
     bool is_sleeping;
     bool is_eating;
+    uint8_t snacks_today : 6;
 
     virtual_pet_display_mode display_mode : 2;
     uint8_t current_menu_index : 3; // works for both menus

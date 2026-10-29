@@ -591,6 +591,7 @@ static void _setup_pet(void *context) {
     state->last_game_logic_loop_counter = 0;
     state->games_played = VIRTUAL_PET_STARTING_GAMES_PLAYED;
     state->egg_idle_animation_chance = virtual_pet_phase_animations[VIRTUAL_PET_PHASE_EGG].idle_animation_chance;
+    state->snacks_today = 0;
 
     state->current_character_animation_frame = 0;
     state->current_poop_animation_frame = 0;
@@ -720,11 +721,14 @@ static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
     } else {
         if (state->is_sleeping) {
             state->is_sleeping = false;
-            if (VIRTUAL_PET_WAKE_UP_HUNGRY) {
-                for (int i = 0; i < 3; i++) {
+            //update stats after waking up
+            for (int i = 0; i < 2; i++) {
                     if(state->hunger > 1) state->hunger--;
+                if(state->happiness > 1) state->happiness--;
+                if(state->needs < VIRTUAL_PET_MAX_NEEDS) state->needs++;
                 }
-            }
+            // reset snacks_today
+            state->snacks_today = 0;
             //ask for attention once the pet wakes up and it already needs attention
             if (state->needs_attention) {
                 _ask_for_attention(state);
@@ -1136,9 +1140,11 @@ static bool _handle_action_menu_choice(void *context) {
                 }
                 if (state->buzzer_enabled) button_beep();
                 _start_eating_animation(state);
+                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY) state->snacks_today++;
                 return true;
             } else {
                 state->happiness++;
+                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY) state->snacks_today++;
                 if (state->buzzer_enabled) button_beep();
                 _start_eating_animation(state);
                 return true;
@@ -1156,9 +1162,10 @@ static bool _handle_action_menu_choice(void *context) {
             if (state->sickness > 0) {
                 int x = random(0, 9);
                 if (x <= VIRTUAL_PET_MEDS_NOT_WORKING_CHANCE) {
-                    return false;
+                    // return true because false confuses the caretaker about the action of heal
+                    return true;
                 }
-                state->sickness--;
+                state->sickness = 0;
                 return true;
             } else {
                 return false;
@@ -1575,6 +1582,7 @@ static void _game_logic_loop(movement_event_t event, void *context) {
         }
         // Happiness
         if (state->time_alive % time_happiness == 0) {
+            if (state->snacks_today == VIRTUAL_PET_MAX_SNACKS_DAILY) _make_pet_dead(state);
             if (state->happiness == 0) {
                 if (state->phase == VIRTUAL_PET_PHASE_CHILD) state->care_mistakes++;
                 if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_METER_EMPTY_SICKNESS_CHANCE);
