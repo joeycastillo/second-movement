@@ -253,6 +253,7 @@ typedef struct {
 typedef struct {
     // Anything you need to keep track of, put it here!
     uint8_t face_idx;
+    uint32_t next_background_task_ts;
 
     rtc_counter_t start_counter : 32; // rtc counter when starting
     rtc_counter_t birth_counter : 32; // rtc counter when egg hatched
@@ -307,11 +308,12 @@ void virtual_pet_face_setup(uint8_t watch_face_index, void ** context_ptr);
 void virtual_pet_face_activate(void *context);
 bool virtual_pet_face_loop(movement_event_t event, void *context);
 void virtual_pet_face_resign(void *context);
+movement_watch_face_advisory_t virtual_pet_face_advise(void *context);
 
 #define virtual_pet_face ((watch_face_t){ \
     virtual_pet_face_setup, \
     virtual_pet_face_activate, \
     virtual_pet_face_loop, \
     virtual_pet_face_resign, \
-    NULL, \
+    virtual_pet_face_advise, \
 })
