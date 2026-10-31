@@ -254,6 +254,7 @@ typedef struct {
     // Anything you need to keep track of, put it here!
     uint8_t face_idx;
     uint32_t next_background_task_ts;
+    bool came_out_of_sleep;
 
     rtc_counter_t start_counter : 32; // rtc counter when starting
     rtc_counter_t birth_counter : 32; // rtc counter when egg hatched

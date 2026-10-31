@@ -607,12 +607,37 @@ static void _exit_menu(void *context) {
     clear_top();
 }
 
+static void wake_up_from_sleep(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    watch_stop_sleep_animation();
+    movement_request_wake();
+    // after this, it still doesn't fully wake up - the screen does not update as usual. need some help here.
+    state->came_out_of_sleep = true;
+#if __EMSCRIPTEN__
+    EM_ASM({
+    console.log('Pet face: waking up from sleep');
+    });
+#endif
+}
+static void go_back_to_sleep(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    watch_start_sleep_animation(500);
+    movement_request_sleep();
+    state->came_out_of_sleep = false;
+#if __EMSCRIPTEN__
+    EM_ASM({
+    console.log('Pet face: going back to sleep');
+    });
+#endif
+}
+
 static void bring_to_foreground(void *context) {
     // always call this before playing notes!
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     movement_move_to_face(state->face_idx);
     watch_buzzer_abort_sequence(); // no "tick" when changing face
     _exit_menu(state);
+    if (watch_sleep_animation_is_running()) wake_up_from_sleep(state);
 }
 
 static void _set_pet_type(void *context) {
@@ -711,10 +736,10 @@ static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
             state->snacks_today = 0;
             //update stats after waking up
             if (state->phase > VIRTUAL_PET_PHASE_EGG) {
-            for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < 2; i++) {
                     if(state->hunger > 1) state->hunger--;
-                if(state->happiness > 1) state->happiness--;
-                if(state->needs < VIRTUAL_PET_MAX_NEEDS) state->needs++;
+                    if(state->happiness > 1) state->happiness--;
+                    if(state->needs < VIRTUAL_PET_MAX_NEEDS) state->needs++;
                 }
             }
             //ask for attention once the pet wakes up and it already needs attention
@@ -1080,7 +1105,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
+            if (state->came_out_of_sleep == false && !watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
             _draw_pet_low_energy(state);
             break;
         default:
@@ -1541,11 +1566,11 @@ static void _game_logic_loop(movement_event_t event, void *context) {
     if (_is_sleeping_time(state, current_time)) {
         if (playing_game) _exit_menu(state);
 
-            // Next background task can be at the next full hour - because
-            // that's when it will wake up
-            uint8_t minutes_until_top_of_hour = 60 - current_time.unit.minute;
-            state->seconds_until_background_task = minutes_until_top_of_hour * 60 - current_time.unit.second;
-            _schedule_background_task(state, state->seconds_until_background_task);
+        // Next background task can be at the next full hour - because
+        // that's when it will wake up
+        uint8_t minutes_until_top_of_hour = 60 - current_time.unit.minute;
+        state->seconds_until_background_task = minutes_until_top_of_hour * 60 - current_time.unit.second;
+        _schedule_background_task(state, state->seconds_until_background_task);
         state->last_game_logic_loop_counter = current_counter;
     
         return;
@@ -1562,8 +1587,8 @@ static void _game_logic_loop(movement_event_t event, void *context) {
         // now if it should not evolve..
         if (!_should_evolve(state)) {
 
-        uint32_t phase_length_s = (60*state->minutes_to_hatch);
-        uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
+            uint32_t phase_length_s = (60*state->minutes_to_hatch);
+            uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
             
             if (seconds_until_hatch <= VIRTUAL_PET_PRE_HATCH_TIME + 1) {
                 state->egg_idle_animation_chance = 9;
@@ -1572,7 +1597,7 @@ static void _game_logic_loop(movement_event_t event, void *context) {
             } else if (seconds_until_hatch <= (60 + VIRTUAL_PET_PRE_HATCH_TIME) && seconds_until_hatch > VIRTUAL_PET_PRE_HATCH_TIME) {
                 _schedule_background_task_nosleep(state, seconds_until_hatch-VIRTUAL_PET_PRE_HATCH_TIME);
             } else {
-            state->seconds_until_background_task = seconds_until_hatch;
+                state->seconds_until_background_task = seconds_until_hatch;
                 state->seconds_until_background_task -= (state->seconds_until_background_task > 60) ? 60 : 0;
                 _schedule_background_task(state, state->seconds_until_background_task);
             }
@@ -1651,27 +1676,27 @@ static void _game_logic_loop(movement_event_t event, void *context) {
         }
 
         // plan background task for next time
-            uint32_t phase_length_s = 0;
+        uint32_t phase_length_s = 0;
 
-            //determine time for next task.
-            uint8_t times[3] = {
-                time_hunger,
-                time_happiness,
-                time_needs,
-            };
-            _determine_seconds_until_next_background_task(times, 3, state);
+        //determine time for next task.
+        uint8_t times[3] = {
+            time_hunger,
+            time_happiness,
+            time_needs,
+        };
+        _determine_seconds_until_next_background_task(times, 3, state);
         _schedule_background_task(state, state->seconds_until_background_task - current_time.unit.second);
+        
+        if (state->phase < VIRTUAL_PET_PHASE_ADULT) {
+            uint32_t s_until_evolve = 0;
+            phase_length_s = (60*virtual_pet_phase_attributes[state->phase].phase_length);
             
-            if (state->phase < VIRTUAL_PET_PHASE_ADULT) {
-                uint32_t s_until_evolve = 0;
-                phase_length_s = (60*virtual_pet_phase_attributes[state->phase].phase_length);
-                
-                s_until_evolve = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
-                if (s_until_evolve < state->seconds_until_background_task) {
-                    state->seconds_until_background_task = s_until_evolve;
+            s_until_evolve = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
+            if (s_until_evolve < state->seconds_until_background_task) {
+                state->seconds_until_background_task = s_until_evolve;
                 _schedule_background_task_nosleep(state, state->seconds_until_background_task);
-                }
             }
+        }
     } else if (state->time_alive == 0) {
         // wish I had found this edge case sooner.. If debugging and starting from a phase different
         // from egg, there would be no new background task planned. LOL
@@ -1703,7 +1728,6 @@ void virtual_pet_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void virtual_pet_face_activate(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     _exit_menu(state);
-    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
     // Handle any tasks related to your watch face coming on screen.
 }
 
@@ -1714,6 +1738,9 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_UP:
             // gotta turn off the led
             movement_default_loop_handler(event);
+            // fall through
+        case EVENT_ALARM_BUTTON_UP:
+            if (state->came_out_of_sleep) state->came_out_of_sleep = false;
             break;
         case EVENT_BACKGROUND_TASK:
             // Game logic in background
@@ -1728,6 +1755,7 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             // If we want to close the menu after a while, we would have to implement that ourselves.
             _exit_game(event, state);
             movement_move_to_face(0);
+            if (state->came_out_of_sleep) go_back_to_sleep(state);
             break;
         case EVENT_ACTIVATE:
             if (state->start_counter == 0) {
