@@ -130,7 +130,6 @@ static uint8_t get_moment_time(uint8_t moment_index, watch_date_time_t scratch_t
 static void _twilight_face_update(twilight_state_t *state) {
     char buf[14];
     double minutes, seconds;
-    bool show_next_match = false;
     uint8_t result;
     uint8_t working_moment_index;
     twilight_moment_t moment;
@@ -187,7 +186,6 @@ static void _twilight_face_update(twilight_state_t *state) {
 
     // we loop through all moments to find the current (or first) one in the future
     working_moment_index = state->moment_index;
-    uint8_t initial_moment_index = working_moment_index;
 
     if (working_moment_index >= 8) {
        // moment index is past the next astronomical dawn, which is tomorrow
@@ -659,11 +657,11 @@ bool twilight_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_LONG_PRESS:
             if (state->page == 0) {
-            if (state->longLatToUse != 0) {
-                state->longLatToUse = 0;
-                _twilight_face_update(state);
-                break;
-            }
+                if (state->longLatToUse != 0) {
+                    state->longLatToUse = 0;
+                    _twilight_face_update(state);
+                    break;
+                }
                 state->page++;
                 state->active_digit = 0;
                 watch_clear_display();
@@ -678,16 +676,8 @@ bool twilight_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
-            if (load_location_from_filesystem().reg == 0) {
-                // if no location set, return home
-                movement_move_to_face(0);
-            } else if (state->page || state->moment_index) {
-                // otherwise on timeout, exit settings mode and return to the next moment
-                state->page = 0;
-                state->moment_index = 0;
-                movement_request_tick_frequency(1);
-                _twilight_face_update(state);
-            }
+            // on timeout simply return to main face, even if in setup mode
+            movement_move_to_face(0);
             break;
         default:
             return movement_default_loop_handler(event);
