@@ -837,6 +837,21 @@ void movement_store_settings(void) {
     }
 }
 
+void movement_store_location(void) {
+#if defined(MOVEMENT_DEFAULT_LATITUDE) && defined(MOVEMENT_DEFAULT_LONGITUDE)
+    movement_location_t movement_location;
+    movement_location_t current_location;
+
+    movement_location.bit.latitude = MOVEMENT_DEFAULT_LATITUDE;
+    movement_location.bit.longitude = MOVEMENT_DEFAULT_LONGITUDE;
+
+    filesystem_read_file("location.u32", (char *) &current_location.reg, sizeof(movement_location_t));
+    if (current_location.reg == 0) {
+        filesystem_write_file("location.u32", (char *) &movement_location.reg, sizeof(movement_location_t));
+    }
+#endif
+}
+
 bool movement_alarm_enabled(void) {
     return movement_state.alarm_enabled;
 }
@@ -1045,6 +1060,7 @@ void app_init(void) {
         movement_state.settings.bit.led_duration = MOVEMENT_DEFAULT_LED_DURATION;
 
         movement_store_settings();
+        movement_store_location();
     }
 
     watch_date_time_t date_time = watch_rtc_get_date_time();
