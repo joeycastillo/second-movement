@@ -1502,7 +1502,7 @@ static bool _should_evolve(void *context) {
     }
 }
 
-uint8_t _get_time_hunger(void *context) {
+static uint8_t _get_time_hunger(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     switch(state->phase) {
         case VIRTUAL_PET_PHASE_EGG:
@@ -1515,7 +1515,7 @@ uint8_t _get_time_hunger(void *context) {
             return virtual_pet_type_attributes[state->type].time_hunger;
     }
 }
-uint8_t _get_time_happiness(void *context) {
+static uint8_t _get_time_happiness(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     switch(state->phase) {
         case VIRTUAL_PET_PHASE_EGG:
@@ -1528,7 +1528,7 @@ uint8_t _get_time_happiness(void *context) {
             return virtual_pet_type_attributes[state->type].time_happiness;
     }
 }
-uint8_t _get_time_needs(void *context) {
+static uint8_t _get_time_needs(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     switch(state->phase) {
         case VIRTUAL_PET_PHASE_EGG:
@@ -1542,7 +1542,7 @@ uint8_t _get_time_needs(void *context) {
     }
 }
 
-static void _game_logic_loop(movement_event_t event, void *context) {
+static void _game_logic_loop(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
     rtc_counter_t current_counter = watch_rtc_get_counter();
@@ -1744,7 +1744,7 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_BACKGROUND_TASK:
             // Game logic in background
-            _game_logic_loop(event, state);
+            _game_logic_loop(state);
             // for low power display drawing, it's EVENT_LOW_ENERGY_UPDATE
 #if VIRTUAL_PET_BACKGROUND_TASK_TUNE
             movement_play_sequence(virtual_pet_background_task_tune, BUZZER_PRIORITY_SIGNAL);
