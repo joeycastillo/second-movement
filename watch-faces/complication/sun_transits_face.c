@@ -424,7 +424,7 @@ static double sun_transits_display_all(double julian_now_date_exact) {
     #endif
 
     // find Julian date of next transit
-    double next_transit_julian_date = find_solar_transit(next_transit_longitude,julian_now_date_exact,0.01);
+    double next_transit_julian_date = find_solar_transit(next_transit_longitude,julian_now_date_exact,SUN_TRANSIT_SEARCH_INCREMENT);
 
     #if __EMSCRIPTEN__
         snprintf( logbuf, sizeof(logbuf), "Julian date next transit = %f", next_transit_julian_date);
@@ -487,6 +487,12 @@ static double sun_transits_display_all(double julian_now_date_exact) {
 }
 
 static double sun_transits_display_sun_transits(double julian_date) {
+    // display CALC message for when the calculation is slow
+    watch_clear_decimal_if_available();
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "TRA", "TR");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
+    watch_display_text(WATCH_POSITION_BOTTOM, "-CALC-");
+
     return sun_transits_display_all(julian_date);
 }
 

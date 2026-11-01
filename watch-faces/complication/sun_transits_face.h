@@ -70,12 +70,26 @@
  * If today is the date of a displayed transit, the Bell indicator
  * is energised to alert the user to the fact.
  *
+ * As the calculations can take some time (~6s at 0.01 INCREMENT
+ * and ~2s at 0.04 INCREMENT), the face starts with '-CALC-'
+ * in the display, until the calculations are finished.
+ *
+ * TODO: Refine the calculations, as they take appreciable time to complete
+ * and may also present the wrong date, if the transit event is within
+ * INCREMENT hours of local midnight.
+ *
  */
 
 #include "movement.h"
 
 #define SUN_TRANSIT_MINIMUM_DAY_GAP 44
 #define SUN_TRANSIT_MAXIMUM_DAY_GAP 48
+
+// incremental search as day fraction
+// (the smaller it is, the longer the calculation)
+// compromises between accuracy and speed
+// 0.04 is roughly one hour
+#define SUN_TRANSIT_SEARCH_INCREMENT 0.04
 
 typedef struct {
     struct {
