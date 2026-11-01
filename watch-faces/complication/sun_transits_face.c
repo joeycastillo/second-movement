@@ -79,6 +79,7 @@ static movement_location_t load_location_from_filesystem() {
 
 static uint8_t hemisphere() {
     // the hemisphere determines the six-month offset for named transits
+    // (and defaults to northern hemisphere, as most users probably live there)
 
     // return +1 for northern hemisphere
     // return -1 for southern hemisphere
@@ -321,31 +322,6 @@ static watch_date_time_t julian_date_to_date_time(double jd)
     return dt;
 }
 
-static watch_date_time_t convert_julian_date_to_gregorian_date(double jd) {
-
-    // algorithm provided by ChatGPT
-
-    watch_date_time_t gregorian_date;
-    uint32_t l, n, i, j, d, m, y;
-
-    l = jd + 68569;
-    n = (4*l) / 146097;
-    l = l - (146097*n + 3)/4;
-    i = (4000*(l+1))/1461001;
-    l = l - (1461*i)/4 + 31;
-    j = (80*l)/2447;
-    d = l - (2447*j)/80;
-    l = j/11;
-    m = j + 2 - 12*l;
-    y = 100*(n-49) + i + l;
-
-    gregorian_date.unit.year  = y;
-    gregorian_date.unit.month = m;
-    gregorian_date.unit.day   = d;
-
-    return gregorian_date;
-}
-
 #define M_PI 3.1415926535897932384
 
 static double degrees_to_radians(double degrees) {
@@ -353,30 +329,6 @@ static double degrees_to_radians(double degrees) {
 }
 static double dsin(double degrees) {
     return sin(degrees_to_radians(degrees));
-}
-
-static double solar_longitude_2(double jd) {
-
-    // calculate **approximate** solar longitude for a Julian date
-
-    // (calculation offered by ChatGPT)
-
-    double T = (jd - 2451545.0) / 36525.0;
-
-    double L0 = 280.46646
-       + 36000.76983 * T
-       + 0.0003032 * T*T;
-
-    double M = 357.52911
-      + 35999.05029 * T
-      - 0.0001537 * T*T;
-
-    double C = (1.914602 - 0.004817*T - 0.000014*T*T) * dsin(M)
-      + (0.019993 - 0.000101*T) * dsin(2*M)
-      + 0.000289 * dsin(3*M);
-
-    double longitude = L0 + C;
-    return longitude;
 }
 
 static double true_solar_longitude(double jd) {
@@ -392,7 +344,7 @@ static double true_solar_longitude(double jd) {
     // Geom Mean Anom Sun (deg)
     double J = 357.52911 + G * (35999.05029 - 0.0001537 * G);
     // Eccent Earth Orbit
-    double K = 0.016708634 - G * (0.000042037 + 0.0000001267 * G);
+    // double K = 0.016708634 - G * (0.000042037 + 0.0000001267 * G);
     // Sun Eq of Ctr
     double L = dsin(J) * (1.914602 - G * (0.004817 + 0.000014 * G ))
                + dsin(2*J) * (0.019993 - 0.000101 * G) + dsin(3*J) * 0.000289;
@@ -400,21 +352,6 @@ static double true_solar_longitude(double jd) {
     double M = I + L;
 
     return M;
-}
-
-static double solar_longitude_usmil(double jd) {
-
-    // calculate **approximate** solar longitude for a Julian date
-
-    // calculation taken from US Navy site
-    //   https://aa.usno.navy.mil/faq/sun_approx
-
-    // adjust jd to j2000
-    double jd_2000 = jd - 2451545.0;
-    double g = fmod(357.529 + 0.98560028 * jd_2000,360.0);
-    double q = fmod(280.459 + 0.98564736 * jd_2000,360.0);
-    double longitude = fmod(q + 1.915 * dsin(g) + 0.020 * dsin(2*g),360.0);
-    return longitude;
 }
 
 static double find_solar_transit(double target_longitude, double starting_julian_date, double increment) {
@@ -447,15 +384,11 @@ static double find_solar_transit(double target_longitude, double starting_julian
 // static void sun_transits_display_all(watch_date_time_t date_time) {
 static double sun_transits_display_all(double julian_now_date_exact) {
     char buf[8 + 1];
-    int net_degrees;
-    int net_seconds;
-    float net_time;
 
-    double jd, longitude, julian_date;
-    int jd_frac,jd_int;
-
+    #if __EMSCRIPTEN__
     char logbuf[48];
-/*
+    #endif
+    /*
     // testing each transit
     julian_now_date_exact = 2461310; // 225 deg
     julian_now_date_exact = 2461360; // 270 deg
@@ -464,12 +397,12 @@ static double sun_transits_display_all(double julian_now_date_exact) {
     julian_now_date_exact = 2461500; // 45 deg
     julian_now_date_exact = 2461560; // 90 deg
     julian_now_date_exact = 2461590; // 135 deg
-*/
+    */
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Julian date today = %f", julian_now_date_exact);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        snprintf( logbuf, sizeof(logbuf), "Julian date today = %f", julian_now_date_exact);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     // convert current Julian date to YMD-HMS to check calculation
     // watch_date_time_t now_date_check = julian_date_to_date_time(julian_now_date_exact);
@@ -477,34 +410,34 @@ static double sun_transits_display_all(double julian_now_date_exact) {
     // get current solar longitude
     double current_solar_longitude = true_solar_longitude(julian_now_date_exact);
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Current solar longitude = %f", current_solar_longitude);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        snprintf( logbuf, sizeof(logbuf), "Current solar longitude = %f", current_solar_longitude);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     // calculate next transit longitude (multiple of 45)
     double next_transit_longitude = (int)(current_solar_longitude/45+1) * 45;
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Next transit longitude = %f", next_transit_longitude);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        snprintf( logbuf, sizeof(logbuf), "Next transit longitude = %f", next_transit_longitude);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     // find Julian date of next transit
     double next_transit_julian_date = find_solar_transit(next_transit_longitude,julian_now_date_exact,0.01);
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Julian date next transit = %f", next_transit_julian_date);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        snprintf( logbuf, sizeof(logbuf), "Julian date next transit = %f", next_transit_julian_date);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
-/*
-#if __EMSCRIPTEN__
-    // check that next transit's calculated longitude is as expected
-    snprintf( logbuf, sizeof(logbuf), "Next transit longitude check = %f", true_solar_longitude(next_transit_julian_date));
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
-*/
+    /*
+    #if __EMSCRIPTEN__
+        // check that next transit's calculated longitude is as expected
+        snprintf( logbuf, sizeof(logbuf), "Next transit longitude check = %f", true_solar_longitude(next_transit_julian_date));
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
+    */
 
     // convert next transit Julian date to YMD-HMS
     watch_date_time_t next_transit_date = julian_date_to_date_time(next_transit_julian_date);
@@ -514,17 +447,17 @@ static double sun_transits_display_all(double julian_now_date_exact) {
     timestamp += (double)movement_get_timezone_offset_for_date(next_transit_date);
     next_transit_date = watch_utility_date_time_from_unix_time(timestamp, 0);
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), 
-        "Next transit date = %4d-%02d-%02d %02d:%02d:%02d",
-        next_transit_date.unit.year+WATCH_RTC_REFERENCE_YEAR,
-        next_transit_date.unit.month,
-        next_transit_date.unit.day,
-        next_transit_date.unit.hour,
-        next_transit_date.unit.minute,
-        next_transit_date.unit.second);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        snprintf( logbuf, sizeof(logbuf),
+            "Next transit date = %4d-%02d-%02d %02d:%02d:%02d",
+            next_transit_date.unit.year+WATCH_RTC_REFERENCE_YEAR,
+            next_transit_date.unit.month,
+            next_transit_date.unit.day,
+            next_transit_date.unit.hour,
+            next_transit_date.unit.minute,
+            next_transit_date.unit.second);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     // display next transit date on watch face
     snprintf(
@@ -584,7 +517,9 @@ bool sun_transits_face_loop(movement_event_t event, void *context) {
     watch_date_time_t current;
     double current_julian_date;
     static double last_transit_event_julian_date;
+    #if __EMSCRIPTEN__
     char logbuf[48];
+    #endif
 
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
@@ -599,10 +534,10 @@ bool sun_transits_face_loop(movement_event_t event, void *context) {
             // get current Julian date
             current_julian_date = convert_date_to_julian_date(current);
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Starting Julian date today = %f", current_julian_date);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+            #if __EMSCRIPTEN__
+                snprintf( logbuf, sizeof(logbuf), "Starting Julian date today = %f", current_julian_date);
+                emscripten_log(EM_LOG_CONSOLE, logbuf);
+            #endif
 
             // save last event's Julian date
             last_transit_event_julian_date = sun_transits_display_sun_transits(current_julian_date);
@@ -613,22 +548,26 @@ bool sun_transits_face_loop(movement_event_t event, void *context) {
 
         case EVENT_LIGHT_BUTTON_UP:
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Previous Julian date target = %f", last_transit_event_julian_date-SUN_TRANSIT_MAXIMUM_DAY_GAP-2);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+            #if __EMSCRIPTEN__
+                snprintf( logbuf, sizeof(logbuf), "Previous Julian date target = %f",
+                    last_transit_event_julian_date-SUN_TRANSIT_MAXIMUM_DAY_GAP-2);
+                emscripten_log(EM_LOG_CONSOLE, logbuf);
+            #endif
             // jump back to just before the previous transit
-            last_transit_event_julian_date = sun_transits_display_sun_transits(last_transit_event_julian_date-SUN_TRANSIT_MAXIMUM_DAY_GAP-2);
+            last_transit_event_julian_date =
+                sun_transits_display_sun_transits(last_transit_event_julian_date-SUN_TRANSIT_MAXIMUM_DAY_GAP-2);
             break;
 
         case EVENT_ALARM_BUTTON_UP:
 
-#if __EMSCRIPTEN__
-    snprintf( logbuf, sizeof(logbuf), "Next Julian date target = %f", last_transit_event_julian_date+SUN_TRANSIT_MINIMUM_DAY_GAP);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+            #if __EMSCRIPTEN__
+                snprintf( logbuf, sizeof(logbuf), "Next Julian date target = %f",
+                    last_transit_event_julian_date+SUN_TRANSIT_MINIMUM_DAY_GAP);
+                emscripten_log(EM_LOG_CONSOLE, logbuf);
+            #endif
             // jump forward to just before the next transit
-            last_transit_event_julian_date = sun_transits_display_sun_transits(last_transit_event_julian_date+SUN_TRANSIT_MINIMUM_DAY_GAP);
+            last_transit_event_julian_date =
+                sun_transits_display_sun_transits(last_transit_event_julian_date+SUN_TRANSIT_MINIMUM_DAY_GAP);
             break;
 
         case EVENT_ALARM_LONG_PRESS:
