@@ -142,29 +142,28 @@ static double dsin(double degrees) {
     return sin(degrees_to_radians(degrees));
 }
 
-static double get_GMST(double jd, watch_date_time_t utc_dt) {
+static double get_GMST(watch_date_time_t utc_dt) {
+
+    double jd = convert_date_to_julian_date(utc_dt);
     double DTT = jd - 2451545.0;
 
-    double H = (double)utc_dt.unit.hour + (double)utc_dt.unit.minute / 60 + (double)utc_dt.unit.second / 3600;
+    // double H = (double)utc_dt.unit.hour + (double)utc_dt.unit.minute / 60 + (double)utc_dt.unit.second / 3600;
 
     // Also compute T the number of TT centuries since the year 2000.
-
-    double T = DTT / 36525;
+    // double T = DTT / 36525;
 
     // Then the Greenwich mean sidereal time in hours is:
-
     // double GMST = mod (6.697375 + 0.065707485828 DUT + 1.0027379 H + 0.0854103 T + 0.0000258 T2, 24) h
 
     // Or, assuming JDTT = JDUT :
 
     // this alternative formula can be used for approximate GMST at 0h UT
     // with a loss of precision of 0.1 second per century:
-
     double GMST = fmod (18.697375 + 24.065709824279 * DTT, 24);
 
     // GAST is obtained by adding a correction to the Greenwich mean sidereal time computed above. 
 
-    // longitude of ascending noe of the moon
+    // longitude of ascending node of the moon
     double omega = 125.04 - 0.052954 * DTT;
     // Mean Longitude of the Sun
     double L = 280.47 + 0.98565 * DTT;
@@ -179,31 +178,32 @@ static double get_GMST(double jd, watch_date_time_t utc_dt) {
 
     GMST = GAST;
 
-#if __EMSCRIPTEN__
-    char logbuf[48];
-    sprintf(logbuf, "Date time %02d:%02d:%02d -> GMST %f", utc_dt.unit.hour, utc_dt.unit.minute, utc_dt.unit.second, GMST);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-    sprintf(logbuf, "eqeq %f, GAST %f", eqeq, GAST);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        char logbuf[48];
+        sprintf(logbuf, "Date time %02d:%02d:%02d -> GMST %f", utc_dt.unit.hour, utc_dt.unit.minute, utc_dt.unit.second, GMST);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+        sprintf(logbuf, "eqeq %f, GAST %f", eqeq, GAST);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     return GMST;
 }
 
-static void sidereal_time_display_all(sidereal_time_state_t *state, watch_date_time_t date_time) {
-    char buf[8 + 1];
+static void sidereal_time_display_all() {
+    char buf[10 + 1];
 
     watch_date_time_t rtc_date_time = watch_rtc_get_date_time();
-
-    double jd = convert_date_to_julian_date(rtc_date_time);
-    double gmst = get_GMST(jd,rtc_date_time);
+    double gmst = get_GMST(rtc_date_time);
 
     movement_location_t movement_location;
-    // if (state->longLatToUse == 0 || _location_count <= 1)
+    /* // TODO: use location presets
+    if (state->longLatToUse == 0 || _location_count <= 1)
         movement_location = load_location_from_filesystem();
-    // else{
-        // movement_location.bit.longitude = longLatPresets[state->longLatToUse].longitude;
-    // }
+    else{
+        movement_location.bit.longitude = longLatPresets[state->longLatToUse].longitude;
+    }
+    */
+    movement_location = load_location_from_filesystem();
     double lon = (double)movement_location.bit.longitude / 100.0;
 
     double lst = gmst + (lon / 15.0);
@@ -214,23 +214,22 @@ static void sidereal_time_display_all(sidereal_time_state_t *state, watch_date_t
     uint8_t sid_minute = (int)minute_second;
     uint8_t sid_second = (int)((minute_second - sid_minute)*60);
 
-#if __EMSCRIPTEN__
-    char logbuf[50];
-    sprintf(logbuf, "GMST %f + long %f = lst %f", gmst, lon/15, lst);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-    sprintf(logbuf, "");
-    sprintf(logbuf, "Sidereal = %2d:%02d:%02d", sid_hour, sid_minute, sid_second);
-    emscripten_log(EM_LOG_CONSOLE, logbuf);
-#endif
+    #if __EMSCRIPTEN__
+        char logbuf[50];
+        sprintf(logbuf, "GMST %f + long %f = lst %f", gmst, lon/15, lst);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+        sprintf(logbuf, "");
+        sprintf(logbuf, "Sidereal = %2d:%02d:%02d", sid_hour, sid_minute, sid_second);
+        emscripten_log(EM_LOG_CONSOLE, logbuf);
+    #endif
 
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Sid", "Sd");
-    sprintf(buf, "");
     sprintf( buf, "%2d%02d%02d", sid_hour, sid_minute, sid_second);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
 
-static void sidereal_time_display_sidereal_time(sidereal_time_state_t *state, watch_date_time_t current) {
-    sidereal_time_display_all(state, current);
+static void sidereal_time_display_sidereal_time() {
+    sidereal_time_display_all();
 }
 
 void sidereal_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -241,11 +240,8 @@ void sidereal_time_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     }
 }
 
-
 void sidereal_time_face_activate(void *context) {
     sidereal_time_state_t *state = (sidereal_time_state_t *) context;
-
-    // sidereal_time_indicate_time_signal(false);
 
     watch_set_colon();
 
@@ -264,20 +260,16 @@ bool sidereal_time_face_loop(movement_event_t event, void *context) {
         case EVENT_ACTIVATE:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Sid", "Sd");
             current = movement_get_utc_date_time();
-
-            sidereal_time_display_sidereal_time(state, current);
-
+            sidereal_time_display_sidereal_time();
             sidereal_time_check_battery_periodically(state, current);
-
             state->date_time.previous = current;
-
             break;
         case EVENT_ALARM_LONG_PRESS:
             break;
         case EVENT_BACKGROUND_TASK:
-            // uncomment this line to snap back to the sidereal_time face when the hour signal sounds:
-            // movement_move_to_face(state->watch_face_index);
-            // movement_play_signal();
+            break;
+        case EVENT_TIMEOUT:
+            // ignore timeout and remain on this face
             break;
         default:
             return movement_default_loop_handler(event);
