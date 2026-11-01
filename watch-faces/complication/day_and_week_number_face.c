@@ -42,8 +42,8 @@
 #endif
 
 static void day_and_week_number_display_all(watch_date_time_t date_time) {
-    char daybuf[2 + 1];
-    char dayweekbuf[6 + 1];
+    char daybuf[3 + 1];
+    char dayweekbuf[10 + 1];
     uint8_t weeknumber = watch_utility_get_weeknumber(date_time.unit.year+WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
     uint16_t daynumber = watch_utility_days_since_new_year(date_time.unit.year+WATCH_RTC_REFERENCE_YEAR, date_time.unit.month, date_time.unit.day);
 
@@ -97,22 +97,25 @@ bool day_and_week_number_face_loop(movement_event_t event, void *context) {
     switch (event.event_type) {
         case EVENT_LOW_ENERGY_UPDATE:
             break;
-        case EVENT_TICK:
         case EVENT_ACTIVATE:
             current = movement_get_local_date_time();
-
+            day_and_week_number_display_day_and_week_number(current);
+            break;
+        case EVENT_TICK:
+            current = movement_get_local_date_time();
             if (current.unit.day != state->date_time.previous.unit.day) {
-                // only need to update on activation or if the current day ticks over
+                // only need to update if the current day ticks over
                 day_and_week_number_display_day_and_week_number(current);
             }
             state->date_time.previous = current;
-
             break;
         case EVENT_ALARM_BUTTON_UP:
             break;
         case EVENT_ALARM_LONG_PRESS:
             break;
-        case EVENT_BACKGROUND_TASK:
+        case EVENT_TIMEOUT:
+            // on timeout return to main face
+            movement_move_to_face(0);
             break;
         default:
             return movement_default_loop_handler(event);
@@ -123,11 +126,4 @@ bool day_and_week_number_face_loop(movement_event_t event, void *context) {
 
 void day_and_week_number_face_resign(void *context) {
     (void) context;
-}
-
-movement_watch_face_advisory_t day_and_week_number_face_advise(void *context) {
-    movement_watch_face_advisory_t retval = { 0 };
-    day_and_week_number_face_state_t *state = (day_and_week_number_face_state_t *) context;
-
-    return retval;
 }

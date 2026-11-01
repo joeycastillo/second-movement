@@ -60,7 +60,6 @@ movement_watch_face_advisory_t day_and_week_number_face_advise(void *context);
     day_and_week_number_face_activate, \
     day_and_week_number_face_loop, \
     day_and_week_number_face_resign, \
-    day_and_week_number_face_advise, \
 })
 
 #endif // DAY_AND_WEEK_NUMBER_FACE_H_
