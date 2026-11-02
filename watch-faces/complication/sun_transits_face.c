@@ -77,7 +77,7 @@ static movement_location_t load_location_from_filesystem() {
     return location;
 }
 
-static uint8_t hemisphere() {
+static int8_t hemisphere() {
     // the hemisphere determines the six-month offset for named transits
     // (and defaults to northern hemisphere, as most users probably live there)
 
@@ -87,12 +87,10 @@ static uint8_t hemisphere() {
 
     movement_location_t movement_location;
     movement_location = load_location_from_filesystem();
+    int16_t latitude = movement_location.bit.latitude;
 
-    if (movement_location.reg == 0 || movement_location.bit.latitude > 0) {
-       return 1;
-    } else if (movement_location.bit.latitude < 0) {
-       return -1;
-    }
+    if (movement_location.reg == 0 || latitude > 0) { return 1; }
+    if (latitude < 0) { return -1; }
     return 0;
 }
 
@@ -106,21 +104,21 @@ static void watch_display_transit_event_text(double transit_angle) {
     char daynum[2+1];
     uint16_t t_angle = transit_angle;
 
-    // southern hemisphere (or equator) has transit names shifted by six months
-    if (hemisphere() < 0) {
+    // northern hemisphere (or equator) has transit names shifted by six months
+    if (hemisphere() >= 0) {
         t_angle = ((int)transit_angle + 180) % 360;
     }
     /*
-    Transit angles and their names
-    0     March equinox "ME" "VE"
-    45    cross-quarter "CQ" "Be" Beltane
-    90    June solstice "JS" "SS" "MS"
-    135   cross-quarter "CQ" "Lu" Lughnasadh "La" (Lammas)
-    180   September equinox "SE"
-    225   cross-quarter "CQ" "Sa"  Samhain
-    270   December solstice "DS" "WS" "MW"
-    315   cross-quarter "CQ" "Im"  Imbolc
-    360   March equinox again
+    * Transit angles and their names
+    * 0     March equinox "ME" "VE"
+    * 45    cross-quarter "CQ" "Be" Beltane
+    * 90    June solstice "JS" "SS" "MS"
+    * 135   cross-quarter "CQ" "Lu" Lughnasadh "La" (Lammas)
+    * 180   September equinox "SE"
+    * 225   cross-quarter "CQ" "Sa"  Samhain
+    * 270   December solstice "DS" "WS" "MW"
+    * 315   cross-quarter "CQ" "Im"  Imbolc
+    * 360   March equinox again
     */
     // transit type is displayed in the Day digits
     // for both LCD types
