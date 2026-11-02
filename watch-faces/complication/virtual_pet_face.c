@@ -607,37 +607,14 @@ static void _exit_menu(void *context) {
     clear_top();
 }
 
-static void wake_up_from_sleep(void *context) {
-    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    watch_stop_sleep_animation();
-    movement_request_wake();
-    // after this, it still doesn't fully wake up - the screen does not update as usual. need some help here.
-    state->came_out_of_sleep = true;
-#if __EMSCRIPTEN__
-    EM_ASM({
-    console.log('Pet face: waking up from sleep');
-    });
-#endif
-}
-static void go_back_to_sleep(void *context) {
-    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    watch_start_sleep_animation(500);
-    movement_request_sleep();
-    state->came_out_of_sleep = false;
-#if __EMSCRIPTEN__
-    EM_ASM({
-    console.log('Pet face: going back to sleep');
-    });
-#endif
-}
-
 static void bring_to_foreground(void *context) {
     // always call this before playing notes!
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     movement_move_to_face(state->face_idx);
     watch_buzzer_abort_sequence(); // no "tick" when changing face
     _exit_menu(state);
-    if (watch_sleep_animation_is_running()) wake_up_from_sleep(state);
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
+    movement_request_wake();
 }
 
 static void _set_pet_type(void *context) {
@@ -1118,7 +1095,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             _draw_buzzer_enabled(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
-            if (state->came_out_of_sleep == false && !watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
+            if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
             _draw_pet_low_energy(state);
             break;
         default:
@@ -1751,9 +1728,6 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_UP:
             // gotta turn off the led
             movement_default_loop_handler(event);
-            // fall through
-        case EVENT_ALARM_BUTTON_UP:
-            if (state->came_out_of_sleep) state->came_out_of_sleep = false;
             break;
         case EVENT_BACKGROUND_TASK:
             // Game logic in background
@@ -1768,7 +1742,6 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             // If we want to close the menu after a while, we would have to implement that ourselves.
             _exit_game(event, state);
             movement_move_to_face(0);
-            if (state->came_out_of_sleep) go_back_to_sleep(state);
             break;
         case EVENT_ACTIVATE:
             if (state->start_counter == 0) {
