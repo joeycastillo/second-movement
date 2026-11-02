@@ -883,6 +883,13 @@ static void _draw_attention(void *context) {
     else watch_clear_indicator(WATCH_INDICATOR_BELL);
 }
 
+static void _draw_buzzer_enabled(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    // don't draw while dead or while sleeping.
+    if (state->buzzer_enabled) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+}
+
 static void _draw_little_ghost(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->phase != VIRTUAL_PET_PHASE_DEAD) return;
@@ -919,6 +926,7 @@ static void _draw_pet(void *context) {
     _draw_character(state);
     // only update when not eating for added gameplay
     if (state->phase > VIRTUAL_PET_PHASE_EGG && !state->is_eating) _draw_attention(state);
+    _draw_buzzer_enabled(state);
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
         _draw_sickness(state);
@@ -1104,6 +1112,10 @@ static bool _pet_loop(movement_event_t event, void *context) {
                     if (state->buzzer_enabled) button_beep();
                     break;
             }
+            break;
+        case EVENT_ALARM_LONG_PRESS:
+            state->buzzer_enabled ^= 1;
+            _draw_buzzer_enabled(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
             if (state->came_out_of_sleep == false && !watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
