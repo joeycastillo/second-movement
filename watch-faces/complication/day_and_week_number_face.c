@@ -113,6 +113,8 @@ bool day_and_week_number_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_LONG_PRESS:
             break;
+        // case EVENT_BACKGROUND_TASK:
+        //     break;
         case EVENT_TIMEOUT:
             // on timeout return to main face
             movement_move_to_face(0);
@@ -126,4 +128,16 @@ bool day_and_week_number_face_loop(movement_event_t event, void *context) {
 
 void day_and_week_number_face_resign(void *context) {
     (void) context;
+}
+
+movement_watch_face_advisory_t day_and_week_number_face_advise(void *context) {
+    movement_watch_face_advisory_t retval = { 0 };
+    day_and_week_number_face_state_t *state = (day_and_week_number_face_state_t *) context;
+
+    if (state->time_signal_enabled) {
+        watch_date_time_t date_time = movement_get_utc_date_time();
+        retval.wants_background_task = date_time.unit.minute == 0;
+    }
+
+    return retval;
 }

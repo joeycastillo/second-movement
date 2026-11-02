@@ -38,7 +38,7 @@
  * Displays the current week and day number for the year in the lower digits as 'ndddww'.
  * The upper digits show the weekday and the month day number.
  *
- */
+*/
 
 #include "movement.h"
 
@@ -47,6 +47,7 @@ typedef struct {
         watch_date_time_t previous;
     } date_time;
     uint8_t watch_face_index;
+    bool time_signal_enabled;
 } day_and_week_number_face_state_t;
 
 void day_and_week_number_face_setup(uint8_t watch_face_index, void ** context_ptr);
@@ -60,6 +61,7 @@ movement_watch_face_advisory_t day_and_week_number_face_advise(void *context);
     day_and_week_number_face_activate, \
     day_and_week_number_face_loop, \
     day_and_week_number_face_resign, \
+    day_and_week_number_face_advise, \
 })
 
 #endif // DAY_AND_WEEK_NUMBER_FACE_H_
