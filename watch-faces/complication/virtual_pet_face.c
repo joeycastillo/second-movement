@@ -1060,6 +1060,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             break; // no light
         case EVENT_ACTIVATE:
         case EVENT_TICK:
+            if (!state->is_eating) _set_needs_attention(state);
             _draw_pet(state);
             break;
         case EVENT_LIGHT_BUTTON_UP:
@@ -1402,7 +1403,7 @@ static bool _action_menu_loop(movement_event_t event, void *context) {
                             case VIRTUAL_PET_ACTION_MENU_ITEM_GAME:
                                 _exit_menu(state);
                                 _setup_game(state);
-                                movement_play_sequence(virtual_pet_game_start_tune, BUZZER_PRIORITY_BUTTON);
+                                if (state->buzzer_enabled) movement_play_sequence(virtual_pet_game_start_tune, BUZZER_PRIORITY_BUTTON);
                                 state->display_mode = VIRTUAL_PET_DISPLAY_MODE_GAME;
                                 event.event_type = EVENT_TICK;
                                 return _game_mode_loop(event, state);
@@ -1546,6 +1547,9 @@ static void _game_logic_loop(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
     rtc_counter_t current_counter = watch_rtc_get_counter();
+    watch_date_time_t current_time = movement_get_local_date_time();
+    bool top_of_minute = current_time.unit.second == 0;
+    bool top_of_hour = current_time.unit.minute == 0;
 
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0)
         return; // nothing happens while dead. no background task is needed.
@@ -1559,7 +1563,6 @@ static void _game_logic_loop(void *context) {
     } 
     state->time_alive = get_time_alive(state, current_counter);
     
-    watch_date_time_t current_time = movement_get_local_date_time();
     // Pet asleep? If so, don't continue any game logic.
     _set_is_sleeping(state, current_time);
     //these two are distinct. above sets animation, below here is if it's sleeping time (applicable to egg)
@@ -1583,7 +1586,7 @@ static void _game_logic_loop(void *context) {
     //if is egg
     if (state->phase == VIRTUAL_PET_PHASE_EGG) {
         virtual_pet_sleep_time_t sleep_time = virtual_pet_sleep_time[state->phase];
-        if (current_time.unit.hour == sleep_time.hour_end && current_time.unit.minute == 0 && current_time.unit.second == 0) state->awake_in_phase_counter = 0;
+        if (current_time.unit.hour == sleep_time.hour_end && top_of_hour && top_of_minute) state->awake_in_phase_counter = 0;
         // now if it should not evolve..
         if (!_should_evolve(state)) {
 
@@ -1605,8 +1608,6 @@ static void _game_logic_loop(void *context) {
         }
     }
 
-    _set_needs_attention(state);
-
     // Evolution/transformation
     if (_should_evolve(state)) {
         state->phase++;
@@ -1624,7 +1625,7 @@ static void _game_logic_loop(void *context) {
 
     state->time_alive = get_time_alive(state, current_counter);
 
-    if (state->time_alive > 0 && current_time.unit.second == 0) {
+    if (state->time_alive > 0 && top_of_minute) {
         uint8_t time_hunger = _get_time_hunger(state);
         uint8_t time_happiness = _get_time_happiness(state);
         uint8_t time_needs = _get_time_needs(state);
