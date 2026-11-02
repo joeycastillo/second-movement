@@ -387,6 +387,7 @@ uint8_t movement_get_backlight_dwell(void);
 void movement_set_backlight_dwell(uint8_t value);
 
 void movement_store_settings(void);
+void movement_store_location(void);
 
 /// TODO: For #SecondMovement: Should we have a counter that watch faces increment when they enable an alarm, and decrement when they disable it?
 /// Or should there be a watch face function where watch faces can tell us if they have an alarm enabled?
