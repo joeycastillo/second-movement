@@ -151,6 +151,7 @@ static virtual_pet_bottom_text_t virtual_pet_action_menu_text[] = {
     {"Clean ", "CLEAN "}, // Clean
     {"Heal  ", "HEAL  "}, // Meds
     {"beep  ", "BEEP  "}, // buzzer enable/disable
+    {"Pause ", "PAUSE "}, // enter sleep mode
 };
 
 /*
@@ -593,6 +594,12 @@ static void _setup_pet(void *context) {
     if (state->phase == VIRTUAL_PET_PHASE_ADULT) state->type = VIRTUAL_PET_STARTING_TYPE;
 }
 
+static bool _event_can_happen(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
+    return state->face_active && (now_ts - state->activate_ts > VIRTUAL_PET_SECONDS_AFTER_ACTIVATE);
+}
+
 static bool _grieving_time_over(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     rtc_counter_t counter = watch_rtc_get_counter();
@@ -689,6 +696,7 @@ static bool _is_sleeping_time(void *context, watch_date_time_t current_time) {
 
 static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    if (state->paused) { state->is_sleeping = true; return;}
     bool is_sleep_time = _is_sleeping_time(state, current_time);
     if (is_sleep_time) {
         if (!state->is_sleeping && virtual_pet_phase_animations[state->phase].can_sleep) {
@@ -915,21 +923,6 @@ static void _draw_pet(void *context) {
                 break;
         }
     }
-    // make "tick" noise when hatching egg
-    // getting ui and background task to sync up is annoying!
-    if (state->phase == VIRTUAL_PET_PHASE_EGG) {
-        rtc_counter_t current_counter = watch_rtc_get_counter();
-        if (state->last_game_logic_loop_counter != 0) {
-            state->awake_in_phase_counter += current_counter - state->last_game_logic_loop_counter;
-        }
-        state->last_game_logic_loop_counter = current_counter;
-        uint32_t phase_length_s = (60*state->minutes_to_hatch);
-        uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
-
-        if (seconds_until_hatch <= VIRTUAL_PET_PRE_HATCH_TIME && seconds_until_hatch > 3 && state->current_character_animation_frame == 1) {
-            if (state->buzzer_enabled) movement_play_sequence(virtual_pet_pre_hatch_tune, BUZZER_PRIORITY_BUTTON);
-        }
-    }
 }
 
 static void _draw_pet_low_energy(void *context) {
@@ -1027,6 +1020,7 @@ static void _draw_game(void *context) {
 
 static bool _pet_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    watch_date_time_t current_time = movement_get_local_date_time();
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -1038,6 +1032,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             break;
         case EVENT_LIGHT_BUTTON_UP:
             if (state->is_eating) break;
+            if (state->paused) break;
             if (state->is_sleeping) break;
             if (state->is_eating) watch_display_character(' ', virtual_pet_phase_animations[state->phase].food_position);
             switch(state->phase) {
@@ -1057,6 +1052,11 @@ static bool _pet_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_ALARM_BUTTON_UP:
+            if (state->paused) {
+                state->paused = false;
+                _set_is_sleeping(state, current_time);
+                break;
+            }
             if (state->is_sleeping) break;
             if (state->is_eating) {
                 state->is_eating = false;
@@ -1346,6 +1346,7 @@ static bool _game_mode_loop(movement_event_t event, void *context) {
 
 static bool _action_menu_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    watch_date_time_t current_time = movement_get_local_date_time();
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -1372,6 +1373,12 @@ static bool _action_menu_loop(movement_event_t event, void *context) {
                     watch_display_character((state->buzzer_enabled) ? 'y' : 'N', 9);
                     if (state->buzzer_enabled) button_beep();
                     break;
+                case VIRTUAL_PET_ACTION_MENU_ITEM_PAUSE:
+                    state->paused = true;
+                    _set_is_sleeping(state, current_time);
+                    _exit_menu(state);
+                    event.event_type = EVENT_TICK;
+                    return _pet_loop(event, state);
                 default:
                     if (_handle_action_menu_choice(state)) {
                         switch(state->current_menu_index) {
@@ -1504,16 +1511,18 @@ static uint8_t _get_time_needs(void *context) {
     }
 }
 
-static void _game_logic_loop(void *context) {
+static void _game_logic_active(void *context) {
+    // primarily for evolving and dying in sync with UI. this runs every second/tick when face is active.
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
     rtc_counter_t current_counter = watch_rtc_get_counter();
+    uint32_t now_ts = rtc_counter_to_seconds(current_counter);
     watch_date_time_t current_time = movement_get_local_date_time();
-    bool top_of_minute = current_time.unit.second == 0;
-    bool top_of_hour = current_time.unit.minute == 0;
-
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0)
         return; // nothing happens while dead. no background task is needed.
+    // nothing happens while sleeping.
+    if (_is_sleeping_time(state, current_time) || state->paused) return;
+    if (playing_game) return;
 
     // Die when rtc counter overflows. Don't want the game to crash or time alive to be inaccurate!
     if (state->birth_counter != 0 && state->passing_counter == 0 && current_counter <= state->start_counter) {
@@ -1521,7 +1530,59 @@ static void _game_logic_loop(void *context) {
         // I assume this only happens 388 days after inserting the battery.
         _make_pet_dead(state);
         return;
-    } 
+    }
+
+    state->time_alive = get_time_alive(state, current_counter);
+
+    if (_should_evolve(state)) {
+        uint32_t evolve_ts = state->activate_ts + VIRTUAL_PET_PRE_EVOLVE_TIME;
+        uint32_t seconds_until_evolve = now_ts - evolve_ts;
+        if (now_ts > evolve_ts) {
+            state->phase++;
+            if (state->phase == VIRTUAL_PET_PHASE_ADULT) _set_pet_type(state);
+            if (state->phase == VIRTUAL_PET_PHASE_BABY) state->birth_counter = current_counter;
+
+            int8_t *note_sequence = virtual_pet_transformation_tune;
+            if (state->phase == VIRTUAL_PET_PHASE_BABY) note_sequence = virtual_pet_hatch_tune;
+
+            if (state->buzzer_enabled) movement_play_sequence(note_sequence, BUZZER_PRIORITY_BUTTON);
+            state->awake_in_phase_counter = 0;
+            clear_bottom();
+        }
+        
+        if (_event_can_happen(state) && state->phase == VIRTUAL_PET_PHASE_EGG){
+            state->egg_idle_animation_chance = 9;
+
+            if (seconds_until_evolve > 3 && state->current_character_animation_frame == 0) {
+                if (state->buzzer_enabled) movement_play_sequence(virtual_pet_pre_hatch_tune, BUZZER_PRIORITY_BUTTON);
+            }
+    }
+    }
+
+    state->time_alive = get_time_alive(state, current_counter);
+}
+
+static void _game_logic_loop(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
+    rtc_counter_t current_counter = watch_rtc_get_counter();
+    uint32_t now_ts = rtc_counter_to_seconds(current_counter);
+    watch_date_time_t current_time = movement_get_local_date_time();
+    bool top_of_minute = current_time.unit.second == 0;
+    bool top_of_hour = current_time.unit.minute == 0;
+
+    if (now_ts - state->activate_ts > VIRTUAL_PET_CRYO_TIME && !state->face_active) {
+        state->paused = true;
+#if __EMSCRIPTEN__
+    EM_ASM({
+    console.log('Pet face: entered cryo sleep (paused)');
+    });
+#endif
+        return;
+    }
+    if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0)
+        return; // nothing happens while dead. no background task is needed.
+
     state->time_alive = get_time_alive(state, current_counter);
     
     // Pet asleep? If so, don't continue any game logic.
@@ -1554,7 +1615,7 @@ static void _game_logic_loop(void *context) {
             uint32_t phase_length_s = (60*state->minutes_to_hatch);
             uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
             
-            if (seconds_until_hatch <= VIRTUAL_PET_PRE_HATCH_TIME + 1) {
+            if (seconds_until_hatch <= VIRTUAL_PET_PRE_EVOLVE_TIME + 1) {
                 state->egg_idle_animation_chance = 9;
             } else if (seconds_until_hatch <= (60 + VIRTUAL_PET_PRE_EVOLVE_TIME) && seconds_until_hatch > VIRTUAL_PET_PRE_EVOLVE_TIME) {
             } else {
@@ -1562,26 +1623,9 @@ static void _game_logic_loop(void *context) {
                 state->seconds_until_background_task -= (state->seconds_until_background_task > 60) ? 60 : 0;
                 _schedule_background_task(state, state->seconds_until_background_task);
             }
-            return;
         }
+        return;
     }
-
-    // Evolution/transformation
-    if (_should_evolve(state)) {
-        state->phase++;
-        if (state->phase == VIRTUAL_PET_PHASE_ADULT) _set_pet_type(state);
-        if (state->phase == VIRTUAL_PET_PHASE_BABY) state->birth_counter = current_counter;
-
-        int8_t *note_sequence = virtual_pet_transformation_tune;
-        if (state->phase == VIRTUAL_PET_PHASE_BABY) note_sequence = virtual_pet_hatch_tune;
-
-        bring_to_foreground(state);
-        if (state->buzzer_enabled) movement_play_sequence(note_sequence, BUZZER_PRIORITY_SIGNAL);
-        state->awake_in_phase_counter = 0;
-        clear_bottom();
-    }
-
-    state->time_alive = get_time_alive(state, current_counter);
 
     if (state->time_alive > 0 && top_of_minute) {
         uint8_t time_hunger = _get_time_hunger(state);
@@ -1602,7 +1646,7 @@ static void _game_logic_loop(void *context) {
         }
         // Happiness
         if (state->time_alive % time_happiness == 0) {
-            if (state->snacks_today == VIRTUAL_PET_MAX_SNACKS_DAILY) _make_pet_dead(state);
+            if (state->snacks_today == VIRTUAL_PET_MAX_SNACKS_DAILY && _event_can_happen(state)) _make_pet_dead(state);
             if (state->happiness == 0) {
                 if (state->phase == VIRTUAL_PET_PHASE_CHILD) state->care_mistakes++;
                 if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_METER_EMPTY_SICKNESS_CHANCE);
@@ -1687,6 +1731,8 @@ void virtual_pet_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 void virtual_pet_face_activate(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     _exit_menu(state);
+    state->face_active = true;
+    state->activate_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
     // Handle any tasks related to your watch face coming on screen.
 }
 
@@ -1694,6 +1740,9 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
 
     switch (event.event_type) {
+        case EVENT_TICK:
+            _game_logic_active(state);
+            break;
         case EVENT_LIGHT_BUTTON_UP:
             // gotta turn off the led
             movement_default_loop_handler(event);
@@ -1746,6 +1795,7 @@ void virtual_pet_face_resign(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->phase == VIRTUAL_PET_PHASE_DEAD) return; // no bg task while dead.
     state->is_eating = false;
+    state->face_active = false;
 
     // one minute until background task, in which the actual time until next background task will be calculated.
     state->seconds_until_background_task = 1;
@@ -1759,7 +1809,7 @@ movement_watch_face_advisory_t virtual_pet_face_advise(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
     uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
-    if (now_ts >= state->next_background_task_ts && state->start_counter != 0) {
+    if ((now_ts >= state->next_background_task_ts && state->start_counter != 0 && !state->paused) || state->face_active) {
         retval.wants_background_task = true;
     }
     return retval;

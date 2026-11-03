@@ -125,8 +125,10 @@
 #define VIRTUAL_PET_SHOW_MINUTES_ALIVE 0
 #define VIRTUAL_PET_RANDOM_HATCH_TIME true
 #define VIRTUAL_PET_HATCH_TIME 3 // overridden by above
-#define VIRTUAL_PET_PRE_HATCH_TIME 12 // seconds before hatching, make egg more active and move to foreground
+#define VIRTUAL_PET_PRE_EVOLVE_TIME 12 // seconds before hatching, make egg more active and move to foreground
 #define VIRTUAL_PET_BACKGROUND_TASK_TUNE false
+#define VIRTUAL_PET_SECONDS_AFTER_ACTIVATE 3
+#define VIRTUAL_PET_CRYO_TIME 72000 // seconds of inactivity after the pet goes into a very deep sleep (20h)
 
 #define VIRTUAL_PET_STARTING_PHASE VIRTUAL_PET_PHASE_EGG
 #define VIRTUAL_PET_STARTING_TYPE VIRTUAL_PET_TYPE_EASY // Only applicable if starting phase is adult
@@ -216,6 +218,7 @@ typedef enum {
     VIRTUAL_PET_ACTION_MENU_ITEM_CLEAN,
     VIRTUAL_PET_ACTION_MENU_ITEM_MEDICATION,
     VIRTUAL_PET_ACTION_MENU_ITEM_BUZZER,
+    VIRTUAL_PET_ACTION_MENU_ITEM_PAUSE,
     VIRTUAL_PET_ACTION_MENU_LENGTH,
 } virtual_pet_action_menu_item;
 
@@ -252,7 +255,11 @@ typedef struct {
  */
 typedef struct {
     // Anything you need to keep track of, put it here!
-    uint8_t face_idx;
+    uint8_t face_idx; // needed for boot sound
+    bool face_active;
+    uint32_t activate_ts;
+    bool paused;
+
     uint32_t next_background_task_ts;
 
     rtc_counter_t start_counter : 32; // rtc counter when starting
