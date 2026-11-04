@@ -54,13 +54,13 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
         .phase_length = VIRTUAL_PET_HATCH_TIME,
     },
     { // Baby
-        .phase_length = 45,
+        .phase_length = 60, // 60 mins awake
         .time_hunger = 5, // 30 mins
         .time_happiness = 4, // 24 mins
         .time_needs = 2, // 12 mins
     },
     { // Child
-        .phase_length = 12*60, // 12 hrs, 12 hrs of sleep in between
+        .phase_length = 26*60, // 26 hrs awake (~2 days total)
         .time_hunger = 15, // 1,5 hrs
         .time_happiness = 10, // 1 hr
         .time_needs = 8, // 48 mins
@@ -77,11 +77,11 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
 static virtual_pet_sleep_time_t virtual_pet_sleep_time[] = {
     { // No sleeping time for an egg, but this is when it won't hatch.
         .hour_start = 18,
-        .hour_end = 12,
+        .hour_end = 10,
     },
     { // Baby
         .hour_start = 18,
-        .hour_end = 11,
+        .hour_end = 10,
     },
     { // Child
         .hour_start = 20, 
