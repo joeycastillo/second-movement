@@ -268,6 +268,7 @@ typedef struct {
     bool face_active;
     uint32_t activate_ts;
     bool paused;
+    bool paused_automatically;
 
     uint32_t next_background_task_ts;
 
@@ -305,6 +306,7 @@ typedef struct {
     uint8_t current_little_ghost_animation_frame : 1;
     uint8_t current_sleeping_animation_frame : 2;
     uint8_t current_eating_animation_frame : 4;
+    uint8_t current_paused_animation_frame : 1;
 
     virtual_pet_game_mode game_display_mode : 3;
     uint8_t game_round : 3;
