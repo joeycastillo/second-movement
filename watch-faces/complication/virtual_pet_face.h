@@ -33,8 +33,8 @@
  *
  * Life phases:
  * - Egg (5-120 min)
- * - Baby (45 min)
- * - Child (~1 day)
+ * - Baby (60 min)
+ * - Child (~2 days)
  * - Adult
  * 
  * Depending on how you take care of it, you can get a different type of pet.
@@ -54,7 +54,7 @@
  * Hunger: Your pet will get hungry over time, just like it will be less happy if you don't play with it!
  * 
  * Sickness: Sometimes your pet gets sick. It happens when you don't take good care of your pet. To heal your pet, give it medicine.
- * Sickness will be shown as a skull in the top left (weekday).
+ * Sickness will be shown as a skull in the top left (weekday digits).
  * 
  * Poop: Sometimes your pet will poop. It will be on the screen, usually in the lower or upper right corner, as a box with a visible odor going back and forth.
  * To remove poop, clean the pet. If you fail to remove poop, the pet might become sick.
@@ -64,6 +64,10 @@
  * 
  * Sleep: Just like you, your pet sleeps. In every life phase it will sleep a different amount of time.
  * Sleep is visible on with "ZZ" in the top left. A bed will be visible. You can't wake it up, it will wake up on its own.
+ * 
+ * Pause: If you want to store your watch, or just need to pause for some reason, you can pause the pet. Go to the action menu and pause.
+ * When paused, the pet will be sleeping, even in daytime. To unpause, press the alarm button.
+ * If the pet hasn't been seen by its caretaker in about a day, it will automatically pause.
  * 
  * Buttons:
  * Press Light to open the status menu. In the status menu, you can advance the menu by pressing the Light button again.
@@ -91,7 +95,6 @@
  * By the way, this watch face will consume more power than your average watch face.
  * Game updates are always done in the background and you should not expect this to last a long time on a single CR2016 coin cell.
  * Game updates are done every minute, only when needed. But the logic can be expensive in terms of processing power.
- * average power consumption is to be determined.
  */
 
 
