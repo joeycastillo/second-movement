@@ -1159,11 +1159,11 @@ static bool _handle_action_menu_choice(void *context) {
                 }
                 if (state->buzzer_enabled) button_beep();
                 _start_eating_animation(state);
-                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY) state->snacks_today++;
+                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
                 return true;
             } else {
                 state->happiness++;
-                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY) state->snacks_today++;
+                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
                 if (state->buzzer_enabled) button_beep();
                 _start_eating_animation(state);
                 return true;
@@ -1639,8 +1639,8 @@ static void _game_logic_loop(void *context) {
             uint32_t phase_length_s = (60*state->minutes_to_hatch);
             uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
             
-                state->seconds_until_background_task = seconds_until_hatch;
-                _schedule_background_task(state, state->seconds_until_background_task);
+            state->seconds_until_background_task = seconds_until_hatch;
+            _schedule_background_task(state, state->seconds_until_background_task);
         }
         return;
     }
