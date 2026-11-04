@@ -577,6 +577,13 @@ static void _setup_pet(void *context) {
     state->birth_counter = 0;
     state->phase = VIRTUAL_PET_STARTING_PHASE;
     state->minutes_to_hatch = VIRTUAL_PET_RANDOM_HATCH_TIME ? random(5, 120) : virtual_pet_phase_attributes[VIRTUAL_PET_PHASE_EGG].phase_length;
+
+#if __EMSCRIPTEN__
+    EM_ASM({
+    console.log('Pet face: hatch time set to ' + $0 + ' minutes');
+    }, state->minutes_to_hatch);
+#endif
+
     state->awake_in_phase_counter = 0;
     state->last_game_logic_loop_counter = 0;
     state->games_played = VIRTUAL_PET_STARTING_GAMES_PLAYED;
@@ -1059,6 +1066,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             if (state->paused) {
                 state->paused = false;
                 _set_is_sleeping(state, current_time);
+                if (state->face_active) clear_bottom();
                 break;
             }
             if (state->is_sleeping) break;
@@ -1381,6 +1389,7 @@ static bool _action_menu_loop(movement_event_t event, void *context) {
                 case VIRTUAL_PET_ACTION_MENU_ITEM_PAUSE:
                     state->paused = true;
                     _set_is_sleeping(state, current_time);
+                    if (state->face_active) clear_bottom();
                     _exit_menu(state);
                     event.event_type = EVENT_TICK;
                     return _pet_loop(event, state);
@@ -1542,7 +1551,10 @@ static void _game_logic_active(void *context) {
     if (_should_evolve(state)) {
         uint32_t evolve_ts = state->activate_ts + VIRTUAL_PET_PRE_EVOLVE_TIME;
         uint32_t seconds_until_evolve = now_ts - evolve_ts;
-        if (now_ts > evolve_ts) {
+        if (now_ts > evolve_ts + VIRTUAL_PET_PRE_EVOLVE_TIME) {
+            state->activate_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
+        }
+        else if (now_ts > evolve_ts) {
             state->phase++;
             if (state->phase == VIRTUAL_PET_PHASE_ADULT) _set_pet_type(state);
             if (state->phase == VIRTUAL_PET_PHASE_BABY) state->birth_counter = current_counter;
@@ -1568,6 +1580,11 @@ static void _game_logic_active(void *context) {
 }
 
 static void _game_logic_loop(void *context) {
+#if __EMSCRIPTEN__
+    EM_ASM({
+    console.log('Pet face: background task running');
+    });
+#endif
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     bool playing_game = state->display_mode == VIRTUAL_PET_DISPLAY_MODE_GAME;
     rtc_counter_t current_counter = watch_rtc_get_counter();
@@ -1578,6 +1595,8 @@ static void _game_logic_loop(void *context) {
 
     if (now_ts - state->activate_ts > VIRTUAL_PET_CRYO_TIME && !state->face_active) {
         state->paused = true;
+        _set_is_sleeping(state, current_time);
+        if (state->face_active) clear_bottom();
 #if __EMSCRIPTEN__
     EM_ASM({
     console.log('Pet face: entered cryo sleep (paused)');
@@ -1620,14 +1639,8 @@ static void _game_logic_loop(void *context) {
             uint32_t phase_length_s = (60*state->minutes_to_hatch);
             uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
             
-            if (seconds_until_hatch <= VIRTUAL_PET_PRE_EVOLVE_TIME + 1) {
-                state->egg_idle_animation_chance = 9;
-            } else if (seconds_until_hatch <= (60 + VIRTUAL_PET_PRE_EVOLVE_TIME) && seconds_until_hatch > VIRTUAL_PET_PRE_EVOLVE_TIME) {
-            } else {
                 state->seconds_until_background_task = seconds_until_hatch;
-                state->seconds_until_background_task -= (state->seconds_until_background_task > 60) ? 60 : 0;
                 _schedule_background_task(state, state->seconds_until_background_task);
-            }
         }
         return;
     }
@@ -1735,6 +1748,7 @@ void virtual_pet_face_setup(uint8_t watch_face_index, void ** context_ptr) {
 
 void virtual_pet_face_activate(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    if (watch_sleep_animation_is_running()) watch_stop_sleep_animation();
     _exit_menu(state);
     state->face_active = true;
     state->activate_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
@@ -1814,7 +1828,7 @@ movement_watch_face_advisory_t virtual_pet_face_advise(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     movement_watch_face_advisory_t retval = { 0 };
     uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
-    if ((now_ts >= state->next_background_task_ts && state->start_counter != 0 && !state->paused) || state->face_active) {
+    if (now_ts >= state->next_background_task_ts && state->start_counter != 0 && !state->paused) {
         retval.wants_background_task = true;
     }
     return retval;

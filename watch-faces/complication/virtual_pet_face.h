@@ -126,7 +126,13 @@
 
 // For debugging or development purposes only. Don't cheat on your pet!
 #define VIRTUAL_PET_SHOW_MINUTES_ALIVE 0
+
+#if __EMSCRIPTEN__
+#define VIRTUAL_PET_RANDOM_HATCH_TIME false
+#else
 #define VIRTUAL_PET_RANDOM_HATCH_TIME true
+#endif
+
 #define VIRTUAL_PET_HATCH_TIME 3 // overridden by above
 #define VIRTUAL_PET_PRE_EVOLVE_TIME 12 // seconds before hatching, make egg more active and move to foreground
 #define VIRTUAL_PET_BACKGROUND_TASK_TUNE false
