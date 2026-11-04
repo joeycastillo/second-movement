@@ -130,7 +130,7 @@
 #define VIRTUAL_PET_HATCH_TIME 3 // overridden by above
 #define VIRTUAL_PET_PRE_EVOLVE_TIME 12 // seconds before hatching, make egg more active and move to foreground
 #define VIRTUAL_PET_BACKGROUND_TASK_TUNE false
-#define VIRTUAL_PET_SECONDS_AFTER_ACTIVATE 3
+#define VIRTUAL_PET_SECONDS_AFTER_ACTIVATE 3 // seconds before anything can happen on screen after going to the watch face.
 #define VIRTUAL_PET_CRYO_TIME 72000 // seconds of inactivity after the pet goes into a very deep sleep (20h)
 
 #define VIRTUAL_PET_STARTING_PHASE VIRTUAL_PET_PHASE_EGG

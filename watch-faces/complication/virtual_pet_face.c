@@ -1027,6 +1027,10 @@ static bool _pet_loop(movement_event_t event, void *context) {
             break; // no light
         case EVENT_ACTIVATE:
         case EVENT_TICK:
+            if (!state->face_active && state->face_idx == 0) {
+                state->face_active = true;
+                state->activate_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
+            }
             if (!state->is_eating) _set_needs_attention(state);
             _draw_pet(state);
             break;
@@ -1083,6 +1087,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             _draw_buzzer_enabled(state);
             break;
         case EVENT_LOW_ENERGY_UPDATE:
+            if (state->face_active && state->face_idx == 0) state->face_active = false;
             if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(500);
             _draw_pet_low_energy(state);
             break;
