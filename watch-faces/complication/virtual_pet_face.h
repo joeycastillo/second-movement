@@ -112,7 +112,8 @@
 #define VIRTUAL_PET_MAX_NEEDS 6
 #define VIRTUAL_PET_MAX_POOPS 2
 #define VIRTUAL_PET_MAX_SICKNESS 5
-#define VIRTUAL_PET_MAX_SNACKS_DAILY 35
+#define VIRTUAL_PET_MAX_SNACKS_DAILY 45
+#define VIRTUAL_PET_MINIMUM_ATTENTION_INTERVAL 5 // minimum amount of minutes between attention calls
 
 #define VIRTUAL_PET_POOP_SICKNESS_CHANCE 3 // 0-9
 #define VIRTUAL_PET_SNACK_SICKNESS_CHANCE 1 // 0-9
@@ -134,9 +135,9 @@
 #endif
 
 #define VIRTUAL_PET_HATCH_TIME 3 // overridden by above
-#define VIRTUAL_PET_PRE_EVOLVE_TIME 12 // seconds before hatching, make egg more active and move to foreground
+#define VIRTUAL_PET_PRE_EVOLVE_TIME 9 // seconds before hatching, make egg more active and move to foreground
 #define VIRTUAL_PET_BACKGROUND_TASK_TUNE false
-#define VIRTUAL_PET_SECONDS_AFTER_ACTIVATE 3 // seconds before anything can happen on screen after going to the watch face.
+#define VIRTUAL_PET_SECONDS_AFTER_ACTIVATE 3 // seconds before anything can happen (evolution, death) on screen after going to the watch face.
 #define VIRTUAL_PET_CRYO_TIME 72000 // seconds of inactivity after the pet goes into a very deep sleep (20h)
 
 #define VIRTUAL_PET_STARTING_PHASE VIRTUAL_PET_PHASE_EGG
@@ -271,6 +272,8 @@ typedef struct {
     bool paused_automatically;
 
     uint32_t next_background_task_ts;
+    uint32_t last_attention_call_ts;
+    bool going_to_die;
 
     rtc_counter_t start_counter : 32; // rtc counter when starting
     rtc_counter_t birth_counter : 32; // rtc counter when egg hatched
