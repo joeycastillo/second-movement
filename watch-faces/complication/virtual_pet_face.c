@@ -1613,6 +1613,7 @@ static void _game_logic_active(void *context) {
 }
 
 static void _game_logic_loop(void *context) {
+    // No UI drawing here!!
 #if __EMSCRIPTEN__
     EM_ASM({
     console.log('Pet face: background task running');
@@ -1629,7 +1630,6 @@ static void _game_logic_loop(void *context) {
     if (now_ts - state->activate_ts > VIRTUAL_PET_CRYO_TIME && !state->face_active) {
         state->paused = true;
         state->paused_automatically = true;
-        _draw_pet(state);
 #if __EMSCRIPTEN__
     EM_ASM({
     console.log('Pet face: entered cryo sleep (paused)');
