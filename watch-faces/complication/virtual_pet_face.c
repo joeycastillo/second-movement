@@ -609,6 +609,9 @@ static void _setup_pet(void *context) {
     state->current_sleeping_animation_frame = 0;
     state->current_eating_animation_frame = 0;
     state->current_paused_animation_frame = 0;
+    state->paused = false;
+    state->paused_automatically = false;
+    state->next_background_task_ts = 1;
 
     if (state->phase == VIRTUAL_PET_PHASE_ADULT) state->type = VIRTUAL_PET_STARTING_TYPE;
 }
@@ -880,14 +883,14 @@ static void _draw_sickness(void *context) {
 static void _draw_attention(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     // don't draw while dead or while sleeping.
-    if (state->needs_attention && state->passing_counter == 0 && !state->is_sleeping) watch_set_indicator(WATCH_INDICATOR_BELL);
+    if (state->needs_attention && state->passing_counter == 0 && !state->is_sleeping && !state->paused) watch_set_indicator(WATCH_INDICATOR_BELL);
     else watch_clear_indicator(WATCH_INDICATOR_BELL);
 }
 
 static void _draw_buzzer_enabled(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     // don't draw while dead or while sleeping.
-    if (state->buzzer_enabled) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
+    if (state->buzzer_enabled && !state->paused) watch_set_indicator(WATCH_INDICATOR_SIGNAL);
     else watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
 }
 
@@ -936,10 +939,10 @@ static void _draw_pet(void *context) {
 
     _draw_character(state);
     _draw_paused(state);
-    if (state->paused) return;
     // only update when not eating for added gameplay
     if (state->phase > VIRTUAL_PET_PHASE_EGG && !state->is_eating) _draw_attention(state);
     _draw_buzzer_enabled(state);
+    if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
         _draw_sickness(state);
@@ -974,8 +977,9 @@ static void _draw_pet_low_energy(void *context) {
 
     _draw_character(state);
     _draw_paused(state);
-    if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG) _draw_attention(state);
+    _draw_buzzer_enabled(state);
+    if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
         _draw_sickness(state);
