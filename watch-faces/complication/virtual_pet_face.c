@@ -61,8 +61,8 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
     },
     { // Child
         .phase_length = 26*60, // 26 hrs awake (~2 days total)
-        .time_hunger = 15, // 1,5 hrs
-        .time_happiness = 10, // 1 hr
+        .time_hunger = 20, // 2 hrs
+        .time_happiness = 15, // 1.5 hr
         .time_needs = 8, // 48 mins
     },
     { // Adult (hunger and happiness determined by type, see below.)
