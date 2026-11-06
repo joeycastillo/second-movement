@@ -890,7 +890,7 @@ static void _draw_poop(void *context) {
     state->current_poop_animation_frame = (state->current_poop_animation_frame == sizeof(poop_animation)/sizeof(poop_animation[0])-1) ? 0 : state->current_poop_animation_frame + 1;
     for (uint8_t i = 0; i < state->poops; i++) {
         watch_display_byte(
-            (state->is_sleeping) ? 0 :
+            (state->is_sleeping || state->is_eating) ? 0 :
             poop_animation[
                 state->current_poop_animation_frame
             ],
@@ -1225,24 +1225,24 @@ static bool _handle_action_menu_choice(void *context) {
             }
             break;
         case VIRTUAL_PET_ACTION_MENU_ITEM_SNACK:
-            if (state->happiness >= VIRTUAL_PET_MAX_HAPPINESS || state->sickness > 0) {
-                int x = random(0, 9);
-                if (x <= VIRTUAL_PET_SNACK_SICKNESS_CHANCE) {
+            if (state->sickness > 0) return false;
+            if (state->happiness >= VIRTUAL_PET_MAX_HAPPINESS) {
+                if (state->overfeed_counter < VIRTUAL_PET_OVERFEED_AMOUNT_SICKNESS) {
+                    state->overfeed_counter++;
+                    // fall through
+                } else {
                     _make_pet_sick(state);
                     return false;
                 }
-                if (state->buzzer_enabled) button_beep();
-                _start_eating_animation(state);
-                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
-                return true;
             } else {
                 state->happiness++;
-                if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
-                if (state->buzzer_enabled) button_beep();
-                _start_eating_animation(state);
-                return true;
+                // fall through
             }
-            break;
+            // start eating animation
+            if (state->buzzer_enabled) button_beep();
+            _start_eating_animation(state);
+            if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
+            return true;
         case VIRTUAL_PET_ACTION_MENU_ITEM_CLEAN:
             if (state->poops > 0) {
                 state->poops = 0;
@@ -1790,6 +1790,10 @@ static void _game_logic_loop(void *context) {
             } else {
                 state->needs++;
             }
+        }
+        // reset overfeed_counter every 10 minutes
+        if (state->time_alive % 10 == 0) {
+            state->overfeed_counter = 0;
         }
         // Randomly getting sick
         if (state->time_alive % 1440 == 0 && state->phase == VIRTUAL_PET_PHASE_ADULT) {

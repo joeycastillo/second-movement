@@ -116,7 +116,7 @@
 #define VIRTUAL_PET_MINIMUM_ATTENTION_INTERVAL 5 // minimum amount of minutes between attention calls
 
 #define VIRTUAL_PET_POOP_SICKNESS_CHANCE 3 // 0-9
-#define VIRTUAL_PET_SNACK_SICKNESS_CHANCE 1 // 0-9
+#define VIRTUAL_PET_OVERFEED_AMOUNT_SICKNESS 5 
 #define VIRTUAL_PET_METER_EMPTY_SICKNESS_CHANCE 0 // 0-9
 #define VIRTUAL_PET_ADULT_RANDOM_SICKNESS_CHANCE 1 // 0-9
 #define VIRTUAL_PET_MEDS_NOT_WORKING_CHANCE 3 // 0-9
@@ -274,6 +274,7 @@ typedef struct {
     uint32_t next_background_task_ts;
     uint32_t last_attention_call_ts;
     bool going_to_die;
+    uint8_t overfeed_counter;
 
     rtc_counter_t start_counter : 32; // rtc counter when starting
     rtc_counter_t birth_counter : 32; // rtc counter when egg hatched
