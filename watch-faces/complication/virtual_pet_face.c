@@ -1110,7 +1110,6 @@ static bool _disable_buttons_for_event(void *context) {
 
 static bool _pet_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    watch_date_time_t current_time = movement_get_local_date_time();
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -1434,7 +1433,6 @@ static bool _game_mode_loop(movement_event_t event, void *context) {
 
 static bool _action_menu_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    watch_date_time_t current_time = movement_get_local_date_time();
 
     switch (event.event_type) {
         case EVENT_LIGHT_BUTTON_DOWN:
@@ -1800,9 +1798,6 @@ static void _game_logic_loop(void *context) {
         if (state->time_alive == 15 && state->phase == VIRTUAL_PET_PHASE_BABY) {
             if (!playing_game) _make_pet_sick_with_chance(state, 9);
         }
-
-        // plan background task for next time
-        uint32_t phase_length_s = 0;
 
         //determine time for next task.
         uint8_t times[3] = {
