@@ -1745,9 +1745,9 @@ static void _game_logic_loop(void *context) {
             
 #if __EMSCRIPTEN__
         if (state->phase < VIRTUAL_PET_PHASE_ADULT && _should_evolve(state)) {
-                EM_ASM({
-                console.log('Pet face: Ready to hatch!');
-                });
+            EM_ASM({
+            console.log('Pet face: Ready to hatch!');
+            });
         }
 #endif
         }
@@ -1821,9 +1821,9 @@ static void _game_logic_loop(void *context) {
 
 #if __EMSCRIPTEN__
         if (state->phase < VIRTUAL_PET_PHASE_ADULT && _should_evolve(state)) {
-                EM_ASM({
-                console.log('Pet face: Ready to evolve!');
-                });
+            EM_ASM({
+            console.log('Pet face: Ready to evolve!');
+            });
         }
 #endif
 
