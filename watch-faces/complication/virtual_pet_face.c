@@ -554,7 +554,7 @@ static uint32_t rtc_counter_to_seconds(rtc_counter_t counter) {
 static uint32_t _get_time_alive(void *context, rtc_counter_t current_counter) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->birth_counter == 0) return 0;
-    return (rtc_counter_to_seconds(current_counter - state->birth_counter)) / 60;
+    return (rtc_counter_to_seconds(current_counter - state->birth_counter - state->paused_counter)) / 60;
 }
 static int random(int min, int max){
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
@@ -1095,6 +1095,21 @@ static bool _disable_buttons_for_event(void *context) {
     return false;
 }
 
+void _pause(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    state->paused = true;
+    rtc_counter_t current_counter = watch_rtc_get_counter();
+    state->last_game_logic_loop_counter = current_counter;
+}
+
+void _unpause(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    state->paused = false;
+    rtc_counter_t current_counter = watch_rtc_get_counter();
+    state->paused_counter += current_counter - state->last_game_logic_loop_counter;
+}
+
+
 static bool _pet_loop(movement_event_t event, void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
 
@@ -1127,7 +1142,7 @@ static bool _pet_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ALARM_BUTTON_UP:
             if (state->paused) {
-                state->paused = false;
+                _unpause(state);
                 _draw_pet(state);
                 break;
             }
@@ -1449,7 +1464,7 @@ static bool _action_menu_loop(movement_event_t event, void *context) {
                     if (state->buzzer_enabled) button_beep();
                     break;
                 case VIRTUAL_PET_ACTION_MENU_ITEM_PAUSE:
-                    state->paused = true;
+                    _pause(state);
                     _exit_menu(state);
                     watch_clear_all_indicators();
                     event.event_type = EVENT_TICK;
@@ -1509,7 +1524,7 @@ static void  _determine_seconds_until_next_background_task(uint8_t *times, uint8
     state->seconds_until_background_task = soonest_timestamp - counter;
 }
 
-static void _schedule_background_task(void *context, uint32_t seconds_from_now) {
+static void _schedule_background_task(void *context, uint32_t seconds_from_now, char identifier[]) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0 || state->going_to_die == true)
         return; // nothing happens while dead. no background task is needed.
@@ -1517,11 +1532,10 @@ static void _schedule_background_task(void *context, uint32_t seconds_from_now) 
     state->next_background_task_ts = now_ts + seconds_from_now;
     // handled by advisory.
     // state->next_background_task_ts is set and will be used by it.
-    // call cb_minute_alarm_fired() to make sure advisory is called!
 #if __EMSCRIPTEN__
     EM_ASM({
-    console.log('Pet face: background task planned ' + $0 + ' seconds from now');
-    }, seconds_from_now);
+    console.log('Pet face: background task planned ' + $0 + 'm ' + $1 + 's from now (' + UTF8ToString($2) + ')');
+    }, seconds_from_now/60, seconds_from_now % 60, identifier);
 #endif
 }
 
@@ -1670,7 +1684,7 @@ static void _game_logic_loop(void *context) {
     }
 
     if (now_ts - state->activate_ts > VIRTUAL_PET_CRYO_TIME && !state->face_active) {
-        state->paused = true;
+        _pause(state);
         state->paused_automatically = true;
 #if __EMSCRIPTEN__
     EM_ASM({
@@ -1682,7 +1696,7 @@ static void _game_logic_loop(void *context) {
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0 || state->going_to_die == true)
         return; // nothing happens while dead. no background task is needed.
 
-    _get_time_alive(state, current_counter);
+    state->time_alive = _get_time_alive(state, current_counter);
 #if __EMSCRIPTEN__
     EM_ASM({
     console.log('Pet face: time alive: ' + $0 + ' mins');
@@ -1700,7 +1714,7 @@ static void _game_logic_loop(void *context) {
         // that's when it will wake up
         uint8_t minutes_until_top_of_hour = 60 - current_time.unit.minute;
         state->seconds_until_background_task = minutes_until_top_of_hour * 60 - current_time.unit.second;
-        _schedule_background_task(state, state->seconds_until_background_task);
+        _schedule_background_task(state, state->seconds_until_background_task, "on wake up");
         state->last_game_logic_loop_counter = current_counter;
     
         return;
@@ -1721,13 +1735,13 @@ static void _game_logic_loop(void *context) {
             uint16_t seconds_until_hatch = phase_length_s - rtc_counter_to_seconds(state->awake_in_phase_counter);
             
             state->seconds_until_background_task = seconds_until_hatch;
-            _schedule_background_task(state, state->seconds_until_background_task);
+            _schedule_background_task(state, state->seconds_until_background_task, "hatch time");
         } else {
             // this should make the attention sound only once per hour
             _ask_for_attention(state, false);
 
             state->seconds_until_background_task = 600;
-            _schedule_background_task(state, state->seconds_until_background_task);
+            _schedule_background_task(state, state->seconds_until_background_task, "want to hatch!!");
             
 #if __EMSCRIPTEN__
         if (state->phase < VIRTUAL_PET_PHASE_ADULT && _should_evolve(state)) {
@@ -1802,7 +1816,8 @@ static void _game_logic_loop(void *context) {
             time_needs,
         };
         _determine_seconds_until_next_background_task(times, 3, state);
-        _schedule_background_task(state, state->seconds_until_background_task - current_time.unit.second);
+        state->seconds_until_background_task -= current_time.unit.second;
+        _schedule_background_task(state, state->seconds_until_background_task, "stat update");
 
 #if __EMSCRIPTEN__
         if (state->phase < VIRTUAL_PET_PHASE_ADULT && _should_evolve(state)) {
@@ -1816,7 +1831,7 @@ static void _game_logic_loop(void *context) {
         // wish I had found this edge case sooner.. If debugging and starting from a phase different
         // from egg, there would be no new background task planned. LOL
         state->seconds_until_background_task = 60 - current_time.unit.second;
-        _schedule_background_task(state, state->seconds_until_background_task);
+        _schedule_background_task(state, state->seconds_until_background_task, "just started and not an egg");
     }
     return;
 }
@@ -1846,7 +1861,7 @@ void virtual_pet_face_activate(void *context) {
     _exit_menu(state);
     state->face_active = true;
     _activate_ts(state);
-    if (state->paused && state->paused_automatically) state->paused = false;
+    if (state->paused && state->paused_automatically) _unpause(state);
     // Handle any tasks related to your watch face coming on screen.
 }
 
@@ -1909,7 +1924,7 @@ void virtual_pet_face_resign(void *context) {
 
     // one minute until background task, in which the actual time until next background task will be calculated.
     state->seconds_until_background_task = 1;
-    _schedule_background_task(state, state->seconds_until_background_task);
+    _schedule_background_task(state, state->seconds_until_background_task, "resign");
 
     // handle any cleanup before your watch face goes off-screen.
 }

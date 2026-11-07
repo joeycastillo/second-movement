@@ -276,6 +276,7 @@ typedef struct {
     rtc_counter_t awake_in_phase_counter : 32; 
     rtc_counter_t last_game_logic_loop_counter : 32;
     rtc_counter_t passing_counter : 32; // rtc counter when died
+    rtc_counter_t paused_counter : 32; // rtc counter (cumulative) of time paused
     uint8_t minutes_to_hatch : 8;
     uint32_t seconds_until_background_task : 32; // = when requesting a background task, this is the amount of seconds until we are in the exact minute for the next task.
 
