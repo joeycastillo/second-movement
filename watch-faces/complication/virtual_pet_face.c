@@ -1082,15 +1082,34 @@ static void _draw_game(void *context) {
     }
 }
 
+static bool _should_evolve(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    uint32_t awake_s;
+    uint32_t evolve_s;
+
+    if (state->phase > VIRTUAL_PET_PHASE_EGG && state->sickness > 0) return false;
+
+    switch(state->phase) {
+        case VIRTUAL_PET_PHASE_DEAD:
+        case VIRTUAL_PET_PHASE_ADULT:
+            return false;
+        case VIRTUAL_PET_PHASE_EGG:
+            awake_s = rtc_counter_to_seconds(state->awake_in_phase_counter);
+            evolve_s = (60*state->minutes_to_hatch);
+            return awake_s >= evolve_s;
+        default:
+            awake_s = rtc_counter_to_seconds(state->awake_in_phase_counter);
+            evolve_s = (60*virtual_pet_phase_attributes[state->phase].phase_length);
+            return awake_s >= evolve_s;
+    }
+}
+
 static bool _disable_buttons_for_event(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->phase == VIRTUAL_PET_PHASE_EGG) return true; // handled in pet_loop
     if (state->going_to_die == true) return true;
     if (state->phase < VIRTUAL_PET_PHASE_ADULT) {
-        uint32_t phase_length_s = 0;
-        phase_length_s = (60*virtual_pet_phase_attributes[state->phase].phase_length);
-        
-        return phase_length_s < rtc_counter_to_seconds(state->awake_in_phase_counter);
+        return _should_evolve(state);
     }
     return false;
 }
@@ -1537,28 +1556,6 @@ static void _schedule_background_task(void *context, uint32_t seconds_from_now, 
     console.log('Pet face: background task planned ' + $0 + 'm ' + $1 + 's from now (' + UTF8ToString($2) + ')');
     }, seconds_from_now/60, seconds_from_now % 60, identifier);
 #endif
-}
-
-static bool _should_evolve(void *context) {
-    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    uint32_t awake_s;
-    uint32_t evolve_s;
-
-    if (state->phase > VIRTUAL_PET_PHASE_EGG && state->sickness > 0) return false;
-
-    switch(state->phase) {
-        case VIRTUAL_PET_PHASE_DEAD:
-        case VIRTUAL_PET_PHASE_ADULT:
-            return false;
-        case VIRTUAL_PET_PHASE_EGG:
-            awake_s = rtc_counter_to_seconds(state->awake_in_phase_counter);
-            evolve_s = (60*state->minutes_to_hatch);
-            return awake_s >= evolve_s;
-        default:
-            awake_s = rtc_counter_to_seconds(state->awake_in_phase_counter);
-            evolve_s = (60*virtual_pet_phase_attributes[state->phase].phase_length);
-            return awake_s >= evolve_s;
-    }
 }
 
 static uint8_t _get_time_hunger(void *context) {
