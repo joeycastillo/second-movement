@@ -1095,14 +1095,14 @@ static bool _disable_buttons_for_event(void *context) {
     return false;
 }
 
-void _pause(void *context) {
+static inline void _pause(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     state->paused = true;
     rtc_counter_t current_counter = watch_rtc_get_counter();
     state->last_game_logic_loop_counter = current_counter;
 }
 
-void _unpause(void *context) {
+static inline void _unpause(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     state->paused = false;
     rtc_counter_t current_counter = watch_rtc_get_counter();
@@ -1524,7 +1524,7 @@ static void  _determine_seconds_until_next_background_task(uint8_t *times, uint8
     state->seconds_until_background_task = soonest_timestamp - counter;
 }
 
-static void _schedule_background_task(void *context, uint32_t seconds_from_now, char identifier[]) {
+static void _schedule_background_task(void *context, uint32_t seconds_from_now, __attribute__((unused)) char identifier[]) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0 || state->going_to_die == true)
         return; // nothing happens while dead. no background task is needed.
