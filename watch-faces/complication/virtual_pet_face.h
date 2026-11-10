@@ -33,7 +33,7 @@
  *
  * Life phases:
  * - Egg (5-120 min)
- * - Baby (60 min)
+ * - Baby (2 hrs)
  * - Child (~2 days)
  * - Adult
  * 
