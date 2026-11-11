@@ -254,3 +254,55 @@ int8_t signal_tune[] = {
     0,
 };
 #endif // SIGNAL_TUNE_EVANGELION
+
+#ifdef SIGNAL_TUNE_ALL_STAR
+int8_t signal_tune[] = {
+    BUZZER_NOTE_G4, 14,            // some
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D5, 7,             // -bo-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 7,             // -dy
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_B4, 14,            // once
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 14,            // told
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // me
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C5, 14,            // world
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 14,            // is
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 7,             // gon-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 7,             // -na
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 14,            // roll
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 29,            // me (line break, held)
+    BUZZER_NOTE_REST, 7,
+    BUZZER_NOTE_G4, 14,            // i
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_C5, 14,            // ain't (rising fourth from "i")
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_B4, 7,             // sharp-
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 7,             // -est
+    BUZZER_NOTE_REST, 2,
+    BUZZER_NOTE_A4, 14,            // tool
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_G4, 14,            // in
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_A4, 14,            // the
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_E4, 14,            // shed (slide start)
+    BUZZER_NOTE_REST, 4,
+    BUZZER_NOTE_D4, 72,            // shed (held)
+    BUZZER_NOTE_REST, 64,
+    0
+};
+#endif // SIGNAL_TUNE_ALL_STAR
