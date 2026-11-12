@@ -55,8 +55,8 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
     },
     { // Baby
         .phase_length = 120, // 2 hrs
-        .time_hunger = 18, // 1.8 hrs
-        .time_happiness = 12, // 1.2 hrs
+        .time_hunger = 10, // 1 hrs
+        .time_happiness = 8, // 48 mins
         .time_needs = 6, // 36 mins
     },
     { // Child
