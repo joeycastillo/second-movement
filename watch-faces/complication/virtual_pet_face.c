@@ -1786,7 +1786,8 @@ static void _game_logic_loop(void *context) {
             if (state->needs == VIRTUAL_PET_MAX_NEEDS) {
                 if (state->poops == VIRTUAL_PET_MAX_POOPS) {
                     if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_POOP_SICKNESS_CHANCE);
-                } else {
+                } else if (state->hunger > 0) {
+                    // no poops when hungry!
                     state->poops++;
                     state->needs = 0;
                 }
