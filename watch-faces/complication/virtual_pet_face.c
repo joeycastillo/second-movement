@@ -109,23 +109,23 @@ static virtual_pet_bottom_text_t virtual_pet_type_text[] = {
 static virtual_pet_type_attribute_t virtual_pet_type_attributes[] = {
     // Minutes for every subtraction of a stat {hunger, happiness}
     { // Needy
-        .time_hunger = 40, // 4 hrs
-        .time_happiness = 25, // 2.5 hrs
+        .time_hunger = 60, // 6 hrs
+        .time_happiness = 45, // 4.5 hrs
         .time_needs = 20, // 2 hrs
     },
     { // Average
-        .time_hunger = 55, // 5.5 hrs
-        .time_happiness = 35, // 3.5 hrs
+        .time_hunger = 70, // 7 hrs
+        .time_happiness = 55, // 5.5 hrs
         .time_needs = 25, // 2.5 hrs
     },
     { // Easy
-        .time_hunger = 70, // 7 hrs
-        .time_happiness = 40, // 4 hrs
+        .time_hunger = 90, // 9 hrs
+        .time_happiness = 65, // 6.5 hrs
         .time_needs = 30, // 3 hrs
     },
     { // Secret is suuuuper chill
         .time_hunger = 100, // 10 hrs
-        .time_happiness = 60, // 6 hrs
+        .time_happiness = 70, // 7 hrs
         .time_needs = 45, // 4.5 hrs
     },
 };
