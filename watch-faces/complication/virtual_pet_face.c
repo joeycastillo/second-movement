@@ -598,7 +598,7 @@ static void _setup_pet(void *context) {
     state->last_game_logic_loop_counter = 0;
     state->games_played = 0;
     state->egg_idle_animation_chance = virtual_pet_phase_animations[VIRTUAL_PET_PHASE_EGG].idle_animation_chance;
-    state->snacks_today = 0;
+    state->overfed_snacks_today = 0;
 
     _reset_animation_frames(state);
 
@@ -750,7 +750,7 @@ static void _set_is_sleeping(void *context, watch_date_time_t current_time) {
         if (state->is_sleeping) {
             state->is_sleeping = false;
             // reset snacks_today
-            state->snacks_today = 0;
+            state->overfed_snacks_today = 0;
             //update stats after waking up
             if (state->phase > VIRTUAL_PET_PHASE_EGG) {
                 for (int i = 0; i < 2; i++) {
@@ -1250,6 +1250,7 @@ static bool _handle_action_menu_choice(void *context) {
             if (state->happiness >= VIRTUAL_PET_MAX_HAPPINESS) {
                 if (state->overfeed_counter < VIRTUAL_PET_OVERFEED_AMOUNT_SICKNESS) {
                     state->overfeed_counter++;
+                    if (state->overfed_snacks_today < VIRTUAL_PET_MAX_OVERFEED_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->overfed_snacks_today++;
                     // fall through
                 } else {
                     _make_pet_sick(state);
@@ -1262,7 +1263,6 @@ static bool _handle_action_menu_choice(void *context) {
             // start eating animation
             if (state->buzzer_enabled) button_beep();
             _start_eating_animation(state);
-            if (state->snacks_today < VIRTUAL_PET_MAX_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->snacks_today++;
             return true;
         case VIRTUAL_PET_ACTION_MENU_ITEM_CLEAN:
             if (state->poops > 0) {
@@ -1770,7 +1770,7 @@ static void _game_logic_loop(void *context) {
         }
         // Happiness
         if (state->time_alive % time_happiness == 0) {
-            if (state->snacks_today == VIRTUAL_PET_MAX_SNACKS_DAILY) _make_pet_dead(state);
+            if (state->overfed_snacks_today == VIRTUAL_PET_MAX_OVERFEED_SNACKS_DAILY) _make_pet_dead(state);
             if (state->happiness == 0) {
                 if (state->phase == VIRTUAL_PET_PHASE_CHILD) state->care_mistakes++;
                 if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_METER_EMPTY_SICKNESS_CHANCE);
