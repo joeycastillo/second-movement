@@ -62,4 +62,5 @@ SRCS += \
   ./watch-faces/clock/world_clock2_face.c \
   ./watch-faces/complication/wumpus_face.c \
   ./watch-faces/complication/sun_moon_compass_face.c \
+  ./watch-faces/complication/zodiac_face.c \
 # New watch faces go above this line.
