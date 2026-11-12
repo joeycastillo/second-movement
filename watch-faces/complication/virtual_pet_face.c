@@ -1887,7 +1887,7 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             if (state->start_counter == 0) {
                 // start vpet!
                 // don't play boot sound when it's the main face. no need to drive it and it breaks the emulator sound otherwise
-                if (state->face_idx > 0 && state->buzzer_enabled) movement_play_sequence(virtual_pet_start_tune, BUZZER_PRIORITY_SIGNAL);
+                if (state->face_idx > 0 && state->buzzer_enabled) movement_play_sequence(virtual_pet_start_tune, BUZZER_PRIORITY_BUTTON);
                 _setup_pet(state);
                 state->start_counter = watch_rtc_get_counter();
                 // set birth counter if not egg (otherwise only gets set when hatching, which doesn't happen when starting from baby or larger.)
