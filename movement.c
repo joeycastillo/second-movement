@@ -41,6 +41,7 @@
 #include "shell.h"
 #include "utz.h"
 #include "zones.h"
+#include "zone_offset.h"
 #include "tc.h"
 #include "evsys.h"
 #include "delay.h"
@@ -217,21 +218,13 @@ static void _movement_set_top_of_minute_alarm() {
 }
 
 static bool _movement_update_dst_offset_cache(void) {
-    uzone_t local_zone;
-    udatetime_t udate_time;
+    udatetime_t udate_time = _movement_convert_date_time_to_udate(watch_rtc_get_date_time());
     bool dst_changed = false;
-    watch_date_time_t system_date_time = watch_rtc_get_date_time();
 
     for (uint8_t i = 0; i < NUM_ZONE_NAMES; i++) {
-        unpack_zone(&zone_defns[i], "", &local_zone);
-        watch_date_time_t date_time = watch_utility_date_time_convert_zone(system_date_time, 0, local_zone.offset.hours * 3600 + local_zone.offset.minutes * 60);
-
-        if (!!local_zone.rules_len) {
-            // if local zone has DST rules, we need to see if DST applies.
-            udate_time = _movement_convert_date_time_to_udate(date_time);
-            uoffset_t offset;
-            get_current_offset(&local_zone, &udate_time, &offset);
-            int8_t new_offset = (offset.hours * 60 + offset.minutes) / 15;
+        if (zone_defns[i].rules_len) {
+            // if the zone has DST rules, we need to see if DST applies.
+            int8_t new_offset = zone_offset_at_utc(&zone_defns[i], udate_time) / OFFSET_INCREMENT;
             if (_movement_dst_offset_cache[i] != new_offset) {
                 _movement_dst_offset_cache[i] = new_offset;
                 dst_changed = true;
@@ -672,12 +665,8 @@ int32_t movement_get_timezone_offset_for_date_in_zone(watch_date_time_t date_tim
     }
 
     // Compute the offset for the given date using the zone's DST rules
-    uzone_t local_zone;
-    unpack_zone(&zone_defns[zone_index], "", &local_zone);
     udatetime_t udt = _movement_convert_date_time_to_udate(date_time);
-    uoffset_t offset;
-    get_current_offset(&local_zone, &udt, &offset);
-    return (int32_t)(offset.hours * 60 + offset.minutes) * 60;
+    return (int32_t)zone_offset_at_standard(&zone_defns[zone_index], udt) * 60;
 }
 
 int32_t movement_get_timezone_offset_for_date(watch_date_time_t date_time) {
