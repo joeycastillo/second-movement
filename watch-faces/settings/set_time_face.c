@@ -47,9 +47,21 @@ static void _handle_alarm_button(watch_date_time_t date_time, uint8_t current_pa
             return;
         case 0: // year
             date_time.unit.year = (date_time.unit.year + 1) % 60;
+            // e.g. Feb 29 in a leap year, advanced into a non-leap year: clamp the day down
+            // to the new year's actual last day of that month, rather than let it silently
+            // overflow into the next month (watch_utility_date_time_to_unix_time has no
+            // concept of "invalid day", it just adds (day-1)*86400 on top of the month).
+            if (date_time.unit.day > watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) {
+                date_time.unit.day = watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR);
+            }
             break;
         case 1: // month
             date_time.unit.month = (date_time.unit.month % 12) + 1;
+            // Same clamp as above -- e.g. day 30 or 31, advanced into February, would
+            // otherwise silently overflow into the following month.
+            if (date_time.unit.day > watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) {
+                date_time.unit.day = watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR);
+            }
             break;
         case 2: // day
             date_time.unit.day = (date_time.unit.day % watch_utility_days_in_month(date_time.unit.month, date_time.unit.year + WATCH_RTC_REFERENCE_YEAR)) + 1;
