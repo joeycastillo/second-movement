@@ -39,6 +39,8 @@ Optionally you can set the watch time when building the firmware using `TIMESET=
 
 If you'd like to modify which faces are built and included in the firmware, edit `movement_config.h`. You will get a compilation error if you enable more faces than the watch can store.
 
+When you change `BOARD` or `DISPLAY`, run `make clean` before building again, or the display may come out garbled.
+
 Installing firmware to the watch
 ----------------------------
 To install the firmware onto your Sensor Watch board, plug the watch into your USB port and double tap the tiny Reset button on the back of the board. You should see the LED light up red and begin pulsing. (If it does not, make sure you didn’t plug the board in upside down). Once you see the `WATCHBOOT` drive appear on your desktop, type `make install`. This will convert your compiled program to a UF2 file, and copy it over to the watch.

@@ -86,4 +86,5 @@
 #include "world_clock2_face.h"
 #include "hydration_face.h"
 #include "wumpus_face.h"
+#include "sun_moon_compass_face.h"
 // New includes go above this line.
