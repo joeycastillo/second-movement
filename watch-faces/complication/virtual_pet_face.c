@@ -1262,9 +1262,10 @@ static bool _handle_action_menu_choice(void *context) {
         case VIRTUAL_PET_ACTION_MENU_ITEM_SNACK:
             if (state->sickness > 0) return false;
             if (state->happiness >= VIRTUAL_PET_MAX_HAPPINESS) {
+                if (state->overfed_snacks_today < VIRTUAL_PET_MAX_OVERFEED_SNACKS_DAILY) state->overfed_snacks_today++;
+
                 if (state->overfeed_counter < VIRTUAL_PET_OVERFEED_AMOUNT_SICKNESS) {
                     state->overfeed_counter++;
-                    if (state->overfed_snacks_today < VIRTUAL_PET_MAX_OVERFEED_SNACKS_DAILY && state->phase > VIRTUAL_PET_PHASE_BABY) state->overfed_snacks_today++;
                     // fall through
                 } else {
                     _make_pet_sick(state);
