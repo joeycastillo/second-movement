@@ -897,17 +897,17 @@ static void _draw_sickness(void *context) {
     );
 }
 
-static bool _should_show_title(void *context) {
-    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
-    return (now_ts - state->show_title_ts) < 2;
-}
 static void _draw_title(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
-    if (_should_show_title(state))
-        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Pet", "PE");
-    else
+    if (state->show_title_ticks < 0) {
+        return;
+    } else if (state->show_title_ticks == 0) {
         watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
+        state->show_title_ticks = -1;
+    } else {
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Pet", "PE");
+        state->show_title_ticks--;
+    }
 }
 
 static void _draw_attention(void *context) {
@@ -976,7 +976,7 @@ static void _draw_pet(void *context) {
     if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
-        if (!_should_show_title(state)) _draw_sickness(state);
+        if (state->show_title_ticks == 0) _draw_sickness(state);
         if (state->is_eating) _draw_food(state);
     } else if (state->phase == VIRTUAL_PET_PHASE_DEAD) {
         _draw_little_ghost(state);
@@ -1874,7 +1874,7 @@ void virtual_pet_face_activate(void *context) {
     _exit_menu(state);
     state->face_active = true;
     _activate_ts(state);
-    state->show_title_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
+    state->show_title_ticks = 3;
     if (state->paused && state->paused_automatically) _unpause(state);
     // Handle any tasks related to your watch face coming on screen.
 }
