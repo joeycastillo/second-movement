@@ -897,6 +897,19 @@ static void _draw_sickness(void *context) {
     );
 }
 
+static bool _should_show_title(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
+    return (now_ts - state->activate_ts) < 2;
+}
+static void _draw_title(void *context) {
+    virtual_pet_state_t *state = (virtual_pet_state_t *)context;
+    if (_should_show_title(state))
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "Pet", "PE");
+    else
+        watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "   ", "  ");
+}
+
 static void _draw_attention(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     // don't draw while dead or while sleeping.
@@ -956,13 +969,14 @@ static void _draw_pet(void *context) {
 
     _draw_character(state);
     _draw_paused(state);
+    _draw_title(state);
     // only update when not eating for added gameplay
     if (state->phase > VIRTUAL_PET_PHASE_EGG && !state->is_eating) _draw_attention(state);
     _draw_buzzer_enabled(state);
     if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
-        _draw_sickness(state);
+        if (!_should_show_title(state)) _draw_sickness(state);
         if (state->is_eating) _draw_food(state);
     } else if (state->phase == VIRTUAL_PET_PHASE_DEAD) {
         _draw_little_ghost(state);
