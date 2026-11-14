@@ -263,6 +263,7 @@ typedef struct {
     uint8_t face_idx; // needed for boot sound
     bool face_active;
     uint32_t activate_ts;
+    uint32_t show_title_ts;
     bool paused;
     bool paused_automatically;
 

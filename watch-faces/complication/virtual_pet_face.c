@@ -900,7 +900,7 @@ static void _draw_sickness(void *context) {
 static bool _should_show_title(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
     uint32_t now_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
-    return (now_ts - state->activate_ts) < 2;
+    return (now_ts - state->show_title_ts) < 2;
 }
 static void _draw_title(void *context) {
     virtual_pet_state_t *state = (virtual_pet_state_t *)context;
@@ -1874,6 +1874,7 @@ void virtual_pet_face_activate(void *context) {
     _exit_menu(state);
     state->face_active = true;
     _activate_ts(state);
+    state->show_title_ts = rtc_counter_to_seconds(watch_rtc_get_counter());
     if (state->paused && state->paused_automatically) _unpause(state);
     // Handle any tasks related to your watch face coming on screen.
 }
