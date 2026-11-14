@@ -60,6 +60,7 @@ SRCS += \
   ./watch-faces/clock/solar_time_face.c \
   ./watch-faces/complication/tide_face.c \
   ./watch-faces/clock/world_clock2_face.c \
+  ./watch-faces/complication/virtual_pet_face.c \
   ./watch-faces/complication/wumpus_face.c \
   ./watch-faces/complication/sun_moon_compass_face.c \
 # New watch faces go above this line.
