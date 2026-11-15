@@ -30,6 +30,7 @@
 /*
  * The virtual pet face is a virtual pet, which can grow, live happily depending on how you take care of it,
  * or die.
+ * Find a written (PDF with images) guide here: https://github.com/joeycastillo/second-movement/pull/255#issuecomment-6875724974
  *
  * Life phases:
  * - Egg (5-120 min)
