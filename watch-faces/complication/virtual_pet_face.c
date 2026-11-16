@@ -946,10 +946,10 @@ static void _draw_pet(virtual_pet_state_t *state) {
     if (state->paused) return;
     if (state->phase > VIRTUAL_PET_PHASE_EGG && state->phase != VIRTUAL_PET_PHASE_DEAD) {
         _draw_poop(state);
-        if (state->show_title_ticks == 0) _draw_sickness(state);
+        if (state->show_title_ticks <= 0) _draw_sickness(state);
         if (state->is_eating) _draw_food(state);
     } else if (state->phase == VIRTUAL_PET_PHASE_DEAD) {
-        _draw_little_ghost(state);
+        if (state->show_title_ticks <= 0) _draw_little_ghost(state);
     }
     if (state->is_sleeping) {
         switch (state->current_sleeping_animation_frame) {
@@ -1103,6 +1103,17 @@ static inline void _unpause(virtual_pet_state_t *state) {
     state->paused_counter += current_counter - state->last_game_logic_loop_counter;
 }
 
+static void _first_time_activate(virtual_pet_state_t *state) {
+    if (state->start_counter == 0) {
+        // start vpet!
+        // don't play boot sound when it's the main face. no need to drive it and it breaks the emulator sound otherwise
+        if (state->face_idx > 0 && state->buzzer_enabled) movement_play_sequence(virtual_pet_start_tune, BUZZER_PRIORITY_BUTTON);
+        _setup_pet(state);
+        state->start_counter = watch_rtc_get_counter();
+        // set birth counter if not egg (otherwise only gets set when hatching, which doesn't happen when starting from baby or larger.)
+        if (state->phase > VIRTUAL_PET_PHASE_EGG && state->birth_counter == 0) state->birth_counter = state->start_counter;
+    }
+}
 
 static bool _pet_loop(movement_event_t event, virtual_pet_state_t *state) {
     switch (event.event_type) {
@@ -1120,9 +1131,6 @@ static bool _pet_loop(movement_event_t event, virtual_pet_state_t *state) {
             if (state->is_eating) watch_display_character(' ', virtual_pet_phase_animations[state->phase].food_position);
             switch(state->phase) {
                 case VIRTUAL_PET_PHASE_DEAD:
-                    if (state->passing_counter > 0 && _grieving_time_over(state)) {
-                        _setup_pet(state);
-                    }
                     break;
                 default:
                     state->display_mode = VIRTUAL_PET_DISPLAY_MODE_STATUS_MENU;
@@ -1147,7 +1155,10 @@ static bool _pet_loop(movement_event_t event, virtual_pet_state_t *state) {
             switch(state->phase) {
                 case VIRTUAL_PET_PHASE_DEAD:
                     if (state->passing_counter > 0 && _grieving_time_over(state)) {
+                        clear_display();
                         _setup_pet(state);
+                        _draw_pet(state);
+                        _first_time_activate(state);
                     }
                     return true;
                 default:
@@ -1570,6 +1581,7 @@ static void _game_logic_active(virtual_pet_state_t *state) {
         state->passing_counter = watch_rtc_get_counter();
         if (state->buzzer_enabled) movement_play_sequence(virtual_pet_death_tune, BUZZER_PRIORITY_BUTTON);
         clear_display();
+        state->going_to_die = false;
     }
     
     if (state->phase == VIRTUAL_PET_PHASE_DEAD || state->passing_counter > 0 || state->going_to_die == true)
@@ -1843,15 +1855,7 @@ bool virtual_pet_face_loop(movement_event_t event, void *context) {
             movement_move_to_face(0);
             break;
         case EVENT_ACTIVATE:
-            if (state->start_counter == 0) {
-                // start vpet!
-                // don't play boot sound when it's the main face. no need to drive it and it breaks the emulator sound otherwise
-                if (state->face_idx > 0 && state->buzzer_enabled) movement_play_sequence(virtual_pet_start_tune, BUZZER_PRIORITY_BUTTON);
-                _setup_pet(state);
-                state->start_counter = watch_rtc_get_counter();
-                // set birth counter if not egg (otherwise only gets set when hatching, which doesn't happen when starting from baby or larger.)
-                if (state->phase > VIRTUAL_PET_PHASE_EGG && state->birth_counter == 0) state->birth_counter = state->start_counter;
-            }
+            _first_time_activate(state);
             break;
         default:
             break;
