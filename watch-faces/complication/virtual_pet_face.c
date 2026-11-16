@@ -55,9 +55,9 @@ static virtual_pet_phase_attribute_t virtual_pet_phase_attributes[] = {
     },
     { // Baby
         .phase_length = 120, // 2 hrs
-        .time_hunger = 10, // 1 hrs
-        .time_happiness = 8, // 48 mins
-        .time_needs = 4, // 36 mins
+        .time_hunger = 8, // 48 mins
+        .time_happiness = 6, // 36 mins
+        .time_needs = 4, // 24 mins
     },
     { // Child
         .phase_length = 20*60, // 20 hrs awake (~2 days total)
@@ -1773,7 +1773,7 @@ static void _game_logic_loop(virtual_pet_state_t *state) {
         if (state->time_alive % 1440 == 0 && state->phase == VIRTUAL_PET_PHASE_ADULT) {
             if (!playing_game) _make_pet_sick_with_chance(state, VIRTUAL_PET_ADULT_RANDOM_SICKNESS_CHANCE);
         }
-        if (state->time_alive == 15 && state->phase == VIRTUAL_PET_PHASE_BABY) {
+        if (state->time_alive == virtual_pet_phase_attributes[VIRTUAL_PET_PHASE_BABY].time_happiness * 3 && state->phase == VIRTUAL_PET_PHASE_BABY) {
             if (!playing_game) _make_pet_sick_with_chance(state, 9);
         }
 
