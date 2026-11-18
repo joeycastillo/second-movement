@@ -243,6 +243,7 @@ bool clock_face_loop(movement_event_t event, void *context) {
             break;
         case EVENT_ACTIVATE:
             clock_indicate_low_available_power(state);
+            // fall-through
         case EVENT_TICK:
             current = movement_get_local_date_time();
 
