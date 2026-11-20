@@ -745,6 +745,8 @@ static void _set_is_sleeping(virtual_pet_state_t *state, watch_date_time_t curre
                 }
             }
             //ask for attention once the pet wakes up and it already needs attention
+            //set needs_attention before, so that non-updated UI does not create a false positive
+            _set_needs_attention(state);
             if (state->needs_attention) {
                 _ask_for_attention(state, true);
             }
