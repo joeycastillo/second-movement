@@ -466,8 +466,6 @@ static void display_title(void) {
     game_state = PO_TITLE_SCREEN;
     watch_display_text(WATCH_POSITION_TOP_LEFT, "PO");
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_TOP);
-    watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_BOTTOM);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "POKER ", " POKER");
 }
 
