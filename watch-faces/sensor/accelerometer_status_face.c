@@ -26,21 +26,32 @@
 #include <string.h>
 #include "accelerometer_status_face.h"
 #include "lis2dw.h"
-#include "tc.h"
 #include "watch.h"
 
-static void _accelerometer_status_face_update_display(accel_interrupt_count_state_t *state) {
-    (void) state;
-
-    // Accelerometer title
+static void _status_display(void) {
     watch_display_text_with_fallback(WATCH_POSITION_TOP, "ACCEL", "AC");
-
-    // sensing is live!
     watch_set_indicator(WATCH_INDICATOR_SIGNAL);
 
-    // Sleep/active state
+    // the motion pin reads HIGH when still at rest, LOW when active
     if (HAL_GPIO_A4_read()) watch_display_text(WATCH_POSITION_BOTTOM, "Still ");
     else watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "Active", " ACtiv");
+}
+
+static bool _settings_blink(uint8_t subsecond) {
+    if (subsecond % 2 == 0) {
+        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
+        watch_clear_decimal_if_available();
+        return true;
+    }
+    return false;
+}
+
+static void _settings_display(uint8_t subsecond) {
+    watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "WAKE ", "WA");
+    if (_settings_blink(subsecond)) return;
+    watch_clear_decimal_if_available();
+    watch_display_text(WATCH_POSITION_BOTTOM, movement_get_wake_on_motion() ? "  on  " : "  off ");
 }
 
 void accelerometer_status_face_setup(uint8_t watch_face_index, void ** context_ptr) {
@@ -48,50 +59,37 @@ void accelerometer_status_face_setup(uint8_t watch_face_index, void ** context_p
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(accel_interrupt_count_state_t));
         memset(*context_ptr, 0, sizeof(accel_interrupt_count_state_t));
+
+        /* Set up accelerometer and enable background sensing */
+        movement_set_accelerometer_background_rate(LIS2DW_DATA_RATE_LOWEST);
     }
 }
 
 void accelerometer_status_face_activate(void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
-    // never in settings mode at the start
     state->is_setting = false;
 
-    // update more quickly to catch changes, also to blink setting
     movement_request_tick_frequency(4);
-
-    // fetch current threshold from accelerometer
-    state->threshold = movement_get_accelerometer_motion_threshold();
 }
 
 bool accelerometer_status_face_loop(movement_event_t event, void *context) {
     accel_interrupt_count_state_t *state = (accel_interrupt_count_state_t *)context;
 
     if (state->is_setting) {
-        watch_clear_indicator(WATCH_INDICATOR_SIGNAL);
         switch (event.event_type) {
-            case EVENT_ALARM_BUTTON_DOWN:
-                state->new_threshold = (state->new_threshold + 1) % 64;
-                // fall through
+            case EVENT_ACTIVATE:
             case EVENT_TICK:
-                {
-                    char buf[11];
-                    if (event.subsecond % 2) {
-                        watch_display_text(WATCH_POSITION_BOTTOM, "      ");
-                        watch_clear_decimal_if_available();
-                    } else {
-                        watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-                        watch_display_text_with_fallback(WATCH_POSITION_TOP, "WAKth", "TH");
-                        watch_display_float_with_best_effort(state->new_threshold * 0.03125, " G");
-                        printf("%s\n", buf);
-                    }
-                }
+                _settings_display(event.subsecond);
                 break;
-            case EVENT_LIGHT_BUTTON_DOWN:
-                movement_set_accelerometer_motion_threshold(state->new_threshold);
-                state->threshold = state->new_threshold;
-                watch_clear_decimal_if_available();
+            case EVENT_ALARM_BUTTON_UP:
+                movement_set_wake_on_motion(!movement_get_wake_on_motion());
+                _settings_display(event.subsecond);
+                break;
+            case EVENT_MODE_BUTTON_UP:
                 state->is_setting = false;
+                watch_clear_decimal_if_available();
+                _status_display();
                 break;
             case EVENT_TIMEOUT:
                 movement_move_to_face(0);
@@ -104,20 +102,19 @@ bool accelerometer_status_face_loop(movement_event_t event, void *context) {
         switch (event.event_type) {
             case EVENT_ACTIVATE:
             case EVENT_TICK:
-                _accelerometer_status_face_update_display(state);
+                _status_display();
                 break;
             case EVENT_LOW_ENERGY_UPDATE:
                 // start tick animation if necessary
                 if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
-                // update the display
-                _accelerometer_status_face_update_display(state);
+                _status_display();
                 // on classic LCD, clear seconds since they interfere with the sleep animation.
                 if (watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC) watch_display_text(WATCH_POSITION_SECONDS, "  ");
                 break;
-            case EVENT_ALARM_LONG_PRESS:
-                state->new_threshold = state->threshold;
+            case EVENT_LIGHT_LONG_PRESS:
                 state->is_setting = true;
-                return false;
+                _settings_display(event.subsecond);
+                break;
             default:
                 movement_default_loop_handler(event);
                 break;
