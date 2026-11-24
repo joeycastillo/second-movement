@@ -37,11 +37,13 @@ typedef enum {
     interval_setting_4_work_minutes,
     interval_setting_5_work_seconds,
     interval_setting_6_work_rounds,
-    interval_setting_7_break_minutes,
-    interval_setting_8_break_seconds,
-    interval_setting_9_full_rounds,
-    interval_setting_10_cooldown_minutes,
-    interval_setting_11_cooldown_seconds,
+    interval_setting_7_sprint_minutes,
+    interval_setting_8_sprint_seconds,
+    interval_setting_9_break_minutes,
+    interval_setting_10_break_seconds,
+    interval_setting_11_full_rounds,
+    interval_setting_12_cooldown_minutes,
+    interval_setting_13_cooldown_seconds,
     interval_setting_max
 } interval_setting_idx_t;
 
@@ -55,26 +57,30 @@ typedef enum {
 #define INTERVAL_FACE_STATE_BREAK_CD "BRK"
 #define INTERVAL_FACE_STATE_COOLDOWN "CD"   // CoolDown
 #define INTERVAL_FACE_STATE_COOLDOWN_CD "CLD"
+#define INTERVAL_FACE_STATE_SPRINT "SP"   // Sprint
+#define INTERVAL_FACE_STATE_SPRINT_CD "SPR"
 
 // Define some default timer settings. Each timer is described in an array like this: 
 //      1. warm-up seconds,
 //      2. work time (seconds/minutes)
-//      3. break time (seconds/minutes)
-//      4. full rounds (0 = no limit)
-//      5. cooldown seconds
-// Work time and break time: positive number = seconds, negative number = minutes
-static const int8_t _default_timers[6][5] = {{0, 40, 20, 0, 0},
-                                            {0, 45, 15, 0, 0},
-                                            {10, 20, 10, 8, 10},
-                                            {0, 35, 0, 0, 0},
-                                            {0, -25, -5, 0, 0},
-                                            {0, -20, -5, 0, 0}};
+//      3. sprint time (seconds/minutes)
+//      4. break time (seconds/minutes)
+//      5. full rounds (0 = no limit)
+//      6. cooldown seconds
+// Work time, sprint time and break time: positive number = seconds, negative number = minutes
+static const int8_t _default_timers[6][6] = {{0, 40, 0, 20, 0, 0},
+                                            {0,  45, 0, 15, 0, 0},
+                                            {10, 20, 0, 10, 8, 10},
+                                            {30, 20, 10, 0, 1, 120},
+                                            {0, -25, 0, -5, 0, 0},
+                                            {0, -20, 0, -5, 0, 0}};
 
 static const uint8_t _intro_segdata[4][2] = {{1, 8}, {0, 8}, {0, 7}, {1, 7}};
 static const uint8_t _intro_segdata_cd[4][2] = {{1, 8}, {1, 9}, {0, 9}, {0, 8}};
-static const uint8_t _setting_page_idx[] = {1, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4};
+static const uint8_t _setting_page_idx[] = {1, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5};
 static const int8_t _sound_seq_warmup[] = {BUZZER_NOTE_F6, 8, BUZZER_NOTE_REST, 1, -2, 3, 0};
 static const int8_t _sound_seq_work[] = {BUZZER_NOTE_F6, 8, BUZZER_NOTE_REST, 1, -2, 2, BUZZER_NOTE_C7, 24, 0};
+static const int8_t _sound_seq_sprint[] = {BUZZER_NOTE_F6, 8, BUZZER_NOTE_REST, 1, -2, 2, BUZZER_NOTE_B6, 24, 0};
 static const int8_t _sound_seq_break[] = {BUZZER_NOTE_B6, 15, BUZZER_NOTE_REST, 1, -2, 1, BUZZER_NOTE_B6, 16, 0};
 static const int8_t _sound_seq_cooldown[] = {BUZZER_NOTE_C7, 15, BUZZER_NOTE_REST, 1, -2, 1, BUZZER_NOTE_C7, 24, 0};
 static const int8_t _sound_seq_finish[] = {BUZZER_NOTE_C7, 6, BUZZER_NOTE_E7, 6, BUZZER_NOTE_G7, 6, BUZZER_NOTE_C8, 18, 0};
@@ -136,6 +142,15 @@ static void _timer_write_info(interval_face_state_t *state, char* bottom_row, ch
         sprintf(index_str, " %1d", state->timer_idx + 1);
         break;
     case 3:
+        // sprint interval info
+        sprintf(bottom_row, "%02d%02d",
+            state->timer[state->timer_idx].sprint_minutes,
+            state->timer[state->timer_idx].sprint_seconds);
+        sprintf(state_str[0], "%2s", INTERVAL_FACE_STATE_SPRINT);
+        sprintf(state_str[1], "%3s", INTERVAL_FACE_STATE_SPRINT_CD);
+        sprintf(index_str, " %1d", state->timer_idx + 1);
+        break;
+    case 4:
         // break interval info
         sprintf(bottom_row, "%02d%02d%2d", 
             state->timer[state->timer_idx].break_minutes, 
@@ -146,7 +161,7 @@ static void _timer_write_info(interval_face_state_t *state, char* bottom_row, ch
         sprintf(state_str[1], "%3s", INTERVAL_FACE_STATE_BREAK_CD);
         sprintf(index_str, " %1d", state->timer_idx + 1);
         break;
-    case 4:
+    case 5:
         // cooldown time info
         sprintf(bottom_row, "%02d%02d  ", 
             state->timer[state->timer_idx].cooldown_minutes, 
@@ -206,18 +221,20 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
                     break;
                 case interval_setting_2_warmup_minutes:
                 case interval_setting_4_work_minutes:
-                case interval_setting_7_break_minutes:
-                case interval_setting_10_cooldown_minutes:
+                case interval_setting_9_break_minutes:
+                case interval_setting_12_cooldown_minutes:
+                case interval_setting_7_sprint_minutes:
                     bottom_row[0] = bottom_row[1] = ' ';
                     break;
                 case interval_setting_3_warmup_seconds:
                 case interval_setting_5_work_seconds:
-                case interval_setting_8_break_seconds:
-                case interval_setting_11_cooldown_seconds:
+                case interval_setting_10_break_seconds:
+                case interval_setting_13_cooldown_seconds:
+                case interval_setting_8_sprint_seconds:
                     bottom_row[2] = bottom_row[3] = ' ';
                     break;
                 case interval_setting_6_work_rounds:
-                case interval_setting_9_full_rounds:
+                case interval_setting_11_full_rounds:
                     bottom_row[4] = bottom_row[5] = ' ';
                     break;
                 default:
@@ -225,7 +242,7 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
             }
         }
         // show lap indicator only when rounds are set
-        if (_setting_idx == interval_setting_6_work_rounds || _setting_idx == interval_setting_9_full_rounds)
+        if (_setting_idx == interval_setting_6_work_rounds || _setting_idx == interval_setting_11_full_rounds)
             watch_set_indicator(WATCH_INDICATOR_LAP);
         else
             watch_clear_indicator(WATCH_INDICATOR_LAP);
@@ -248,6 +265,10 @@ static void _face_draw(interval_face_state_t *state, uint8_t subsecond) {
         case 3:
             sprintf(int_state_str[0], "%2s", INTERVAL_FACE_STATE_COOLDOWN);
             sprintf(int_state_str[1], "%3s", INTERVAL_FACE_STATE_COOLDOWN_CD);
+            break;
+        case 4:
+            sprintf(int_state_str[0], "%2s", INTERVAL_FACE_STATE_SPRINT);
+            sprintf(int_state_str[1], "%3s", INTERVAL_FACE_STATE_SPRINT_CD);
             break;
         default:
             break;
@@ -333,20 +354,26 @@ static void _handle_alarm_button(interval_face_state_t *state) {
     case interval_setting_6_work_rounds:
         _inc_uint8(&state->timer[state->timer_idx].work_rounds, 1, 100);
         break;
-    case interval_setting_7_break_minutes:
+    case interval_setting_9_break_minutes:
         _inc_uint8(&state->timer[state->timer_idx].break_minutes, 1, 60);
         break;
-    case interval_setting_8_break_seconds:
+    case interval_setting_10_break_seconds:
         _inc_uint8(&state->timer[state->timer_idx].break_seconds, 5, 60);
         break;
-    case interval_setting_9_full_rounds:
+    case interval_setting_11_full_rounds:
         _inc_uint8(&state->timer[state->timer_idx].full_rounds, 1, 100);
         break;
-    case interval_setting_10_cooldown_minutes:
+    case interval_setting_12_cooldown_minutes:
         _inc_uint8(&state->timer[state->timer_idx].cooldown_minutes, 1, 60);
         break;
-    case interval_setting_11_cooldown_seconds:
+    case interval_setting_13_cooldown_seconds:
         _inc_uint8(&state->timer[state->timer_idx].cooldown_seconds, 5, 60);
+        break;
+    case interval_setting_7_sprint_minutes:
+        _inc_uint8(&state->timer[state->timer_idx].sprint_minutes, 1, 60);
+        break;
+    case interval_setting_8_sprint_seconds:
+        _inc_uint8(&state->timer[state->timer_idx].sprint_seconds, 5, 60);
         break;
     default:
         break;
@@ -375,6 +402,10 @@ static void _set_next_timestamp(interval_face_state_t *state) {
         delta = timer.cooldown_minutes * 60 + timer.cooldown_seconds;
         sound_seq = (int8_t *)_sound_seq_cooldown;
         break;
+    case 4:
+        delta = timer.sprint_minutes * 60 + timer.sprint_seconds;
+        sound_seq = (int8_t *)_sound_seq_sprint;
+        break;
     default:
         sound_seq = NULL;
         break;
@@ -393,6 +424,7 @@ static inline bool _is_timer_empty(interval_timer_setting_t *timer) {
     // checks if a timer is empty
     return (timer->warmup_minutes + timer->warmup_seconds 
         + timer->work_minutes + timer->work_seconds 
+        + timer->sprint_minutes + timer->sprint_seconds
         + timer->break_minutes + timer->break_seconds
         + timer->cooldown_minutes + timer->cooldown_seconds == 0);
 }
@@ -437,10 +469,16 @@ void interval_face_setup(uint8_t watch_face_index, void **context_ptr) {
             if (_default_timers[i][1] < 0) state->timer[i].work_minutes = -_default_timers[i][1];
             else state->timer[i].work_seconds = _default_timers[i][1];
             state->timer[i].work_rounds = 1;
-            if (_default_timers[i][2] < 0) state->timer[i].break_minutes = -_default_timers[i][2];
-            else state->timer[i].break_seconds = _default_timers[i][2];
-            state->timer[i].full_rounds = _default_timers[i][3];
-            state->timer[i].cooldown_seconds = _default_timers[i][4];
+            state->timer[i].sprint_seconds = _default_timers[i][2];
+            if (_default_timers[i][3] < 0) state->timer[i].break_minutes = -_default_timers[i][3];
+            else state->timer[i].break_seconds = _default_timers[i][3];
+            state->timer[i].full_rounds = _default_timers[i][4];
+            if(_default_timers[i][5]>60){
+                state->timer[i].cooldown_minutes = _default_timers[i][5] / 60;
+                state->timer[i].cooldown_seconds = _default_timers[i][5] % 60;
+            }else{
+                state->timer[i].cooldown_seconds = _default_timers[i][5];
+            }
         }
     }
 }
@@ -473,7 +511,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
     case EVENT_TICK:
         if (state->face_state == interval_state_intro) {
             // play intro animation so the wearer knows the face
-            if (_ticks == 4) {
+            if (_ticks >= 0) { //if (_ticks == 4) {
                 // transition to default view of current interval slot
                 watch_set_colon();
                 _init_timer_info(state);
@@ -520,9 +558,9 @@ bool interval_face_loop(movement_event_t event, void *context) {
                     // play a short beep as confirmation
                     watch_buzzer_play_note(BUZZER_NOTE_C8, 70);
                 }
-            } else if (_setting_idx == interval_setting_9_full_rounds && !timer->full_rounds) {
+            } else if (_setting_idx == interval_setting_11_full_rounds && !timer->full_rounds) {
                 // skip cooldown if full rounds are not limited
-                _setting_idx = interval_setting_11_cooldown_seconds;
+                _setting_idx = interval_setting_13_cooldown_seconds;
             }
             _setting_idx += 1;
             if (_setting_idx == interval_setting_max) {
@@ -593,6 +631,7 @@ bool interval_face_loop(movement_event_t event, void *context) {
                 _timer_work_round = _timer_full_round = 0;
                 if (timer->warmup_minutes + timer->warmup_seconds) _timer_run_state = 0;
                 else if (timer->work_minutes + timer->work_seconds) _timer_run_state = 1;
+                else if (timer->sprint_minutes + timer->sprint_seconds) _timer_run_state = 4;
                 else if (timer->break_minutes + timer->break_seconds) _timer_run_state = 2;
                 else if (timer->cooldown_minutes + timer->cooldown_seconds) _timer_run_state = 3;
                 movement_request_tick_frequency(1);
@@ -622,23 +661,36 @@ bool interval_face_loop(movement_event_t event, void *context) {
         if (_timer_run_state == 0) {
             // warmup finished
             if (timer->work_minutes + timer->work_seconds) _timer_run_state = 1;
+            else if (timer->sprint_minutes + timer->sprint_seconds) _timer_run_state = 4;
             else if (timer->break_minutes + timer->break_seconds) _timer_run_state = 2;
             else if (timer->cooldown_minutes + timer->cooldown_seconds) _timer_run_state = 3;
-            else _timer_run_state = 4;
+            else _timer_run_state = 5;
         } else if (_timer_run_state == 1) {
             // work finished
             _timer_work_round++;
             if (_timer_work_round == timer->work_rounds) {
                 _timer_work_round = 0;
-                if (timer->break_minutes + timer->break_seconds && (timer->full_rounds == 0 
+                if (timer->sprint_minutes + timer->sprint_seconds) _timer_run_state = 4;
+                else if (timer->break_minutes + timer->break_seconds && (timer->full_rounds == 0
                     || (timer->full_rounds && _timer_full_round + 1 < timer->full_rounds))) _timer_run_state = 2;
                 else {
                     _timer_full_round++;
                     if (timer->full_rounds && _timer_full_round == timer->full_rounds) {
                         if (timer->cooldown_minutes + timer->cooldown_seconds) _timer_run_state = 3;
-                        else _timer_run_state = 4;
+                        else _timer_run_state = 5;
                     } else _timer_run_state = 1;
                 }
+            }
+        } else if (_timer_run_state == 4) {
+            // sprint finished
+            if (timer->break_minutes + timer->break_seconds && (timer->full_rounds == 0 
+                || (timer->full_rounds && _timer_full_round + 1 < timer->full_rounds))) _timer_run_state = 2;
+            else {
+                _timer_full_round++;
+                if (timer->full_rounds && _timer_full_round == timer->full_rounds) {
+                    if (timer->cooldown_minutes + timer->cooldown_seconds) _timer_run_state = 3;
+                    else _timer_run_state = 5;
+                } else _timer_run_state = 1;
             }
         } else if (_timer_run_state == 2) {
             // break finished
@@ -646,16 +698,16 @@ bool interval_face_loop(movement_event_t event, void *context) {
             _timer_work_round = 0;
             if (timer->full_rounds && _timer_full_round == timer->full_rounds) {
                 if (timer->cooldown_minutes + timer->cooldown_seconds) _timer_run_state = 3;
-                else _timer_run_state = 4;
+                else _timer_run_state = 5;
                 _timer_full_round--;
             } else {
                 if (timer->work_minutes + timer->work_seconds) _timer_run_state = 1;
             }
         } else if (_timer_run_state == 3)
             // cooldown finished
-            _timer_run_state = 4;
+            _timer_run_state = 5;
         // set next timestamp or play final sound sequence
-        if (_timer_run_state < 4) {
+        if (_timer_run_state < 5) {
             // transition to next timer phase
             _set_next_timestamp(state);
         } else {
