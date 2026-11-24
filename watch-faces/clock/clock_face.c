@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include "clock_face.h"
+#include "movement_config.h"
 #include "watch.h"
 #include "watch_utility.h"
 #include "watch_common_display.h"
@@ -253,7 +254,11 @@ bool clock_face_loop(movement_event_t event, void *context) {
 
             break;
         case EVENT_ALARM_LONG_PRESS:
-            clock_toggle_time_signal(state);
+            if (MOVEMENT_HIDDEN_FACE_INDEX) {
+              movement_move_to_face(MOVEMENT_HIDDEN_FACE_INDEX);
+            } else {
+                clock_toggle_time_signal(state);
+            }
             break;
         case EVENT_BACKGROUND_TASK:
             // uncomment this line to snap back to the clock face when the hour signal sounds:
