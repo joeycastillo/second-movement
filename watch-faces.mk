@@ -46,6 +46,7 @@ SRCS += \
   ./watch-faces/complication/pulsometer_face.c \
   ./watch-faces/complication/interval_face.c \
   ./watch-faces/complication/timer_face.c \
+  ./watch-faces/complication/contraction_face.c \
   ./watch-faces/complication/simple_coin_flip_face.c \
   ./watch-faces/sensor/lis2dw_monitor_face.c \
   ./watch-faces/complication/wareki_face.c \
@@ -56,6 +57,7 @@ SRCS += \
   ./watch-faces/complication/lander_face.c \
   ./watch-faces/complication/simon_face.c \
   ./watch-faces/complication/ping_face.c \
+  ./watch-faces/complication/pi_face.c\
   ./watch-faces/complication/tomato_face.c \
   ./watch-faces/clock/solar_time_face.c \
   ./watch-faces/complication/tide_face.c \

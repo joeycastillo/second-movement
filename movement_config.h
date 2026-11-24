@@ -29,14 +29,18 @@
 
 const watch_face_t watch_faces[] = {
     clock_face,
-    world_clock_face,
+    timer_face,
+    beats_face,
+    contraction_face,
     sunrise_sunset_face,
+    periodic_table_face,
+    probability_face,
+    tally_face,
     moon_phase_face,
-    fast_stopwatch_face,
-    countdown_face,
+    stopwatch_face,
     alarm_face,
     temperature_display_face,
-    voltage_face,
+    pi_face,
     settings_face,
     set_time_face,
 };
