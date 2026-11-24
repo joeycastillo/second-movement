@@ -272,7 +272,7 @@ static void _settings_display(movement_event_t event, world_clock2_state_t *stat
         zone_name = watch_utility_time_zone_name_at_index(state->current_zone);
         watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, zone_name, zone_name);
     } else {
-        sprintf(buf, " %3d%02d", zone_offset.hours, zone_offset.minutes);
+        sprintf(buf, " %3d%02d", zone_offset.hours, abs(zone_offset.minutes));
         watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, buf, buf);
     }
 }
