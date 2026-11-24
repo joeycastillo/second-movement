@@ -171,7 +171,7 @@ bool close_enough_face_loop(movement_event_t event, void *context) {
                 show_next_hour = true;
             }
 
-            if (movement_clock_mode_24h() != MOVEMENT_CLOCK_MODE_24H) {
+            if (!movement_clock_mode_24h()) {
                 // if we are at "MM 2 12", don't show the PM indicator
                 if (close_enough_hour < 12 || show_next_hour) {
                     watch_clear_indicator(WATCH_INDICATOR_PM);
