@@ -61,9 +61,9 @@ typedef enum {
 //      2. work time (seconds/minutes)
 //      3. break time (seconds/minutes)
 //      4. full rounds (0 = no limit)
-//      5. cooldown seconds
-// Work time and break time: positive number = seconds, negative number = minutes
-static const int8_t _default_timers[6][5] = {{0, 40, 20, 0, 0},
+//      5. cooldown time (seconds/minutes)
+// Work, break and cooldown time: positive number = seconds, negative number = minutes
+static const int8_t _default_timers[6][5] = {{0, 5, 5, 1, -1},
                                             {0, 45, 15, 0, 0},
                                             {10, 20, 10, 8, 10},
                                             {0, 35, 0, 0, 0},
@@ -440,7 +440,8 @@ void interval_face_setup(uint8_t watch_face_index, void **context_ptr) {
             if (_default_timers[i][2] < 0) state->timer[i].break_minutes = -_default_timers[i][2];
             else state->timer[i].break_seconds = _default_timers[i][2];
             state->timer[i].full_rounds = _default_timers[i][3];
-            state->timer[i].cooldown_seconds = _default_timers[i][4];
+            if (_default_timers[i][4] < 0) state->timer[i].cooldown_minutes = -_default_timers[i][4];
+            else state->timer[i].cooldown_seconds = _default_timers[i][4];
         }
     }
 }
