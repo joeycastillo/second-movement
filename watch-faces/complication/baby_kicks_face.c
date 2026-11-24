@@ -418,6 +418,9 @@ bool baby_kicks_face_loop(movement_event_t event, void *context) {
         case EVENT_LOW_ENERGY_UPDATE:
             _start_sleep_face();
             break;
+        case EVENT_TIMEOUT:
+            // we stay in this face until the user chooses to exit
+            break;
         default:
             movement_default_loop_handler(event);
             break;

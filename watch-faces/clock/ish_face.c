@@ -177,6 +177,10 @@ bool ish_face_loop(movement_event_t event, void *context) {
             ish_face_update_display(state, date_time);
             break;
         }
+        case EVENT_TIMEOUT: {
+            // we never resign this clock face.
+            break;
+        }
         default:
             // Use default handler for all other events
             return movement_default_loop_handler(event);
@@ -190,4 +194,3 @@ void ish_face_resign(void *context) {
     // Stop colon blink and sleep animation when leaving the face
     ish_face_stop_tick_tock_animation();
 }
-

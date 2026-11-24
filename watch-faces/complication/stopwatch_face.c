@@ -144,8 +144,13 @@ bool stopwatch_face_loop(movement_event_t event, void *context) {
             }
             break;
         case EVENT_TIMEOUT:
-            // explicitly ignore the timeout event so we stay on screen
-            break;
+            if (stopwatch_state->running) {
+                // explicitly ignore the timeout event so we stay on screen
+                break;
+            } else {
+                // otherwise we defer the timeout behavior to the default handler.
+                return movement_default_loop_handler(event);
+            }
         case EVENT_LOW_ENERGY_UPDATE:
             if (!watch_sleep_animation_is_running()) watch_start_sleep_animation(1000);
             if (!stopwatch_state->running) {
