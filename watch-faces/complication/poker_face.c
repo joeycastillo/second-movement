@@ -300,8 +300,6 @@ static void set_segment_at_position(segment_t segment, uint8_t position) {
     watch_lcd_type_t lcd_type = watch_get_lcd_type();
     if (lcd_type == WATCH_LCD_TYPE_CUSTOM) {
         segmap = Custom_LCD_Display_Mapping[position];
-    } else if (lcd_type == WATCH_LCD_TYPE_GSHOCK) {
-        segmap = GShock_LCD_Display_Mapping[position];
     } else {
         segmap = Classic_LCD_Display_Mapping[position];
     }
@@ -325,7 +323,7 @@ static void display_rank(hand_ranks_t rank) {
             watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, "3K", " 3");
             break;
         case PO_STRAIGHT:
-            watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP_RIGHT, "St", "St", " S");
+            watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, "St", " S");
             break;
         case PO_FULL_HOUSE:
             watch_display_text_with_fallback(WATCH_POSITION_TOP_RIGHT, "FH", " F");
@@ -339,16 +337,11 @@ static void display_rank(hand_ranks_t rank) {
 }
 
 static void display_opponent_rank(void) {
-    if (watch_get_lcd_type() == WATCH_LCD_TYPE_GSHOCK) {
-        watch_display_text(WATCH_POSITION_MONTH_GSHOCK, "OP");
-        watch_set_indicator(WATCH_INDICATOR_BOX_COLON_TOP);
-        watch_set_indicator(WATCH_INDICATOR_BOX_COLON_BOTTOM);
-    }
     display_rank(opponent.hand_rank);
 }
 
 static void display_lifted_card_at_position(uint8_t card, uint8_t display_position) {
-    bool indicate_top = false;  // Only on G-Shock and Custom because Classic indicates top and bottom.
+    bool indicate_top = false;
     bool is_classic = watch_get_lcd_type() == WATCH_LCD_TYPE_CLASSIC;
     switch (card) {
         case 4:
@@ -472,7 +465,7 @@ static void add_to_game_scores(bool add_to_wins) {
 static void display_title(void) {
     game_state = PO_TITLE_SCREEN;
     watch_display_text(WATCH_POSITION_TOP_LEFT, "PO");
-    watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP_RIGHT, "    ", "  ", "  ");
+    watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
     watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_TOP);
     watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_BOTTOM);
     watch_display_text_with_fallback(WATCH_POSITION_BOTTOM, "POKER ", " POKER");
@@ -486,7 +479,7 @@ static void display_win_ratio(poker_face_state_t *state) {
         win_ratio = (uint8_t)((100 * state->games_won) / state->games_played);
     }
     watch_display_text(WATCH_POSITION_TOP_RIGHT, "  ");
-    watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP, "WR   ", "WINS  ", "WR");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP, "WINS  ", "WR");
     sprintf(buf, "%3dPct", win_ratio);
     watch_display_text(WATCH_POSITION_BOTTOM, buf);
 }
@@ -553,19 +546,19 @@ static bool swap_cards(hand_info_t *hand_info) {
 
 static inline void display_win(void) {
     add_to_game_scores(true);
-    watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP_LEFT, "W ", "WI", "WI");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WI", "WI");
     display_opponent_rank();
 }
 
 static inline void display_lose(void) {
     add_to_game_scores(false);
-    watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP_LEFT, "L ", "LO", "LO");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LO", "LO");
     display_opponent_rank();
 }
 
 static inline void display_tie(void) {
     // Don't record ties to the win ratio
-    watch_display_text_with_gshock_and_fallback(WATCH_POSITION_TOP_LEFT, "T ", "TI", "TI");
+    watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "TI", "TI");
     display_opponent_rank();
 }
 
@@ -775,21 +768,6 @@ bool poker_face_loop(movement_event_t event, void *context) {
                 blink_selected_card(event.subsecond);
             }
             break;
-#ifdef FORCE_GSHOCK_LCD_TYPE
-        case EVENT_START_BUTTON_UP:
-            if (game_state == PO_PLAYING) {
-                handle_button_presses(PO_LEFT);
-            } else {
-                return movement_default_loop_handler(event);
-            }
-            break;
-        case EVENT_LIGHT_BUTTON_UP:
-            handle_button_presses(PO_RIGHT);
-            break;
-        case EVENT_ALARM_BUTTON_UP:
-            handle_button_presses(PO_SELECT);
-            break;
-#else
         case EVENT_MODE_BUTTON_UP:
             if (game_state == PO_PLAYING) {
                 handle_button_presses(PO_LEFT);
@@ -803,7 +781,6 @@ bool poker_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_BUTTON_UP:
             handle_button_presses(PO_SELECT);
             break;
-#endif
         case EVENT_LIGHT_BUTTON_DOWN:
             break;
         case EVENT_LIGHT_LONG_PRESS:
@@ -829,9 +806,6 @@ bool poker_face_loop(movement_event_t event, void *context) {
                 display_win_ratio(state);
             } else if (game_state == PO_RESULT) {
                 if (displaying_opponent) {
-                    watch_display_text(WATCH_POSITION_MONTH_GSHOCK, "  ");
-                    watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_TOP);
-                    watch_clear_indicator(WATCH_INDICATOR_BOX_COLON_BOTTOM);
                     display_player_hand();
                     display_rank(player.hand_rank);
                 } else {
