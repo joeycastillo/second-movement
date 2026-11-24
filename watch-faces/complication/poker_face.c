@@ -532,6 +532,7 @@ static bool swap_cards(hand_info_t *hand_info) {
     for (uint8_t i=0; i<POKER_HAND_SIZE; i++) {
         if (hand_info->cards_to_swap[i]) {
             hand_info->hand[i] = get_next_card();
+            hand_info->cards_to_swap[i] = false;
             cards_swapped = true;
         }
     }
