@@ -24,6 +24,10 @@ double __daylen__( int year, int month, int day, double lon, double lat,
 int __sunriset__( int year, int month, int day, double lon, double lat,
                   double altit, int upper_limb, double *rise, double *set );
 
+/* The Sun's ecliptic longitude (degrees, 0..360) and distance (AU) at an */
+/* instant given in days since 2000 Jan 0.0 UT.                          */
+void sunpos( double d, double *lon, double *r );
+
 void sun_RA_dec( double d, double *RA, double *dec, double *r );
 
 double revolution( double x );

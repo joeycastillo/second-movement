@@ -63,4 +63,5 @@ SRCS += \
   ./watch-faces/complication/virtual_pet_face.c \
   ./watch-faces/complication/wumpus_face.c \
   ./watch-faces/complication/sun_moon_compass_face.c \
+  ./watch-faces/complication/zodiac_face.c \
 # New watch faces go above this line.

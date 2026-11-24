@@ -71,6 +71,7 @@ INCLUDES += \
   -I./filesystem \
   -I./shell \
   -I./lib/sunriset \
+  -I./lib/zodiac \
   -I./lib/sha1 \
   -I./lib/sha256 \
   -I./lib/sha512 \
@@ -98,6 +99,7 @@ SRCS += \
   ./shell/shell.c \
   ./shell/shell_cmd_list.c \
   ./lib/sunriset/sunriset.c \
+  ./lib/zodiac/zodiac.c \
   ./lib/base32/base32.c \
   ./lib/TOTP/sha1.c \
   ./lib/TOTP/sha256.c \
