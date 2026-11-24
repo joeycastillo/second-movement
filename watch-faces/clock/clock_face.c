@@ -54,8 +54,8 @@ static void clock_indicate_alarm() {
     clock_indicate(WATCH_INDICATOR_SIGNAL, movement_alarm_enabled());
 }
 
-static void clock_indicate_time_signal(clock_state_t *state) {
-    clock_indicate(WATCH_INDICATOR_BELL, state->time_signal_enabled);
+static void clock_indicate_mute_state() {
+    clock_indicate(WATCH_INDICATOR_BELL, !movement_is_muted());
 }
 
 static void clock_indicate_24h() {
@@ -105,9 +105,9 @@ static void clock_check_battery_periodically(clock_state_t *state, watch_date_ti
     clock_indicate_low_available_power(state);
 }
 
-static void clock_toggle_time_signal(clock_state_t *state) {
-    state->time_signal_enabled = !state->time_signal_enabled;
-    clock_indicate_time_signal(state);
+static void clock_toggle_muted() {
+    movement_mute(!movement_is_muted());
+    clock_indicate_mute_state();
 }
 
 static void clock_display_all(watch_date_time_t date_time) {
@@ -212,7 +212,6 @@ void clock_face_setup(uint8_t watch_face_index, void ** context_ptr) {
     if (*context_ptr == NULL) {
         *context_ptr = malloc(sizeof(clock_state_t));
         clock_state_t *state = (clock_state_t *) *context_ptr;
-        state->time_signal_enabled = false;
         state->watch_face_index = watch_face_index;
     }
 }
@@ -222,7 +221,7 @@ void clock_face_activate(void *context) {
 
     clock_stop_tick_tock_animation();
 
-    clock_indicate_time_signal(state);
+    clock_indicate_mute_state();
     clock_indicate_alarm();
     clock_indicate_24h();
 
@@ -253,12 +252,7 @@ bool clock_face_loop(movement_event_t event, void *context) {
 
             break;
         case EVENT_ALARM_LONG_PRESS:
-            clock_toggle_time_signal(state);
-            break;
-        case EVENT_BACKGROUND_TASK:
-            // uncomment this line to snap back to the clock face when the hour signal sounds:
-            // movement_move_to_face(state->watch_face_index);
-            movement_play_signal();
+            clock_toggle_muted();
             break;
         default:
             return movement_default_loop_handler(event);
@@ -269,16 +263,4 @@ bool clock_face_loop(movement_event_t event, void *context) {
 
 void clock_face_resign(void *context) {
     (void) context;
-}
-
-movement_watch_face_advisory_t clock_face_advise(void *context) {
-    movement_watch_face_advisory_t retval = { 0 };
-    clock_state_t *state = (clock_state_t *) context;
-
-    if (state->time_signal_enabled) {
-        watch_date_time_t date_time = movement_get_local_date_time();
-        retval.wants_background_task = date_time.unit.minute == 0;
-    }
-
-    return retval;
 }
