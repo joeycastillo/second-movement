@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Chris Ellis
+ * Copyright (c) 2026 David Volovskiy
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,45 @@
 #include "movement.h"
 
 /*
- * Blackjack face
+ * Poker face
  * ======================
  *
  * Simple poker game.
  *
+ * Very simple 5-card poker.
+ * There's no bets, just one round of wapping to make the best hand you can.
+ * All cards are the same color, so flushes don't occur.
  * 
+ * When you start a game, you get dealt five cards. Your cursor will be on the right-most poistion.
+ * The top-right will show your current hand rank ('1P' for 1-Pair, '3K' for three-of-a-kind)
+ * You can then scroll left or right to select a card to swap. When you select the card, it'll be raised
+ * up so as to make it clear you want to swap it.
+ * If you select the empty right-most position, or long-press the select button, you'll swap the selected cards.
+ * Immedietly when you swap, the dealer will swap their cards and the top-right will show their rank.
+ * If you're using the Jolt, the opponent's rank will display 'op:' in front of it to make it clear you're
+ * seeing their rank.
+ * The top-left will show if you won that round ('W' for Win, 'L' for Lose, 'T' for Tie).
+ * If you want to see the opponent's full hand, you can long-press the select button and it'll show their hand and rank.
+ * Long-pressing the select button will go back to showing your hand and rank.
+ * If you want more then one round of being able to swap cards, then change BETTING_ROUNDS to a larger number.
+ * 
+ * Controls:
+ *  Jolt (as text is printed on DW5600UE):
+ *   ADJUST: Move Left.
+ *   START: Move Right. Long press on title shows winrate percentage. Long-pressing when looking at the winrate resets it.
+ *   LIGHT: Select card to swap. Selecting the slot after the cards or long pressing swaps the selected cards.
+ *          Long press on title shows winrate percentage.
+ *  Sensorwatch:
+ *   MODE: Move Left. Long press or pressing when not in a game goes to the next face.
+ *   ALARM: Move Right. Long press on title shows winrate percentage. Long-pressing when looking at the winrate resets it.
+ *   LIGHT: Select card to swap. Selecting the slot after the cards or long pressing swaps the selected cards.
+ *          Long press on title shows winrate percentage.
  * 
  * | Cards   |                          |
  * |---------|--------------------------|
- * | Value   |2|3|4|5|6|7|8|9|
- * | Display |2|3|4|5|6|7|8|9|
+ * | Value   |2|3|4|5|6|7|8|9|10|J|Q|K|A|
+ * | Display |2|3|4|5|6|7|8|9| 0|J|q|K|a|
+ * If you're using a custom display, Ace will display as 'A', not 'a'
  */
 
 
