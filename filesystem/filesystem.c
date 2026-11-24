@@ -318,6 +318,26 @@ int filesystem_cmd_b64encode(int argc, char *argv[]) {
     return 0;
 }
 
+int filesystem_cmd_b64decode(int argc, char *argv[]) {
+    (void) argc;
+    char *buf = malloc(strlen(argv[1]) * 1.5 + 1);
+    unsigned int decoded_size = b64_decode((unsigned char *)argv[1], strlen(argv[1]), (unsigned char *)buf);
+    if (!decoded_size) {
+        printf("No bytes decoded.\r\n");
+        return 0;
+    }
+    if (!strcmp(argv[2], ">>")) {
+        if (filesystem_file_exists(argv[3])) {
+            filesystem_append_file(argv[3], buf, decoded_size);
+        } else {
+            printf("b64decode: %s: No such file\r\n", argv[3]);
+        }
+    } else if (!strcmp(argv[2], ">")) {
+            filesystem_write_file(argv[3], buf, decoded_size);
+    }
+    return 0;
+}
+
 int filesystem_cmd_df(int argc, char *argv[]) {
     (void) argc;
     (void) argv;

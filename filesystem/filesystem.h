@@ -99,6 +99,7 @@ bool filesystem_append_file(char *filename, char *text, int32_t length);
 int filesystem_cmd_ls(int argc, char *argv[]);
 int filesystem_cmd_cat(int argc, char *argv[]);
 int filesystem_cmd_b64encode(int argc, char *argv[]);
+int filesystem_cmd_b64decode(int argc, char *argv[]);
 int filesystem_cmd_df(int argc, char *argv[]);
 int filesystem_cmd_rm(int argc, char *argv[]);
 int filesystem_cmd_format(int argc, char *argv[]);
