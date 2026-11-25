@@ -82,6 +82,7 @@ typedef struct {
 typedef enum {
     PO_TITLE_SCREEN,
     PO_PLAYING,
+    PO_HAND_FINAL,
     PO_RESULT,
     PO_WIN_RATIO,
 } game_state_t;
@@ -543,22 +544,35 @@ static bool swap_cards(hand_info_t *hand_info) {
     return cards_swapped;
 }
 
+static inline void display_player_or_opponent_hand(void) {
+    if (displaying_opponent) {
+        display_opponent_hand();
+        display_opponent_rank();
+    } else {
+        display_player_hand();
+        display_rank(player.hand_rank);
+    }
+}
+
 static inline void display_win(void) {
     add_to_game_scores(true);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "WI", "WI");
-    display_opponent_rank();
+    displaying_opponent = true;
+    display_player_or_opponent_hand();
 }
 
 static inline void display_lose(void) {
     add_to_game_scores(false);
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "LO", "LO");
-    display_opponent_rank();
+    displaying_opponent = true;
+    display_player_or_opponent_hand();
 }
 
 static inline void display_tie(void) {
     // Don't record ties to the win ratio
     watch_display_text_with_fallback(WATCH_POSITION_TOP_LEFT, "TI", "TI");
-    display_opponent_rank();
+    displaying_opponent = true;
+    display_player_or_opponent_hand();
 }
 
 static inline uint8_t get_top_rank_card(const hand_info_t *hand_info) {
@@ -705,7 +719,11 @@ static void make_decision(void) {
         bool opponent_swapped = swap_cards(&opponent);
         betting_round++;
         if (betting_round > BETTING_ROUNDS) {
-            get_result();
+            if (player_swapped) {
+                game_state = PO_HAND_FINAL;
+            } else {
+                get_result();
+            }
         } else if (!player_swapped) {
             // Even though we're good with our cards, the opponent gets to keep swapping until they're out of rounds.
             while (opponent_swapped && betting_round <= BETTING_ROUNDS) {
@@ -743,6 +761,9 @@ static void handle_button_presses(button_options_t option) {
             make_decision();
             break;
         }
+        break;
+    case PO_HAND_FINAL:
+        get_result();
         break;
     case PO_RESULT:
     case PO_WIN_RATIO:
@@ -818,14 +839,8 @@ bool poker_face_loop(movement_event_t event, void *context) {
             } else if (game_state == PO_TITLE_SCREEN) {
                 display_win_ratio(state);
             } else if (game_state == PO_RESULT) {
-                if (displaying_opponent) {
-                    display_player_hand();
-                    display_rank(player.hand_rank);
-                } else {
-                    display_opponent_hand();
-                    display_opponent_rank();
-                }
                 displaying_opponent = !displaying_opponent;
+                display_player_or_opponent_hand();
             }
             break;
         case EVENT_TIMEOUT:
