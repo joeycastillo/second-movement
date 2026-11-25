@@ -626,13 +626,17 @@ static void get_result(void) {
 #endif
 }
 
-static inline void display_player_card_or_lifted(void) {
-    if (player.selected_pos == POKER_HAND_SIZE) return;
-    if (player.cards_to_swap[player.selected_pos]) {
-        display_lifted_card_at_position(player.hand[player.selected_pos], BOARD_DISPLAY_START + player.selected_pos);
+static inline void display_player_card_or_lifted_at_position(uint8_t card_to_display) {
+    if (card_to_display == POKER_HAND_SIZE) return;
+    if (player.cards_to_swap[card_to_display]) {
+        display_lifted_card_at_position(player.hand[card_to_display], BOARD_DISPLAY_START + card_to_display);
     } else {
-        display_card_at_position(player.hand[player.selected_pos], BOARD_DISPLAY_START + player.selected_pos);
+        display_card_at_position(player.hand[card_to_display], BOARD_DISPLAY_START + card_to_display);
     }
+}
+
+static inline void display_player_card_or_lifted(void) {
+    display_player_card_or_lifted_at_position(player.selected_pos);
 }
 
 static inline void underscore_selected(bool ignore_if_lifted) {
@@ -642,6 +646,12 @@ static inline void underscore_selected(bool ignore_if_lifted) {
     }
 }
 
+static inline void invert_all_swap_card(void) {
+    for (uint8_t i=0; i<POKER_HAND_SIZE; i++) {
+        player.cards_to_swap[i] = !player.cards_to_swap[i];
+        display_player_card_or_lifted_at_position(i);
+    }
+}
 static void blink_selected_card(uint8_t subsecond) {
     if (player.selected_pos == POKER_HAND_SIZE) return;
     if (subsecond % 2) {
@@ -785,6 +795,8 @@ bool poker_face_loop(movement_event_t event, void *context) {
         case EVENT_LIGHT_LONG_PRESS:
             if (game_state == PO_TITLE_SCREEN) {
                 display_win_ratio(state);
+            } else if (game_state == PO_PLAYING) {
+                invert_all_swap_card();
             } else {
                 movement_illuminate_led();
             }
