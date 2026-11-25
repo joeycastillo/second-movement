@@ -88,4 +88,5 @@
 #include "virtual_pet_face.h"
 #include "wumpus_face.h"
 #include "sun_moon_compass_face.h"
+#include "poker_face.h"
 // New includes go above this line.
